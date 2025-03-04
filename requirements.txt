@@ -1,0 +1,54 @@
+# Core Django
+Django==5.1.4
+whitenoise==6.8.2
+django-extensions==3.2.3
+django-seed==0.3.1
+django-widget-tweaks==1.5.0
+django-compressor==4.5.1
+django-relativedelta==2.0.0
+
+# Banco de dados
+psycopg2-binary==2.9.10
+
+# Processamento de imagens
+pillow==11.0.0
+
+# Segurança
+argon2-cffi==23.1.0
+argon2-cffi-bindings==21.2.0
+
+# Configurações
+python-decouple==3.8
+
+# Servidor
+gunicorn==23.0.0
+
+# Outras dependências essenciais
+groq==0.18.0
+langchain-groq==0.2.2
+python-dateutil==2.9.0.post0
+
+
+
+# Ferramentas de desenvolvimento
+ipython==9.0.1
+jupyter==1.1.1
+django-debug-toolbar==4.3.0  # Adicionar se necessário
+
+# Testes
+pytest==8.2.2
+pytest-django==4.8.0
+
+# Documentação
+mkdocs==1.6.1
+mkdocs-material==9.6.7
+mkdocstrings==0.28.2
+mkdocs-include==1.0.0
+pymdown-extensions==10.14.3
+
+# Formatação
+autopep8==2.3.1
+isort==5.13.2
+
+# Ambiente virtual
+python-dotenv==1.0.1

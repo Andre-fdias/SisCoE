@@ -1,0 +1,29 @@
+{
+  "name": "siscoe",
+  "version": "1.0.0",
+  "description": "Siscoe",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andre-fdias/SisCoE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Andre-fdias/SisCoE/issues"
+  },
+  "homepage": "https://github.com/Andre-fdias/SisCoE#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.9"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.9",
+    "flowbite": "^3.1.2"
+  }
+}
