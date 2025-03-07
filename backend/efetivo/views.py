@@ -9,6 +9,8 @@ from django.db import IntegrityError
 from backend.adicional.models import Cadastro_adicional
 from backend.rpt.models import Cadastro_rpt
 from django.http import HttpResponseForbidden
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 
 @login_required
 def cadastrar_militar(request):
@@ -22,6 +24,7 @@ def cadastrar_militar(request):
             'esta_adido': DetalhesSituacao.esta_adido_choices,
             'funcao': DetalhesSituacao.funcao_choices,
             'op_adm': DetalhesSituacao.op_adm_choices,
+            'prontidao': DetalhesSituacao.prontidao_choices,
             'genero': Cadastro.genero_choices,
             'situacao': DetalhesSituacao.situacao_choices,
             'cad_efetivo': DetalhesSituacao.cat_efetivo_choices,
@@ -81,6 +84,7 @@ def cadastrar_militar(request):
                     esta_adido=request.POST.get('esta_adido'),
                     funcao=request.POST.get('funcao'),
                     op_adm=request.POST.get('op_adm'),
+                    prontidao= request.POST.get('prontidao'),
                     apresentacao_na_unidade=request.POST.get('apresentacao_na_unidade'),
                     saida_da_unidade=request.POST.get('saida_da_unidade'),
                     usuario_alteracao=request.user
@@ -161,18 +165,6 @@ def listar_militar(request):
         })
 
     
-# responsável pelo detalhamento de cada ID de militares
-@login_required
-def ver_militar(request, id):
-    if id is None:
-        messages.add_message(request, constants.ERROR, 'ID inválido', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('/efetivo/listar_militar')
-
-    try:
-        cadastro = Cadastro.objects.get(id=id)
-    except Cadastro.DoesNotExist:
-        messages.add_message(request, constants.ERROR, 'Militar não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('/efetivo/listar_militar')
 
 
 # responsável pelo detalhamento de cada ID de militares
@@ -191,8 +183,22 @@ def ver_militar(request, id):
     if request.method == "GET":
         detalhes = DetalhesSituacao.objects.filter(cadastro=cadastro).last()
         promocao = Promocao.objects.filter(cadastro=cadastro).last()
-        cadastro_rpt = Cadastro_rpt.objects.filter(cadastro=cadastro).last()
-       
+         # Obter o RPT com rank global
+        cadastro_rpt = Cadastro_rpt.objects.filter(cadastro=cadastro).annotate(
+            global_rank=Window(
+                expression=RowNumber(),
+                order_by=[F('data_pedido').asc(), F('id').asc()]
+            )
+        ).last()
+
+        # Contar inscritos na mesma seção
+        count_in_section = 0
+        if cadastro_rpt:
+            count_in_section = Cadastro_rpt.objects.filter(
+                posto_secao_destino=cadastro_rpt.posto_secao_destino
+            ).count()
+        
+
         return render(request, 'ver_militar.html', {
             'cadastro': cadastro,
             'detalhes': detalhes,
@@ -204,22 +210,49 @@ def ver_militar(request, id):
             'esta_adido': DetalhesSituacao.esta_adido_choices,
             'funcao': DetalhesSituacao.funcao_choices,
             'op_adm': DetalhesSituacao.op_adm_choices,
+            'prontidao': DetalhesSituacao.prontidao_choices,
             'posto_grad': Promocao.posto_grad_choices,
             'quadro': Promocao.quadro_choices,
             'grupo': Promocao.grupo_choices,
             'genero': Cadastro.genero_choices,
             'cat_efetivo': DetalhesSituacao.cat_efetivo_choices,
             'alteracao': Cadastro.alteracao_choices,
+            'global_rank': cadastro_rpt.global_rank if cadastro_rpt else None,
+            'count_in_section': count_in_section,
         })
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 
-# responsável por fazer a exclusão dos cadastros
 @login_required
 def excluir_militar(request, id):
-    cadastro = get_object_or_404(Cadastro, id=id)
-    cadastro.delete()
-    messages.add_message(request, constants.SUCCESS, 'Militar deletado com sucesso', extra_tags='bg-green-500 text-white p-4 rounded')
+    if request.method == 'POST':
+        try:
+            # Obter objetos relevantes
+            cadastro = Cadastro.objects.get(id=id)
+            current_user = request.user
+            
+            # Verificar senha
+            password = request.POST.get('password', '')
+            if not check_password(password, current_user.password):
+                messages.add_message(request, constants.ERROR,  'Senha incorreta! Operação cancelada.', extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('ver_militar', id=id)
+            
+            # Realizar exclusão
+            cadastro.delete()
+            messages.add_message(request, constants.SUCCESS, 'Cadastro excluído com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.success(request, 'Militar excluído com sucesso!')
+            return redirect('/efetivo/listar_militar')
+            
+        except Cadastro.DoesNotExist:
+            messages.add_message(request, constants.ERROR, 'Militar não encontrado!.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('/efetivo/listar_militar')
+        except Exception as e:
+            messages.add_message(request, constants.ERROR, f'Erro ao excluir: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('ver_militar', id=id)
+    
     return redirect('/efetivo/listar_militar')
+
 
 
 # responsável pela edição da model promoções
@@ -286,6 +319,7 @@ def editar_situacao_atual(request, id):
             if detalhes:
                 detalhes.situacao = request.POST['situacao_atual']
                 detalhes.cat_efetivo = request.POST['cat_efetivo']
+                detalhes.prontidao = request.POST['prontidao']
                 detalhes.saida_da_unidade = request.POST.get('saida_da_unidade', None)
                 detalhes.save()
             
@@ -316,6 +350,7 @@ def cadastrar_nova_situacao(request, id):
                 esta_adido=request.POST['esta_adido'],
                 funcao=request.POST['funcao'],
                 op_adm=request.POST['op_adm'],
+                prontidao= request.POST.get('prontidao'),
                 apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
                 saida_da_unidade=request.POST.get('saida_da_unidade', None),
                 usuario_alteracao=request.user,
@@ -332,6 +367,7 @@ def cadastrar_nova_situacao(request, id):
                 esta_adido=nova_situacao.esta_adido,
                 funcao=nova_situacao.funcao,
                 op_adm=nova_situacao.op_adm,
+                prontidao= nova_situacao.prontidao,
                 apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
                 saida_da_unidade=nova_situacao.saida_da_unidade,
                 data_alteracao=nova_situacao.data_alteracao,

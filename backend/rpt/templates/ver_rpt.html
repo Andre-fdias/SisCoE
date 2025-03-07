@@ -75,7 +75,18 @@
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Posto ou Seção:</b> <span>{{ cadastro.detalhes_situacao.last.posto_secao }}</span></h4>
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Apresentação na Unidade:</b> <span>{{ cadastro.detalhes_situacao.last.apresentacao_na_unidade|date:"d/m/Y" }}</span></h4>
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Tempo na Unidade:</b> <span>{{ cadastro.detalhes_situacao.last.tempo_na_unidade }}</span></h4>
-                             <br>
+                            <h4 class="text-1xl text-gray-700 mb-4">
+                                {% if cadastro_rpt %}
+                                <h4 class="text-1xl text-gray-700 mb-4">
+                                    <b>Posição na Fila Geral:</b> <span>{{ global_rank|default:"N/A" }}</span>
+                                </h4>
+                                <h4 class="text-1xl text-gray-700 mb-4">
+                                    <b>Inscritos para {{ cadastro_rpt.posto_secao_destino }}:</b> 
+                                    <span>{{ count_in_section|default:"0" }}</span>
+                                </h4>
+                            {% else %}
+                                <p class="text-gray-500">Nenhum registro RPT encontrado para este militar.</p>
+                            {% endif %}
                              <br>
                              <br>
                             <!-- Botão para abrir o modal de edição -->
@@ -232,30 +243,70 @@
                     <div class="flex flex-wrap">
                         <div class="w-full md:w-1/2">
                             <div class="container1">
-                                <div class="flex justify-start">
-                                    <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#exampleModal">Excluir</button>
-                                </div>
-                                <div id="exampleModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                                    <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
-                                        <div class="flex justify-between items-center p-4 bg-gray-800">
-                                            <h1 class="text-xl text-gray-200 font-medium">Excluir</h1>
-                                            <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close="#exampleModal">&times;</button>
-                                        </div>
-                                        <br>
-                                    
-                                        <div class="p-4 text-gray-400">
-                                            <p>Você tem certeza que deseja excluir o cadastro?</p>
-                                            <br>
-                                            <br>
-                                            <label for="password" class="block text-sm font-medium text-gray-400">Senha:</label>
-                                            <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                        </div>
-                                        <div class="flex justify-end space-x-2 p-4">
-                                            <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#exampleModal">Voltar</button>
-                                            <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" onclick="validatePassword()">Excluir</button>
+                              
+                                <!-- Adicionar este código onde deve aparecer o modal de exclusão -->
+                                    <div id="deleteRptModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                                        <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
+                                            <form method="POST" action="{% url 'rpt:excluir_rpt' cadastro.id %}">
+                                                {% csrf_token %}
+                                                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t">
+                                                    <h1 class="text-xl text-gray-200 font-medium">Confirmar Exclusão de RPT</h1>
+                                                    <button type="button" onclick="closeRptDeleteModal()" class="text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                                                </div>
+                                                <div class="p-4">
+                                                    <p class="text-gray-300 mb-4">Você está prestes a excluir o cadastro na RPT:</p>
+                                                    <p class="text-red-400 font-bold mb-6">{{ cadastro.nome}} </p>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Digite sua senha:</label>
+                                                        <input type="password" 
+                                                            name="password" 
+                                                            id="rptPasswordInput"
+                                                            class="w-full px-3 py-2 border border-gray-500 rounded-md bg-gray-700 text-gray-200 focus:outline-none focus:border-red-500"
+                                                            required>
+                                                        <div id="rptPasswordError" class="text-red-400 text-sm mt-2 hidden"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex justify-end space-x-4 p-4 bg-gray-800 rounded-b">
+                                                    <button type="button" onclick="closeRptDeleteModal()" class="px-4 py-2 text-gray-300 hover:text-gray-100">
+                                                        Cancelar
+                                                    </button>
+                                                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                                        Confirmar Exclusão
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
-                                </div>
+
+                                    <!-- Botão de excluir (geralmente junto com outros botões) -->
+                                    <button onclick="openRptDeleteModal()" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" >
+                                        Excluir RPT
+                                    </button>
+
+                                    <script>
+                                    // Funções específicas para o modal RPT
+                                    function openRptDeleteModal() {
+                                        document.getElementById('deleteRptModal').classList.remove('hidden');
+                                        document.getElementById('rptPasswordInput').focus();
+                                    }
+
+                                    function closeRptDeleteModal() {
+                                        document.getElementById('deleteRptModal').classList.add('hidden');
+                                        document.getElementById('rptPasswordError').classList.add('hidden');
+                                    }
+
+                                    // Tratar mensagens de erro específicas para RPT
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                                                document.getElementById('rptPasswordError').innerText = '{{ message|escapejs }}';
+                                                document.getElementById('rptPasswordError').classList.remove('hidden');
+                                                openRptDeleteModal();
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    </script>
                             </div>
                         </div>
                         

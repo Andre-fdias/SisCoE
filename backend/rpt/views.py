@@ -68,21 +68,43 @@ def listar_rpt(request):
 
 
 
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
 
 @login_required
 def ver_rpt(request, id):
-    cadastro_rpt = get_object_or_404(Cadastro_rpt, id=id)
+    # Obtém o cadastro RPT com rank global
+    cadastro_rpt = get_object_or_404(
+        Cadastro_rpt.objects.annotate(
+            global_rank=Window(
+                expression=RowNumber(),
+                order_by=[F('data_pedido').asc(), F('id').asc()]
+            )
+        ),
+        id=id
+    )
+    
+    # Obtém dados relacionados
     cadastro = cadastro_rpt.cadastro
-    detalhes_situacao = cadastro.detalhes_situacao.last()  # Supondo que você tenha uma relação de DetalhesSituacao com Cadastro
-    promocao = cadastro.promocoes.last()  # Usando o related_name definido na model Promocao
+    detalhes_situacao = cadastro.detalhes_situacao.last()
+    promocao = cadastro.promocoes.last()
+
+    # Conta quantos estão no mesmo posto_secao_destino
+    count_in_section = Cadastro_rpt.objects.filter(
+        posto_secao_destino=cadastro_rpt.posto_secao_destino
+    ).count()
 
     context = {
         'cadastro_rpt': cadastro_rpt,
         'cadastro': cadastro,
         'detalhes_situacao': detalhes_situacao,
         'promocao': promocao,
+        'global_rank': cadastro_rpt.global_rank,
+        'count_in_section': count_in_section,
     }
     return render(request, 'ver_rpt.html', context)
+
+
 
 @login_required
 def editar_rpt(request, id):
@@ -138,13 +160,38 @@ def search_cadastro(request):
 
 
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def excluir_rpt(request, id):
-    cadastro = get_object_or_404(Cadastro_rpt, id=id)
     if request.method == 'POST':
-        cadastro.delete()
-        messages.success(request, 'Cadastro excluído com sucesso!')
-        return redirect('rpt:listar_rpt')
+        try:
+            # Obter objetos relevantes
+            cadastro = get_object_or_404(Cadastro_rpt, id=id)
+            current_user = request.user
+            
+            # Verificar senha
+            password = request.POST.get('password', '')
+            if not check_password(password, current_user.password):
+                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.', 
+                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('rpt:ver_rpt', id=id)
+            
+            # Realizar exclusão
+            cadastro.delete()
+            messages.add_message(request, messages.SUCCESS, 'Cadastro excluído com sucesso.', 
+                               extra_tags='bg-green-500 text-white p-4 rounded')
+            return redirect('rpt:listar_rpt')
+            
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f'Erro ao excluir: {str(e)}', 
+                               extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('rpt:ver_rpt', id=id)
+    
     return redirect('rpt:listar_rpt')
 
 
