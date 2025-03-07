@@ -47,62 +47,18 @@
                 <div id="calendar" class="mt-4"></div>
             </div>
 
+            
             <!-- Modal de Escolha -->
             <div id="escolhaModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
                 <div class="flex items-center justify-center min-h-screen">
-                    <div class="bg-white rounded-lg shadow-xl p-6   "></div>
-                    <h2>Escolha o Tipo de Cadastro</h2>
-                    <div class="bg-white rounded-lg shadow-xl p-6   ">
+                    <div class="bg-white rounded-lg shadow-xl p-6">
+                    text-2xl font-bold mb-4">Escolha o Tipo de Cadastro</h2>
                         <button onclick="openModal('lembreteModal')" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Cadastrar Lembrete</button>
                         <button onclick="openModal('tarefaModal')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Cadastrar Tarefa</button>
                         <button type="button" onclick="closeModal('escolhaModal')" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</button>
                     </div>
                 </div>
             </div>
-            <!-- Adicione este modal para listagem de eventos -->
-<div id="listModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
-    <div class="flex items-center justify-center min-h-screen">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-3/4">
-            <h2 class="text-2xl font-bold mb-4">Todos os Eventos</h2>
-            <table class="min-w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Data</th>
-                        <th class="px-4 py-2">Título</th>
-                        <th class="px-4 py-2">Assunto</th>
-                        <th class="px-4 py-2">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for lembrete in lembretes %}
-                    <tr>
-                        <td class="border px-4 py-2">{{ lembrete.data|date:"d/m/Y H:i" }}</td>
-                        <td class="border px-4 py-2">{{ lembrete.titulo }}</td>
-                        <td class="border px-4 py-2">{{ lembrete.assunto }}</td>
-                        <td class="border px-4 py-2">
-                            <a href="{% url 'agenda:lembrete_editar' lembrete.id %}" class="text-blue-500">Editar</a>
-                            <a href="{% url 'agenda:lembrete_deletar' lembrete.id %}" class="text-red-500 ml-2">Excluir</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% for tarefa in tarefas %}
-                    <tr>
-                        <td class="border px-4 py-2">{{ tarefa.data_inicio|date:"d/m/Y H:i" }}</td>
-                        <td class="border px-4 py-2">{{ tarefa.titulo }}</td>
-                        <td class="border px-4 py-2">{{ tarefa.assunto }}</td>
-                        <td class="border px-4 py-2">
-                            <a href="{% url 'agenda:tarefa_editar' tarefa.id %}" class="text-blue-500">Editar</a>
-                            <a href="{% url 'agenda:tarefa_deletar' tarefa.id %}" class="text-red-500 ml-2">Excluir</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <button onclick="closeModal('listModal')" class="mt-4 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Fechar</button>
-        </div>
-    </div>
-</div>
-
 
             <!-- Modal para Lembrete -->
             <div id="lembreteModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
@@ -111,6 +67,7 @@
                         <h2 class="text-2xl font-bold mb-4">Novo Lembrete</h2>
                         <form method="post" action="{% url 'agenda:lembrete_novo' %}">
                             {% csrf_token %}
+                            <input type="hidden" id="lembreteData" name="data">
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="titulo">Título</label>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="titulo" name="titulo" type="text" placeholder="Título">
@@ -118,19 +75,6 @@
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="descricao">Descrição</label>
                                 <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="descricao" name="descricao" placeholder="Descrição"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="data">Data</label>
-                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="data" name="data" type="datetime-local">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="visibilidade">Visibilidade</label>
-                                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                        id="visibilidade" name="visibilidade">
-                                    <option value="privado">Privado (somente eu)</option>
-                                    <option value="secao">Minha Seção</option>
-                                    <option value="publico">Público (todos os usuários)</option>
-                                </select>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="cor">Cor</label>
@@ -145,6 +89,8 @@
                 </div>
             </div>
 
+
+
             <!-- Modal para Tarefa -->
             <div id="tarefaModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
                 <div class="flex items-center justify-center min-h-screen">
@@ -152,6 +98,8 @@
                         <h2 class="text-2xl font-bold mb-4">Nova Tarefa</h2>
                         <form method="post" action="{% url 'agenda:tarefa_nova' %}">
                             {% csrf_token %}
+                            <input type="hidden" id="tarefaDataInicio" name="data_inicio">
+                            <input type="hidden" id="tarefaDataFim" name="data_fim">
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="titulo">Título</label>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="titulo" name="titulo" type="text" placeholder="Título">
@@ -159,23 +107,6 @@
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="descricao">Descrição</label>
                                 <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="descricao" name="descricao" placeholder="Descrição"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="data_inicio">Data de Início</label>
-                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="data_inicio" name="data_inicio" type="datetime-local">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="data_fim">Data de Fim</label>
-                                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="data_fim" name="data_fim" type="datetime-local">
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-gray-700 text-sm font-bold mb-2" for="visibilidade">Visibilidade</label>
-                                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                        id="visibilidade" name="visibilidade">
-                                    <option value="privado">Privado (somente eu)</option>
-                                    <option value="secao">Minha Seção</option>
-                                    <option value="publico">Público (todos os usuários)</option>
-                                </select>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-gray-700 text-sm font-bold mb-2" for="cor">Cor</label>
@@ -191,79 +122,70 @@
             </div>
     </fieldset>
     <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+    
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    
+        function setModalData(modalId, date) {
+            if (modalId === 'lembreteModal') {
+                document.getElementById('lembreteData').value = date.format('YYYY-MM-DDTHH:mm:ss');
+            } else if (modalId === 'tarefaModal') {
+                document.getElementById('tarefaDataInicio').value = date.format('YYYY-MM-DDTHH:mm:ss');
+                document.getElementById('tarefaDataFim').value = date.format('YYYY-MM-DDTHH:mm:ss');
+            }
+        }
+    
         $(document).ready(function() {
             $('#calendar').fullCalendar({
                 locale: 'pt-br',
-                header: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'month,agendaWeek,agendaDay listMonth'
-                },
-                eventRender: function(event, element) {
-                    // Filtra visibilidade
-                    if(event.visibilidade === 'privado' && event.usuario_id !== {{ request.user.id }}) {
-                        return false;
-                    }
-                    element.attr('title', 
-                        `Assunto: ${event.assunto}\nDescrição: ${event.descricao}\nLocal: ${event.local}`
-                    );
-                },
-                eventDblClick: function(calEvent) {
-                    if(calEvent.tipo === 'lembrete') {
-                        $('#edit_lembrete_id').val(calEvent.id.split('-')[1]);
-                        $('#edit_lembrete_titulo').val(calEvent.title);
-                        // Preencher outros campos...
-                        $('#delete_lembrete_id').val(calEvent.id.split('-')[1]);
-                        openModal('editLembreteModal');
-                    }
-                    // Similar para tarefas
+                selectable: true,
+                selectHelper: true,
+                select: function(start, end) {
+                    openModal('escolhaModal');
+                    setModalData('lembreteModal', start);
+                    setModalData('tarefaModal', start);
                 },
                 events: [
                     {% for lembrete in lembretes %}
                     {
-                        title: '{{ lembrete.titulo }}',
-                        start: '{{ lembrete.data|date:"Y-m-d\TH:i:s" }}',
+                        title: '{{ lembrete.titulo }} (Lembrete)',
+                        start: '{{ lembrete.data|date:"Y-m-dTH:i:s" }}',
                         color: '{{ lembrete.cor }}',
-                        id: 'lembrete-{{ lembrete.id }}',
-                        tipo: 'lembrete',
-                        assunto: '{{ lembrete.assunto }}',
-                        descricao: '{{ lembrete.descricao|escapejs }}',
-                        local: '{{ lembrete.local }}',
-                        visibilidade: '{{ lembrete.visibilidade }}',
-                        usuario_id: {{ lembrete.usuario.id }}
+                        id: 'lembrete-{{ lembrete.id }}'
                     },
                     {% endfor %}
                     {% for tarefa in tarefas %}
                     {
-                        title: '{{ tarefa.titulo }}',
-                        start: '{{ tarefa.data_inicio|date:"Y-m-d\TH:i:s" }}',
-                        end: '{{ tarefa.data_fim|date:"Y-m-d\TH:i:s" }}',
+                        title: '{{ tarefa.titulo }} (Tarefa)',
+                        start: '{{ tarefa.data_inicio|date:"Y-m-dTH:i:s" }}',
+                        end: '{{ tarefa.data_fim|date:"Y-m-dTH:i:s" }}',
                         color: '{{ tarefa.cor }}',
-                        id: 'tarefa-{{ tarefa.id }}',
-                        tipo: 'tarefa',
-                        assunto: '{{ tarefa.assunto }}',
-                        descricao: '{{ tarefa.descricao|escapejs }}',
-                        local: '{{ tarefa.local }}',
-                        visibilidade: '{{ tarefa.visibilidade }}',
-                        usuario_id: {{ tarefa.usuario.id }}
+                        id: 'tarefa-{{ tarefa.id }}'
                     },
                     {% endfor %}
-                ]
+                ],
+                eventClick: function(event) {
+                    if (event.id.startsWith('lembrete-')) {
+                        // Abrir modal de edição de lembrete
+                        openModal('lembreteModal');
+                        // Preencher os campos do modal com os dados do lembrete
+                        // (Você precisará implementar a lógica para buscar e preencher os dados)
+                    } else if (event.id.startsWith('tarefa-')) {
+                        // Abrir modal de edição de tarefa
+                        openModal('tarefaModal');
+                        // Preencher os campos do modal com os dados da tarefa
+                        // (Você precisará implementar a lógica para buscar e preencher os dados)
+                    }
+                }
             });
         });
-        
-        // Funções de controle de modal
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-        }
-        </script>
-        
-        
-        
+    </script>
+    
+    
     </fieldset>
 </div>
 {% endblock %}

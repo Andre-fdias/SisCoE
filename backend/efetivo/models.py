@@ -359,6 +359,13 @@ class DetalhesSituacao(models.Model):
         ("LP", "LP"),
         ("FERIAS", "FÉRIAS"),
     )
+    prontidao_choices=( 
+        ("", " "),                                                
+        ("VERDE","VERDE"),
+        ("AMARELA","AMARELA"),
+        ("AZUL", "AZUL"),
+        ("ADM", "ADM"),  
+    )
 
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE,
                                  related_name='detalhes_situacao')
@@ -368,7 +375,8 @@ class DetalhesSituacao(models.Model):
     posto_secao = models.CharField(max_length=100, blank=False, null=False, choices=posto_secao_choices)
     esta_adido = models.CharField(max_length=100, blank=True, null=True, choices=esta_adido_choices)
     funcao = models.CharField(max_length=50, blank=False, null=False, choices=funcao_choices)
-    op_adm = models.CharField(max_length=18, blank=False, null=False, choices=op_adm_choices)
+    op_adm = models.CharField(max_length=18, blank=True, null=True, choices=op_adm_choices)
+    prontidao = models.CharField(max_length=18, blank=False, null=False, choices=prontidao_choices, default="") # Added default value
     apresentacao_na_unidade = models.DateField(blank=False, null=False)
     saida_da_unidade = models.DateField(blank=True, null=True)
     data_alteracao  = models.DateTimeField(auto_now_add=True)
@@ -400,7 +408,17 @@ class DetalhesSituacao(models.Model):
         if self.situacao == 'Mov. Interna':
             return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Mov. Interna</span>')
      
-
+    @property
+    def prontidao_badge(self):
+        if self.prontidao == 'VERDE':
+            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">VERDE</span>')
+        if self.prontidao == 'AMARELA':
+            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AMARELA</span>') # changed text to black for better visibility
+        if self.prontidao == 'AZUL':
+            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">AZUL</span>')
+        if self.prontidao == 'ADM':
+            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ADM</span>')
+        return mark_safe('<span class="bg-gray-200 text-gray-500 px-2 py-1 rounded">N/A</span>') # added a default badge for empty values.
  
     @property
     def status_cat(self):
@@ -535,15 +553,6 @@ class Imagem(models.Model):
     def __str__(self):
         return f'Imagem de {self.cadastro.nome_de_guerra}'
 
-@receiver(post_save, sender=Imagem)
-def add_cpf_to_profile_image(sender, instance, **kwargs):
-    cpf = instance.cadastro.cpf
-    image_path = instance.image.path
-    output_path = os.path.join(os.path.dirname(image_path), f"cpf_{os.path.basename(image_path)}")
-    add_cpf_to_image(image_path, cpf, output_path)
-    instance.image = output_path
-    instance.save()
-# modelo de dados para  gerar o historico de promoções  do militar
 
 
 class HistoricoPromocao(models.Model):
@@ -570,6 +579,7 @@ class HistoricoDetalhesSituacao(models.Model):
     esta_adido = models.CharField(max_length=50)
     funcao = models.CharField(max_length=50)
     op_adm = models.CharField(max_length=50)
+    prontidao = models.CharField(max_length=18, blank=False, null=False, default="") # Added default value
     cat_efetivo = models.CharField(max_length=30, blank=False, null=False,  default="Efetivo")
     apresentacao_na_unidade = models.DateField()
     saida_da_unidade = models.DateField(null=True, blank=True)
@@ -579,4 +589,3 @@ class HistoricoDetalhesSituacao(models.Model):
     
     def __str__(self):
         return f' {self.situacao}'
-

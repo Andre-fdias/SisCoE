@@ -170,6 +170,15 @@
                 <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione se é operacional ou administrativo.</div>
             </div>
             <div>
+                <label for="prontidao" class="block text-sm font-medium text-gray-700">Qual Prontidão</label>
+                <select name="prontidao" id="prontidao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                    {% for i in prontidao %}
+                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                    {% endfor %}
+                </select>
+                <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione sua prontidão.</div>
+            </div>
+            <div>
                 <label for="apresentacao_na_unidade" class="block text-sm font-medium text-gray-700">Data da Apresentação na Unidade</label>
                 <input type="date" name="apresentacao_na_unidade" id="apresentacao_na_unidade" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
                 <div class="text-red-500 text-sm mt-1 hidden" id="apresentacao_na_unidade_error">Por favor, insira a data da apresentação na unidade.</div>
