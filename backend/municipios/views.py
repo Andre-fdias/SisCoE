@@ -209,10 +209,37 @@ def posto_update(request, pk):
 
 
 
+# views.py do app municipio
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 
-def posto_delete(request, pk):
-    posto = get_object_or_404(Posto, pk=pk)
+@login_required
+def excluir_municipio(request, id):
     if request.method == 'POST':
-        posto.delete()
-        return redirect('posto_list')
-    return render(request, 'posto_confirm_delete.html', {'posto': posto})
+        try:
+            # Obter objetos relevantes
+            cadastro = get_object_or_404(Posto, id=id)
+            current_user = request.user
+            
+            # Verificar senha
+            password = request.POST.get('password', '')
+            if not check_password(password, current_user.password):
+                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.', 
+                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('municipios:ver_municipio', id=id)
+            
+            # Realizar exclusão
+            cadastro.delete()
+            messages.add_message(request, messages.SUCCESS, 'Município excluído com sucesso.', 
+                               extra_tags='bg-green-500 text-white p-4 rounded')
+            return redirect('municipios:listar_municipio')
+            
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f'Erro ao excluir: {str(e)}', 
+                               extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('municipios:ver_municipio', id=id)
+    
+    return redirect('municipios:listar_municipio')

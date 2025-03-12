@@ -246,55 +246,7 @@
         </div>
     </fieldset>
 
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Adicional e Licença- Prêmio</p>
-            <p class="text-sm">Lançar a data de concessão e o bloco do último adicional e LP, caso ainda não tenha lançar a data de adimissão</p>
-        </div>
-        <hr class="my-4 border-b-1 border-gray-300">
-        <div >
-            <div class="mb-4">
-                <h3 class="text-md">Adicional de Tempo de Serviço</h3>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="numero_adicional " class="block text-sm font-medium text-gray-700">Último Bloco do Adicional</label>
-                    <select name="numero_adicional " id="numero_adicional " class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for i in numero_adicional %}
-                        <option value="{{ i.0 }}">{{ i.1 }}</option>
-                        {% endfor %}
-                    </select> 
-                <div>
-                    <label for="data_ultimo_adicional " class="block text-sm font-medium text-gray-700">Data do Último Adicional</label>
-                    <input type="date" name="data_ultimo_adicional " id="data_ultimo_adicional " class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="data_ultimo_adicional _error">Por favor, insira a data do último Adicional.</div>
-                </div>
-            </div>
-        </div>
-        <br>
-        <div >
-            <div class="mb-4">
-                <p class="text-lg ">Licença-Prêmio</p>        
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for=" numero_lp" class="block text-sm font-medium text-gray-700">Último Bloco da LP</label>
-                    <select name=" numero_lp" id=" numero_lp" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                      {% for i in  numero_lp%}
-                      <option value="{{ i.0 }}">{{ i.1 }}</option>
-                      {% endfor %}
-                  </select>
-                  <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione o último bloco de LP.</div>
-                </div>
-                <div>
-                  <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data da Última Licença-Prêmio</label>
-                  <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                  <div class="text-red-500 text-sm mt-1 hidden" id="data_ultimo_lp_error">Por favor, insira a data da última licença-Prêmio.</div>
-                </div>
-            </div>
-        </div>
-    </fieldset>
-
+ 
 
 
     <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">

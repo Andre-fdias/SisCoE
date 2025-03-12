@@ -5,7 +5,6 @@
 
 {% block 'body' %}
 
-
 <body>
 
     <br>
@@ -75,35 +74,22 @@
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Posto ou Seção:</b> <span>{{ cadastro.detalhes_situacao.last.posto_secao }}</span></h4>
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Apresentação na Unidade:</b> <span>{{ cadastro.detalhes_situacao.last.apresentacao_na_unidade|date:"d/m/Y" }}</span></h4>
                             <h4 class="text-1xl text-gray-700  mb-4"><b>Tempo na Unidade:</b> <span>{{ cadastro.detalhes_situacao.last.tempo_na_unidade }}</span></h4>
-                            <h4 class="text-1xl text-gray-700 mb-4">
-                                {% if cadastro_rpt %}
-                                <h4 class="text-1xl text-gray-700 mb-4">
-                                    <b>Posição na Fila Geral:</b> <span>{{ global_rank|default:"N/A" }}</span>
-                                </h4>
-                                <h4 class="text-1xl text-gray-700 mb-4">
-                                    <b>Inscritos para {{ cadastro_rpt.posto_secao_destino }}:</b> 
-                                    <span>{{ count_in_section|default:"0" }}</span>
-                                </h4>
-                            {% else %}
-                                <p class="text-gray-500">Nenhum registro RPT encontrado para este militar.</p>
-                            {% endif %}
-                             <br>
-                             <br>
+                         
                             <!-- Botão para abrir o modal de edição -->
                             <button id="modalgeral" type="button" class="text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" onclick="openModal()">
                                 Editar Rpt
                             </button>
-                            
+                                                        
                              <!-- Modal Editar Rpt -->
                             <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                            <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
-                                    <!-- MOdal header -->
-                                <div class="flex items-start justify-between p-4 bg-gray-800 rounded-t border-gray-500">
-                                    <h5 class="text-xl font-semibold text-gray-300 dark:text-white" id="trocaFotoModalLabel">Editar Rpt</h5>   
-                                    <button class="text-gray-200 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" onclick="closeModal()">&times;</button>
-                                </div>
+                                <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
+                                        <!-- Modal header -->
+                            <div class="flex items-start justify-between p-4 bg-gray-800 rounded-t border-gray-500">
+                                <h5 class="text-xl font-semibold text-gray-300 dark:text-white" id="trocaFotoModalLabel">Editar Rpt</h5>
+                                <button class="text-gray-200 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" onclick="closeModal()">&times;</button>
+                            </div>
                                     <!-- MOdal Body -->
-                                
+                            
                                     <div class="p-6 space-y-6">
                                         <form method="POST" action="{% url 'rpt:editar_rpt' cadastro_rpt.id %}">
                                             {% csrf_token %}
@@ -112,8 +98,8 @@
                                                 <div>
                                                     <label for="sgb_destino" class="block mb-2 text-sm font-medium text-gray-400">Sgb Destino</label>
                                                     <select name="sgb_destino" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_grad" required>
-                                                        {% for choice in sgb_choices %}
-                                                            <option value="{{ choice.0 }}" {% if cadastro_rpt.sgb_destino == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                                        {% for value, display in sgb_choices %}
+                                                        <option value="{{ value }}" {% if cadastro_rpt.sgb_destino == value %}selected{% endif %}>{{ display }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <div class="text-red-500 text-sm mt-1 hidden">
@@ -124,20 +110,19 @@
                                                 <div>
                                                     <label for="posto_secao_destino" class="block mb-2 text-sm font-medium text-gray-400">Posto Seção Destino</label>
                                                     <select name="posto_secao_destino" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_grad" required>
-                                                        {% for choice in posto_secao_choices %}
-                                                            <option value="{{ choice.0 }}" {% if cadastro_rpt.posto_secao_destino == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                                        {% for value, display in posto_secao_choices %}
+                                                        <option value="{{ value }}" {% if cadastro_rpt.posto_secao_destino == value %}selected{% endif %}>{{ display }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <div class="text-red-500 text-sm mt-1 hidden">
                                                         Por favor, selecione Posto ou Seção de destino.
                                                     </div>
                                                 </div>
-                                                
                                                 <div>
                                                     <label for="alteracao" class="block mb-2 text-sm font-medium text-gray-400">Motivo da Alteração</label>
                                                     <select name="alteracao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_grad" required>
                                                         {% for value, display in alteracao_choices %}
-                                                            <option value="{{ value }}" {% if cadastro_rpt.alteracao == value %}selected{% endif %}>{{ display }}</option>
+                                                        <option value="{{ value }}" {% if cadastro_rpt.alteracao == value %}selected{% endif %}>{{ display }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <div class="text-red-500 text-sm mt-1 hidden">
@@ -149,20 +134,20 @@
                                                     <label for="status" class="block mb-2 text-sm font-medium text-gray-400">Status</label>
                                                     <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_grad" required>
                                                         {% for value, display in status_choices %}
-                                              <option value="{{ value }}" {% if cadastro.status == value %}selected{% endif %}>{{ display }}</option>
-                                                                 {% endfor %}
-                    </select>
+                                                        <option value="{{ value }}" {% if cadastro_rpt.status == value %}selected{% endif %}>{{ display }}</option>
+                                                        {% endfor %}
+                                                    </select>
                                                     <div class="text-red-500 text-sm mt-1 hidden">
                                                         Por favor, selecione o Status.
                                                     </div>
-                                                </div><div>
+                                                </div>
+                                                <div>
                                                     <label for="data_pedido" class="block mb-2 text-sm font-medium text-gray-400">Data do Pedido</label>
                                                     <input type="date" name="data_pedido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="apresentacao_na_unidade" value="{{ cadastro_rpt.data_pedido|date:'Y-m-d' }}" required>
                                                     <div class="text-red-500 text-sm mt-1 hidden">
                                                         Por favor, insira a data do pedido.
                                                     </div>
                                                 </div>
-                                    
                                                 <div>
                                                     <label for="data_movimentacao" class="block mb-2 text-sm font-medium text-gray-400">Data da Movimentação</label>
                                                     <input type="date" name="data_movimentacao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="apresentacao_na_unidade" value="{{ cadastro_rpt.data_movimentacao|date:'Y-m-d' }}" required>
@@ -235,7 +220,79 @@
 
         </fieldset> 
     
-  
+     
+        <fieldset class=" p-2 mb-8 rounded-md rounded-[10px]">
+            <div class="flex flex-col h-auto rounded-[10px]">
+                <div class=" bg-gray-200 rounded-xl shadow-2xl  w-full p-2 transition-all duration-300 animate-fade-in">
+                   
+                   <div class=" p-6 rounded-lg shadow-md">
+                       <h3 class="text-xl font-bold mb-8">Detalhamento</h3>
+                       
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-12">
+                        <div class="bg-blue-50 p-4 rounded-md rounded-[10px] shadow-sm">
+                            <p class="text-sm text-gray-600 mb-4">Destino</p>
+                            <p class="font-semibold  text-md text-gray-600">{{ cadastro_rpt.posto_secao_destino }}</p>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-md rounded-[10px] shadow-sm">
+                            <p class="text-sm text-gray-600 mb-4">Sua Posição</p>
+                            <p class="font-semibold text-md text-gray-600">{{posicao }}º</p>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-md rounded-[10px] shadow-sm">
+                            <p class="text-sm text-gray-600 mb-4">Total na Fila</p>
+                            <p class="font-semibold text-md text-gray-600">{{ total_secao }} militares</p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-lg font-semibold mb-3">Lista Completa por Ordem de Data de Inscrição:</h4>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Posição</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Graduação</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RE</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome de Guerra</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SGB</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Posto/Seção</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data de Inscrição</th>
+                                </tr>
+                            </thead>
+
+
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for inscrito in inscritos_secao %}
+                                <tr class="{% if inscrito.id == cadastro_rpt.id %}bg-blue-50{% endif %} hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500  ">
+                                        {{ inscrito.posicao }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span class="font-mono"> {{ inscrito.cadastro.promocoes.last.posto_grad }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span class="font-mono">{{ inscrito.cadastro.re }}-{{ inscrito.cadastro.dig }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ inscrito.cadastro.nome_de_guerra }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ inscrito.cadastro.detalhes_situacao.last.sgb|default:"-" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ inscrito.cadastro.detalhes_situacao.last.posto_secao|default:"-" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ inscrito.data_pedido|date:"d/m/Y" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+
+        </fieldset> 
         <fieldset class="border bg-gray-800 border-gray-800 p-4 mb-8 rounded-md">
             <legend></legend>
             <div id="01" class="flex flex-wrap">
@@ -247,7 +304,7 @@
                                 <!-- Adicionar este código onde deve aparecer o modal de exclusão -->
                                     <div id="deleteRptModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
                                         <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
-                                            <form method="POST" action="{% url 'rpt:excluir_rpt' cadastro.id %}">
+                                            <form method="POST" action="{% url 'rpt:excluir_rpt' cadastro_rpt.id %}">
                                                 {% csrf_token %}
                                                 <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t">
                                                     <h1 class="text-xl text-gray-200 font-medium">Confirmar Exclusão de RPT</h1>
@@ -324,6 +381,8 @@
         </fieldset>
     </fieldset>
         </div>
+
+
   
 <script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

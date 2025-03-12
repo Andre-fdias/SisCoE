@@ -7,6 +7,8 @@ from dateutil.relativedelta import relativedelta
 from backend.efetivo.models import Cadastro
 import locale
 locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Cadastro_adicional(models.Model):
@@ -155,3 +157,47 @@ class HistoricoCadastro(models.Model):
 
     def __str__(self):
         return f'Histórico de {self.cadastro} em {self.data_alteracao}'
+    
+
+
+@receiver(post_save, sender=Cadastro_adicional)
+def calcular_proximo_periodo(sender, instance, created, **kwargs):
+    # Cálculo para Adicional
+    if instance.data_ultimo_adicional:
+        # Calcula a data base + 5 anos (1826 dias)
+        data_base = instance.data_ultimo_adicional
+        instance.proximo_adicional = data_base + timedelta(days=1826 - instance.dias_desconto_adicional)
+        
+        # Extrai mês e ano
+        instance.mes_proximo_adicional = instance.proximo_adicional.month
+        instance.ano_proximo_adicional = instance.proximo_adicional.year
+        
+        # Número do próximo adicional
+        instance.numero_prox_adicional = instance.numero_adicional + 1
+
+    # Cálculo para LP
+    if instance.data_ultimo_lp:
+        # Calcula a data base + 5 anos (1826 dias)
+        data_base_lp = instance.data_ultimo_lp
+        instance.proximo_lp = data_base_lp + timedelta(days=1826 - instance.dias_desconto_lp)
+        
+        # Extrai mês e ano
+        instance.mes_proximo_lp = instance.proximo_lp.month
+        instance.ano_proximo_lp = instance.proximo_lp.year
+        
+        # Número do próximo LP
+        instance.numero_prox_lp = instance.numero_lp + 1
+
+    # Salva novamente evitando loop infinito
+    if created or instance._state.adding:
+        return
+    instance.save(update_fields=[
+        'proximo_adicional',
+        'mes_proximo_adicional',
+        'ano_proximo_adicional',
+        'numero_prox_adicional',
+        'proximo_lp',
+        'mes_proximo_lp',
+        'ano_proximo_lp',
+        'numero_prox_lp'
+    ])

@@ -67,57 +67,85 @@ def listar_rpt(request):
 
 
 
-
-from django.db.models import F, Window
+from django.db import models  # Adicione esta linha
+from django.db.models import Count, Q, F, Window, Subquery, OuterRef
 from django.db.models.functions import RowNumber
 
 @login_required
 def ver_rpt(request, id):
-    # Obtém o cadastro RPT com rank global
+    # Subquery para total_secao
+    count_subquery = Cadastro_rpt.objects.filter(
+        posto_secao_destino=OuterRef('posto_secao_destino')
+    ).values('posto_secao_destino').annotate(
+        count=Count('id')
+    ).values('count')
+
+    # Consulta principal com posicao
     cadastro_rpt = get_object_or_404(
         Cadastro_rpt.objects.annotate(
-            global_rank=Window(
+            posicao=Window(
                 expression=RowNumber(),
-                order_by=[F('data_pedido').asc(), F('id').asc()]
-            )
-        ),
+                partition_by=[F('posto_secao_destino')],
+                order_by=[
+                    F('data_pedido').asc(),  # Ordem ascendente pela data
+                    F('id').asc()  # Desempate pelo ID mais antigo
+                ]
+            ),
+            total_secao=Subquery(count_subquery, output_field=models.IntegerField())
+        )
+        .select_related('cadastro')
+        .prefetch_related('cadastro__detalhes_situacao'),
         id=id
     )
-    
-    # Obtém dados relacionados
+
+    # Dados relacionados
     cadastro = cadastro_rpt.cadastro
     detalhes_situacao = cadastro.detalhes_situacao.last()
     promocao = cadastro.promocoes.last()
 
-    # Conta quantos estão no mesmo posto_secao_destino
-    count_in_section = Cadastro_rpt.objects.filter(
+   
+      # Lista de inscritos com a mesma ordenação
+    inscritos_secao = Cadastro_rpt.objects.filter(
         posto_secao_destino=cadastro_rpt.posto_secao_destino
-    ).count()
-
+    ).annotate(
+        posicao=Window(
+            expression=RowNumber(),
+            partition_by=[F('posto_secao_destino')],
+            order_by=[F('data_pedido').asc(), F('id').asc()]
+        )
+    ).order_by('posicao')  # Ordenar pela posição calculada
+    posicao_real = None
+    for idx, inscrito in enumerate(inscritos_secao, start=1):
+          if inscrito.id == cadastro_rpt.id:
+            posicao_real = idx
+            break
+ 
     context = {
         'cadastro_rpt': cadastro_rpt,
+        'posicao': posicao_real,  # Nome corrigido
+        'total_secao': cadastro_rpt.total_secao,  # Nome corrigido
+        'inscritos_secao': inscritos_secao,
         'cadastro': cadastro,
         'detalhes_situacao': detalhes_situacao,
         'promocao': promocao,
-        'global_rank': cadastro_rpt.global_rank,
-        'count_in_section': count_in_section,
     }
     return render(request, 'ver_rpt.html', context)
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Cadastro_rpt
+from django.contrib.auth.decorators import login_required
+import logging
 
-
+logger = logging.getLogger(__name__)
 
 @login_required
 def editar_rpt(request, id):
     cadastro_rpt = get_object_or_404(Cadastro_rpt, id=id)
 
-    if request.method == "GET":
-        return render(request, 'editar_rpt.html', {
-             'cadastro_rpt': cadastro_rpt,
-             'status_choices': Cadastro_rpt._meta.get_field('status').choices,
-             'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
-             'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
-             'alteracao_choices': Cadastro_rpt._meta.get_field('alteracao').choices,
-    })
+    status_choices = Cadastro_rpt._meta.get_field('status').choices
+    posto_secao_choices = Cadastro_rpt._meta.get_field('posto_secao_destino').choices
+    sgb_choices = Cadastro_rpt._meta.get_field('sgb_destino').choices
+    alteracao_choices = Cadastro_rpt._meta.get_field('alteracao').choices
+
     if request.method == "POST":
         cadastro_rpt.data_pedido = request.POST.get('data_pedido')
         cadastro_rpt.data_movimentacao = request.POST.get('data_movimentacao')
@@ -130,10 +158,23 @@ def editar_rpt(request, id):
         cadastro_rpt.doc_movimentacao = request.POST.get('doc_movimentacao')
         cadastro_rpt.alteracao = request.POST.get('alteracao')
 
-        cadastro_rpt.save()
-        return redirect('rpt:ver_rpt', id=cadastro_rpt.id)
-        
-  
+        try:
+            cadastro_rpt.save()
+            return redirect('rpt:ver_rpt', id=cadastro_rpt.id)
+        except Exception as e:
+            logger.error(f'Erro ao salvar Cadastro_rpt: {e}', exc_info=True)
+            # Você pode adicionar uma mensagem de erro para o usuário aqui
+            # messages.error(request, 'Ocorreu um erro ao salvar o registro.')
+            return redirect('rpt:listar_rpt')  # Redireciona para a lista em caso de erro
+
+    context = {
+        'cadastro_rpt': cadastro_rpt,
+        'status_choices': status_choices,
+        'posto_secao_choices': posto_secao_choices,
+        'sgb_choices': sgb_choices,
+        'alteracao_choices': alteracao_choices,
+    }
+    return render(request, 'editar_rpt.html', context)
 
 @login_required
 def search_cadastro(request):

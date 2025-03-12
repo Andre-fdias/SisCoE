@@ -9,35 +9,70 @@
 {% endblock 'head' %}
 
 {% block 'body' %}
+<style>
+    @keyframes diagonal-scroll {
+    0% { transform: translateY(-100%) translateX(-100%); }
+    100% { transform: translateY(100%) translateX(100%); }
+}
 
+.diagonal-overlay {
+    animation: diagonal-scroll 40s linear infinite;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0,0,0,0.1) 10px,
+        rgba(0,0,0,0.1) 20px
+    );
+}
+</style>
 
 <body>
 
     <br>
     <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
-     <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
+        
+        
+     <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">   
+      
         <fieldset class=" p-2 mb-8 rounded-md w-full" id="first-fieldset">
-                 
+       
                <div class="flex flex-col h-auto rounded-[10px]">
                 <div class=" bg-gray-800 rounded-xl shadow-2xl  w-full p-8 transition-all duration-300 animate-fade-in">
                     <div class="flex flex-col md:flex-row">
-                        <div class="md:w-1/3 text-center mb-8 md:mb-0">
+                        <div class="md:w-1/3 text-center mb-8 md:mb-0 relative">
                             {% if cadastro.imagens.exists %}
-                            {% with cadastro.promocoes.last as promocao %}
-                                {% if promocao.posto_grad == "Cel PM" or promocao.posto_grad == "Ten Cel PM" or promocao.posto_grad == "Maj PM" or promocao.posto_grad == "CAP PM" or promocao.posto_grad == "1º Ten PM" or promocao.posto_grad == "1º Ten QAPM" or promocao.posto_grad == "2º Ten PM" or promocao.posto_grad == "2º Ten QAPM" or promocao.posto_grad == "Asp OF PM" %}
-                                    <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-500 transition-transform duration-300 hover:scale-105 object-cover">
-                                {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
-                                    <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-red-500 transition-transform duration-300 hover:scale-105 object-cover">
-                                {% elif promocao.posto_grad == "Cb PM" or promocao.posto_grad == "Sd PM" or promocao.posto_grad == "Sd PM 2ºCL" %}
-                                    <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-black transition-transform duration-300 hover:scale-105 object-cover">
-                                {% else %}
-                                    <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-800 transition-transform duration-300 hover:scale-105 object-cover">
-                                {% endif %}
-                            {% endwith %}
-                        {% else %}
-                            Sem imagem
-                        {% endif %}
-                            
+                                {% with cadastro.promocoes.last as promocao %}
+                                <div class="relative group">
+                                    <div class="absolute inset-0 overflow-hidden rounded-full w-60 h-60 mx-auto mb-4 ">
+                                        <div class="absolute inset-0 grid grid-cols-6 grid-rows-5 -rotate-45 gap-4 opacity-20 pointer-events-none">
+                                            {% for _ in "x"|ljust:20 %}
+                                            <span class="text-gray-200 text-xs font-mono tracking-wider transform rotate-45">
+                                                {{ request.user.profile.cpf|default:"CPF Não Cadastrado" }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if promocao.posto_grad == "Cel PM" or promocao.posto_grad == "Ten Cel PM" or promocao.posto_grad == "Maj PM" or promocao.posto_grad == "CAP PM" or promocao.posto_grad == "1º Ten PM" or promocao.posto_grad == "1º Ten QAPM" or promocao.posto_grad == "2º Ten PM" or promocao.posto_grad == "2º Ten QAPM" or promocao.posto_grad == "Asp OF PM" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-500 transition-transform duration-300 hover:scale-105 object-cover">
+                                             {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-red-500 transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% elif promocao.posto_grad == "Cb PM" or promocao.posto_grad == "Sd PM" or promocao.posto_grad == "Sd PM 2ºCL" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-black transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% else %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-800 transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% endif %}
+                                </div>
+                                {% endwith %}
+                            {% else %}
+                                <div class="text-gray-500">Sem imagem</div>
+                            {% endif %}
+                    
                             <p class="text-gray-300 "> {{ cadastro.promocoes.last.grad|safe }}</p><br>
                             <p class="text-gray-300 font-bold "> {{ cadastro.nome_de_guerra }}</p><br>
                             
@@ -777,7 +812,7 @@
                             <h4 class="text-1xl text-gray-700 mb-4"><b>Status:</b> <span>{{ cadastro_rpt.pedido_status }}</span></h4>
                             {% if cadastro_rpt %}
                             <h4 class="text-1xl text-gray-700 mb-4">
-                                <b>Posição na Fila Geral:</b> <span>{{ global_rank|default:"N/A" }}</span>
+                                <b>Posição na Fila Geral:</b> <span>{{ cadastro_rpt.global_rank|default:"N/A" }}</span>
                             </h4>
                             <h4 class="text-1xl text-gray-700 mb-4">
                                 <b>Inscritos para {{ cadastro_rpt.posto_secao_destino }}:</b> 
