@@ -50,6 +50,7 @@
     <!-- Alpine.js -->
     <script src="//unpkg.com/alpinejs" defer></script>
 
+    
   </head>
   <body class="bg-gray-500">
   
@@ -63,6 +64,14 @@
 
       <div id="main-content" class="h-full w-full bg-gray-500 relative overflow-y-auto lg:ml-64">
         {% block 'body' %}{% endblock  %}
+        
+        <div id="spinner-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75 hidden">
+          <div class="flex space-x-2">
+            <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce delay-100"></div>
+            <div class="w-4 h-4 bg-green-500 rounded-full animate-bounce delay-300"></div>
+            <div class="w-4 h-4 bg-yellow-500 rounded-full animate-bounce delay-500"></div>
+          </div>
+        </div>
         {% include "includes/footer.html" %}
 
       </div>
@@ -74,7 +83,27 @@
     <script src="../path/to/fullcalendar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-
+    <script>
+      // Controle do spinner
+      function showSpinner() {
+        document.getElementById('spinner-container').classList.remove('hidden');
+      }
+    
+      function hideSpinner() {
+        document.getElementById('spinner-container').classList.add('hidden');
+      }
+    
+      // Exemplo de uso durante o carregamento
+      document.addEventListener('DOMContentLoaded', function() {
+        hideSpinner(); // Esconde quando tudo carregar
+      });
+      
+      // Mostrar spinner antes do carregamento da página
+      window.addEventListener('beforeunload', function() {
+        showSpinner();
+      });
+    </script>
+    
 
     {% block js %}{% endblock js %}
   </body>

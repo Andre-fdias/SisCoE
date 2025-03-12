@@ -9,5 +9,5 @@ urlpatterns = [
     path('municipio/<int:pk>/', v.municipio_detail, name='municipio_detail'),  # Nova linha
     path('novo/', v.posto_create, name='posto_create'),
     path('<int:pk>/editar/', v.posto_update, name='posto_update'),
-    path('<int:pk>/deletar/', v.posto_delete, name='posto_delete'),
+    path('<int:pk>/deletar/', v.excluir_municipio, name='excluir_municipio'),
 ]

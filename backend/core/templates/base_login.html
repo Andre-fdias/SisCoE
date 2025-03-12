@@ -60,13 +60,54 @@
 
     <!-- Alpine.js -->
     <script src="//unpkg.com/alpinejs" defer></script>
+    <style>
+      @keyframes bounce {
+            0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+      }
+      50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      }
+    } 
+    </style>
 
   </head>
   <body class="bg-gray-800">
+    <div id="spinner-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75 hidden">
+      <div class="flex space-x-2">
+        <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce delay-100"></div>
+        <div class="w-4 h-4 bg-green-500 rounded-full animate-bounce delay-200"></div>
+        <div class="w-4 h-4 bg-yellow-500 rounded-full animate-bounce delay-300"></div>
+      </div>
+    </div>
+
+
 
     {% block content %}{% endblock content %}
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
     <script src="{% static 'js/app.bundle.js' %}"></script>
+    <script>
+      // Controle do spinner
+      function showSpinner() {
+        document.getElementById('spinner-container').classList.remove('hidden');
+      }
+    
+      function hideSpinner() {
+        document.getElementById('spinner-container').classList.add('hidden');
+      }
+    
+      // Exemplo de uso durante o carregamento
+      document.addEventListener('DOMContentLoaded', function() {
+        hideSpinner(); // Esconde quando tudo carregar
+      });
+      
+      // Mostrar spinner antes do carregamento da página
+      window.addEventListener('beforeunload', function() {
+        showSpinner();
+      });
+    </script>
   </body>
 </html>

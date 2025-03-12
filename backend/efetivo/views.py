@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from django.db import IntegrityError
-from backend.adicional.models import Cadastro_adicional
+
 from backend.rpt.models import Cadastro_rpt
 from django.http import HttpResponseForbidden
 from django.db.models import F, Window
@@ -29,8 +29,7 @@ def cadastrar_militar(request):
             'situacao': DetalhesSituacao.situacao_choices,
             'cad_efetivo': DetalhesSituacao.cat_efetivo_choices,
             'alteracao': Cadastro.alteracao_choices,
-            'numero_lp': Cadastro.n_choices,
-            'numero_adicional': Cadastro.n_choices,
+         
         }
         return render(request, 'cadastrar_militar.html', context)
 
@@ -112,20 +111,6 @@ def cadastrar_militar(request):
                 messages.add_message(request, constants.ERROR, 'Erro ao salvar promoção.', extra_tags='bg-red-500 text-white p-4 rounded')
 
             
-            try:
-                cadastro_adicional = Cadastro_adicional(
-                    cadastro=cadastro,
-                    numero_adicional=request.POST.get('numero_adicional'),
-                    data_ultimo_adicional=request.POST.get('data_ultimo_adicional'),
-                    numero_lp=request.POST.get('numero_lp'),
-                    data_ultimo_lp=request.POST.get('data_ultimo_lp'),
-                )
-                cadastro_adicional.save()
-                print("Cadastro adicional salvo com sucesso")
-            except Exception as e:
-                print(f"Erro ao salvar cadastro adicional: {e}")
-                messages.add_message(request, constants.ERROR, 'Erro ao salvar cadastro adicional.', extra_tags='bg-green-500 text-white p-4 rounded')
-                return render(request, 'cadastrar_militar.html', {'form_data': request.POST})
 
             messages.add_message(request, constants.SUCCESS, 'Militar cadastrado com sucesso', extra_tags='bg-green-500 text-white p-4 rounded')
             return redirect('/efetivo/cadastrar_militar')

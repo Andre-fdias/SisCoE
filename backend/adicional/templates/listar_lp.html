@@ -10,109 +10,48 @@
 
 {% block 'body' %}
 
-<div class="container mx-auto p-4 mt-30" id="cad_lp">
+<body>
 
-    <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-        <fieldset class="bg-gray-800 p-4 mb-8 rounded-md w-full" id="first-fieldset">
-            <div id="01" class="mb-4">
-                <div class="bg-gray-800 p-4 rounded-md">
-                    <div class="flex flex-wrap items-center justify-between py-3">
-                        <div class="col-12 md:w-auto">
-                            <h1 class="text-3xl text-gray-200">Adicional de Tempo e Licença Prêmio</h1>
-                            <p class="text-gray-400" >Consulte abaixo o adicional e LP.</p>
-                        </div>
-                        <div class="w-full md:w-auto text-right">
-                            <a href="{% url 'adicional:cadastrar_lp' %}" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Cadastrar ATS-LP</a>
-                        </div>
-                    </div>
-                </div>
-            </div>  
-        </fieldset>  
-        <fieldset>
-                <legend  class=" mb-8 rounded-md w-full" >
-                    {% if messages %}
-                    {% for message in messages %}
-                        <section class="alert {{ message.tags }}">
-                            {{ message }}
-                        </section>
-                    {% endfor %}
-                    {% endif %}
-                </legend>  
-        </fieldset>
-        <!-- Cabeçalho para Adicional de Tempo -->
-        <fieldset class="bg-gray-700 mb-8 rounded-md w-full p-5" id="adicionalTempoHeader">
+    <div class=" md:items-center md:justify-between rounded-lg mt-12  w-full" id="cad_efetivo">
+    
+     <fieldset class=" p-4 mb-4 rounded-md w-full" id="second-fieldset">
+          <!-- Cabeçalho para Adicional de Tempo -->
+        <fieldset class="bg-gray-800 mb-4 rounded-md w-full p-5" id="adicionalTempoHeader">
             <h1 class="text-2xl text-gray-200">Adicional de Tempo</h1>
             <p class="text-gray-400">Consulte abaixo o adicional de Tempo de Serviço.</p>
             <br>
             <div class="flex justify-end mb-3">
+                <a href="{% url 'adicional:cadastrar_lp' %}" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Cadastrar ATS-LP</a>                      
                 <button id="toggleToLicencaPremio" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Licença Prêmio</button>
             </div>
         </fieldset>
 
         <!-- Cabeçalho para Licença Prêmio -->
-        <fieldset class="bg-gray-700 mb-8 rounded-md w-full p-5 hidden" id="licencaPremioHeader">
+        <fieldset class="bg-gray-800 mb-4 rounded-md w-full p-5 hidden" id="licencaPremioHeader">
             <h1 class="text-2xl text-gray-200">Licença Prêmio</h1>
             <p class="text-gray-400">Consulte abaixo as Licenças-Prêmio.</p>
             <br>
             <div class="flex justify-end mb-3">
+                <a href="{% url 'adicional:cadastrar_lp' %}" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Cadastrar ATS-LP</a>                      
                 <button id="toggleToAdicionalTempo" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Adicional de Tempo</button>
             </div>
         </fieldset>
 
-        
+        <fieldset>
+            <legend  class=" mb-8 rounded-md w-full" >
+                {% if messages %}
+                {% for message in messages %}
+                    <section class="alert {{ message.tags }}">
+                        {{ message }}
+                    </section>
+                {% endfor %}
+                {% endif %}
+            </legend>  
+        </fieldset>
         <fieldset class="bg-gray-100 mb-8 rounded-md w-full" id="adicionalTempoTable">
             <div class="flex flex-wrap mb-3 justify-between p-4 bg-gray-600">
-                <div class="flex flex-wrap w-full md:w-3/4">
-                    <form class="w-full md:w-1/4 px-2 mb-4 md:mb-0">
-                        <label for="anoFilter" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Ano</label>
-                        <select id="anoFilter" class="bg-gray-50 border border-gray-300 text-gray-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Todos</option>
-                            <option value="2018">2018</option>
-                            <option value="2019">2019</option>
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                            <option value="2029">2029</option>
-                            <option value="2030">2030</option>
-                            <option value="2031">2031</option>
-                            <option value="2032">2032</option>
-                            <option value="2033">2033</option>
-                            <option value="2034">2034</option>
-                            <option value="2035">2035</option>
-                            <option value="2036">2036</option>
-                            <option value="2037">2037</option>
-                            <option value="2038">2038</option>
-                            <option value="2039">2039</option>
-                            <option value="2040">2040</option>
-                        </select>
-                    </form>
-                    
-                    <form class="w-full md:w-1/4 px-2 mb-4 md:mb-0">
-                        <label for="mesFilter" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Mês</label>
-                        <select id="mesFilter" class="bg-gray-50 border border-gray-300 text-gray-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Todos</option>
-                            <option value="01">Jan</option>
-                            <option value="02">Fev</option>
-                            <option value="03">Mar</option>
-                            <option value="04">Abr</option>
-                            <option value="05">Mai</option>
-                            <option value="06">Jun</option>
-                            <option value="07">Jul</option>
-                            <option value="08">Ago</option>
-                            <option value="09">Set</option>
-                            <option value="10">Out</option>
-                            <option value="11">Nov</option>
-                            <option value="12">Dez</option>
-                        </select>
-                    </form>
-                </div>
-                <div class="w-full md:w-1/4 px-2 mb-4 md:mb-0 flex items-center justify-end">
+               
+                <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
                     <button type="button" class="flex items-center justify-center flex-shrink-0 px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                         <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -267,57 +206,8 @@
     
         <fieldset class="bg-gray-100 mb-8 rounded-md w-full hidden" id="licencaPremioTable">
             <div class="flex flex-wrap mb-3 justify-between p-4 bg-gray-600">
-                <div class="flex flex-wrap w-full md:w-3/4">
-                    <form class="w-full md:w-1/4 px-2 mb-4 md:mb-0">
-                        <label for="anoFilter2" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Ano</label>
-                        <select id="anoFilter2" class="bg-gray-50 border border-gray-300 text-gray-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Todos</option>
-                            <option value="2018">2018</option>
-                            <option value="2019">2019</option>
-                            <option value="2020">2020</option>
-                            <option value="2021">2021</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                            <option value="2029">2029</option>
-                            <option value="2030">2030</option>
-                            <option value="2031">2031</option>
-                            <option value="2032">2032</option>
-                            <option value="2033">2033</option>
-                            <option value="2034">2034</option>
-                            <option value="2035">2035</option>
-                            <option value="2036">2036</option>
-                            <option value="2037">2037</option>
-                            <option value="2038">2038</option>
-                            <option value="2039">2039</option>
-                            <option value="2040">2040</option>
-                        </select>
-                    </form>
-                    
-                    <form class="w-full md:w-1/4 px-2 mb-4 md:mb-0">
-                        <label for="mesFilter" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Mês</label>
-                        <select id="mesFilter" class="bg-gray-50 border border-gray-300 text-gray-600 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            <option value="">Todos</option>
-                            <option value="01">Jan</option>
-                            <option value="02">Fev</option>
-                            <option value="03">Mar</option>
-                            <option value="04">Abr</option>
-                            <option value="05">Mai</option>
-                            <option value="06">Jun</option>
-                            <option value="07">Jul</option>
-                            <option value="08">Ago</option>
-                            <option value="09">Set</option>
-                            <option value="10">Out</option>
-                            <option value="11">Nov</option>
-                            <option value="12">Dez</option>
-                        </select>
-                    </form>
-                </div>
-                <div class="w-full md:w-1/4 px-2 mb-4 md:mb-0 flex items-center justify-end">
+                
+                <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
                     <button type="button" class="flex items-center justify-center flex-shrink-0 px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                         <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
