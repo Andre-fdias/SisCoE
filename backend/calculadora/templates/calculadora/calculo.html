@@ -1,0 +1,107 @@
+{% extends "base_login.html" %}
+{% load static %}
+{% block 'title' %} Consultar Efetivo{% endblock %}
+{% block 'head' %}
+
+
+{% endblock 'head' %}
+
+{% block content%}
+
+ 
+<style type="text/tailwindcss">
+    @layer utilities {
+      .form-control {
+        @apply text-gray-600 placeholder-gray-400 px-4 py-3 w-full rounded-lg focus:outline-none mb-4
+      }
+    }
+  </style>
+  
+<br>
+<br>
+  <div class="container mx-auto p-2 mt-8" id="cad_efetivo">
+      <fieldset class="p-4 mb-8 rounded-md w-full" id="second-fieldset">
+            <fieldset class="bg-gray-700 p-4 mb-4 rounded-md">
+                <div id="01" class="mb-4">
+                    <div class="bg-gray-700 p-4 rounded-md">
+                        <div class="flex flex-wrap items-center justify-between py-3">
+                            <div class="w-full md:w-9/12">
+                                <h1 class="text-3xl text-gray-200">Cálculo de Tempo de Serviço </h1>
+                            </div>
+                            <div class="w-full md:w-3/12 text-right">
+                              <a href="{% url 'core:index' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </fieldset>
+        <fieldset class="border bg-gray-200 border-gray-300 p-8 mb-4 rounded-md">
+                   
+        
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button class="mt-8 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-4 py-2 text-center me-2 mb-2" type="submit">Calcular</button>
+                </form>
+            
+        </fieldset>
+        <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
+            <div class="w-full">
+                <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação</h2>
+            </div>
+            {% if resultados %}
+            <div class="grid grid-cols-2 gap-4 ms-12">
+                <div>
+                    <div class="mb-4"> 
+                        <p class="text-lg text-gray-700"><strong>Data de Admissão:</strong> {{ resultados.calculo.data_admissao }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Dias da Admissão até Hoje:</strong>  {{  resultados.dias_totais }} dias</p> 
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Tempo em 01/01/2021:</strong> {{ resultados.tempo_01jan21 }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Total de Dias:</strong> {{ resultados.total_dias }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Averbação FFAA/PM/CBM:</strong> {{ resultados.calculo.tempo_ffaa_pm_cbm }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Averbação INSS/Outros:</strong> {{ resultados.calculo.tempo_inss_outros }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Afastamentos Descontáveis:</strong> {{ resultados.calculo.afastamentos }} dias</p>
+                    </div>
+                  
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>30 Anos em:</strong> {{ resultados.data_30anos }}</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Diferença para 30 Anos:</strong> {{ resultados.dif_30anos }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Pedágio 17%:</strong> {{ resultados.pedagio_17 }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>30 Anos + Pedágio:</strong> {{ resultados.data_30anos_pedagio }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>25 Anos em:</strong> {{ resultados.data_25anos }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Data Base:</strong> {{ resultados.data_base }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Acréscimo 4 Meses:</strong> {{ resultados.acrescimo_4meses }} dias</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-lg text-gray-700"><strong>Tempo de Atividade Militar:</strong> {{ resultados.data_tempo_militar }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </fieldset>
+</main>{% endblock %}

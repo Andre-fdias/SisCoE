@@ -2,6 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import User
 from .models import Profile
+from backend.documentos.models import Documento
+from django.shortcuts import render
+from backend.efetivo.models import Cadastro, Promocao, Imagem, DetalhesSituacao
+from datetime import datetime, date
+from django.db.models import Q
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from backend.agenda.models import Lembrete, Tarefa  # Importe os modelos Lembrete e Tarefa
 
 
 def capa(request):
@@ -9,12 +16,56 @@ def capa(request):
     return render(request, template_name)
 
 
-
-
 @login_required
-
 def index(request):
-    return render(request, 'index.html')
+    hoje = datetime.now()
+    mes_atual = hoje.month
+    ano_atual = hoje.year
+
+    aniversariantes_list = Cadastro.objects.filter(nasc__month=mes_atual).order_by('nasc__day').prefetch_related('imagens', 'promocoes', 'detalhes_situacao')
+
+    for funcionario in aniversariantes_list:
+        try:
+            funcionario.posto_grad_recente = funcionario.promocoes.latest('ultima_promocao').posto_grad
+        except Promocao.DoesNotExist:
+            funcionario.posto_grad_recente = None
+
+    paginator_aniversariantes = Paginator(aniversariantes_list, 10)
+    page_number = request.GET.get('page')
+
+    documentos_list = Documento.objects.all().order_by('-data_criacao')
+    paginator_documentos = Paginator(documentos_list, 10)
+    documentos_page_number = request.GET.get('documentos_page')
+
+    try:
+        page_obj = paginator_aniversariantes.get_page(page_number)
+        documentos_page_obj = paginator_documentos.get_page(documentos_page_number)
+    except PageNotAnInteger:
+        page_obj = paginator_aniversariantes.get_page(1)
+        documentos_page_obj = paginator_documentos.get_page(1)
+    except EmptyPage:
+        page_obj = paginator_aniversariantes.get_page(paginator_aniversariantes.num_pages)
+        documentos_page_obj = paginator_documentos.get_page(paginator_documentos.num_pages)
+
+    # Adicionando os lembretes e tarefas ao contexto
+    lembretes = Lembrete.objects.filter(user=request.user, data__year=hoje.year, data__month=hoje.month).order_by('data')
+    tarefas = Tarefa.objects.filter(user=request.user, data_inicio__year=hoje.year, data_inicio__month=hoje.month).order_by('data_inicio')
+
+    context = {
+        'page_obj': page_obj,
+        'documentos_page_obj': documentos_page_obj,
+        'mes_atual': mes_atual,
+        'meses': [
+            (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'),
+            (4, 'Abril'), (5, 'Maio'), (6, 'Junho'),
+            (7, 'Julho'), (8, 'Agosto'), (9, 'Setembro'),
+            (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
+        ],
+        'hoje': hoje,
+        'lembretes': lembretes,  # Adicionado
+        'tarefas': tarefas,      # Adicionado
+    }
+    return render(request, 'index.html', context)
 
 @login_required
 def dashboard(request):

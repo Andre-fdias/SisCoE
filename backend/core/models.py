@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from backend.efetivo.models import Cadastro  # Importe a model Cadastro
+from django.db import connection
+from django.conf import settings
 
 
 class Profile(models.Model):
@@ -99,11 +101,6 @@ class Profile(models.Model):
 
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.db import connection
-from django.conf import settings
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -111,10 +108,13 @@ def create_user_profile(sender, instance, created, **kwargs):
             if 'core_profile' in connection.introspection.table_names():
                 Profile.objects.create(user=instance)
         except Exception as e:
-            print(f"Erro ao criar perfil: {e}")
-
-
+            print(f"Erro ao criar perfil para o usuário {instance.email}: {e}")
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    try:
+        instance.profile.save()
+    except Profile.DoesNotExist:
+        Profile.objects.create(user=instance)
+    except Exception as e:
+        print(f"Erro ao salvar perfil para o usuário {instance.email}: {e}")

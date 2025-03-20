@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
 from django.contrib.messages import constants
-from decouple import Csv, config
+from decouple import config
+from decouple import Csv  # Adicione esta linha separadamente se necessário
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,7 +45,9 @@ INSTALLED_APPS = [
     'backend.municipios',
     'backend.documentos',
     'backend.agenda',
+    'backend.calculadora',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,7 +79,9 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'backend.wsgi.application'
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -196,4 +201,7 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
+
+DATE_FORMAT = 'd/m/Y'
+USE_L10N = False
 

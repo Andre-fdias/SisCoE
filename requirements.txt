@@ -1,25 +1,44 @@
+# requirements.txt
+
+
+# Django e extensões
 Django==5.1.4
 django-extensions==3.2.3
-gunicorn==23.0.0
-psycopg2-binary==2.9.10
-python-decouple==3.8
-whitenoise==6.8.2
-autopep8==2.3.1
-isort==5.13.2
-requests==2.32.3
-click==8.1.7
-djhtml==3.0.7
-six==1.17.0
 django-widget-tweaks==1.5.0
-django-compressor==4.5.1
-django-relativedelta==2.0.0
-python-dateutil==2.9.0.post0
-pillow==11.0.0
 django-seed==0.3.1
-jupyter==1.1.1
-Markdown==3.7
-langchain-groq==0.2.2
-fontawesome==5.10.1.post1
-pytz==2024.2
+django-compressor==4.5.1  # Nome CORRETO
+whitenoise==6.8.2
+Pillow==10.3.0
+
+# Banco de dados
 psycopg2-binary==2.9.10
+
+# Channels e ASGI
+channels==4.1.0
+channels_redis==4.2.1
+daphne==4.1.0
+
+# Configurações de ambiente
+python-decouple==3.8  # Versão CORRETA substituindo django-decouple
+
+# Frontend/Assets
 fontawesomefree==6.6.0
+
+
+# Utilitários
+python-dateutil==2.9.0.post0
+python-json-logger==3.3.0
+requests==2.32.3
+gunicorn==23.0.0
+orjson==3.10.15
+langchain-groq==0.2.2
+Markdown==3.7
+pytz==2024.2
+
+# Segurança
+argon2-cffi==23.1.0
+cryptography==42.0.5
+
+# Dev Tools (opcional para produção)
+ipython==9.0.2
+django-debug-toolbar==3.8.1  # Adicione se necessário
