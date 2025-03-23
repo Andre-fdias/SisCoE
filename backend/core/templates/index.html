@@ -23,30 +23,41 @@
     
     
 
-    <style type="text/tailwindcss">
+ 
+  <style type="text/tailwindcss">
       @layer utilities {
-        .form-control {
-          @apply text-gray-600 placeholder-gray-400 px-4 py-3 w-full rounded-lg focus:outline-none mb-4
-        }
+          .form-control {
+              @apply text-gray-600 placeholder-gray-400 px-4 py-3 w-full rounded-lg focus:outline-none mb-4
+          }
       }
 
-            /* Adicione isso no seu arquivo CSS global ou dentro de uma tag <style> */
-              .fc-theme-standard th {
-        background-color: #374151 !important; /* bg-gray-700 */
-        color: #e5e7eb !important; /* text-gray-200 */
-        padding: 0.5rem !important; /* p-2 */
+      .fc-theme-standard th {
+          background-color: #374151 !important;
+          color: #e5e7eb !important;
+          padding: 0.5rem !important;
       }
 
       .fc .fc-col-header-cell-cushion {
-        color: #e5e7eb !important; /* text-gray-200 */
+          color: #e5e7eb !important;
       }
-    </style>
+
+      .carousel-item {
+          transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .carousel-control:hover {
+          background-color: rgba(55, 65, 81, 0.6);
+      }
+  </style>
 
   </head>
+
+
   <body class="bg-gray-800 ">
     <div class="container mx-auto p-5">
-      <div class="flex flex-col md:flex-row md:justify-between items-center gap-4">
-        <!-- Item Esquerda (Logo) -->
+      <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:justify-between items-center gap-4">
+               <!-- Item Esquerda (Logo) -->
         <div class="flex-shrink-0 order-1">
             <div class="flex justify-center md:justify-start">
                 <img src="{% static 'img/logo-siscoe-black2.png' %}" 
@@ -143,7 +154,7 @@
       </div>
       
       
-      <!-- Main Navigation -->
+      <!-- Carrossel -->
 
       <div class="md:flex md:flex-row mt-20">
         <!-- Coluna esquerda -->
@@ -242,32 +253,26 @@
                 </div>
             </section>
         </div>
-    </div>
-    
-    <style>
-        .carousel-item {
-            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .carousel-control:hover {
-            background-color: rgba(55, 65, 81, 0.6);
-        }
-    </style>
-      
-      
-
-      <!-- cards 1 sectioin -->
-      <div class="lg:flex mb-4 m-10 rounded mx-auto">
-<!-- Card-2 -->
       </div>
-      <div id="pructs" class="my-20">
-     
+    
+      <style>
+          .carousel-item {
+              transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .carousel-control:hover {
+              background-color: rgba(55, 65, 81, 0.6);
+          }
+      </style>
+      
+        <!-- Cards Section -->
+      <div id="products" class="my-20 mt-24">
         <div class="grid grid-flow-row grid-cols-1 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           <div class="max-w-xs mx-auto bg-gray-900  rounded-lg overflow-hidden shadow-lg">
             
-             <img class="w-full"  src="{% static 'img/seu_perfil.jpeg' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
+              <img class="w-full"  src="{% static 'img/seu_perfil.jpeg' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
             </a>
             <div class="p-5">
-             
+              
               <div class="flex text-gray-400 flex-row my-3">
                   <h3 class="font-bold">Seu Perfil</h3>
               </div>
@@ -302,7 +307,7 @@
               <img class="w-full"  src="{% static 'img/cadastrar_cursos.jpg' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
             
             <div class="p-5">
-             
+              
               <div class="flex  text-gray-400 flex-row my-3">
                   <h3 class="font-bold">Cadastrar Cursos e Medalhas</h3>
               </div>
@@ -331,7 +336,7 @@
             <img  src="{% static 'img/calculadora.jpg' %}"  role="img" aria-label="people-circle" id="logo">
           
           <div class="p-5">
-             
+              
               <div class="flex text-gray-400 my-3">
                   <h3 class="font-bold">Calculadora de Tempo</h3>
               </div>
@@ -355,30 +360,31 @@
               </div>
             </div>
           </div>
-          <div class="max-w-xs mx-auto bg-gray-900  rounded-lg overflow-hidden shadow-lg">
+          <div class="max-w-xs w-full mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+
+            <img  src="{% static 'img/faisca.jpeg' %}"  role="img" aria-label="people-circle" id="logo">
+          
+          <div class="p-5">
             
-              <img class="w-full"  src="{% static 'img/admin.png' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
-            <div class="p-5">
-             
-              <div class="flex text-gray-400 flex-row my-3">
-                  <h3 class="font-bold">Administração</h3>
-              </div>
-              <div class="flex text-gray-400 flex-row my-3">
-                <p>
-                  Página exclusiva para uso da administração!
-                </p>
-              </div>
-              <div class="flex text-gray-400 flex-row my-3">
-                  <a href="">Acesse aqui! <i class="fas fa-chevron-right"></i></a>
-              </div>
+            <div class="flex text-gray-400 flex-row my-3">
+                <h3 class="font-bold">Faísca IA</h3>
+            </div>
+            <div class="flex text-gray-400 flex-row my-3">
+              <p>
+                Acesse aqui para duvidas sobre os processos internos dde forma geral.
+              </p>
+            </div>
+            <div class="flex text-gray-400 flex-row my-3">
+                <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
+            </div>
+          
+            <div class="flex flex-col xl:flex-row justify-between">
             
-              <div class="flex flex-col xl:flex-row justify-between mb-0">
-              
-                <a href="{% url 'core:dashboard' %}" class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm hover:bg-purple-700 flex flex-row justify-center" href="#">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                  Saiba Mais
+              <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Saiba Mais
                 </a>
               </div>
             </div>
@@ -386,151 +392,225 @@
         </div>
       </div> 
 
-
-      
-
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const carousel = document.getElementById('carousel');
-          const prevBtn = document.getElementById('prevBtn');
-          const nextBtn = document.getElementById('nextBtn');
-          let scrollAmount = 0;
-          const scrollStep = carousel.offsetWidth;
-      
-          nextBtn.addEventListener('click', () => {
-            scrollAmount += scrollStep;
-            if (scrollAmount > carousel.scrollWidth - carousel.offsetWidth) {
-              scrollAmount = 0;
-            }
-            carousel.style.transform = `translateX(-${scrollAmount}px)`;
-          });
-      
-          prevBtn.addEventListener('click', () => {
-            scrollAmount -= scrollStep;
-            if (scrollAmount < 0) {
-              scrollAmount = carousel.scrollWidth - carousel.offsetWidth;
-            }
-            carousel.style.transform = `translateX(-${scrollAmount}px)`;
-          });
-        });
-      </script>
        <!-- table aniversarinte Section -->
 
-       <div class="flex flex-wrap gap-4 bg-gray-00 p-4"> <!-- Container principal -->
-        <!-- Primeira Tabela -->
-        <div class="flex-1 min-w-[400px] bg-gray-900 rounded-lg shadow-lg">
-          <section class="container px-4 py-6 mx-auto">
-              <!-- Cabeçalho -->
-              <div class="sm:flex sm:items-center sm:justify-between">
-                  <div>
-                      <div class="flex items-center gap-x-3">
-                          <h2 class="text-2xl font-medium text-gray-300">Aniversariantes do Mês</h2>
-                          <span class="px-3 py-1 text-xs text-gray-100 bg-blue-900 rounded-full">
-                            {{ page_obj.paginator.count }} Aniversariantes
-                          </span>
+       <div class="flex flex-col lg:flex-row gap-6 bg-gray-800 p-4 rounded-lg">
+        <!-- Birthday Table -->
+        <div class="flex-1 bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+            <!-- Table Content -->
+            <section class="px-4 py-6">
+                <!-- Cabeçalho -->
+                <div class="sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <div class="flex items-center gap-x-3">
+                            <h2 class="text-2xl font-medium text-gray-300">Aniversariantes do Mês</h2>
+                            <span class="px-3 py-1 text-xs text-gray-100 bg-blue-900 rounded-full">
+                              {{ page_obj.paginator.count }} Aniversariantes
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">
+                            {% for mes in meses %}
+                                {% if mes.0 == mes_atual %}
+                                    Registrados em {{ mes.1 }} de {{ hoje.year }}
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+        
+                <!-- Tabela -->
+                <div class="flex flex-col mt-6">
+                  <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 py-3">
+                      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                          <div class="overflow-hidden border border-gray-700 md:rounded-lg">
+                              <table class="min-w-full divide-y divide-gray-700">
+                                  <!-- Cabeçalho da tabela -->
+                                  <thead class="bg-gray-800">
+                                      <tr>
+                                          <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500"></th> 
+                                          <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Posto/Grad</th>
+                                          <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Nome de Guerra</th>
+                                          <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Sgb</th>
+                                          <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Data</th>
+                                      </tr>
+                                  </thead>
+                                  
+                                  <!-- Corpo da tabela -->
+                                  <tbody class="bg-gray-700 divide-y divide-gray-700">
+                                      {% for funcionario in page_obj.object_list %}
+                                      <tr class="hover:bg-gray-600 transition-colors">
+                                          <td class="px-4 py-4 text-sm font-medium text-gray-300">
+                                              {% if funcionario.imagens.first %}
+                                                  <img src="{{ funcionario.imagens.first.image.url }}" alt="Foto de {{ funcionario.nome_de_guerra }}" class="w-10 h-10 rounded-full">
+                                              {% else %}
+                                                  Sem foto
+                                              {% endif %}
+                                          </td>
+                                  
+                                          <td class="px-4 py-4 text-sm font-medium text-gray-300">
+                                              <div class="flex flex-col items-center">
+                                                <span class="font-semibold">
+                                                  {% if funcionario.posto_grad_recente %}
+                                                  {{ funcionario.posto_grad_recente }}
+                                                  {% else %}
+                                                      Sem promoção
+                                                  {% endif %}
+                                                </span>
+                                                <span>
+                                                  {{ funcionario.re }}-  {{ funcionario.dig }}
+                                                </span>
+                                            </div>
+                                          </td>
+                                  
+                                          <td class="px-4 py-4 text-sm text-gray-300">
+                                              {{ funcionario.nome_de_guerra }}
+                                          </td>
+                                  
+                                          <td class="px-4 py-4 text-sm text-gray-300 text-center">
+                                            <div class="flex flex-col items-center">
+                                                <span class="font-semibold">
+                                                    {% if funcionario.detalhes_situacao.first %}
+                                                        {{ funcionario.detalhes_situacao.first.sgb }}
+                                                    {% else %}
+                                                        Sem SGB
+                                                    {% endif %}
+                                                </span>
+                                                <span>
+                                                    {% if funcionario.detalhes_situacao.first %}
+                                                        {{ funcionario.detalhes_situacao.first.posto_secao }}
+                                                    {% else %}
+                                                        Sem Posto/Seção
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </td>
+                                  
+                                          <td class="px-4 py-4 text-sm text-gray-300">
+                                              {{ funcionario.nasc|date:"d/m/Y" }}
+                                          </td>
+                                      </tr>
+                                      {% empty %}
+                                      <tr>
+                                          <td colspan="6" class="px-4 py-4 text-center text-gray-400">
+                                              Nenhum aniversariante registrado este mês
+                                          </td>
+                                      </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                          </div>
+                          
+                          <!-- Paginação -->
+                          <div class="mt-6 sm:flex sm:items-center sm:justify-between">
+                              <div class="text-sm text-gray-600">
+                                  Página <span class="font-medium">{{ page_obj.number }}</span> de 
+                                  <span class="font-medium">{{ page_obj.paginator.num_pages }}</span>
+                              </div>
+                              
+                              <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
+                                  {% if page_obj.has_previous %}
+                                      <a href="?page={{ page_obj.previous_page_number }}" 
+                                        class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
+                                          </svg>
+                                          <span>Anterior</span>
+                                      </a>
+                                  {% endif %}
+                                  
+                                  {% if page_obj.has_next %}
+                                      <a href="?page={{ page_obj.next_page_number }}" 
+                                        class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
+                                          <span>Próximo</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+                                          </svg>
+                                      </a>
+                                  {% endif %}
+                              </div>
+                          </div>
                       </div>
-                      <p class="mt-1 text-sm text-gray-500">
-                          {% for mes in meses %}
-                              {% if mes.0 == mes_atual %}
-                                  Registrados em {{ mes.1 }} de {{ hoje.year }}
-                              {% endif %}
-                          {% endfor %}
-                      </p>
                   </div>
               </div>
-      
-              <!-- Tabela -->
-              <div class="flex flex-col mt-6">
+            </section>
+        </div>
+
+        <!-- Documents Table -->
+        <div class="flex-1 bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+          <!-- Table Content -->
+          <section class="px-4 py-6">
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <h2 class="text-2xl font-medium text-gray-300">Últimos Documentos</h2>
+                        <span class="px-3 py-1 text-xs text-gray-100 bg-blue-900 rounded-full">
+                            {{ documentos_page_obj.paginator.count }} registros
+                        </span>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Documentos recentemente cadastrados no sistema</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col mt-6">
                 <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 py-3">
                     <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                         <div class="overflow-hidden border border-gray-700 md:rounded-lg">
                             <table class="min-w-full divide-y divide-gray-700">
-                                <!-- Cabeçalho da tabela -->
                                 <thead class="bg-gray-800">
                                     <tr>
-                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500"></th> 
-                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Posto/Grad</th>
-                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Nome de Guerra</th>
-                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Sgb</th>
-                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center text-gray-500">Data</th>
+                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Data</th>
+                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Número</th>
+                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Assunto</th>
+                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Tipo</th>
+                                        <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Anexos</th>
                                     </tr>
                                 </thead>
                                 
-                                <!-- Corpo da tabela -->
                                 <tbody class="bg-gray-700 divide-y divide-gray-700">
-                                    {% for funcionario in page_obj.object_list %}
-                                    <tr class="hover:bg-gray-600 transition-colors">
-                                        <td class="px-4 py-4 text-sm font-medium text-gray-300">
-                                            {% if funcionario.imagens.first %}
-                                                <img src="{{ funcionario.imagens.first.image.url }}" alt="Foto de {{ funcionario.nome_de_guerra }}" class="w-10 h-10 rounded-full">
-                                            {% else %}
-                                                Sem foto
-                                            {% endif %}
-                                        </td>
-                                
-                                        <td class="px-4 py-4 text-sm font-medium text-gray-300">
-                                            <div class="flex flex-col items-center">
-                                              <span class="font-semibold">
-                                                {% if funcionario.posto_grad_recente %}
-                                                {{ funcionario.posto_grad_recente }}
-                                                {% else %}
-                                                    Sem promoção
-                                                {% endif %}
-                                              </span>
-                                              <span>
-                                                {{ funcionario.re }}-  {{ funcionario.dig }}
-                                              </span>
-                                          </div>
-                                        </td>
-                                
-                                        <td class="px-4 py-4 text-sm text-gray-300">
-                                            {{ funcionario.nome_de_guerra }}
-                                        </td>
-                                
-                                        <td class="px-4 py-4 text-sm text-gray-300 text-center">
-                                          <div class="flex flex-col items-center">
-                                              <span class="font-semibold">
-                                                  {% if funcionario.detalhes_situacao.first %}
-                                                      {{ funcionario.detalhes_situacao.first.sgb }}
-                                                  {% else %}
-                                                      Sem SGB
-                                                  {% endif %}
-                                              </span>
-                                              <span>
-                                                  {% if funcionario.detalhes_situacao.first %}
-                                                      {{ funcionario.detalhes_situacao.first.posto_secao }}
-                                                  {% else %}
-                                                      Sem Posto/Seção
-                                                  {% endif %}
-                                              </span>
+                                  {% for documento in documentos_page_obj %}
+                                  <tr class="hover:bg-gray-600 transition-colors">
+                                      <td class="px-4 py-4 text-sm text-gray-300 whitespace-nowrap">
+                                          {{ documento.data_publicacao|date:"d/m/Y" }}
+                                      </td>
+                                      <td class="px-4 py-4 text-sm text-gray-300">
+                                          <a href="{% url 'documentos:detalhe_documento' documento.id %}" class="text-blue-500 hover:text-blue-400 transition-colors">
+                                              {{ documento.numero_documento }}
+                                          </a>
+                                      </td>
+                                      <td class="px-4 py-4 text-sm text-gray-300">
+                                          <div class="flex flex-col">
+                                              <span class="font-medium">{{ documento.assunto|truncatechars:30 }}</span>
+                                              <span class="text-xs text-gray-400">{{ documento.descricao|truncatechars:40 }}</span>
                                           </div>
                                       </td>
-                                
-                                        <td class="px-4 py-4 text-sm text-gray-300">
-                                            {{ funcionario.nasc|date:"d/m/Y" }}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="6" class="px-4 py-4 text-center text-gray-400">
-                                            Nenhum aniversariante registrado este mês
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
+                                      <td class="px-4 py-4 text-sm">
+                                          {{ documento.tipo_badge|safe }}
+                                      </td>
+                                      <td class="px-4 py-4 text-sm text-gray-300">
+                                          {{ documento.anexos_info }}
+                                      </td>
+                                  </tr>
+                                  {% empty %}
+                                  <tr>
+                                      <td colspan="5" class="px-4 py-4 text-center text-gray-400">
+                                          Nenhum documento encontrado
+                                      </td>
+                                  </tr>
+                                  {% endfor %}
+                              </tbody>
                             </table>
                         </div>
-                        
-                        <!-- Paginação -->
+
+                        <!-- Paginação Documentos -->
                         <div class="mt-6 sm:flex sm:items-center sm:justify-between">
                             <div class="text-sm text-gray-600">
-                                Página <span class="font-medium">{{ page_obj.number }}</span> de 
-                                <span class="font-medium">{{ page_obj.paginator.num_pages }}</span>
+                                Página <span class="font-medium">{{ documentos_page_obj.number }}</span> de 
+                                <span class="font-medium">{{ documentos_page_obj.paginator.num_pages }}</span>
                             </div>
                             
                             <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-                                {% if page_obj.has_previous %}
-                                    <a href="?page={{ page_obj.previous_page_number }}" 
+                                {% if documentos_page_obj.has_previous %}
+                                    <a href="?documentos_page={{ documentos_page_obj.previous_page_number }}" 
                                       class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
@@ -539,8 +619,8 @@
                                     </a>
                                 {% endif %}
                                 
-                                {% if page_obj.has_next %}
-                                    <a href="?page={{ page_obj.next_page_number }}" 
+                                {% if documentos_page_obj.has_next %}
+                                    <a href="?documentos_page={{ documentos_page_obj.next_page_number }}" 
                                       class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
                                         <span>Próximo</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
@@ -554,351 +634,541 @@
                 </div>
             </div>
           </section>
-      </div>
-
-    <!-- Segunda Tabela -->
-  <!-- Nova Tabela de Documentos -->
-<!-- Tabela de Documentos -->
-<div class="flex-1 min-w-[400px] bg-gray-900 rounded-lg shadow-lg">
-  <section class="container px-4 py-6 mx-auto">
-      <div class="sm:flex sm:items-center sm:justify-between">
-          <div>
-              <div class="flex items-center gap-x-3">
-                  <h2 class="text-2xl font-medium text-gray-300">Últimos Documentos</h2>
-                  <span class="px-3 py-1 text-xs text-gray-100 bg-blue-900 rounded-full">
-                      {{ documentos_page_obj.paginator.count }} registros
-                  </span>
-              </div>
-              <p class="mt-1 text-sm text-gray-500">Documentos recentemente cadastrados no sistema</p>
-          </div>
-      </div>
-
-      <div class="flex flex-col mt-6">
-          <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 py-3">
-              <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                  <div class="overflow-hidden border border-gray-700 md:rounded-lg">
-                      <table class="min-w-full divide-y divide-gray-700">
-                          <thead class="bg-gray-800">
-                              <tr>
-                                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Data</th>
-                                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Número</th>
-                                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Assunto</th>
-                                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Tipo</th>
-                                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left text-gray-500">Anexos</th>
-                              </tr>
-                          </thead>
-                          
-                          <tbody class="bg-gray-700 divide-y divide-gray-700">
-                            {% for documento in documentos_page_obj %}
-                            <tr class="hover:bg-gray-600 transition-colors">
-                                <td class="px-4 py-4 text-sm text-gray-300 whitespace-nowrap">
-                                    {{ documento.data_publicacao|date:"d/m/Y" }}
-                                </td>
-                                <td class="px-4 py-4 text-sm text-gray-300">
-                                    <a href="{% url 'documentos:detalhe_documento' documento.id %}" class="text-blue-500 hover:text-blue-400 transition-colors">
-                                        {{ documento.numero_documento }}
-                                    </a>
-                                </td>
-                                <td class="px-4 py-4 text-sm text-gray-300">
-                                    <div class="flex flex-col">
-                                        <span class="font-medium">{{ documento.assunto|truncatechars:30 }}</span>
-                                        <span class="text-xs text-gray-400">{{ documento.descricao|truncatechars:40 }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-4 text-sm">
-                                    {{ documento.tipo_badge|safe }}
-                                </td>
-                                <td class="px-4 py-4 text-sm text-gray-300">
-                                    {{ documento.anexos_info }}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="px-4 py-4 text-center text-gray-400">
-                                    Nenhum documento encontrado
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                      </table>
-                  </div>
-
-                  <!-- Paginação Documentos -->
-                  <div class="mt-6 sm:flex sm:items-center sm:justify-between">
-                      <div class="text-sm text-gray-600">
-                          Página <span class="font-medium">{{ documentos_page_obj.number }}</span> de 
-                          <span class="font-medium">{{ documentos_page_obj.paginator.num_pages }}</span>
-                      </div>
-                      
-                      <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-                          {% if documentos_page_obj.has_previous %}
-                              <a href="?documentos_page={{ documentos_page_obj.previous_page_number }}" 
-                                 class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
-                                  </svg>
-                                  <span>Anterior</span>
-                              </a>
-                          {% endif %}
-                          
-                          {% if documentos_page_obj.has_next %}
-                              <a href="?documentos_page={{ documentos_page_obj.next_page_number }}" 
-                                 class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-200 capitalize transition-colors duration-200 bg-blue-500 rounded-md sm:w-auto gap-x-2 hover:bg-blue-600">
-                                  <span>Próximo</span>
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-                                  </svg>
-                              </a>
-                          {% endif %}
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </section>
-</div>
        </div>
+       </div>
+   
+       <!-- Calendar Section -->
+       <div class="mb-24 mt-24 rounded-lg">
+          <div class="flex flex-col lg:flex-row gap-6 overflow-hidden">
+<!-- Container Principal -->
+<div class="flex-1 min-w-0 w-full">
+  <div class="grid lg:grid-cols-[45%_55%] gap-6 p-4 rounded-lg">
+      <div class="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+          <section class="px-4 py-6 h-full">
+              <h2 class="text-xl font-medium text-gray-300 mb-4">Calendário de Feriados</h2>
+              <div id="mini-calendar" class="mt-2"></div>
+          </section>
+      </div>
+
+      <script>
+        $(document).ready(function() {
+            const countryCode = 'BR';
+            const stateCode = 'SP';
     
-       <!-- Cards 2 Section -->
+            // Feriados Municipais (15º GB)
+            const municipalHolidays = {
+                "Sorocaba": [
+                    { name: "Aniversário de Sorocaba", date: "06-15" },
+                    { name: "Dia do Padroeiro (São Pedro)", date: "06-29" }
+                ],
+                "Votorantim": [
+                    { name: "Aniversário de Votorantim", date: "08-25" }
+                ],
+                "Piedade": [
+                    { name: "Aniversário de Piedade", date: "07-02" }
+                ],
+                "Itu": [
+                    { name: "Aniversário de Itu", date: "02-02" }
+                ],
+                "Porto Feliz": [
+                    { name: "Aniversário de Porto Feliz", date: "09-10" }
+                ],
+                "Salto": [
+                    { name: "Aniversário de Salto", date: "08-10" }
+                ],
+                "São Roque": [
+                    { name: "Aniversário de São Roque", date: "08-16" }
+                ],
+                "Ibiúna": [
+                    { name: "Aniversário de Ibiúna", date: "03-24" }
+                ],
+                "Itapeva": [
+                    { name: "Aniversário de Itapeva", date: "09-20" }
+                ],
+                "Itararé": [
+                    { name: "Aniversário de Itararé", date: "05-20" }
+                ],
+                "Apiaí": [
+                    { name: "Aniversário de Apiaí", date: "03-18" }
+                ],
+                "Capão Bonito": [
+                    { name: "Aniversário de Capão Bonito", date: "04-19" }
+                ],
+                "Itapetininga": [
+                    { name: "Aniversário de Itapetininga", date: "11-05" }
+                ],
+                "Angatuba": [
+                    { name: "Aniversário de Angatuba", date: "12-20" }
+                ],
+                "Boituva": [
+                    { name: "Aniversário de Boituva", date: "12-23" }
+                ],
+                "Tatuí": [
+                    { name: "Aniversário de Tatuí", date: "08-11" }
+                ],
+                "Tietê": [
+                    { name: "Aniversário de Tietê", date: "03-21" }
+                ],
+                "Laranjal Paulista": [
+                    { name: "Aniversário de Laranjal Paulista", date: "10-27" }
+                ],
+                "Botucatu": [
+                    { name: "Aniversário de Botucatu", date: "04-14" }
+                ],
+                "Itaí": [
+                    { name: "Aniversário de Itaí", date: "08-26" }
+                ],
+                "Avaré": [
+                    { name: "Aniversário de Avaré", date: "09-15" }
+                ],
+                "Itatinga": [
+                    { name: "Aniversário de Itatinga", date: "12-20" }
+                ],
+                "Piraju": [
+                    { name: "Aniversário de Piraju", date: "03-21" }
+                ]
+            };
+    
+            // Datas Comemorativas do 15º GB
+            const bombeiroHolidays = [
+                { name: "Dia do Bombeiro (15º GB)", date: "07-02", color: '#f59e0b' },
+                { name: "Fundação do 15º GB", date: "10-10", color: '#f59e0b' }
+            ];
+    
+            function getHolidays(year) {
+                return $.ajax({
+                    url: `https://brasilapi.com.br/api/feriados/v3/${year}`,
+                    method: 'GET'
+                }).fail(function(error) {
+                    console.error("Erro ao buscar feriados da Brasil API:", error);
+                    // Retorna um array vazio para evitar erros no processamento
+                    return $.Deferred().resolve([]);
+                });
+            }
+    
+            $('#mini-calendar').fullCalendar({
+                locale: 'pt-br',
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay,list'
+                },
+                defaultView: 'month',
+                events: function(start, end, timezone, callback) {
+                    const year = start.year();
+    
+                    getHolidays(year).then(feriados => {
+                        // Feriados Nacionais (API)
+                        const national = feriados.map(feriado => ({
+                            title: feriado.localName,
+                            start: feriado.date,
+                            color: '#ef4444',
+                            description: `Feriado Nacional - ${feriado.name}`
+                        }));
+    
+                        // Feriados Estaduais SP (API)
+                        const state = [
+                            {
+                                title: "Revolução Constitucionalista",
+                                start: `${year}-07-09`,
+                                color: '#3b82f6',
+                                description: "Feriado Estadual - SP"
+                            }
+                        ];
+    
+                        // Feriados Municipais
+                        const municipal = Object.entries(municipalHolidays).flatMap(([city, holidays]) =>
+                            holidays.map(feriado => ({
+                                title: `<span class="math-inline">\{feriado\.name\} \(</span>{city})`,
+                                start: `<span class="math-inline">\{year\}\-</span>{feriado.date.replace(/(\d{2})-(\d{2})/, '$1-$2')}`,
+                                color: '#10b981',
+                                description: `Feriado Municipal - ${city}`
+                            }))
+                        );
+    
+                        // Datas do 15º GB
+                        const bombeiro = bombeiroHolidays.map(feriado => ({
+                            title: feriado.name,
+                            start: `<span class="math-inline">\{year\}\-</span>{feriado.date.replace(/(\d{2})-(\d{2})/, '$1-$2')}`,
+                            color: feriado.color,
+                            description: "Data Comemorativa - 15º Grupamento de Bombeiros"
+                        }));
+    
+                        // Feriados Nacionais (Manual)
+                        const nationalManual = [
+                            { title: "Confraternização Universal", start: `${year}-01-01`, color: '#ef4444', description: "Feriado Nacional" },
+                            { title: "Tiradentes", start: `${year}-04-21`, color: '#ef4444', description: "Feriado Nacional" },
+                            { title: "Dia do Trabalho", start: `${year}-05-01`, color: '#ef4444', description:  "Feriado Nacional" },
+                            { title: "Independência do Brasil", start: `${year}-09-07`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Nossa Senhora Aparecida", start: `${year}-10-12`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Finados", start: `${year}-11-02`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Proclamação da República", start: `${year}-11-15`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Natal", start: `${year}-12-25`, color: '#ef4444', description: "Feriado Nacional" }
+                    ];
 
-      <div class="my-20">  
-        <div class="grid grid-flow-row grid-cols-1 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-          <div class="max-w-xs w-full mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                    // Feriado Estadual SP (Manual)
+                    const stateManual = [
+                        { title: "Revolução Constitucionalista", start: `${year}-07-09`, color: '#3b82f6', description: "Feriado Estadual - SP" }
+                    ];
 
-              <img  src="{% static 'img/faisca.jpeg' %}"  role="img" aria-label="people-circle" id="logo">
-            
-            <div class="p-5">
-             
-              <div class="flex text-gray-400 flex-row my-3">
-                  <h3 class="font-bold">Faísca IA</h3>
-              </div>
-              <div class="flex text-gray-400 flex-row my-3">
-                <p>
-                  Acesse aqui para duvidas sobre os processos internos dde forma geral.
-                </p>
-              </div>
-              <div class="flex text-gray-400 flex-row my-3">
-                  <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
-              </div>
-            
-              <div class="flex flex-col xl:flex-row justify-between">
-              
-                <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                  Saiba Mais
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                    callback([...national, ...state, ...municipal, ...bombeiro, ...nationalManual, ...stateManual]);
+                }).catch(error => {
+                    console.error('Erro:', error);
+                    // Adicione os feriados manuais mesmo em caso de erro da API
+                    const nationalManual = [
+                        { title: "Confraternização Universal", start: `${year}-01-01`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Tiradentes", start: `${year}-04-21`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Dia do Trabalho", start: `${year}-05-01`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Independência do Brasil", start: `${year}-09-07`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Nossa Senhora Aparecida", start: `${year}-10-12`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Finados", start: `${year}-11-02`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Proclamação da República", start: `${year}-11-15`, color: '#ef4444', description: "Feriado Nacional" },
+                        { title: "Natal", start: `${year}-12-25`, color: '#ef4444', description: "Feriado Nacional" }
+                    ];
 
-            <img  src="{% static 'img/links.jpg' %}"  role="img" aria-label="people-circle" id="logo">
-          
-          <div class="p-5">
-             
-              <div class="flex text-gray-400 flex-row my-3">
-                  <h3 class="font-bold">Links Úteis</h3>
-              </div>
-              <div class="flex text-gray-400 flex-row my-3">
-                <p>
-                  Acesso aos mais variadas páginas online!                 
-                </p>
-              </div>
-              <div class="flex  text-gray-400 flex-row my-3 fixed-0">
-                  <a href="">Pesquise! <i class="fas fa-chevron-right"></i></a>
-              </div>
-            
-              <div class="flex  text-gray-400 flex-col xl:flex-row justify-between">
-              
-                <a class=" text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                  Saiba Mais
-                </a>
-              </div>
-            </div>
-          </div>
-         
-        
-          <div class="max-w-xs mx-auto bg-white rounded-lg overflow-hidden shadow-lg ">
-            <div class="lg:w-35 w-full bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-gray-700 p-12">
-              <h3 class="text-2xl font-extrabold mb-4">Fale Conosco</h3>
-              <p class="mb-4 leading-relaxed">Envie uma mensagem e diga como podemos te ajudar.</p>
-              <div>
-                <form action="{% url 'crm:send_contact' %}" method="POST">
-                  {% csrf_token %}
-                  <input
-                    id="id_name"
-                    name="name"
-                    type="text"
-                    class="form-control"
-                    placeholder="Seu Nome"
-                  />
-                  <input
-                    id="id_email"
-                    name="email"
-                    type="email"
-                    class="form-control"
-                    placeholder="Seu E-mail"
-                  />
-                  <input
-                    id="id_title"
-                    name="title"
-                    type="text"
-                    class="form-control"
-                    placeholder="Título da mensagem"
-                  />
-                  <textarea
-                    id="id_body"
-                    name="body"
-                    type="text"
-                    class="form-control  "
-                    rows="10"
-                    placeholder="Favor informar seu Posto ou Graduação, RE, Nome e Posto em que trabalha"
-                  ></textarea>
-                  <button type="submit" class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 shadow-lg shadow-cyan-500/50 dark:shadow-lg dark:shadow-cyan-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 hover:bg-purple-700 text-white py-3 rounded-lg w-full">Enviar</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> 
-      
-
-      <div class="flex flex-wrap gap-4 bg-gray-900 p-4 mb-8"> <div class="flex-1 min-w-[400px] bg-gray-900 rounded-lg shadow-lg">
-        <section class="container px-4 py-6 mx-auto">
-          <div class="flex flex-col md:flex-row-reverse gap-4 bg-gray-700 p-4">
-            <!-- Calendário à Direita -->
-            <div class="flex-1 min-w-[400px] bg-gray-900 rounded-lg shadow-lg">
-                <section class="container px-4 py-6 mx-auto">
-                    <h2 class="text-xl font-medium text-gray-300 mb-4">Calendário</h2>
-                    <div id="mini-calendar" class="mt-2"></div>
-                </section>
-            </div>
-        
-            <!-- Tabela de Compromissos à Esquerda -->
-            <div class="flex-1 min-w-[400px] bg-gray-900 rounded-lg shadow-lg">
-                <section class="container px-4 py-6 mx-auto">
-                    <h2 class="text-xl font-medium text-gray-300 mb-4">Lista de Compromissos</h2>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-700">
-                            <thead class="bg-gray-800">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Título</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Data/Hora</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Tipo</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Cor</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-gray-800 divide-y divide-gray-700">
-                                <!-- Conteúdo da tabela mantido igual -->
-                                {% for lembrete in lembretes %}
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.titulo }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.data|date:"d/m/Y H:i" }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">Lembrete</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="w-4 h-4 rounded-full" style="background-color: {{ lembrete.cor }}"></div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                
-                                {% for tarefa in tarefas %}
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ tarefa.titulo }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">
-                                        {{ tarefa.data_inicio|date:"d/m/Y H:i" }} - 
-                                        {{ tarefa.data_fim|date:"d/m/Y H:i" }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-300">Tarefa</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="w-4 h-4 rounded-full" style="background-color: {{ tarefa.cor }}"></div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                
-                                {% if not lembretes and not tarefas %}
-                                <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-400">Nenhum compromisso encontrado</td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                            
-                        </table>
-                    </div>
-                </section>
-            </div>
-        </div>
-            </section>
-    </div>
-
-
-</div>
-
-<script>
-    $(document).ready(function() {
-        $('#mini-calendar').fullCalendar({
-            locale: 'pt-br',
-            header: {
-                left: 'prev,next today',
-                center: 'title',
-                right: ''
+                    // Feriado Estadual (adicionado manualmente)
+                    const stateManual = [
+                        { title: "Revolução Constitucionalista", start: `${year}-07-09`, color: '#3b82f6', description: "Feriado Estadual - SP" }
+                    ];
+                    callback([...nationalManual, ...stateManual]);
+                });
             },
-            defaultView: 'month',
-            events: [
-                {% for lembrete in lembretes %}
-                {
-                    title: '{{ lembrete.titulo }} (Lembrete)',
-                    start: '{{ lembrete.data|date:"Y-m-dTH:i:s" }}',
-                    color: '{{ lembrete.cor }}',
-                    allDay: false
-                },
-                {% endfor %}
-                {% for tarefa in tarefas %}
-                {
-                    title: '{{ tarefa.titulo }} (Tarefa)',
-                    start: '{{ tarefa.data_inicio|date:"Y-m-dTH:i:s" }}',
-                    end: '{{ tarefa.data_fim|date:"Y-m-dTH:i:s" }}',
-                    color: '{{ tarefa.cor }}',
-                    allDay: false
-                },
-                {% endfor %}
-            ],
+            eventRender: function(event, element) {
+                element.popover({
+                    title: `<div class="flex items-center gap-2">
+                                      <div class="w-3 h-3 rounded-full" style="background:${event.color}"></div>
+                                      <span class="text-gray-200">${event.title}</span>
+                                    </div>`,
+                    content: `<p class="text-gray-300">${event.description}</p>`,
+                    trigger: 'hover',
+                    placement: 'top',
+                    container: 'body',
+                    html: true
+                }).css({
+                    'border-radius': '4px',
+                    'padding': '2px 8px',
+                    'margin': '2px',
+                    'border': `2px solid ${event.color}`,
+                    'background-color': `${event.color}20`,
+                    'color': '#e5e7eb',
+                    'font-weight': '500'
+                });
+            },
             dayRender: function(date, cell) {
-                var dayOfYear = date.dayOfYear();
-                var colorIndex = dayOfYear % 3;
-
-                if (colorIndex === 0) {
-                    cell.css("background-color", "green");
-                } else if (colorIndex === 1) {
-                    cell.css("background-color", "yellow");
-                } else {
-                    cell.css("background-color", "blue");
+                // Restaurar formatação original das células
+                const dayOfYear = date.dayOfYear();
+                const colors = ['bg-green-700', 'bg-yellow-500', 'bg-blue-900'];
+                cell.addClass(colors[dayOfYear % 3]);
+            },
+            viewRender: function(view) {
+                $('.fc-center h2')
+                    .addClass('text-gray-200 font-semibold')
+                    .css('font-size', '1.25rem');
+                $('.fc-today-button').addClass('text-white bg-gray-500 hover:bg-gray-700 px-4 py-2 rounded-md'); // Adicionado
+            },
+            views: {
+                list: {
+                    listDayFormat: 'DD [de] MMMM [de] YYYY',
+                    listDayAltFormat: 'DD [de] MMMM [de] YYYY',
+                    listWeekends: true,
+                    listGroupField: 'start',
+                    listGroupFormat: { month: 'long', day: 'numeric', year: 'numeric' },
+                    visibleRange: function(currentDate) {
+                        return {
+                            start: currentDate.clone().startOf('day'),
+                            end: currentDate.clone().add(1, 'year')
+                        };
+                    }
                 }
             },
-            selectable: false,
-            selectHelper: false,
-            editable: false,
-            eventClick: function(event) {}
         });
     });
 </script>
-      <!-- Fale conosco Section -->
+    
+    
 
-      <div id="contato" class="flex  w-full flex-row rounded-lg shadow-lg my-15">
+</script>
+                      <!-- Tabela de Compromissos (55%) -->
+                      <div class="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+                          <section class="px-4 py-6 h-full flex flex-col">
+                              <h2 class="text-xl font-medium text-gray-300 mb-4">Lista de Compromissos</h2>
+                              <div class="overflow-x-auto flex-1">
+                                  <table class="min-w-full divide-y divide-gray-700">
+                                      <thead class="bg-gray-800">
+                                          <tr>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Título</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Data/Hora</th>
+                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Cor</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody class="bg-gray-800 divide-y divide-gray-700">
+                                          <!-- Conteúdo mantido igual -->
+                                          {% for lembrete in lembretes %}
+                                          <tr>
+                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.titulo }}</td>
+                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.data|date:"d/m/Y H:i" }}</td>
+                                              <td class="px-6 py-4 whitespace-nowrap">
+                                                  <div class="w-4 h-4 rounded-full" style="background-color: {{ lembrete.cor }}"></div>
+                                              </td>
+                                          </tr>
+                                          {% endfor %}
+                                          
+                                          {% for tarefa in tarefas %}
+                                          <tr>
+                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ tarefa.titulo }}</td>
+                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">
+                                                  {{ tarefa.data_inicio|date:"d/m/Y H:i" }} - 
+                                                  {{ tarefa.data_fim|date:"d/m/Y H:i" }}
+                                              </td>
+                                              <td class="px-6 py-4 whitespace-nowrap">
+                                                  <div class="w-4 h-4 rounded-full" style="background-color: {{ tarefa.cor }}"></div>
+                                              </td>
+                                          </tr>
+                                          {% endfor %}
+                                          
+                                          {% if not lembretes and not tarefas %}
+                                          <tr>
+                                              <td colspan="4" class="px-6 py-4 text-center text-gray-400">Nenhum compromisso encontrado</td>
+                                          </tr>
+                                          {% endif %}
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </section>
+                      </div>
+                  </div>
+              </div>
+          </div>
        </div>
+                
+
+
+
+   <!-- Fale conosco Section -->
+      <!-- Badge Flutuante -->
+      <button onclick="openModal()" class="fixed bottom-4 right-4 w-16 h-16 rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-white text-2xl animate-bounce">
+        ✉️
+      </button>
+      
+      <!-- Modal -->
+      <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl relative">
+            <!-- Botão Fechar -->
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                ✕
+            </button>
+            
+            <!-- Conteúdo do Modal -->
+            <div class="p-8 bg-gradient-to-r from-indigo-200 via-purple-300 to-pink-200  rounded-lg">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Fale Conosco</h2>
+                
+                <form action="{% url 'crm:send_contact' %}" method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="id_name" class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+                            <input
+                                id="id_name"
+                                name="name"
+                                type="text"
+                                required
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Ex: João da Silva"
+                            />
+                        </div>
+      
+                        <div>
+                            <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                            <input
+                                id="id_email"
+                                name="email"
+                                type="email"
+                                required
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="seu.email@exemplo.com"
+                            />
+                        </div>
+      
+                        <div>
+                            <label for="id_title" class="block text-sm font-medium text-gray-700 mb-1">Assunto</label>
+                            <input
+                                id="id_title"
+                                name="title"
+                                type="text"
+                                required
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Título da mensagem"
+                            />
+                        </div>
+      
+                        <div>
+                            <label for="id_body" class="block text-sm font-medium text-gray-700 mb-1">Mensagem</label>
+                            <textarea
+                                id="id_body"
+                                name="body"
+                                required
+                                rows="5"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="Informe seu Posto/Graduação, RE, Nome completo e local de trabalho"
+                            ></textarea>
+                        </div>
+                    </div>
+      
+                    <button
+                        type="submit"
+                        class="w-full px-6 py-3 bg-gradient-to-r from-cyan-400 to-cyan-600 hover:from-cyan-500 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
+                    >
+                        Enviar Mensagem
+                    </button>
+                </form>
+            </div>
+        </div>
+      </div>
+      
+      <script>
+        function openModal() {
+            document.getElementById('contactModal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+      
+        function closeModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+      
+        // Fechar modal ao clicar fora
+        document.getElementById('contactModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+      
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+      </script>
+
+   
+
+
+   
+
+
+
+    <div class="footer mt-8 bg-gray-900 rounded-lg">
+      <ul class="flex justify-start items-center overflow-x-auto whitespace-nowrap px-4 space-x-12 py-4">
+          <!-- Cobom Online Duplicado -->
+          <li class="flex-shrink-0">
+              <a href="http://cobomonline.ccb.policiamilitar.sp.gov.br/Singes/login" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="Cobom Online" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">Cobom Online</span>
+              </a>
+          </li>
+        <!-- CB Duplicado -->
+
+          <li class="flex-shrink-0">
+            <a href="http://prdwiang.ccb.policiamilitar.sp.gov.br/intranetCB/#/" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                <img src="{% static 'img/brasao.png' %}" alt="CB" class="w-16 h-16 mb-2">
+                <span class="text-gray-200 text-sm">CB</span>
+            </a>
+        </li>
+          <li class="flex-shrink-0">
+              <a href="https://doe.sp.gov.br/" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/logo_DO.jpeg' %}" alt="Cobom Online" class="w-20 h-12 mb-2 rounded-md">
+                  <span class="text-gray-200 text-sm">DOE SP</span>
+              </a>
+          </li>
+
+          <!-- CB Duplicado -->
+          <li class="flex-shrink-0">
+            <a href="https://ead.pmesp.org/login/index.php" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                <img src="https://ead.pmesp.org/pluginfile.php/1/core_admin/logo/0x200/1739404529/Logo-EAD_Fundo-Quadrado-Claro_Alfa.png" alt="EAD Pmesp" class="w-16 h-16 mb-2">
+                <span class="text-gray-200 text-sm">EAD Pmesp</span>
+            </a>
+        </li>
+          <li class="flex-shrink-0">
+            <a href="https://ead.pmesp.org/login/index.php" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                <img src="https://ead.pmesp.org/pluginfile.php/1/core_admin/logo/0x200/1739404529/Logo-EAD_Fundo-Quadrado-Claro_Alfa.png" alt="EAD Pmesp" class="w-16 h-16 mb-2">
+                <span class="text-gray-200 text-sm">EAD Pmesp</span>
+            </a>
+        </li>
+          <!-- EAD Pmesp Duplicado -->
+          <li class="flex-shrink-0">
+              <a href="https://ead.pmesp.org/login/index.php" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="https://ead.pmesp.org/pluginfile.php/1/core_admin/logo/0x200/1739404529/Logo-EAD_Fundo-Quadrado-Claro_Alfa.png" alt="EAD Pmesp" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">EAD Pmesp</span>
+              </a>
+          </li>
+          <li class="flex-shrink-0">
+              <a href="https://ead.pmesp.org/login/index.php" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="https://ead.pmesp.org/pluginfile.php/1/core_admin/logo/0x200/1739404529/Logo-EAD_Fundo-Quadrado-Claro_Alfa.png" alt="EAD Pmesp" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">EAD Pmesp</span>
+              </a>
+          </li>
+
+          <!-- FCT Duplicado -->
+          <li class="flex-shrink-0">
+              <a href="https://www.fazenda.sp.gov.br/saf/usogeral/login.aspx" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="FCT" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">FCT</span>
+              </a>
+          </li>
+          <li class="flex-shrink-0">
+              <a href="https://www.fazenda.sp.gov.br/saf/usogeral/login.aspx" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="FCT" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">FCT</span>
+              </a>
+          </li>
+
+          <!-- Holerite Duplicado -->
+          <li class="flex-shrink-0">
+              <a href="https://www.ciaf.policiamilitar.sp.gov.br/folhadepagamento/autenticacaosegura.aspx" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="Holerite" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">Holerite</span>
+              </a>
+          </li>
+          <li class="flex-shrink-0">
+              <a href="https://www.ciaf.policiamilitar.sp.gov.br/folhadepagamento/autenticacaosegura.aspx" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="Holerite" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">Holerite</span>
+              </a>
+          </li>
+
+          <!-- Serviços ao PM Duplicado -->
+          <li class="flex-shrink-0">
+              <a href="https://www.policiamilitar.sp.gov.br/servico-ao-pm/login" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="Serviços ao PM" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">Serviços ao PM</span>
+              </a>
+          </li>
+          <li class="flex-shrink-0">
+              <a href="https://www.policiamilitar.sp.gov.br/servico-ao-pm/login" target="_blank" class="flex flex-col items-center min-w-[120px]">
+                  <img src="{% static 'img/brasao.png' %}" alt="Serviços ao PM" class="w-16 h-16 mb-2">
+                  <span class="text-gray-200 text-sm">Serviços ao PM</span>
+              </a>
+          </li>
+      </ul>
+    </div>
+    <div class="flex flex-col justify-center text-center p-4 text-xs w-full">
+      <div id="contato" class="flex  w-full flex-row rounded-lg shadow-lg my-15">
+      </div>
 
       <div class="border-t-2 border-gray-600 flex flex-col md:flex-row md:justify-between text-center py-5 text-sm">
         <div class="mb-4 text-gray-400">
           <a href="#" class="mx-2.5">SisCoE &copy; 2024</a>
         </div>
         <p class="text-gray-400"  >by André Fonseca Dias</p>
-      </div><!-- Footer Section -->
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    </div>
+      
+ 
   </body>
 </html>
