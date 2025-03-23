@@ -343,7 +343,7 @@
         function openModal(modalId) {
             document.getElementById(modalId).classList.remove('hidden');
         }
-        
+    
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
         }
@@ -356,91 +356,117 @@
                 document.getElementById('tarefaDataFim').value = date.format('YYYY-MM-DDTHH:mm:ss');
             }
         }
-                // Fechar o modal de escolha após clicar em uma opção
+    
+        // Fechar o modal de escolha após clicar em uma opção
         document.querySelectorAll('#escolhaModal button').forEach(button => {
             button.addEventListener('click', function() {
                 closeModal('escolhaModal');
             });
         });
     
-    
         $(document).ready(function() {
             $('#calendar').fullCalendar({
                 header: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'month,agendaWeek,agendaDay'
+                    right: 'month,agendaWeek,agendaDay, list'
                 },
                 locale: 'pt-br',
                 selectable: true,
                 selectHelper: true,
                 select: function(start, end) {
-                    openModal('escolhaModal'); // Abre o modal de escolha
-                    setModalData('lembreteModal', start); // Define a data no modal de lembrete
-                    setModalData('tarefaModal', start); // Define a data no modal de tarefa
+                    openModal('escolhaModal');
+                    setModalData('lembreteModal', start);
+                    setModalData('tarefaModal', start);
                 },
                 events: [
-                {% for lembrete in lembretes %}
-                {
-                    title: '{{ lembrete.titulo|escapejs }} (Lembrete)',
-                    start: '{{ lembrete.data|date:"Y-m-d\TH:i:s" }}',
-                    color: '{{ lembrete.cor|escapejs }}',
-                    id: 'lembrete-{{ lembrete.id }}',
-                    descricao: '{{ lembrete.descricao|escapejs }}'
+                    {% for lembrete in lembretes %}
+                    {
+                        title: '{{ lembrete.titulo|escapejs }} (Lembrete)',
+                        start: '{{ lembrete.data|date:"Y-m-d\\TH:i:s" }}',
+                        color: '{{ lembrete.cor|escapejs }}',
+                        id: 'lembrete-{{ lembrete.id }}',
+                        descricao: '{{ lembrete.descricao|escapejs }}'
+                    },
+                    {% endfor %}
+                    {% for tarefa in tarefas %}
+                    {
+                        title: '{{ tarefa.titulo|escapejs }} (Tarefa)',
+                        start: '{{ tarefa.data_inicio|date:"Y-m-d\\TH:i:s" }}',
+                        end: '{{ tarefa.data_fim|date:"Y-m-d\\TH:i:s" }}',
+                        color: '{{ tarefa.cor|escapejs }}',
+                        id: 'tarefa-{{ tarefa.id }}',
+                        descricao: '{{ tarefa.descricao|escapejs }}'
+                    },
+                    {% endfor %}
+                ],
+                dayRender: function(date, cell) {
+                    const dataBase = moment('2024-03-23');
+                    const diffDays = date.diff(dataBase, 'days');
+                    const colorClasses = ['green', 'yellow', 'blue'];
+                    const colorIndex = Math.abs(diffDays % 3);
+    
+                    const colorPoint = document.createElement('div');
+                    colorPoint.style.position = 'absolute';
+                    colorPoint.style.top = '2px';
+                    colorPoint.style.left = '2px';
+                    colorPoint.style.width = '10px';
+                    colorPoint.style.height = '10px';
+                    colorPoint.style.backgroundColor = colorClasses[colorIndex];
+                    colorPoint.style.borderRadius = '50%';
+                    cell.css('position', 'relative');
+                    cell.append(colorPoint);
                 },
-                {% endfor %}
-                {% for tarefa in tarefas %}
-                {
-                    title: '{{ tarefa.titulo|escapejs }} (Tarefa)',
-                    start: '{{ tarefa.data_inicio|date:"Y-m-d\TH:i:s" }}',
-                    end: '{{ tarefa.data_fim|date:"Y-m-d\TH:i:s" }}',
-                    color: '{{ tarefa.cor|escapejs }}',
-                    id: 'tarefa-{{ tarefa.id }}',
-                    descricao: '{{ tarefa.descricao|escapejs }}'
-                },
-                {% endfor %}
-            ],
                 eventClick: function(event) {
-                    abrirModalVisualizacao(event); // Abre o modal de visualização ao clicar no evento
-                }
-            });
-        
-            // Aplicar classes personalizadas ao título
-            $('.fc-center h2').addClass('text-3xl font-semibold text-gray-700');
-        });
-    </script>
-    <script>
-    $(document).ready(function() {
-        $('#calendar').fullCalendar({
-            // ... outras configurações existentes ...
+                    abrirModalVisualizacao(event);
+                },
+                views: {
+                    list: {
+                        listDayFormat: 'DD [de] MMMM [de] YYYY',
+                        listDayAltFormat: 'DD [de] MMMM [de] YYYY',
+                        listWeekends: true,
+                        listGroupField: 'start',
+                        listGroupFormat: { month: 'long', day: 'numeric', year: 'numeric' },
+                        visibleRange: function(currentDate) {
+                            return {
+                                start: currentDate.clone().startOf('day'),
+                                end: currentDate.clone().add(1, 'year')
+                            };
+                        }
+                    }
+                },
+                viewRender: function() {
+                // Aplicar classes personalizadas ao botão "today"
+                $('.fc-today-button').addClass('text-white bg-gray-500 hover:bg-gray-700 px-4 py-2 rounded-md');
+                $('.fc-center h2').addClass('text-3xl font-semibold text-gray-700');
 
-            dayRender: function(date, cell) {
-                // Data base para o padrão (23 de março de 2024)
-                const dataBase = moment('2024-03-23');
-                const diffDays = date.diff(dataBase, 'days');
-                
-                // Mapeamento de cores usando classes Tailwind
-                const colorClasses = [
-                    'bg-yellow-500', // 0 - amarelo
-                    'bg-blue-500',   // 1 - azul
-                    'bg-green-500'   // 2 - verde
-                ];
-                
-                // Calcula o índice da cor
-                const colorIndex = ((diffDays % 3) + 3) % 3;
-                
-                // Cria o ponto com Tailwind
-                const dot = $('<div>')
-                    .addClass('w-2 h-2 rounded-full inline-block ml-1 ' + colorClasses[colorIndex]);
-                
-                // Adiciona o ponto ao número do dia
-                cell.find('.fc-day-number').append(dot);
-            },
-
-            // ... restante das configurações existentes ...
+                // Verificar se o botão "today" foi estilizado corretamente
+                console.log('Botão "today" estilizado:', $('.fc-today-button').hasClass('text-white'));
+            }
         });
     });
-</script>
+    
+        function abrirModalVisualizacao(evento) {
+            eventoAtual = evento;
+            document.getElementById('eventoTitulo').textContent = evento.title;
+            document.getElementById('eventoDescricao').textContent = evento.descricao || 'Sem descrição.';
+            document.getElementById('eventoCor').style.backgroundColor = evento.color || '#3788d8';
+    
+            const dataInicio = new Date(evento.start);
+            const dataFim = new Date(evento.end);
+            const opcoesData = { year: 'numeric', month: 'long', day: 'numeric' };
+            const opcoesHora = { hour: '2-digit', minute: '2-digit' };
+    
+            let textoData = dataInicio.toLocaleDateString('pt-BR', opcoesData);
+            if (evento.end) {
+                textoData += ` - ${dataFim.toLocaleDateString('pt-BR', opcoesData)}`;
+            }
+            document.getElementById('eventoData').textContent = textoData;
+            document.getElementById('eventoOrganizador').textContent = evento.organizador || 'Sem organizador.';
+            openModal('visualizarModal');
+        }
+    </script>
+
     <script>
         function submitForm(event, formId, modalId) {
             event.preventDefault();
@@ -456,15 +482,15 @@
                 }
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal(modalId);
-                    $('#calendar').fullCalendar('refetchEvents'); // Recarrega os eventos no calendário
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
+        .then(data => {
+            if (data.success) {
+                closeModal(modalId);
+                window.location.reload(); // Recarrega a página inteira
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
         }
 
 
