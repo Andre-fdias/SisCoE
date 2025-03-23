@@ -24,11 +24,17 @@ def index(request):
 
     aniversariantes_list = Cadastro.objects.filter(nasc__month=mes_atual).order_by('nasc__day').prefetch_related('imagens', 'promocoes', 'detalhes_situacao')
 
+    # Depuração: Verifique os aniversariantes encontrados
+    print(f"Aniversariantes encontrados: {aniversariantes_list.count()}")
+
     for funcionario in aniversariantes_list:
         try:
             funcionario.posto_grad_recente = funcionario.promocoes.latest('ultima_promocao').posto_grad
         except Promocao.DoesNotExist:
             funcionario.posto_grad_recente = None
+
+        # Depuração: Verifique os dados de cada funcionário
+        print(f"Funcionário: {funcionario.nome_de_guerra}, Nascimento: {funcionario.nasc}, Idade: {funcionario.idade_detalhada}")
 
     paginator_aniversariantes = Paginator(aniversariantes_list, 10)
     page_number = request.GET.get('page')
@@ -62,8 +68,8 @@ def index(request):
             (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
         ],
         'hoje': hoje,
-        'lembretes': lembretes,  # Adicionado
-        'tarefas': tarefas,      # Adicionado
+        'lembretes': lembretes,
+        'tarefas': tarefas,
     }
     return render(request, 'index.html', context)
 

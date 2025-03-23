@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
 from django.contrib.messages import constants
-from decouple import config
-from decouple import Csv  # Adicione esta linha separadamente se necessário
+from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -48,7 +47,6 @@ INSTALLED_APPS = [
     'backend.calculadora',
 ]
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -79,31 +77,20 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'backend.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#   'default': {
-#      'ENGINE': 'django.db.backends.sqlite3',
-#     'NAME': BASE_DIR / 'db.sqlite3',
-# }
-# }
-
-# settings.py
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'siscoe_db',
-        'USER': 'postgres',
-        'PASSWORD': 'davi2807',
-        'HOST': 'localhost',  # Alterado de 'db' para 'localhost'
-        'PORT': '5432',        # Porta padrão do PostgreSQL
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # Caminho para o arquivo do banco de dados SQLite
     }
 }
+
+# settings.py
+
 
 # Email config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -201,7 +188,4 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
-
-DATE_FORMAT = 'd/m/Y'
-USE_L10N = False
 

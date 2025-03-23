@@ -1,307 +1,109 @@
 {% extends "base.html" %}
 {% load static %}
-{% block 'title' %} Consultar Ordens{% endblock %}
-{% block 'head' %}
-
-<link rel="stylesheet" href="{% static 'efetivo\css\ver_militar.css' %}">
-
-{% endblock 'head' %}
+{% block title %}Editar Adicional e LP{% endblock %}
 
 {% block 'body' %}
 
 
-<br>
-<br>
-<div class="container">
-    <fieldset>
-        <legend>
-            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between ">
-                <div class="col-md-6">
-                    <div class="d-grid gap-12 d-md-block">
-                        <h1 class="titulo3"> {{ documento.numero_documento }}</h1>
-                    </div>
-                 
-                </div>
-                <div class="col-md-6 text-end"> 
-                      <!-- Botão para abrir o modal de edição -->
-                      <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal-{{ documento.id }}">
-                        <i class="bi bi-pencil"></i> Editar
-                    </button>
-                    <!-- Modal de Edição -->
-                    <div class="modal fade" id="editModal-{{ documento.id }}" tabindex="-1" aria-labelledby="editModalLabel-{{ documento.id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="editModalLabel-{{ documento.id }}">Editar Documento</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form method="POST" action="{% url 'documento_edit' documento.id %}" enctype="multipart/form-data" class="needs-validation" novalidate>
-                                        {% csrf_token %}
-                                        <fieldset>
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="data_publicacao" class="form-label">Data de Publicação:</label>
-                                                    <input type="date" class="form-control" id="data_publicacao" name="data_publicacao" value="{{ documento.data_publicacao|date:'Y-m-d' }}" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça uma data de publicação.
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="data_documento" class="form-label">Data do Documento:</label>
-                                                    <input type="date" class="form-control" id="data_documento" name="data_documento" value="{{ documento.data_documento|date:'Y-m-d' }}" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça uma data do documento.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <fieldset>
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="numero_documento" class="form-label">Número do Documento:</label>
-                                                    <input type="text" class="form-control" id="numero_documento" name="numero_documento" value="{{ documento.numero_documento }}" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça o número do documento.
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="assunto" class="form-label">Assunto:</label>
-                                                    <input type="text" class="form-control" id="assunto" name="assunto" value="{{ documento.assunto }}" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça o assunto.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <fieldset>
-                                            <div class="mb-3">
-                                                <label for="conteudo" class="form-label">Conteúdo:</label>
-                                                <textarea class="form-control" id="conteudo" name="conteudo" rows="4" required>{{ documento.conteudo }}</textarea>
-                                                <div class="invalid-feedback">
-                                                    Por favor, forneça o conteúdo.
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="assinada_por" class="form-label">Assinada por:</label>
-                                                <input type="text" class="form-control" id="assinada_por" name="assinada_por" value="{{ documento.assinada_por }}" required>
-                                                <div class="invalid-feedback">
-                                                    Por favor, forneça o nome de quem assinou.
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <fieldset>
-                                            <div class="mb-3">
-                                                <label for="arquivo_pdf" class="form-label">Arquivo PDF:</label>
-                                                <input type="file" class="form-control" id="arquivo_pdf" name="arquivo_pdf">
-                                            </div>
-                                        </fieldset>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <button type="submit" class="btn btn-primary">Salvar</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">Excluír</i></button>
+<body>
 
-                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Excluir</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Você tem certeza que deseja excluir o cadastro?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
-                                    <form method="post" action="{% url 'documento_delete' documento.pk %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <a class="btn btn-primary " href="{% url 'documento_list' %}" role="button">Voltar</a>
-                </div>
-            </div>
-        </legend>
-    </fieldset>
-    <fieldset>
-        <div class="row row-bg">
-            <div id="02" class="col-lg-6 col-md-12 order-1 highlighted-div">
-                <div class="row mb-6">
-                    <div class="col-6 d-flex align-items-center">
-                        <h4 class="titulo6"><b>Assunto:</b><span class="espaco-direita">{{ documento.assunto }}</span></h4>
-                    </div>
-                    <div class="col-6 d-flex align-items-center">
-                        <h4 class="titulo6"><b>Data:</b><span class="espaco-direita">{{ documento.data_documento }}</span></h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </fieldset>
-    <fieldset> 
-        <div class="row row-bg">
-            <div id="02" class="col-12 order-1 highlighted-div">
-                <div class="row mb-12">
-                    <label for="conteudo" class="form-label"><b>Conteúdo:</b></label><br>
-                    <h4 class="titulo6"><span class="espaco-direita">{{ documento.conteudo }}</span></h4>
-                </div>         
-            </div>
-        </div>
-        <div class="row row-bg">
-            <div id="02" class="col-12 order-1 highlighted-div">
-                <div class="row mb-12">
-                    <h4 class="titulo6"><b>Assinada por:</b><span class="espaco-direita">{{ documento.assinada_por }}</span></h4>
-                </div>   
-            </div>
-        </div>
-    </fieldset>
-    <fieldset>
-        <div class="row row-bg">
-            <div id="02" class="col-lg-6 col-md-12 order-1 highlighted-div">
-                            <h4 class="titulo6"><b>Arquivo PDF:</b></h4>
-                            {% if documento.arquivo_pdf %}
-                                <a href="{{ documento.arquivo_pdf.url }}" class="btn btn-info" download>Baixar PDF</a>
-                            {% else %}
-                                <p>Não há arquivo PDF disponível.</p>
-                            {% endif %}
-            </div>
-        </div>
-    </fieldset>
-    <fieldset>
-        <legend>
-            <div class="row  highlighted-div bg-lightblue">
-               
-                <div class="col-md-3">
-                  
-                        <!-- Botão para abrir o modal de edição -->
-                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal-{{ documento.id }}">
-                            <i class="bi bi-pencil"></i> Editar
-                        </button>
-                        <!-- Modal de Edição -->
-                        <div class="modal fade" id="editModal-{{ documento.id }}" tabindex="-1" aria-labelledby="editModalLabel-{{ documento.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="editModalLabel-{{ documento.id }}">Editar Documento</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form method="POST" action="{% url 'documento_edit' documento.id %}" enctype="multipart/form-data" class="needs-validation" novalidate>
-                                            {% csrf_token %}
-                                            <fieldset>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label for="data_publicacao" class="form-label">Data de Publicação:</label>
-                                                        <input type="date" class="form-control" id="data_publicacao" name="data_publicacao" value="{{ documento.data_publicacao|date:'Y-m-d' }}" required>
-                                                        <div class="invalid-feedback">
-                                                            Por favor, forneça uma data de publicação.
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label for="data_documento" class="form-label">Data do Documento:</label>
-                                                        <input type="date" class="form-control" id="data_documento" name="data_documento" value="{{ documento.data_documento|date:'Y-m-d' }}" required>
-                                                        <div class="invalid-feedback">
-                                                            Por favor, forneça uma data do documento.
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </fieldset>
-                                            <fieldset>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label for="numero_documento" class="form-label">Número do Documento:</label>
-                                                        <input type="text" class="form-control" id="numero_documento" name="numero_documento" value="{{ documento.numero_documento }}" required>
-                                                        <div class="invalid-feedback">
-                                                            Por favor, forneça o número do documento.
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label for="assunto" class="form-label">Assunto:</label>
-                                                        <input type="text" class="form-control" id="assunto" name="assunto" value="{{ documento.assunto }}" required>
-                                                        <div class="invalid-feedback">
-                                                            Por favor, forneça o assunto.
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </fieldset>
-                                            <fieldset>
-                                                <div class="mb-3">
-                                                    <label for="conteudo" class="form-label">Conteúdo:</label>
-                                                    <textarea class="form-control" id="conteudo" name="conteudo" rows="4" required>{{ documento.conteudo }}</textarea>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça o conteúdo.
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="assinada_por" class="form-label">Assinada por:</label>
-                                                    <input type="text" class="form-control" id="assinada_por" name="assinada_por" value="{{ documento.assinada_por }}" required>
-                                                    <div class="invalid-feedback">
-                                                        Por favor, forneça o nome de quem assinou.
-                                                    </div>
-                                                </div>
-                                            </fieldset>
-                                            <fieldset>
-                                                <div class="mb-3">
-                                                    <label for="arquivo_pdf" class="form-label">Arquivo PDF:</label>
-                                                    <input type="file" class="form-control" id="arquivo_pdf" name="arquivo_pdf">
-                                                </div>
-                                            </fieldset>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-primary">Salvar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-                <div class="col-md-3">
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">Excluír</i></button>
-                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Excluir</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        Você tem certeza que deseja excluir o cadastro?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
-                                        <form method="post" action="{% url 'documento_delete' documento.pk %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger">Excluir</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-                <div class="col-md-6 text-end">
-                    <!-- Conteúdo da terceira div -->
-                        <a class="btn btn-primary " href="{% url 'documento_list' %}" role="button">Voltar</a>
     
+<div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
+     <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
+        <fieldset class="  bg-gray-800  p-4 mb-8 rounded-md">
+   
+         <div id="01" class="mb-4">
+            <div class="bg-gray-800 p-4 rounded-md">
+                <div class="flex flex-wrap items-center justify-between py-3">
+                    <div class="w-full md:w-9/12">
+                        <h1 class="text-3xl text-gray-200">Editar os Períodos de LP e Adicional</h1>
+                    </div>
+                    <div class="w-full md:w-3/12 text-right">
+                        <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
+                        
+                        <a href="{% url 'adicional:ver_lp' cadastro.id %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
+                    </div>
+                </div>
             </div>
-
+         </div>
+        </fieldset>
+        <legend  class=" mb-8 rounded-md w-full" >
+            {% if messages %}
+            {% for message in messages %}
+                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
+                    {{ message }}
+                </section>
+            {% endfor %}
+            {% endif %}
         </legend>
-    </fieldset>   
-    
+        <fieldset class="w-full bg-gray-200 p-4 rounded-lg">
+            <form method="POST" action="{% url 'adicional:editar_lp' cadastro.id %}">
+        {% csrf_token %}
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Adicional -->
+                    <div class="bg-gray-200 p-4 rounded-md">
+                        <h2 class="text-xl font-semibold mb-4">Adicional</h2>
+                        <div class="mb-4">
+                            <label for="numero_adicional" class="block text-sm font-medium text-gray-700">Nº Bloco Adicional:</label>
+                            <select name="numero_adicional" id="numero_adicional" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                {% for value, display in cadastro.n_choices %}
+                                <option value="{{ value }}" {% if value == cadastro.numero_adicional %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="data_ultimo_adicional" class="block text-sm font-medium text-gray-700">Data Último Adicional:</label>
+                            <input type="date" name="data_ultimo_adicional" id="data_ultimo_adicional" value="{{ cadastro.data_ultimo_adicional|date:'Y-m-d' }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="dias_desconto_adicional" class="block text-sm font-medium text-gray-700">Dias de Desconto Adicional:</label>
+                            <input type="number" name="dias_desconto_adicional" id="dias_desconto_adicional" value="{{ cadastro.dias_desconto_adicional }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label for="situacao_adicional" class="block text-sm font-medium text-gray-700">Situação:</label>
+                            <select name="situacao_adicional" id="situacao_adicional" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                {% for value, display in cadastro.situacao_choices %}
+                                <option value="{{ value }}" {% if value == cadastro.situacao_adicional %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- LP -->
+                    <div class="bg-gray-200 p-4 rounded-md">
+                        <h2 class="text-xl font-semibold mb-4">Licença-Prêmio</h2>
+                        <div class="mb-4">
+                            <label for="numero_lp" class="block text-sm font-medium text-gray-700">Nº Bloco LP:</label>
+                            <select name="numero_lp" id="numero_lp" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                {% for value, display in cadastro.n_choices %}
+                                <option value="{{ value }}" {% if value == cadastro.numero_lp %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data Último LP:</label>
+                            <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" value="{{ cadastro.data_ultimo_lp|date:'Y-m-d' }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="dias_desconto_lp" class="block text-sm font-medium text-gray-700">Dias de Desconto LP:</label>
+                            <input type="number" name="dias_desconto_lp" id="dias_desconto_lp" value="{{ cadastro.dias_desconto_lp }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label for="situacao_lp" class="block text-sm font-medium text-gray-700">Situação:</label>
+                            <select name="situacao_lp" id="situacao_lp" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                {% for value, display in cadastro.situacao_choices %}
+                                <option value="{{ value }}" {% if value == cadastro.situacao_lp %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Salvar</button>
+                    <a href="{% url 'adicional:ver_lp' cadastro.id %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancelar</a>
+                </div>
+            </form>
+        </fieldset>
+     </fieldset>
 </div>
-<script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
-
-
-{% endblock  %}
+{% endblock %}

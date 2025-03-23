@@ -9,14 +9,6 @@
 {% block content%}
 
  
-<style type="text/tailwindcss">
-    @layer utilities {
-      .form-control {
-        @apply text-gray-600 placeholder-gray-400 px-4 py-3 w-full rounded-lg focus:outline-none mb-4
-      }
-    }
-  </style>
-  
 <br>
 <br>
   <div class="container mx-auto p-2 mt-8" id="cad_efetivo">
@@ -55,9 +47,7 @@
                     <div class="mb-4"> 
                         <p class="text-lg text-gray-700"><strong>Data de Admissão:</strong> {{ resultados.calculo.data_admissao }}</p>
                     </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Dias da Admissão até Hoje:</strong>  {{  resultados.dias_totais }} dias</p> 
-                    </div>
+                
                     <div class="mb-4">
                         <p class="text-lg text-gray-700"><strong>Tempo em 01/01/2021:</strong> {{ resultados.tempo_01jan21 }} dias</p>
                     </div>
