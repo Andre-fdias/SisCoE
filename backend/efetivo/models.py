@@ -380,7 +380,7 @@ class DetalhesSituacao(models.Model):
     apresentacao_na_unidade = models.DateField(blank=False, null=False)
     saida_da_unidade = models.DateField(blank=True, null=True)
     data_alteracao  = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True,  related_name='detalhes_situacao')
 
     def __str__(self):
       return f'{self.cadastro.re} - {self.situacao}'

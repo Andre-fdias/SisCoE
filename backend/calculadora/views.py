@@ -12,15 +12,12 @@ def calcular_tempo_servico(request):
         tempo_ffaa_pm_cbm = calculo.tempo_ffaa_pm_cbm
         tempo_inss_outros = min(calculo.tempo_inss_outros, 1825)
         afastamentos = calculo.afastamentos
-        
-        data_admissao = calculo.data_admissao
-        today = date.today()
-        dias_totais = (today - data_admissao).days
+     
 
         data_01jan21 = date(2021, 1, 1)
         tempo_01jan21 = (data_01jan21 - data_admissao).days
 
-        total_dias = dias_totais + tempo_ffaa_pm_cbm + tempo_inss_outros - afastamentos
+        total_dias =  tempo_01jan21 + tempo_ffaa_pm_cbm + tempo_inss_outros - afastamentos
 
         data_30anos = data_admissao + timedelta(days=30*365)
         dif_30anos = (data_30anos - data_01jan21).days
@@ -38,7 +35,7 @@ def calcular_tempo_servico(request):
         resultados = {
             'calculo': calculo,
             'tempo_01jan21': tempo_01jan21,
-            'dias_totais': dias_totais,
+            
             'total_dias': total_dias,
             'data_30anos': data_30anos,
             'dif_30anos': dif_30anos,
