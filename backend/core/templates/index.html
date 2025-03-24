@@ -887,55 +887,13 @@
     
     
 
-</script>
-                      <!-- Tabela de Compromissos (55%) -->
-                      <div class="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
-                          <section class="px-4 py-6 h-full flex flex-col">
-                              <h2 class="text-xl font-medium text-gray-300 mb-4">Lista de Compromissos</h2>
-                              <div class="overflow-x-auto flex-1">
-                                  <table class="min-w-full divide-y divide-gray-700">
-                                      <thead class="bg-gray-800">
-                                          <tr>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Título</th>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Data/Hora</th>
-                                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Cor</th>
-                                          </tr>
-                                      </thead>
-                                      <tbody class="bg-gray-800 divide-y divide-gray-700">
-                                          <!-- Conteúdo mantido igual -->
-                                          {% for lembrete in lembretes %}
-                                          <tr>
-                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.titulo }}</td>
-                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ lembrete.data|date:"d/m/Y H:i" }}</td>
-                                              <td class="px-6 py-4 whitespace-nowrap">
-                                                  <div class="w-4 h-4 rounded-full" style="background-color: {{ lembrete.cor }}"></div>
-                                              </td>
-                                          </tr>
-                                          {% endfor %}
-                                          
-                                          {% for tarefa in tarefas %}
-                                          <tr>
-                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">{{ tarefa.titulo }}</td>
-                                              <td class="px-6 py-4 whitespace-nowrap text-gray-300">
-                                                  {{ tarefa.data_inicio|date:"d/m/Y H:i" }} - 
-                                                  {{ tarefa.data_fim|date:"d/m/Y H:i" }}
-                                              </td>
-                                              <td class="px-6 py-4 whitespace-nowrap">
-                                                  <div class="w-4 h-4 rounded-full" style="background-color: {{ tarefa.cor }}"></div>
-                                              </td>
-                                          </tr>
-                                          {% endfor %}
-                                          
-                                          {% if not lembretes and not tarefas %}
-                                          <tr>
-                                              <td colspan="4" class="px-6 py-4 text-center text-gray-400">Nenhum compromisso encontrado</td>
-                                          </tr>
-                                          {% endif %}
-                                      </tbody>
-                                  </table>
-                              </div>
-                          </section>
-                      </div>
+<div class="bg-gray-900 text-gray-100 rounded-xl shadow-xl overflow-hidden">
+  <section class="px-6 py-6 h-full flex flex-col">
+
+  </section>
+</div>
+
+
                   </div>
               </div>
           </div>
@@ -1053,11 +1011,205 @@
       </script>
 
    
+<div class="w-full grid grid-cols-2 gap-6 p-4">
+  <!-- Seção de Notícias -->
+  <div class="bg-gray-900 text-gray-100 rounded-xl shadow-xl overflow-hidden">
+    <section class="px-6 py-6 h-full flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Últimas Notícias</h2>
+        <a href="#" class="text-blue-400 text-sm flex items-center">
+          Notícias locais
+          <svg width="24" height="24" viewBox="0 0 24 24" class="ml-1">
+            <path fill="currentColor" d="M7.59 18.59L9 20l8-8-8-8-1.41 1.41L14.17 12"></path>
+          </svg>
+        </a>
+      </div>
+      <div id="noticias" class="space-y-4"></div>
+    </section>
+  </div>
 
+
+  <!-- Seção de Tempo e Calendário -->
+  <div class="bg-gray-900 text-gray-100 rounded-xl shadow-xl overflow-hidden">
+    <section class="px-6 py-6 h-full flex flex-col">
+      <!-- Cabeçalho com Data/Hora e Seletor -->
+      <div class="mb-6">
+        <h1 id="currentDate" class="text-2xl font-bold capitalize w-full"></h1>
+      </div>
+      <div class="flex justify-between items-center mb-6">
+        <p id="currentTime" class="text-gray-400 text-md"></p>
+        <select id="citySelector" class="bg-gray-800 text-gray-100 rounded-md p-2 mt-1">
+          <option value="">Selecione uma cidade</option>
+          <option value="sorocaba" selected>Sorocaba</option>
+          <option value="votorantim">Votorantim</option>
+          <option value="piedade">Piedade</option>
+          <option value="itu">Itu</option>
+          <option value="porto feliz">Porto Feliz</option>
+          <option value="salto">Salto</option>
+          <option value="sao roque">São Roque</option>
+          <option value="ibiuna">Ibiúna</option>
+          <option value="itapeva">Itapeva</option>
+          <option value="itarare">Itararé</option>
+          <option value="apiai">Apiaí</option>
+          <option value="capao bonito">Capão Bonito</option>
+          <option value="itapetininga">Itapetininga</option>
+          <option value="angatuba">Angatuba</option>
+          <option value="boituva">Boituva</option>
+          <option value="tatui">Tatuí</option>
+          <option value="tiete">Tietê</option>
+          <option value="laranjal paulista">Laranjal Paulista</option>
+          <option value="botucatu">Botucatu</option>
+          <option value="itai">Itaí</option>
+          <option value="avare">Avaré</option>
+          <option value="itatinga">Itatinga</option>
+          <option value="piraju">Piraju</option>
+        </select>
+      </div>
+      <!-- Seção do Tempo -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-5xl font-bold" id="temperature"></p>
+            <p class="text-gray-400" id="weatherCondition"></p>
+          </div>
+          <img id="weatherIcon" class="w-24 h-24" alt="Ícone do tempo">
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <div class="bg-gray-800 p-3 rounded-lg">
+            <p class="text-gray-400 mb-1">Sensação</p>
+            <p class="font-medium" id="feelsLike"></p>
+          </div>
+          <div class="bg-gray-800 p-3 rounded-lg">
+            <p class="text-gray-400 mb-1">Vento</p>
+            <p class="font-medium" id="windSpeed"></p>
+          </div>
+          <div class="bg-gray-800 p-3 rounded-lg">
+            <p class="text-gray-400 mb-1">Umidade</p>
+            <p class="font-medium" id="humidity"></p>
+          </div>
+        </div>
+      </div>
+      <!-- Previsão do Tempo -->
+      <div id="weatherForecast" class="grid grid-cols-3 gap-4 mb-4"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    const newsApiKey = 'c4caed8f6272441d9a631f420d10e9a4';
+    const weatherApiKey = '37c31b897f1242bd16f59c9b0b92ec55';
+    let currentCity = 'sorocaba';
+
+    // Atualizar data e hora
+    function updateDateTime() {
+      const now = moment();
+      $('#currentDate').text(
+        now.format('dddd [•] LL')
+          .replace(/^\w/, c => c.toUpperCase())
+          .replace(/(\s)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase())
+      );
+      $('#currentTime').text(now.format('HH:mm'));
+    }
+
+     // Notícias
+     function fetchNews() {
+      $.ajax({
+        url: `https://newsapi.org/v2/top-headlines?country=br&apiKey=${newsApiKey}`,
+        success: (data) => {
+          $('#noticias').empty();
+          data.articles.slice(0, 3).forEach(article => {
+            const imageUrl = article.urlToImage || 'https://via.placeholder.com/100x100';
+            $('#noticias').append(`
+              <a href="${article.url}" target="_blank" class="block bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition">
+                <div class="flex items-start gap-4">
+                  <img src="${imageUrl}" 
+                       class="w-20 h-20 object-cover rounded-lg">
+                  <div>
+                    <p class="text-sm text-gray-400 mb-1">${article.source.name}</p>
+                    <p class="font-medium">${article.title}</p>
+                    <time class="text-sm text-gray-400">
+                      ${moment(article.publishedAt).format('HH:mm')}
+                    </time>
+                  </div>
+                </div>
+              </a>
+            `);
+          });
+        },
+        error: () => {
+          $('#noticias').html('<p class="text-red-400">Erro ao carregar notícias</p>');
+        }
+      });
+    }
+
+    // Função principal do tempo
+    async function fetchWeather() {
+      try {
+        // Dados atuais
+        const currentResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${currentCity}&appid=${weatherApiKey}&units=metric&lang=pt`
+        );
+        const currentData = await currentResponse.json();
+
+        // Atualiza elementos
+        $('#temperature').text(`${Math.round(currentData.main.temp)}°C`);
+        $('#weatherCondition').text(currentData.weather[0].description);
+        $('#feelsLike').text(`${Math.round(currentData.main.feels_like)}°C`);
+        $('#windSpeed').text(`${(currentData.wind.speed * 3.6).toFixed(1)} km/h`);
+        $('#humidity').text(`${currentData.main.humidity}%`);
+        $('#weatherIcon').attr('src', `https://openweathermap.org/img/wn/${currentData.weather[0].icon}@4x.png`);
+
+        // Previsão
+        const forecastResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/forecast?q=${currentCity}&appid=${weatherApiKey}&units=metric&lang=pt`
+        );
+        const forecastData = await forecastResponse.json();
+        
+        $('#weatherForecast').empty();
+        const startDate = moment().startOf('day');
+        
+        forecastData.list
+          .filter(f => moment(f.dt_txt).isSameOrAfter(startDate))
+          .slice(0, 3)
+          .forEach(f => {
+            $('#weatherForecast').append(`
+              <div class="bg-gray-800 p-3 rounded-lg">
+                <p class="font-medium">${moment(f.dt_txt).format('DD/MM')}</p>
+                <img src="https://openweathermap.org/img/w/${f.weather[0].icon}.png" 
+                     class="w-12 h-12 mx-auto">
+                <p class="text-center">${Math.round(f.main.temp)}°C</p>
+                <p class="text-center text-sm">${f.weather[0].description}</p>
+              </div>
+            `);
+          });
+
+      } catch (error) {
+        console.error('Erro:', error);
+        $('#temperature').text('--°C');
+        $('#weatherForecast').html('<p class="text-red-400">Erro ao carregar dados</p>');
+      }
+    }
+
+    // Inicialização
+    function init() {
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+      fetchNews();
+      fetchWeather();
+      
+      $('#citySelector').change(function() {
+        currentCity = $(this).val();
+        fetchWeather();
+      });
+    }
+
+    init();
+  });
+</script>
 
    
-
-
 
     <div class="footer mt-8 bg-gray-900 rounded-lg">
       <ul class="flex justify-start items-center overflow-x-auto whitespace-nowrap px-4 space-x-12 py-4">
