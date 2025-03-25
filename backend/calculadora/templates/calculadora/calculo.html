@@ -1,97 +1,116 @@
 {% extends "base_login.html" %}
 {% load static %}
-{% block 'title' %} Consultar Efetivo{% endblock %}
+{% block 'title' %} Consultar Efetivo {% endblock %}
 {% block 'head' %}
-
-
 {% endblock 'head' %}
 
-{% block content%}
+{% block content %}
+<div class="container mx-auto p-4 mt-8">
+    <section class="w-full bg-gray-700 rounded-lg shadow-md p-6 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 bg">
+            <h1 class="text-3xl font-semibold text-gray-100 mb-12 md:mb-">Cálculo de Tempo de Serviço</h1>
+            <a href="{% url 'core:index' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">Voltar</a>
+        </div>
+    </section>
 
+    <section class="w-full bg-gray-600 rounded-lg shadow-md p-6 mb-8">
  
-<br>
-<br>
-  <div class="container mx-auto p-2 mt-8" id="cad_efetivo">
-      <fieldset class="p-4 mb-8 rounded-md w-full" id="second-fieldset">
-            <fieldset class="bg-gray-700 p-4 mb-4 rounded-md">
-                <div id="01" class="mb-4">
-                    <div class="bg-gray-700 p-4 rounded-md">
-                        <div class="flex flex-wrap items-center justify-between py-3">
-                            <div class="w-full md:w-9/12">
-                                <h1 class="text-3xl text-gray-200">Cálculo de Tempo de Serviço </h1>
-                            </div>
-                            <div class="w-full md:w-3/12 text-right">
-                              <a href="{% url 'core:index' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                            </div>
-                        </div>
+
+        <form method="post" class="grid grid-cols-1">
+            {% csrf_token %}
+            <div class="bg-gray-600 p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for field in form %}
+                    <div class="flex flex-col">
+                        <label for="{{ field.id_for_label }}" class="text-gray-300">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-red-500 text-sm">{{ field.errors.as_text }}</p>
+                        {% endif %}
                     </div>
-                </div>
-        </fieldset>
-        <fieldset class="border bg-gray-200 border-gray-300 p-8 mb-4 rounded-md">
-                   
-        
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button class="mt-8 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-4 py-2 text-center me-2 mb-2" type="submit">Calcular</button>
-                </form>
-            
-        </fieldset>
-        <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-            <div class="w-full">
-                <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação</h2>
+                {% endfor %}
             </div>
-            {% if resultados %}
-            <div class="grid grid-cols-2 gap-4 ms-12">
-                <div>
-                    <div class="mb-4"> 
-                        <p class="text-lg text-gray-700"><strong>Data de Admissão:</strong> {{ resultados.calculo.data_admissao }}</p>
-                    </div>
-                
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Tempo em 01/01/2021:</strong> {{ resultados.tempo_01jan21 }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Total de Dias:</strong> {{ resultados.total_dias }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Averbação FFAA/PM/CBM:</strong> {{ resultados.calculo.tempo_ffaa_pm_cbm }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Averbação INSS/Outros:</strong> {{ resultados.calculo.tempo_inss_outros }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Afastamentos Descontáveis:</strong> {{ resultados.calculo.afastamentos }} dias</p>
-                    </div>
-                  
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>30 Anos em:</strong> {{ resultados.data_30anos }}</p>
-                    </div>
+            <div class="mt-4">
+                <button class="ms-4  mt-4  bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300  text-gray-800 bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-sm inline-flex items-center px-3 py-2 text-center" type="submit">Calcular</button>
+            </div>
+        </form>
+    </section>
+
+    {% if resultados %}
+    <section class="bg-gray-300 text-gray-700 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação Art 24-G</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <div class="mb-4">
+                    <strong class="block">Data de Admissão:</strong>
+                    <span>{{ resultados.calculo.data_admissao }}</span>
                 </div>
-                <div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Diferença para 30 Anos:</strong> {{ resultados.dif_30anos }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Pedágio 17%:</strong> {{ resultados.pedagio_17 }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>30 Anos + Pedágio:</strong> {{ resultados.data_30anos_pedagio }}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>25 Anos em:</strong> {{ resultados.data_25anos }}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Data Base:</strong> {{ resultados.data_base }}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Acréscimo 4 Meses:</strong> {{ resultados.acrescimo_4meses }} dias</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-lg text-gray-700"><strong>Tempo de Atividade Militar:</strong> {{ resultados.data_tempo_militar }}</p>
-                    </div>
+                <div class="mb-4">
+                    <strong class="block">Tempo em 01/01/2021:</strong>
+                    <span>{{ resultados.tempo_01jan21 }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Total de Dias:</strong>
+                    <span>{{ resultados.total_dias }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Averbação FFAA/PM/CBM:</strong>
+                    <span>{{ resultados.calculo.tempo_ffaa_pm_cbm }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Averbação INSS/Outros:</strong>
+                    <span>{{ resultados.calculo.tempo_inss_outros }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Afastamentos Descontáveis:</strong>
+                    <span>{{ resultados.calculo.afastamentos }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">30 Anos em:</strong>
+                    <span>{{ resultados.data_30anos }}</span>
                 </div>
             </div>
-            {% endif %}
-        </fieldset>
-</main>{% endblock %}
+            <div>
+                <div class="mb-4">
+                    <strong class="block">Diferença para 30 Anos:</strong>
+                    <span>{{ resultados.dif_30anos }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Pedágio 17%:</strong>
+                    <span>{{ resultados.pedagio_17 }} dias</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">30 Anos + Pedágio:</strong>
+                    <span>{{ resultados.data_30anos_pedagio }}</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">25 Anos em:</strong>
+                    <span>{{ resultados.data_25anos }}</span>
+                </div>
+                <div class="mb-4">
+                    <strong class="block">Data Base:</strong>
+                    <span>{{ resultados.data_base }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-gray-300 text-gray-700 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação Art 24 Paragrafo Único</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <div class="mb-4">
+                    <strong class="block">Acréscimo 4 Meses:</strong>
+                    <span>{{ resultados.acrescimo_4meses }} dias</span>
+                </div>
+            </div>
+            <div>
+                <div class="mb-4">
+                    <strong class="block">Tempo de Atividade Militar:</strong>
+                    <span>{{ resultados.data_tempo_militar }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
