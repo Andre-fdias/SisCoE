@@ -167,6 +167,15 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 GROQ_API_KEY = config('GROQ_API_KEY')
+# OpenWeatherMap
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+
+
+
+
+
+
+
 
 AUTH_USER_MODEL = 'accounts.User'
 

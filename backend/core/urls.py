@@ -1,17 +1,21 @@
 from django.urls import path
-
-from backend.core import views as v
+from .views import (
+    index, capa, dashboard, 
+    profile_list, profile_detail, 
+    profile_create, profile_update,
+CalendarioView, CalendarioEventosView
+)
 
 app_name = 'core'
 
-
 urlpatterns = [
-    path('home', v.index, name='index'),  # noqa E501
-    path('', v.capa, name='capa'),  # noqa E501
-    path('dashboard/', v.dashboard, name='dashboard'),
-    path('profiles/', v.profile_list, name='profile_list'),
-    path('profiles/<int:pk>/', v.profile_detail, name='profile_detail'),
-    path('profiles/create/', v.profile_create, name='profile_create'),
-    path('profiles/<int:pk>/update/', v.profile_update, name='profile_update'),
-    path('profiles/<int:pk>/delete/', v.profile_delete, name='profile_delete'),
+    path('home', index, name='index'),
+    path('', capa, name='capa'),
+    path('dashboard/', dashboard, name='dashboard'),
+    path('profiles/', profile_list, name='profile_list'),
+    path('profiles/<int:pk>/', profile_detail, name='profile_detail'),
+    path('profiles/create/', profile_create, name='profile_create'),
+    path('profiles/<int:pk>/update/', profile_update, name='profile_update'),
+     path('calendario/', CalendarioView.as_view(), name='calendario'),
+    path('calendario/eventos/', CalendarioEventosView.as_view(), name='calendario_eventos'),
 ]
