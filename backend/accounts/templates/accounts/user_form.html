@@ -12,65 +12,74 @@
 
 {% block content %}
 
-<body>
-
-  <div class="bg-gray-100 shadow p-6 rounded-lg md:mt-24 max-w-400p xl:p-0 w-7/12 mx-auto"> 
-
-    <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-        <legend class="mb-8 rounded-md w-full">
-            {% if messages %}
-            {% for message in messages %}
-                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                    {{ message }}
-                </section>
-            {% endfor %}
-            {% endif %}
-        </legend>
-        <fieldset class="bg-gray-100 mb-8 rounded-md w-full" id="adicionalTempoTable">
-           <div class="mx-auto flex flex-col px-6 pt-8 pt:mt-0">
-            <div class="p-2 sm:p-2 lg:p-8 space-y-8">
-              <h2 class="text-2xl lg:text-3xl font-bold text-gray-900">
-                {% if object.pk %}
-                  Editar
-                {% else %}
-                  Adicionar
-                {% endif %}
-                Usuário
-              </h2>
-
-              {% if form.errors %}
-                {% for error in form.non_field_errors %}
-                  <p class="text-red-500">{{ error }}</p>
-                {% endfor %}
-              {% endif %}
-              <p class="text-gray-500">Após preencher os dados e salvar, será encaminhado para o email cadastrado a senha!.</p>
-              <br>
-
-              <form class="mt-8 space-y-6" action="." method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% for field in form.visible_fields %}
-                  <div>
-                    <label class="text-sm font-medium text-gray-900 block mb-2">{{ field.label }}</label>
-                    {% render_field field class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5" %}
-                  </div>
-                  <span class="text-sm font-medium text-gray-500">{{ field.help_text }}</span>
-                  {% for error in field.errors %}
-                    <span class="text-red-500">{{ error }}</span> <br>
-                  {% endfor %}
-                {% endfor %}
-
-                <div class="flex flex-col sm:flex-row">
-                  <button type="submit" class="text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-base px-5 py-3 w-full sm:w-auto text-center">Salvar</button>
-                  <a href="{{ object.get_absolute_url }}" class="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-sm px-5 py-3 mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto text-center">
-                    Cancelar
-                  </a>
-                </div>
-              </form>
-              <p class="text-gray-500 text-sm">*após salvar será encaminhada a senha para o email cadastrado</p>
-            </div>
+<body class="bg-gray-900">
+  <div class="container mx-auto p-2 mt-8">
+    <div class="mx-auto flex flex-col justify-center items-center px-6 pt-8 pt:mt-0">
+      <div class="bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl xl:p-0 border border-gray-700">
+        
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="p-4 border-b border-gray-700">
+          {% for message in messages %}
+          <div class="alert {{ message.tags }} p-4 mb-4 rounded-lg bg-gray-700 text-gray-200 border border-gray-600">
+            {{ message }}
           </div>
-        </fieldset>
-    </fieldset>
-  </div>
+          {% endfor %}
+        </div>
+        {% endif %}
 
+        <div class="p-8 space-y-8">
+          <h2 class="text-2xl font-bold text-gray-200">
+            {% if object.pk %}
+              Editar
+            {% else %}
+              Adicionar
+            {% endif %}
+            Usuário
+          </h2>
+
+          <p class="text-gray-400">Após preencher os dados e salvar, será encaminhado para o email cadastrado a senha.</p>
+
+          <form class="mt-8 space-y-6" action="." method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Erros gerais do formulário -->
+            {% if form.errors %}
+              {% for error in form.non_field_errors %}
+                <p class="text-red-400">{{ error }}</p>
+              {% endfor %}
+            {% endif %}
+
+            <!-- Campos do formulário -->
+            {% for field in form.visible_fields %}
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-300 block">{{ field.label }}</label>
+                {% render_field field class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+                
+                {% if field.help_text %}
+                  <span class="text-xs text-gray-500">{{ field.help_text }}</span>
+                {% endif %}
+                
+                {% for error in field.errors %}
+                  <span class="text-sm text-red-400">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endfor %}
+
+            <!-- Botões -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-8">
+              <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-center">
+                Salvar
+              </button>
+              <a href="{{ object.get_absolute_url }}" class="w-full sm:w-auto px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors font-medium text-center border border-gray-600">
+                Cancelar
+              </a>
+            </div>
+          </form>
+
+          <p class="text-gray-500 text-sm">* Após salvar será encaminhada a senha para o email cadastrado</p>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
