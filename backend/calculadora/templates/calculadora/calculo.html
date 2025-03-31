@@ -1,111 +1,100 @@
 {% extends "base_login.html" %}
 {% load static %}
+{% load widget_tweaks %}
 {% block 'title' %} Consultar Efetivo {% endblock %}
-{% block 'head' %}
-{% endblock 'head' %}
 
 {% block content %}
 <div class="container mx-auto p-4 mt-8">
-    <section class="w-full bg-gray-700 rounded-lg shadow-md p-6 mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 bg">
-            <h1 class="text-3xl font-semibold text-gray-100 mb-12 md:mb-">Cálculo de Tempo de Serviço</h1>
-            <a href="{% url 'core:index' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">Voltar</a>
+    <!-- Cabeçalho -->
+    <section class="w-full bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-semibold text-gray-200">Cálculo de Tempo de Serviço</h1>
+            <div class="flex space-x-4">
+   
+                <a href="{% url 'core:index' %}" class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-medium text-gray-300 transition-all duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Voltar
+                </a>
+            </div>
         </div>
     </section>
 
-    <section class="w-full bg-gray-600 rounded-lg shadow-md p-6 mb-8">
- 
-
-        <form method="post" class="grid grid-cols-1">
-            {% csrf_token %}
-            <div class="bg-gray-600 p-4 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for field in form %}
-                    <div class="flex flex-col">
-                        <label for="{{ field.id_for_label }}" class="text-gray-300">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <p class="text-red-500 text-sm">{{ field.errors.as_text }}</p>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+<!-- Formulário -->
+<section class="w-full bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for field in form %}
+                <div class="space-y-2">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300">
+                        {{ field.label }}
+                    </label>
+                    {{ field|add_class:"bg-gray-700 border border-gray-600 text-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" }}
+                    {% if field.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ field.errors.as_text }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <!-- Botão Calcular -->
+            <div class="md:col-span-2 lg:col-span-1 mt-4">
+                <button type="submit" class="w-full px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                    Calcular
+                </button>
             </div>
-            <div class="mt-4">
-                <button class="ms-4  mt-4  bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300  text-gray-800 bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-sm inline-flex items-center px-3 py-2 text-center" type="submit">Calcular</button>
-            </div>
-        </form>
-    </section>
+        </div>
+    </form>
+</section>
 
     {% if resultados %}
-    <section class="bg-gray-300 text-gray-700 rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação Art 24-G</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <div class="mb-4">
-                    <strong class="block">Data de Admissão:</strong>
-                    <span>{{ resultados.calculo.data_admissao }}</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Tempo em 01/01/2021:</strong>
-                    <span>{{ resultados.tempo_01jan21 }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Total de Dias:</strong>
-                    <span>{{ resultados.total_dias }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Averbação FFAA/PM/CBM:</strong>
-                    <span>{{ resultados.calculo.tempo_ffaa_pm_cbm }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Averbação INSS/Outros:</strong>
-                    <span>{{ resultados.calculo.tempo_inss_outros }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Afastamentos Descontáveis:</strong>
-                    <span>{{ resultados.calculo.afastamentos }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">30 Anos em:</strong>
-                    <span>{{ resultados.data_30anos }}</span>
-                </div>
-            </div>
-            <div>
-                <div class="mb-4">
-                    <strong class="block">Diferença para 30 Anos:</strong>
-                    <span>{{ resultados.dif_30anos }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Pedágio 17%:</strong>
-                    <span>{{ resultados.pedagio_17 }} dias</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">30 Anos + Pedágio:</strong>
-                    <span>{{ resultados.data_30anos_pedagio }}</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">25 Anos em:</strong>
-                    <span>{{ resultados.data_25anos }}</span>
-                </div>
-                <div class="mb-4">
-                    <strong class="block">Data Base:</strong>
-                    <span>{{ resultados.data_base }}</span>
-                </div>
-            </div>
+  <!-- Resultado Art 24-G -->
+<section class="bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
+    <h2 class="text-xl font-semibold text-gray-200 mb-6 text-center">Resultado da Simulação Art 24-G</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-300">
+        <!-- Coluna 1 -->
+        <div class="space-y-4">
+            <div><strong class="text-gray-200">Data de Admissão:</strong> {{ resultados.calculo.data_admissao }}</div>
+            <div><strong class="text-gray-200">Tempo em 01/01/2021:</strong> {{ resultados.tempo_01jan21 }} dias</div>
+            <div><strong class="text-gray-200">Total de Dias:</strong> {{ resultados.total_dias }} dias</div>
+            <div><strong class="text-gray-200">Averbação FFAA/PM/CBM:</strong> {{ resultados.calculo.tempo_ffaa_pm_cbm }} dias</div>
         </div>
-    </section>
+        
+        <!-- Coluna 2 -->
+        <div class="space-y-4">
+            <div><strong class="text-gray-200">Averbação INSS/Outros:</strong> {{ resultados.calculo.tempo_inss_outros }} dias</div>
+            <div><strong class="text-gray-200">Afastamentos:</strong> {{ resultados.calculo.afastamentos }} dias</div>
+            <div><strong class="text-gray-200">30 Anos em:</strong> {{ resultados.data_30anos }}</div>
+            <div><strong class="text-gray-200">Diferença para 30 Anos:</strong> {{ resultados.dif_30anos }} dias</div>
+        </div>
+        
+        <!-- Coluna 3 -->
+        <div class="space-y-4">
+            <div><strong class="text-gray-200">Pedágio 17%:</strong> {{ resultados.pedagio_17 }} dias</div>
+            <div><strong class="text-gray-200">30 Anos + Pedágio:</strong> {{ resultados.data_30anos_pedagio }}</div>
+            <div><strong class="text-gray-200">25 Anos em:</strong> {{ resultados.data_25anos }}</div>
+            <div><strong class="text-gray-200">Data Base:</strong> {{ resultados.data_base }}</div>
+        </div>
+    </div>
+</section>
 
-    <section class="bg-gray-300 text-gray-700 rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-2xl font-semibold mb-12 text-center">Resultado da Simulação Art 24 Paragrafo Único</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <div class="mb-4">
-                    <strong class="block">Acréscimo 4 Meses:</strong>
+    <!-- Resultado Art 24 Paragrafo Único -->
+    <section class="bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
+        <h2 class="text-xl font-semibold text-gray-200 mb-6 text-center">Resultado da Simulação Art 24 Parágrafo Único</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-300">
+            <div class="space-y-4">
+                <div>
+                    <strong class="block text-gray-200">Acréscimo 4 Meses:</strong>
                     <span>{{ resultados.acrescimo_4meses }} dias</span>
                 </div>
             </div>
-            <div>
-                <div class="mb-4">
-                    <strong class="block">Tempo de Atividade Militar:</strong>
+            <div class="space-y-4">
+                <div>
+                    <strong class="block text-gray-200">Tempo de Atividade Militar:</strong>
                     <span>{{ resultados.data_tempo_militar }}</span>
                 </div>
             </div>
