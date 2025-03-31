@@ -88,3 +88,70 @@ def reset_chat(request):
     """Cria nova conversa vazia sem apagar o histórico"""
     Conversation.objects.create(user=request.user)
     return JsonResponse({'status': 'success', 'new_conversation': True})
+
+
+@login_required
+def system_agent(request):
+    """Endpoint para o agente de sistema síncrono"""
+    if request.method == 'POST':
+        if not request.user.has_perm('faisca.use_system_agent'):
+            return JsonResponse({'error': 'Permissão negada'}, status=403)
+            
+        comando = request.POST.get('comando')
+        agent = SistemaAgent(request.user)
+        resposta = agent.executar_comando(comando)
+        
+        return JsonResponse({
+            'comando': comando,
+            'resposta': resposta,
+            'timestamp': get_local_time().isoformat()
+        })
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+
+# backend/faisca/views.py
+@login_required
+def faisca_agent_chat(request):
+    """View principal do Faisca Agent"""
+    current_conversation = FaiscaAgentConversation.objects.filter(user=request.user, active=True).first()
+    
+    if request.method == 'POST':
+        if not current_conversation:
+            current_conversation = FaiscaAgentConversation.objects.create(user=request.user)
+        
+        message = request.POST.get('message')
+        response = execute_faisca_agent_command(message)
+        
+        FaiscaAgentChat.objects.create(
+            conversation=current_conversation,
+            message=message,
+            response=response
+        )
+
+        return JsonResponse({'message': message, 'response': response})
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+def execute_faisca_agent_command(command):
+    """Executa comandos no Faisca Agent"""
+    agent = ChatGroq(model='llama-3.2-90b-vision-preview')
+    
+    prompt = f"""
+    [SYSTEM]
+    Você é o Faisca Agent, especialista em análise de dados e operações do sistema.
+    Forneça respostas técnicas e estruturadas usando markdown.
+    Mantenha o foco em dados do sistema e operações.
+    
+    [COMANDO]
+    {command}
+    """
+    
+    response = agent.invoke(prompt)
+    return markdown(response.content, output_format='html')
+
+@login_required
+def reset_faisca_agent_chat(request):
+    """Reseta a conversa do Faisca Agent"""
+    FaiscaAgentConversation.objects.filter(user=request.user, active=True).update(active=False)
+    return JsonResponse({'status': 'success'})
