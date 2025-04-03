@@ -5,6 +5,8 @@ from .models import Profile
 from backend.documentos.models import Documento
 from django.shortcuts import render
 from backend.efetivo.models import Cadastro, Promocao, Imagem, DetalhesSituacao
+from backend.municipios.models import  Pessoal
+from backend.bm.models import Cadastro_bm
 from datetime import datetime, date
 from django.db.models import Q
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -396,3 +398,170 @@ class CalendarioEventosView(View):
             {"name": "SOLENIDADE DE 23 ANOS DO 18ºGB", "date": date(year, 4, 9)},
             {"name": "SOLENIDADE DE 13 ANOS DO 17º GB", "date": date(year, 4, 16)}
         ]
+
+
+from django.db.models import Sum, Count, Q
+from backend.municipios.models import Pessoal
+from backend.efetivo.models import Cadastro, DetalhesSituacao
+from backend.bm.models import Cadastro_bm
+from datetime import date, timedelta
+from django.utils import timezone
+
+def dashboard_view(request):
+    try:
+        # 1. Efetivo Fixado - Soma de todo o pessoal dos postos
+        pessoal_aggregation = Pessoal.objects.aggregate(
+            total_cel=Sum('cel'),
+            total_ten_cel=Sum('ten_cel'),
+            total_maj=Sum('maj'),
+            total_cap=Sum('cap'),
+            total_tenqo=Sum('tenqo'),
+            total_tenqa=Sum('tenqa'),
+            total_asp=Sum('asp'),
+            total_st_sgt=Sum('st_sgt'),
+            total_cb_sd=Sum('cb_sd')
+        )
+        
+        # Calcula o total, substituindo None por 0
+        efetivo_fixado = sum(v if v is not None else 0 for v in pessoal_aggregation.values())
+
+        # 2. Efetivo Existente - Correção: usando Cadastro através do relacionamento
+        efetivo_existente = Cadastro.objects.filter(
+            detalhes_situacao__situacao="Efetivo",
+        ).count()
+
+        # 3. Claro (diferença entre fixado e existente)
+        claro = max(efetivo_fixado - efetivo_existente, 0)  # Garante não negativo
+
+        # 4. % de Claro - Dois cálculos diferentes
+        percentual_claro_cb = round((claro / efetivo_fixado * 100), 1) if efetivo_fixado > 0 else 0
+        
+        # 5. Bombeiros Municipais
+        bombeiros_municipais = Cadastro_bm.objects.filter(
+            situacao="Efetivo"
+        ).count()
+        
+        # Cálculo do percentual Claro CB + BCM
+        percentual_claro_cb_bcm = round(((claro + bombeiros_municipais) / efetivo_fixado * 100), 1) if efetivo_fixado > 0 else 0
+
+        # Cálculo das variações em relação ao mês anterior
+        hoje = timezone.now().date()
+        mes_passado = hoje - timedelta(days=30)
+        
+        # Variação do Efetivo Fixado (assumindo que não muda frequentemente)
+        variacao_fixado = 0  # Normalmente fixo
+        
+        # Variação do Efetivo Existente
+        existente_mes_passado = Cadastro.objects.filter(
+            detalhes_situacao__situacao="Efetivo",
+            detalhes_situacao__data_alteracao__date__lte=mes_passado
+        ).count()
+        variacao_existente = calcular_variacao(existente_mes_passado, efetivo_existente)
+        
+        # Variação do Claro
+        claro_mes_passado = max(efetivo_fixado - existente_mes_passado, 0)
+        variacao_claro = calcular_variacao(claro_mes_passado, claro)
+        
+        # Variação dos Bombeiros Municipais
+        bm_mes_passado = Cadastro_bm.objects.filter(
+            situacao="Efetivo",
+            create_at__date__lte=mes_passado
+        ).count()
+        variacao_bm = calcular_variacao(bm_mes_passado, bombeiros_municipais)
+
+        # Dados para os gráficos
+        # Distribuição por SGB
+        sgb_distribution = DetalhesSituacao.objects.filter(
+            situacao="Efetivo"
+        ).values('sgb').annotate(
+            existente=Count('id'),
+        ).order_by('sgb')
+        
+        # Adicionando dados fixados por SGB
+        for sgb in sgb_distribution:
+            sgb_fixado = Pessoal.objects.filter(
+                posto__sgb=sgb['sgb']
+            ).aggregate(
+                total=Sum('cel') + Sum('ten_cel') + Sum('maj') + Sum('cap') + 
+                      Sum('tenqo') + Sum('tenqa') + Sum('asp') + 
+                      Sum('st_sgt') + Sum('cb_sd')
+            )['total'] or 0
+            sgb['fixado'] = sgb_fixado
+            sgb['claro'] = max(sgb_fixado - sgb['existente'], 0)
+            sgb['percentage'] = round((sgb['existente'] / sgb_fixado * 100), 1) if sgb_fixado > 0 else 0
+
+        # Movimentações recentes (últimos 30 dias)
+        recent_movements = DetalhesSituacao.objects.filter(
+            data_alteracao__date__gte=mes_passado
+        ).order_by('-data_alteracao')[:5]
+        
+        # Transformar em formato para o template
+        formatted_movements = []
+        for mov in recent_movements:
+            movement_type = 'transfer' if 'transfer' in mov.situacao.lower() else 'admission' if 'admission' in mov.situacao.lower() else 'other'
+            formatted_movements.append({
+                'type': movement_type,
+                'description': f"{mov.cadastro.nome_de_guerra} - {mov.situacao}",
+                'date': mov.data_alteracao.strftime('%d/%m/%Y'),
+                'unit': mov.sgb,
+                'time': mov.data_alteracao.strftime('%H:%M')
+            })
+
+        context = {
+            # Cards principais
+            'efetivo_fixado': efetivo_fixado or 0,
+            'efetivo_existente': efetivo_existente or 0,
+            'claro': claro or 0,
+            'percentual_claro_cb': percentual_claro_cb or 0,
+            'percentual_claro_cb_bcm': percentual_claro_cb_bcm or 0,
+            'bombeiros_municipais': bombeiros_municipais or 0,
+            'variacao_fixado': variacao_fixado,
+            'variacao_existente': variacao_existente,
+            'variacao_claro': variacao_claro,
+            'variacao_bm': variacao_bm,
+            
+            # Dados para gráficos e tabelas
+            'sgb_data': sgb_distribution,
+            'recent_movements': formatted_movements,
+            
+            # Dados temporários para os gráficos
+            'evolution_data': {
+                'labels': ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                'fixado': [600, 605, 610, 615, 620, 625, 630, 632, 633, 634, 635, 635],
+                'existente': [480, 490, 495, 500, 505, 510, 515, 518, 520, 521, 522, 522]
+            },
+            'rank_distribution': {
+                'labels': ['Oficiais', 'Sargentos', 'Cabos', 'Soldados', 'Temporários'],
+                'data': [45, 120, 150, 180, 27]
+            },
+            'age_distribution': {
+                'labels': ['18-24', '25-29', '30-34', '35-39', '40-44', '45+'],
+                'data': [85, 120, 150, 90, 60, 17]
+            },
+            'health_distribution': {
+                'labels': ['Apto', 'Apto c/ Restrição', 'Inapto Temporário', 'Inapto Permanente'],
+                'data': [380, 90, 40, 12]
+            }
+        }
+        return render(request, 'dashboard.html', context)
+
+    except Exception as e:
+        print(f"Erro na dashboard_view: {str(e)}")
+        # Retorna valores padrão em caso de erro
+        return render(request, 'dashboard.html', {
+            'efetivo_fixado': 0,
+            'efetivo_existente': 0,
+            'claro': 0,
+            'percentual_claro_cb': 0,
+            'percentual_claro_cb_bcm': 0,
+            'bombeiros_municipais': 0,
+            'variacao_fixado': 0,
+            'variacao_existente': 0,
+            'variacao_claro': 0,
+            'variacao_bm': 0,
+        })
+
+def calcular_variacao(valor_anterior, valor_atual):
+    if valor_anterior == 0:
+        return 100 if valor_atual > 0 else 0
+    return round(((valor_atual - valor_anterior) / valor_anterior) * 100, 1)

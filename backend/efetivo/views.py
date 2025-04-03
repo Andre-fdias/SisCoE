@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from django.db import IntegrityError
-
+from django.db import transaction
 from backend.rpt.models import Cadastro_rpt
 from django.http import HttpResponseForbidden
 from django.db.models import F, Window
@@ -220,24 +220,26 @@ def excluir_militar(request, id):
             # Verificar senha
             password = request.POST.get('password', '')
             if not check_password(password, current_user.password):
-                messages.add_message(request, constants.ERROR,  'Senha incorreta! Operação cancelada.', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('ver_militar', id=id)
+                messages.add_message(request, constants.ERROR, 'Senha incorreta! Operação cancelada.', 
+                                  extra_tags='bg-red-500 text-white p-4 rounded delete_error')  # Adicione 'delete_error'
+                return redirect('efetivo:ver_militar', id=id)
             
             # Realizar exclusão
             cadastro.delete()
-            messages.add_message(request, constants.SUCCESS, 'Cadastro excluído com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
-            messages.success(request, 'Militar excluído com sucesso!')
-            return redirect('/efetivo/listar_militar')
+            messages.add_message(request, constants.SUCCESS, 'Cadastro excluído com sucesso.', 
+                              extra_tags='bg-green-500 text-white p-4 rounded')
+            return redirect('efetivo:listar_militar')
             
         except Cadastro.DoesNotExist:
-            messages.add_message(request, constants.ERROR, 'Militar não encontrado!.', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('/efetivo/listar_militar')
+            messages.add_message(request, constants.ERROR, 'Militar não encontrado!.', 
+                              extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('efetivo:listar_militar')
         except Exception as e:
-            messages.add_message(request, constants.ERROR, f'Erro ao excluir: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('ver_militar', id=id)
+            messages.add_message(request, constants.ERROR, f'Erro ao excluir: {str(e)}', 
+                              extra_tags='bg-red-500 text-white p-4 rounded delete_error')  # Adicione 'delete_error'
+            return redirect('efetivo:ver_militar', id=id)
     
-    return redirect('/efetivo/listar_militar')
-
+    return redirect('efetivo:listar_militar')
 
 
 # responsável pela edição da model promoções
@@ -360,18 +362,19 @@ def cadastrar_nova_situacao(request, id):
                 cat_efetivo=nova_situacao.cat_efetivo,
             )
          
-            messages.add_message(request, constants.SUCCESS, 'Criada Nova Situação Funcional com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
-            return redirect('efetivo:listar_militar')  # Substitua pelo nome correto da view
+            messages.add_message(request, constants.SUCCESS, 'Criada Nova Situação Funcional com sucesso.', 
+            extra_tags='bg-green-500 text-white p-4 rounded')
+            return redirect('efetivo:ver_militar', id=cadastro.id)
 
         except Exception as e:
             print(f"Erro ao cadastrar a nova situação: {e}")
-            messages.add_message(request, constants.ERROR, 'Dados de Posto e Graduação atualizados com sucesso.', extra_tags='bg-red-500 text-white p-4 rounded')
-      
-            return redirect('efetivo:ver_militar')  # Substitua pelo nome correto da view
+            messages.add_message(request, constants.ERROR, 'Erro ao cadastrar nova situação.', 
+                              extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
+            return redirect('efetivo:ver_militar', id=cadastro.id)
     
-   
-    messages.add_message(request, constants.ERROR, 'Método de Reqeuisição errado.', extra_tags='bg-red-500 text-white p-4 rounded')
-    return redirect('efetivo:ver_militar')  # Substitua pelo nome correto da view
+    messages.add_message(request, constants.ERROR, 'Método de Requisição errado.', 
+                      extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
+    return redirect('efetivo:ver_militar', id=id)
 
 
 

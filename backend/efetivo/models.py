@@ -369,8 +369,8 @@ class DetalhesSituacao(models.Model):
 
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE,
                                  related_name='detalhes_situacao')
-    situacao = models.CharField(max_length=30, blank=False, null=False, choices=cat_efetivo_choices,    default="Efetivo")
-    cat_efetivo = models.CharField(max_length=30, blank=False, null=False, choices=situacao_choices,    default="Ativo")
+    situacao = models.CharField(max_length=30, blank=False, null=False, choices=situacao_choices,    default="Efetivo")
+    cat_efetivo = models.CharField(max_length=30, blank=False, null=False, choices=cat_efetivo_choices,    default="Ativo")
     sgb = models.CharField(max_length=9, blank=False, null=False, choices=sgb_choices)
     posto_secao = models.CharField(max_length=100, blank=False, null=False, choices=posto_secao_choices)
     esta_adido = models.CharField(max_length=100, blank=True, null=True, choices=esta_adido_choices)

@@ -881,29 +881,29 @@
                                     </div>
                                 </div>
                                 
-                                <script>
-                                // Funções para controle do modal
-                                function openDeleteModal() {
-                                    document.getElementById('exampleModal').classList.remove('hidden');
-                                    document.getElementById('passwordInput').focus();
-                                }
-                                
-                                function closeDeleteModal() {
-                                    document.getElementById('exampleModal').classList.add('hidden');
-                                    document.getElementById('passwordError').classList.add('hidden');
-                                }
-                                
-                                // Tratar mensagens de erro do Django
-                                {% if messages %}
-                                    {% for message in messages %}
-                                        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                                            document.getElementById('passwordError').innerText = '{{ message }}';
-                                            document.getElementById('passwordError').classList.remove('hidden');
-                                            openDeleteModal();
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endif %}
-                                </script>
+                               <script>
+// Funções para controle do modal
+function openDeleteModal() {
+    document.getElementById('exampleModal').classList.remove('hidden');
+    document.getElementById('passwordInput').focus();
+}
+
+function closeDeleteModal() {
+    document.getElementById('exampleModal').classList.add('hidden');
+    document.getElementById('passwordError').classList.add('hidden');
+}
+
+// Tratar mensagens de erro do Django - SOMENTE para erros de exclusão
+{% if messages %}
+    {% for message in messages %}
+        {% if message.extra_tags == 'delete_error' %}  {# Adicione esta tag específica #}
+            document.getElementById('passwordError').innerText = '{{ message }}';
+            document.getElementById('passwordError').classList.remove('hidden');
+            openDeleteModal();
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
                             </div>
                         </div>
                         <div class="w-full md:w-1/2 text-right">

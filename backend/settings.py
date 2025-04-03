@@ -47,6 +47,25 @@ INSTALLED_APPS = [
     'backend.calculadora',
 ]
 
+
+# Restrinja os apps que podem ser acessados
+FAISCA_ALLOWED_APPS = [
+    'backend.accounts',
+    'backend.core',
+    'backend.crm',
+    'backend.efetivo',
+    'backend.adicional',
+    'backend.faisca',
+    'backend.rpt',
+    'backend.bm',
+    'backend.municipios',
+    'backend.documentos',
+    'backend.agenda',
+    'backend.calculadora',
+]
+
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -167,13 +186,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 GROQ_API_KEY = config('GROQ_API_KEY')
+
+
+
 # OpenWeatherMap
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-
-
-
-
-
 
 
 
@@ -198,3 +215,8 @@ LOGGING = {
     },
 }
 
+
+# Configurações para AJAX
+CSRF_COOKIE_HTTPONLY = False  # Permite que JavaScript leia o CSRF token
+CSRF_COOKIE_SECURE = False    # Em desenvolvimento pode ser False
+CSRF_COOKIE_SAMESITE = 'Lax'  # Ou 'None' se estiver usando CORS

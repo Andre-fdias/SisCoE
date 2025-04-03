@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.core.validators import URLValidator
 
 
+
+
 class Posto(models.Model):
 
     sgb_choices=( 
@@ -344,3 +346,48 @@ class Cidade(models.Model):
     class Meta:
         verbose_name = "Cidade"
         verbose_name_plural = "Cidades"
+
+
+    class HistoricoPessoal(models.Model):
+            data_referencia = models.DateField()
+            total_cel = models.IntegerField()
+            total_ten_cel = models.IntegerField()
+            total_maj = models.IntegerField()
+            total_cap = models.IntegerField()
+            total_tenqo = models.IntegerField()
+            total_tenqa = models.IntegerField()
+            total_asp = models.IntegerField()
+            total_st_sgt = models.IntegerField()
+            total_cb_sd = models.IntegerField()
+            total_geral = models.IntegerField()
+            criado_em = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def criar_registro_mensal(cls):
+        totais = Pessoal.objects.aggregate(
+            cel=Sum('cel'),
+            ten_cel=Sum('ten_cel'),
+            maj=Sum('maj'),
+            cap=Sum('cap'),
+            tenqo=Sum('tenqo'),
+            tenqa=Sum('tenqa'),
+            asp=Sum('asp'),
+            st_sgt=Sum('st_sgt'),
+            cb_sd=Sum('cb_sd')
+        )
+        
+        total_geral = sum(v for v in totais.values() if v is not None)
+        
+        return cls.objects.create(
+            data_referencia=date.today(),
+            total_cel=totais['cel'] or 0,
+            total_ten_cel=totais['ten_cel'] or 0,
+            total_maj=totais['maj'] or 0,
+            total_cap=totais['cap'] or 0,
+            total_tenqo=totais['tenqo'] or 0,
+            total_tenqa=totais['tenqa'] or 0,
+            total_asp=totais['asp'] or 0,
+            total_st_sgt=totais['st_sgt'] or 0,
+            total_cb_sd=totais['cb_sd'] or 0,
+            total_geral=total_geral
+        )
