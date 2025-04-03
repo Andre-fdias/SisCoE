@@ -1,648 +1,677 @@
-<!-- dashboard.html -->
 {% extends "base.html" %}
 {% load static %}
 {% block 'body' %}
   <main>
-
-
-
-    <body>
-
-      <br>
-      <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
-       <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
-       
-    <div class="mt-4 w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
-      <div class="flex flex-col bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">635</span>
-            <h3 class="text-base font-normal text-gray-500">Efetivo Fixado</h3>
-          </div>
-          <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-            14.6%
-            <svg
-              class="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
+    <div class="p-4 w-full">
+<!-- Cards de Resumo -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+  <!-- Card Efetivo Fixado -->
+  <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 text-white">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-sm font-medium opacity-80">Efetivo Fixado</p>
+        <h3 class="text-2xl font-bold mt-1">
+          {{ efetivo_fixado|default:"0" }}
+        </h3>
       </div>
-      <div class="flex flex-col bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8">
-
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">522</span>
-            <h3 class="text-base font-normal text-gray-500">Efetivo Existente</h3>
-          </div>
-          <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-            14.6%
-            <svg
-              class="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
+      <div class="bg-white/20 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
       </div>
-      <div class="flex flex-col bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">113</span>
-            <h3 class="text-base font-normal text-gray-500">Claro</h3>
-          </div>
-          <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-            14.6%
-            <svg
-              class="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
-      </div>
-      <div class="flex flex-col bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">18,5%</span>
-            <h3 class="text-base font-normal text-gray-500">% de Claro</h3>
-          </div>
-          <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-            32.9%
-            <svg
-              class="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
-      </div>
-      <div class="flex flex-col bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8">
-
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">95</span>
-            <h3 class="text-base font-normal text-gray-500">Bombeiro Municipal</h3>
-          </div>
-          <div class="ml-5 w-0 flex items-center justify-end flex-1 text-red-500 text-base font-bold">
-            -2.7%
-            <svg
-              class="w-5 h-5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
-      </div>
-
     </div>
-    <div class="pt-6 px-2">
-      <div class="w-full grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8  2xl:col-span-2">
+    <div class="mt-4 flex items-center text-sm">
+      <span class="font-semibold">
+        {{ variacao_fixado|default:"0" }}%
+      </span>
+      <span class="ml-1">vs último mês</span>
+    </div>
+  </div>
 
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex-shrink-0">
-              <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">$45,385</span>
-              <h3 class="text-base font-normal text-gray-500">Sales this week</h3>
-            </div>
-            <div class="flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-              12.5%
-              <svg
-                class="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
+  <!-- Card Efetivo Existente -->
+  <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-5 text-white">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-sm font-medium opacity-80">Efetivo Existente</p>
+        <h3 class="text-2xl font-bold mt-1">
+          {{ efetivo_existente|default:"0" }}
+        </h3>
+      </div>
+      <div class="bg-white/20 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center text-sm">
+      <span class="font-semibold">
+        {{ variacao_existente|default:"0" }}%
+      </span>
+      <span class="ml-1">vs último mês</span>
+    </div>
+  </div>
+
+  <!-- Card Claro -->
+  <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-5 text-white">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-sm font-medium opacity-80">Claro</p>
+        <h3 class="text-2xl font-bold mt-1">
+          {{ claro|default:"0" }}
+        </h3>
+      </div>
+      <div class="bg-white/20 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center text-sm">
+      <span class="font-semibold">
+        {{ variacao_claro|default:"0" }}%
+      </span>
+      <span class="ml-1">vs último mês</span>
+    </div>
+  </div>
+
+    <!-- Card Bombeiro Municipal -->
+    <div class="bg-gradient-to-br from-yellow-300 to-red-400 rounded-xl shadow-lg p-5 text-white">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-sm font-medium opacity-80">Bombeiro Municipal</p>
+          <h3 class="text-2xl font-bold mt-1">
+            {{ bombeiros_municipais|default:"0" }}
+          </h3>
+        </div>
+        <div class="bg-white/20 p-2 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center text-sm">
+        <span class="font-semibold {% if variacao_bm < 0 %}text-amber-300{% endif %}">
+          {% if variacao_bm >= 0 or variacao_bm is None %}+{% endif %}
+          {{ variacao_bm|default:"0" }}%
+        </span>
+        <span class="ml-1">vs último mês</span>
+      </div>
+    </div>
+  
+
+  <!-- Card % de Claro Consolidado -->
+  <div class="bg-gradient-to-br from-red-400 to-red-500 rounded-xl shadow-lg p-5 text-white">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-sm font-medium opacity-80">Percentual de Claro</p>
+        
+        <!-- Linha CB -->
+        <div class="flex items-center mt-2">
+          <span class="text-sm opacity-80 mr-2">CB:</span>
+          <h3 class="text-xl font-bold">
+            {{ percentual_claro_cb|default:"0" }}%
+          </h3>
+        </div>
+        
+        <!-- Linha CB + BCM -->
+        <div class="flex items-center mt-1">
+          <span class="text-sm opacity-80 mr-2">CB + BCM:</span>
+          <h3 class="text-xl font-bold">
+            {{ percentual_claro_cb_bcm|default:"0" }}%
+          </h3>
+        </div>
+      </div>
+      
+      <div class="bg-white/20 p-2 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      </div>
+    </div>
+    
+    <!-- Variações -->
+  
+    
+  </div>
+
+
+</div>
+
+
+<!-- Gráficos Principais -->
+<div class="grid grid-cols-1 lg:grid-cols-8 gap-6 mb-6">
+<!-- Gráfico de Evolução Mensal (3/8) -->
+<div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-3">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h3 class="text-xl font-bold text-gray-800">Evolução do Efetivo</h3>
+      <p class="text-sm text-gray-500">Últimos 12 meses</p>
+    </div>
+    <div class="flex space-x-2">
+      <button class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg">Anual</button>
+      <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">Mensal</button>
+    </div>
+  </div>
+  <div class="h-80">
+    <canvas id="evolutionChart"></canvas>
+  </div>
+</div>
+
+  <!-- Gráfico de Distribuição por SGB (3/8) -->
+  <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-3">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-gray-800">Distribuição por SGB</h3>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center">
+          <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+          <span class="text-sm text-gray-600">Fixado</span>
+        </div>
+        <div class="flex items-center">
+          <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+          <span class="text-sm text-gray-600">Existente</span>
+        </div>
+      </div>
+    </div>
+    <div id="sgbChart" class="h-80"></div>
+  </div>
+
+  <!-- Últimas Movimentações -->
+  <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-gray-800">Últimas Movimentações</h3>
+        <p class="text-sm text-gray-500">Atualizado há 2 horas</p>
+      </div>
+      <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-800">Ver todas</a>
+    </div>
+    
+    <div class="space-y-4">
+      {% for mov in recent_movements %}
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mt-1">
+          <div class="h-8 w-8 rounded-full flex items-center justify-center 
+            {% if mov.type == 'admission' %}bg-green-100 text-green-600
+            {% elif mov.type == 'transfer' %}bg-blue-100 text-blue-600
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {% if mov.type == 'admission' %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            {% elif mov.type == 'transfer' %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            {% else %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            {% endif %}
+          </div>
+        </div>
+        <div class="ml-3 flex-1">
+          <p class="text-sm font-medium text-gray-900">{{ mov.description }}</p>
+          <p class="text-sm text-gray-500">{{ mov.date }} · {{ mov.unit }}</p>
+        </div>
+        <div class="text-sm text-gray-500 whitespace-nowrap">{{ mov.time }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+      <!-- Tabela de Efetivo por SGB -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div class="px-6 py-4 border-b border-gray-100">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">Efetivo por SGB</h3>
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg">Exportar</button>
+              <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">Filtrar</button>
             </div>
           </div>
-          <div id="main-chart"></div>
-
         </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SGB</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FX</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EX</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claro</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BCM</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for sgb in sgb_data %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ sgb.name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sgb.fx }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sgb.ex }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sgb.claro }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sgb.percentage }}%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sgb.bcm }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ sgb.percentage }}%"></div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between">
+          <div class="text-sm text-gray-500">
+            Mostrando <span class="font-medium">1</span> a <span class="font-medium">5</span> de <span class="font-medium">10</span> resultados
+          </div>
+          <div class="flex space-x-2">
+            <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg">Anterior</button>
+            <button class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg">Próximo</button>
+          </div>
+        </div>
+      </div>
 
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 ">
-
-          <!-- Card Title -->
-          <div class="mb-4 flex items-center justify-between">
+      <!-- Gráficos Secundários -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Distribuição por Posto/Graduação -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
             <div>
-              <h3 class="text-xl font-bold text-gray-900 mb-2">Latest Transactions</h3>
-              <span class="text-base font-normal text-gray-500">This is a list of latest transactions</span>
+              <h3 class="text-xl font-bold text-gray-800">Distribuição por Posto</h3>
+              <p class="text-sm text-gray-500">Efetivo existente</p>
             </div>
-            <div class="flex-shrink-0">
-              <a
-                href="#"
-                class="text-sm font-medium text-cyan-600 hover:bg-gray-100 rounded-lg p-2"
-              >View all</a>
-            </div>
-          </div>
-          <!-- Table -->
-          <div class="flex flex-col mt-8">
-            <div class="overflow-x-auto rounded-lg">
-              <div class="align-middle inline-block min-w-full">
-                <div class="shadow overflow-hidden sm:rounded-lg">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Transaction
-                        </th>
-                        <th
-                          scope="col"
-                          class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Date & Time
-                        </th>
-                        <th
-                          scope="col"
-                          class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white">
-                      <tr>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
-                          Payment from <span class="font-semibold">Bonnie Green</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 23 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $2300
-                        </td>
-                      </tr>
-                      <tr class="bg-gray-50">
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900 rounded-lg rounded-left">
-                          Payment refund to <span class="font-semibold">#00910</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 23 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          -$670
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
-                          Payment failed from <span class="font-semibold">#087651</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 18 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $234
-                        </td>
-                      </tr>
-                      <tr class="bg-gray-50">
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900 rounded-lg rounded-left">
-                          Payment from <span class="font-semibold">Lana Byrd</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 15 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $5000
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
-                          Payment from <span class="font-semibold">Jese Leos</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 15 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $2300
-                        </td>
-                      </tr>
-                      <tr class="bg-gray-50">
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900 rounded-lg rounded-left">
-                          Payment from <span class="font-semibold">THEMESBERG LLC</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 11 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $560
-                        </td>
-                      </tr>
-
-                      <tr>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
-                          Payment from <span class="font-semibold">Lana Lysle</span>
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                          Apr 6 ,2021
-                        </td>
-                        <td class="p-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                          $1437
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="mt-4 w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 ">
-
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">2,340</span>
-              <h3 class="text-base font-normal text-gray-500">New products this week</h3>
-            </div>
-            <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-              14.6%
-              <svg
-                class="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                  clip-rule="evenodd"
-                ></path>
+            <button class="text-blue-600 hover:text-blue-800">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
               </svg>
-            </div>
+            </button>
           </div>
-
+          <div class="h-64">
+            <canvas id="rankChart"></canvas>
+          </div>
         </div>
 
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 ">
-
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">5,355</span>
-              <h3 class="text-base font-normal text-gray-500">Visitors this week</h3>
+        <!-- Distribuição por Idade -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="text-xl font-bold text-gray-800">Distribuição por Idade</h3>
+              <p class="text-sm text-gray-500">Faixas etárias</p>
             </div>
-            <div class="ml-5 w-0 flex items-center justify-end flex-1 text-green-500 text-base font-bold">
-              32.9%
-              <svg
-                class="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                  clip-rule="evenodd"
-                ></path>
+            <button class="text-blue-600 hover:text-blue-800">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
               </svg>
-            </div>
+            </button>
           </div>
-
+          <div class="h-64">
+            <canvas id="ageChart"></canvas>
+          </div>
         </div>
 
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 ">
-
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <span class="text-2xl sm:text-3xl leading-none font-bold text-gray-900">385</span>
-              <h3 class="text-base font-normal text-gray-500">User signups this week</h3>
+        <!-- Status de Saúde -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="text-xl font-bold text-gray-800">Status de Saúde</h3>
+              <p class="text-sm text-gray-500">Aptidão médica</p>
             </div>
-            <div class="ml-5 w-0 flex items-center justify-end flex-1 text-red-500 text-base font-bold">
-              -2.7%
-              <svg
-                class="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                ></path>
+            <button class="text-blue-600 hover:text-blue-800">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
               </svg>
-            </div>
+            </button>
           </div>
-
-        </div>
-
-      </div>
-      <div class="grid grid-cols-1 2xl:grid-cols-2 xl:gap-4 my-4">
-        <!-- Top Sales Card -->
-        <div class="bg-white shadow rounded-lg mb-4 p-4 sm:p-6 h-full">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold leading-none text-gray-900">Latest Customers</h3>
-            <a
-              href="#"
-              class="text-sm font-medium text-cyan-600 hover:bg-gray-100 rounded-lg inline-flex items-center p-2"
-            >
-              View all
-            </a>
-          </div>
-          <div class="flow-root">
-            <ul
-              role="list"
-              class="divide-y divide-gray-200"
-            >
-              <li class="py-3 sm:py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img
-                      class="h-8 w-8 rounded-full"
-                      src="https://demo.themesberg.com/windster/images/users/neil-sims.png"
-                      alt="Neil image"
-                    >
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Neil Sims
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      email@windster.com
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold text-gray-900">
-                    $320
-                  </div>
-                </div>
-              </li>
-              <li class="py-3 sm:py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img
-                      class="h-8 w-8 rounded-full"
-                      src="https://demo.themesberg.com/windster/images/users/bonnie-green.png"
-                      alt="Neil image"
-                    >
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Bonnie Green
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      email@windster.com
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold text-gray-900">
-                    $3467
-                  </div>
-                </div>
-              </li>
-              <li class="py-3 sm:py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img
-                      class="h-8 w-8 rounded-full"
-                      src="https://demo.themesberg.com/windster/images/users/michael-gough.png"
-                      alt="Neil image"
-                    >
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Michael Gough
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      email@windster.com
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold text-gray-900">
-                    $67
-                  </div>
-                </div>
-              </li>
-              <li class="py-3 sm:py-4">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img
-                      class="h-8 w-8 rounded-full"
-                      src="https://demo.themesberg.com/windster/images/users/thomas-lean.png"
-                      alt="Neil image"
-                    >
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Thomes Lean
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      email@windster.com
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold text-gray-900">
-                    $2367
-                  </div>
-                </div>
-              </li>
-              <li class="pt-3 sm:pt-4 pb-0">
-                <div class="flex items-center space-x-4">
-                  <div class="flex-shrink-0">
-                    <img
-                      class="h-8 w-8 rounded-full"
-                      src="https://demo.themesberg.com/windster/images/users/lana-byrd.png"
-                      alt="Neil image"
-                    >
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">
-                      Lana Byrd
-                    </p>
-                    <p class="text-sm text-gray-500 truncate">
-                      email@windster.com
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold text-gray-900">
-                    $367
-                  </div>
-                </div>
-              </li>
-            </ul>
+          <div class="h-64">
+            <canvas id="healthChart"></canvas>
           </div>
         </div>
-        <!-- Sessions by device Card -->
-        <div class="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 ">
-
-          <!-- Card Title -->
-          <h3 class="text-xl leading-none font-bold text-gray-900 mb-10">Efetivo por SGB</h3>
-          <div class="block w-full overflow-x-auto">
-            <table class="items-center w-full bg-transparent border-collapse">
-              <thead>
-                <tr>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">SGB</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">FX</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">EX</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">CLARO</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">%</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap">BCM</th>
-                  <th class="px-4 bg-gray-50 text-gray-700 align-middle py-3 text-xs font-semibold text-left uppercase border-l-0 border-r-0 whitespace-nowrap min-w-140-px"></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr class="text-gray-500">
-                  <th class="border-t-0 px-4 align-middle text-sm font-normal whitespace-nowrap p-4 text-left">1º SGB</th>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">125</td>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">110</td>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">15</td>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">10%</td>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">0</td>
-                  <td class="border-t-0 px-4 align-middle text-xs whitespace-nowrap p-4">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">30%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-cyan-600 h-2 rounded-sm"
-                            style="width: 30%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="text-gray-500">
-                  <th class="border-t-0 px-4 align-middle text-sm font-normal whitespace-nowrap p-4 text-left">2º SGB</th>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">112</td>
-                  <td class="border-t-0 px-4 align-middle text-xs whitespace-nowrap p-4">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">24%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-orange-300 h-2 rounded-sm"
-                            style="width: 24%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="text-gray-500">
-                  <th class="border-t-0 px-4 align-middle text-sm font-normal whitespace-nowrap p-4 text-left">Direct</th>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">3,105</td>
-                  <td class="border-t-0 px-4 align-middle text-xs whitespace-nowrap p-4">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">18%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-teal-400 h-2 rounded-sm"
-                            style="width: 18%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="text-gray-500">
-                  <th class="border-t-0 px-4 align-middle text-sm font-normal whitespace-nowrap p-4 text-left">Social</th>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">1251</td>
-                  <td class="border-t-0 px-4 align-middle text-xs whitespace-nowrap p-4">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">12%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-pink-600 h-2 rounded-sm"
-                            style="width: 12%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="text-gray-500">
-                  <th class="border-t-0 px-4 align-middle text-sm font-normal whitespace-nowrap p-4 text-left">Other</th>
-                  <td class="border-t-0 px-4 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4">734</td>
-                  <td class="border-t-0 px-4 align-middle text-xs whitespace-nowrap p-4">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">9%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-indigo-600 h-2 rounded-sm"
-                            style="width: 9%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="text-gray-500">
-                  <th class="border-t-0 align-middle text-sm font-normal whitespace-nowrap p-4 pb-0 text-left">Email</th>
-                  <td class="border-t-0 align-middle text-xs font-medium text-gray-900 whitespace-nowrap p-4 pb-0">456</td>
-                  <td class="border-t-0 align-middle text-xs whitespace-nowrap p-4 pb-0">
-                    <div class="flex items-center">
-                      <span class="mr-2 text-xs font-medium">7%</span>
-                      <div class="relative w-full">
-                        <div class="w-full bg-gray-200 rounded-sm h-2">
-                          <div
-                            class="bg-purple-500 h-2 rounded-sm"
-                            style="width: 7%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-
       </div>
     </div>
-
-
   </main>
+
+  <!-- Scripts para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Gráfico de Evolução
+    document.addEventListener('DOMContentLoaded', function() {
+      const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+      
+      // Dados reais do Django
+      const labels = {{ evolution_labels|safe }};
+      const fixadoData = {{ evolution_fixado|safe }};
+      const existenteData = {{ evolution_existente|safe }};
+    
+      new Chart(evolutionCtx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Efetivo Fixado',
+              data: fixadoData,
+              borderColor: '#3B82F6',
+              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Efetivo Existente',
+              data: existenteData,
+              borderColor: '#10B981',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              suggestedMin: Math.min(...existenteData) - 20,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+    // Gráfico de Posto/Graduação
+    const rankCtx = document.getElementById('rankChart').getContext('2d');
+    const rankChart = new Chart(rankCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Oficiais', 'Sargentos', 'Cabos', 'Soldados', 'Temporários'],
+        datasets: [{
+          data: [45, 120, 150, 180, 27],
+          backgroundColor: [
+            '#3B82F6',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#8B5CF6'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+          }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Gráfico de Idade
+    const ageCtx = document.getElementById('ageChart').getContext('2d');
+    const ageChart = new Chart(ageCtx, {
+      type: 'bar',
+      data: {
+        labels: ['18-24', '25-29', '30-34', '35-39', '40-44', '45+'],
+        datasets: [{
+          label: 'Militares',
+          data: [85, 120, 150, 90, 60, 17],
+          backgroundColor: '#3B82F6',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Gráfico de Saúde
+    const healthCtx = document.getElementById('healthChart').getContext('2d');
+    const healthChart = new Chart(healthCtx, {
+      type: 'polarArea',
+      data: {
+        labels: ['Apto', 'Apto c/ Restrição', 'Inapto Temporário', 'Inapto Permanente'],
+        datasets: [{
+          data: [380, 90, 40, 12],
+          backgroundColor: [
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#64748B'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+          }
+        }
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script>
+    // Dados dinâmicos dos modelos
+    const sgbData = {
+      {% for sgb in sgb_distribution %}
+        '{{ sgb.sgb }}': {
+          fixado: {{ sgb.fixado }},
+          existente: {{ sgb.existente }}
+        },
+      {% endfor %}
+    };
+  
+    const statusData = {
+      {% for status in status_distribution %}
+        '{{ status.status }}': {{ status.count }},
+      {% endfor %}
+    };
+  
+    // Configuração do Gráfico de SGB (ApexCharts)
+    const sgbOptions = {
+      chart: {
+        type: 'bar',
+        height: '100%',
+        toolbar: {show: false},
+        fontFamily: 'Inter, sans-serif'
+      },
+      colors: ['#3B82F6', '#10B981'],
+      plotOptions: {
+        bar: {
+          borderRadius: 8,
+          columnWidth: '45%',
+          dataLabels: {position: 'top'}
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        style: {fontSize: '12px', colors: ["#1F2937"]},
+        offsetY: -20,
+        formatter: function(val) {
+          return val + "";
+        }
+      },
+      xaxis: {
+        categories: Object.keys(sgbData),
+        axisBorder: {show: false},
+        axisTicks: {show: false},
+        labels: {style: {colors: '#6B7280', fontSize: '14px'}}
+      },
+      yaxis: {
+        labels: {
+          style: {colors: '#6B7280', fontSize: '14px'},
+          formatter: function(val) {
+            return Math.floor(val);
+          }
+        },
+        title: {text: 'Militares', style: {color: '#6B7280', fontSize: '14px'}},
+        min: 0,
+        tickAmount: 5
+      },
+      grid: {
+        borderColor: '#F3F4F6',
+        strokeDashArray: 4,
+        yaxis: {
+          lines: {
+            show: true
+          }
+        }
+      },
+      tooltip: {
+        y: {
+          formatter: function(val) {
+            return val + " militares";
+          }
+        },
+        style: {fontSize: '14px'}
+      },
+      legend: {
+        show: false
+      }
+    };
+  
+    // Inicialização do Gráfico de SGB
+    new ApexCharts(document.querySelector("#sgbChart"), {
+      ...sgbOptions,
+      series: [
+        {
+          name: 'Fixado',
+          data: Object.values(sgbData).map(item => item.fixado)
+        },
+        {
+          name: 'Existente',
+          data: Object.values(sgbData).map(item => item.existente)
+        }
+      ]
+    }).render();
+  
+    // Configuração do Gráfico de Status (Donut)
+    const statusOptions = {
+      chart: {
+        type: 'donut',
+        height: '100%',
+        toolbar: {show: false}
+      },
+      colors: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
+      labels: Object.keys(statusData),
+      dataLabels: {enabled: false},
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '65%',
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: 'Total',
+                color: '#6B7280',
+                fontSize: '16px',
+                formatter: function (w) {
+                  return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                }
+              }
+            }
+          }
+        }
+      },
+      legend: {
+        position: 'bottom',
+        horizontalAlign: 'center'
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: {chart: {width: '100%'}}
+      }]
+    };
+  
+    // Inicialização do Gráfico de Status
+    new ApexCharts(document.querySelector("#statusChart"), {
+      ...statusOptions,
+      series: Object.values(statusData)
+    }).render();
+  
+    // Gráfico de Evolução (Chart.js)
+    const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+    const evolutionChart = new Chart(evolutionCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+        datasets: [
+          {
+            label: 'Efetivo Fixado',
+            data: [600, 605, 610, 615, 620, 625, 630, 632, 633, 634, 635, 635],
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Efetivo Existente',
+            data: [480, 490, 495, 500, 505, 510, 515, 518, 520, 521, 522, 522],
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            min: 400
+          }
+        }
+      }
+    });
+  </script>
 {% endblock %}

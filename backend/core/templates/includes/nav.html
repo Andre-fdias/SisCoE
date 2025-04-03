@@ -29,8 +29,8 @@
 
             <!-- Lado Direito -->
             <div class="flex items-center gap-4">
-                <button onclick="openFaiscaModal()" class="hidden lg:flex items-center p-2 text-white bg-gradient-to-r from-teal-400 to-teal-600 rounded-lg hover:opacity-90 transition">
-                    <i class="fas fa-dog text-xl "></i>
+                <button onclick="openFaiscaModal()" class="hidden lg:flex items-center p-2 rounded-lg hover:opacity-90 transition">
+                    <i class="fas fa-dog text-xl" style="background: linear-gradient(to right, #2dd4bf, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
                     <span></span>
                 </button>
 
@@ -113,3 +113,15 @@ document.getElementById('searchModal').addEventListener('click', function(e) {
     }
 });
 </script>
+<script>
+    // Função para abrir o modal Faisca
+    function openFaiscaModal() {
+        const faiscaModal = document.getElementById('faiscaModal');
+        if (faiscaModal) {
+            faiscaModal.classList.remove('hidden');
+            // Focar no input quando abrir
+            const faiscaInput = document.getElementById('faiscaInput');
+            if (faiscaInput) faiscaInput.focus();
+        }
+    }
+    </script>
