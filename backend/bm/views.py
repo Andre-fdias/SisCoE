@@ -5,6 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.messages import constants
 from datetime import datetime
+from django.contrib.auth.decorators import user_passes_test
+
+
 
 def listar_bm(request):
     cadastros = Cadastro_bm.objects.all()
@@ -149,3 +152,73 @@ def excluir_bm(request, pk):
         cadastro.delete()
         return redirect('bm:listar_bm')
     return render(request, 'bm/excluir_bm.html', {'cadastro': cadastro})
+
+import pandas as pd
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from datetime import datetime
+from .models import Cadastro_bm
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def importar_bm(request):
+    if request.method == 'POST' and request.FILES.get('arquivo'):
+        arquivo = request.FILES['arquivo']
+        extensao = arquivo.name.split('.')[-1].lower()
+        
+        try:
+            if extensao == 'csv':
+                df = pd.read_csv(arquivo)
+            elif extensao in ['xls', 'xlsx']:
+                df = pd.read_excel(arquivo)
+            else:
+                messages.error(request, 'Formato de arquivo não suportado!')
+                return redirect('bm:importar_bm')
+            
+            # Converter nomes das colunas para minúsculas
+            df.columns = df.columns.str.lower()
+            
+            for index, row in df.iterrows():
+                # Verificar CPF único
+                if Cadastro_bm.objects.filter(cpf=row['cpf']).exists():
+                    continue  # Pula registro duplicado
+                
+                # Converter datas
+                def converter_data(data_str):
+                    try:
+                        return datetime.strptime(str(data_str), '%Y-%m-%d').date()
+                    except:
+                        return None
+                
+                Cadastro_bm.objects.create(
+                    nome=row.get('nome', ''),
+                    nome_de_guerra=row.get('nome_de_guerra', ''),
+                    situacao=row.get('situacao', 'Efetivo'),
+                    sgb=row.get('sgb', ''),
+                    posto_secao=row.get('posto_secao', ''),
+                    cpf=row.get('cpf', ''),
+                    rg=row.get('rg', ''),
+                    cnh=row.get('cnh', ''),
+                    cat_cnh=row.get('cat_cnh', ''),
+                    esb=row.get('esb', 'NÃO'),
+                    ovb=row.get('ovb', 'NÃO POSSUI'),
+                    admissao=converter_data(row.get('admissao')),
+                    nasc=converter_data(row.get('nasc')),
+                    email=row.get('email', ''),
+                    telefone=row.get('telefone', ''),
+                    apresentacao_na_unidade=converter_data(row.get('apresentacao_na_unidade')),
+                    saida_da_unidade=converter_data(row.get('saida_da_unidade')),
+                    funcao=row.get('funcao', ''),
+                    genero=row.get('genero', 'Masculino'),
+                    user=request.user
+                )
+            
+            messages.success(request, f'Dados importados com sucesso! {len(df)} registros processados.')
+            return redirect('bm:listar_bm')
+            
+        except Exception as e:
+            messages.error(request, f'Erro na importação: {str(e)}')
+            return redirect('bm:importar_bm')
+    
+    return render(request, 'importar_bm.html')
