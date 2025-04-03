@@ -31,7 +31,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login_computer_name = models.CharField(max_length=255, null=True, blank=True)
     login_history = models.JSONField(default=list, blank=True)
     is_online = models.BooleanField(default=False)
-
+    is_superuser = models.BooleanField(
+        _('superuser status'),
+        default=False,
+        help_text=_('Designates that this user has all permissions without explicitly assigning them.'),
+    )
 
     objects = UserManager()
 
@@ -76,15 +80,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 
-    @property
-    def is_superuser(self):
-        return super().is_superuser
-
+    
     @property
     def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
-        return self.is_admin
+        return self.is_admin or super().is_superuser
 
     def get_absolute_url(self):
         return reverse_lazy('user_detail', kwargs={'pk': self.pk})
