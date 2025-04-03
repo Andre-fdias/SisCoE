@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Importar Dados{% endblock %}
+
+{% block 'body' %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Importar Dados de Bombeiros</h1>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="arquivo">
+                    Selecione o arquivo (CSV/XLSX):
+                </label>
+                <input type="file" name="arquivo" required
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    accept=".csv,.xlsx,.xls">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" 
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Importar Dados
+                </button>
+                <a href="{% url 'bm:listar_bm' %}" 
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+
+        <div class="mt-8 p-4 bg-yellow-100 rounded-lg">
+            <h2 class="text-lg font-semibold mb-2">Instruções:</h2>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>O arquivo deve conter os cabeçalhos corretos</li>
+                <li>Formatos de data devem ser YYYY-MM-DD</li>
+                <li>CPFs duplicados serão ignorados</li>
+                <li>Download do <a href="/caminho/para/modelo.csv" class="text-blue-600 underline">modelo CSV</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

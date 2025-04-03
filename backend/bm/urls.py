@@ -9,5 +9,5 @@ urlpatterns = [
     path('editar_bm/<int:id>/', views.editar_bm, name="editar_bm"),
     path('ver_bm/<int:pk>/', views.ver_bm, name="ver_bm"),  # Use 'pk' aqui
     path('excluir_bm/<int:id>/', views.excluir_bm, name='excluir_bm'),
- 
+    path('importar_bm/', views.importar_bm, name='importar_bm'),
 ]

@@ -75,6 +75,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
+
+    @property
+    def is_superuser(self):
+        return super().is_superuser
+
     @property
     def is_staff(self):
         "Is the user a member of staff?"
