@@ -126,7 +126,7 @@ class Cadastro_bm(models.Model):
     nasc = models.DateField(blank=False, null=False)
     email = models.EmailField(null=True, blank=True)
     telefone = models.CharField(max_length=14, blank=False, null=False)
-    apresentacao_na_unidade = models.DateField(blank=False, null=False)
+    apresentacao_na_unidade = models.DateField(blank=True, null=True) 
     saida_da_unidade = models.DateField(blank=True, null=True)
     funcao = models.CharField(max_length=50, blank=False, null=False, choices=funcao_choices)
     data_alteracao = models.DateTimeField(auto_now=True)
