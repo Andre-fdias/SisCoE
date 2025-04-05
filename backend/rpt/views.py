@@ -7,7 +7,18 @@ from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from datetime import datetime, timedelta
+from .models import Cadastro_rpt
+from backend.efetivo.models import Cadastro  # Importe o modelo Cadastro
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
+from .export_utils import export_rpt_data
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 @login_required
 def cadastrar_rpt(request):
@@ -279,3 +290,174 @@ def historico_rpt(request, id):
         'cadastro_rpt': cadastro_rpt,
         'historicoRpt': historico_rpt_list,
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def importar_rpt(request):
+    if request.method == 'POST' and request.FILES.get('arquivo'):
+        arquivo = request.FILES['arquivo']
+        extensao = arquivo.name.split('.')[-1].lower()
+
+        try:
+            if arquivo.size > 5 * 1024 * 1024:
+                messages.error(request, 'Arquivo muito grande (máximo 5MB).', extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('rpt:importar_rpt')
+
+            try:
+                if extensao == 'csv':
+                    df = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig', dtype=str, keep_default_na=False, na_filter=False)
+                elif extensao in ['xls', 'xlsx']:
+                    df = pd.read_excel(arquivo, dtype=str, keep_default_na=False, na_values=[])
+                else:
+                    messages.error(request, 'Formato inválido (use CSV ou Excel).', extra_tags='bg-red-500 text-white p-4 rounded')
+                    return redirect('rpt:importar_rpt')
+            except Exception as e:
+                messages.error(request, f'Erro ao ler arquivo: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('rpt:importar_rpt')
+
+            colunas_obrigatorias = {'cadastro_re', 'data_pedido', 'status', 'sgb_destino', 'posto_secao_destino', 'doc_solicitacao'}
+
+            if missing := colunas_obrigatorias - set(df.columns):
+                messages.error(request, f'Colunas faltando: {", ".join(missing)}', extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('rpt:importar_rpt')
+
+            erros_pre_validacao = []
+            for index, row in df.iterrows():
+                try:
+                    if all(str(v).strip() in ['', 'nan', 'N/A'] for v in row):
+                        continue
+                    for campo in colunas_obrigatorias:
+                        valor = str(row.get(campo, '')).strip()
+                        if valor in ['', 'nan', 'N/A']:
+                            raise ValueError(f'Campo "{campo}" está vazio ou é inválido')
+                except Exception as e:
+                    erros_pre_validacao.append(f"Linha {index + 2}: {str(e)}")
+
+            if erros_pre_validacao:
+                erros_msg = f'Erros críticos: {", ".join(erros_pre_validacao[:3])}... (total: {len(erros_pre_validacao)})'
+                messages.error(request, erros_msg, extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect('rpt:importar_rpt')
+
+            campos_nao_obrigatorios = list(set(df.columns) - colunas_obrigatorias)
+            df[campos_nao_obrigatorios] = df[campos_nao_obrigatorios].replace(['', None, 'nan'], 'N/A')
+
+            registros_processados = 0
+            erros_processamento = []
+
+            def converter_data(valor, field_name):
+                valor = str(valor).strip()
+                if valor == 'N/A':
+                    return None
+
+                if valor.replace('.', '').isdigit():
+                    try:
+                        return (datetime(1899, 12, 30) + timedelta(days=float(valor))).date()
+                    except:
+                        pass
+
+                formatos = ['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d']
+                for fmt in formatos:
+                    try:
+                        return datetime.strptime(valor, fmt).date()
+                    except:
+                        continue
+                raise ValueError(f'Formato de data inválido: "{valor}"')
+
+            for index, row in df.iterrows():
+                try:
+                    if all(str(v) == 'N/A' for v in row):
+                        continue
+
+                    try:
+                        cadastro = Cadastro.objects.get(re=row['cadastro_re'].strip())
+                    except Cadastro.DoesNotExist:
+                        raise ValueError(f'Cadastro com RE {row["cadastro_re"]} não encontrado')
+
+                    data_pedido = converter_data(row['data_pedido'], 'data_pedido')
+
+                    Cadastro_rpt.objects.create(
+                        cadastro=cadastro,
+                        data_pedido=data_pedido,
+                        status=row['status'].strip(),
+                        sgb_destino=row['sgb_destino'].strip(),
+                        posto_secao_destino=row['posto_secao_destino'].strip(),
+                        doc_solicitacao=row['doc_solicitacao'].strip(),
+                        data_movimentacao=converter_data(row.get('data_movimentacao', 'N/A'), 'data_movimentacao'),
+                        data_alteracao=converter_data(row.get('data_alteracao', 'N/A'), 'data_alteracao'),
+                        doc_alteracao=row.get('doc_alteracao', 'N/A').strip(),
+                        doc_movimentacao=row.get('doc_movimentacao', 'N/A').strip(),
+                        alteracao=row.get('alteracao', 'N/A').strip(),
+                        usuario_alteracao=request.user
+                    )
+                    registros_processados += 1
+
+                except Exception as e:
+                    erros_processamento.append(f"Linha {index + 2}: {str(e)}")
+                    continue
+
+            if registros_processados > 0:
+                msg = f'✅ {registros_processados} registros importados com sucesso!'
+                messages.success(request, msg, extra_tags='bg-green-500 text-white p-4 rounded')
+
+            if erros_processamento:
+                erros_msg = f'⚠️ {len(erros_processamento)} erro(s): ' + ', '.join(erros_processamento[:3])
+                if len(erros_processamento) > 3:
+                    erros_msg += f' (...mais {len(erros_processamento)-3})'
+                messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
+
+            return redirect('rpt:listar_rpt')
+
+        except Exception as e:
+            messages.error(request, f'❌ Falha na importação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('rpt:importar_rpt')
+
+    return render(request, 'importar_rpt.html')
+
+def exportar_rpt(request):
+    if request.method == 'POST':
+        format_type = request.POST.get('export_format')
+        if not format_type:
+            return HttpResponseBadRequest("Formato de exportação não especificado")
+
+        queryset = Cadastro_rpt.objects.all().values(
+            'cadastro__re', 'cadastro__nome_de_guerra', 'data_pedido', 'status',
+            'sgb_destino', 'posto_secao_destino', 'doc_solicitacao',
+            'data_movimentacao', 'data_alteracao', 'doc_alteracao', 'doc_movimentacao',
+            'alteracao'
+        )
+        df = pd.DataFrame(list(queryset))
+        df.columns = [
+            'RE', 'Nome de Guerra', 'Data Pedido', 'Status', 'SGB Destino',
+            'Posto/Seção Destino', 'Doc. Solicitação', 'Data Movimentação',
+            'Data Alteração', 'Doc. Alteração', 'Doc. Movimentação', 'Alteração'
+        ]
+
+        if format_type == 'xlsx':
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="rpt_data.xlsx"'
+            df.to_excel(response, index=False)
+            return response
+
+        elif format_type == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="rpt_data.csv"'
+            df.to_csv(response, index=False, sep=';', encoding='utf-8-sig')
+            return response
+
+        elif format_type == 'pdf':
+            buffer = BytesIO()
+            p = canvas.Canvas(buffer, pagesizes=letter)
+            p.drawString(100, 750, "Dados RPT")
+            y = 700
+            for index, row in df.iterrows():
+                row_str = ", ".join(map(str, row.values))
+                p.drawString(100, y, row_str)
+                y -= 20
+            p.save()
+            buffer.seek(0)
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="rpt_data.pdf"'
+            return response
+
+    return HttpResponseBadRequest("Método não permitido")
