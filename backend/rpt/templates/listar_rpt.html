@@ -134,36 +134,47 @@
                     </a>
                     {% endif %}
                     <div class="relative inline-block text-left">
-                        <button id="exportButton" type="button" class="inline-flex justify-center items-center text-gray-900 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-500 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 font-medium rounded-lg text-sm px-5 py-2.5">
-                          <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                          </svg>
-                          Exportar
+                        <button id="exportButton" type="button" class="inline-flex justify-center items-center text-gray-900 bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 focus:z-10 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5">
+                            <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                            Exportar
                         </button>
                       
-                        <div id="exportMenu" class="hidden origin-bottom-right absolute bottom-full mb-2 right-0 w-44 rounded-md shadow-lg bg-gray-300  ring-black ring-opacity-5 focus:outline-none z-10">
-                            <form method="post" action="{% url 'rpt:exportar_rpt' %}">
+                        <div id="exportMenu" class="hidden absolute right-0 mt-2 w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <form method="GET" action="{% url 'rpt:exportar_rpt' %}" class="py-1">
                                 {% csrf_token %}
-                            <button type="submit" name="export_format" value="pdf" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">PDF</button>
-                            <button type="submit" name="export_format" value="xlsx" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">Excel (XLSX)</button>
-                            <button type="submit" name="export_format" value="csv" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">CSV</button>
-                          </form>
+                                <!-- Manter os filtros ativos -->
+                                <input type="hidden" name="status" value="{{ request.GET.status }}">
+                                <input type="hidden" name="posto_secao_destino" value="{{ request.GET.posto_secao_destino }}">
+                                
+                                <button type="submit" name="format" value="pdf" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">PDF</button>
+                                <button type="submit" name="format" value="xlsx" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">Excel (XLSX)</button>
+                                <button type="submit" name="format" value="csv" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900">CSV</button>
+                            </form>
                         </div>
-                      </div>
-                      
-                      <script>
+                    </div>
+                    
+                    <script>
                         // Mostrar/ocultar menu de exportação
                         document.getElementById('exportButton').addEventListener('click', function(e) {
-                          e.stopPropagation();
-                          const menu = document.getElementById('exportMenu');
-                          menu.classList.toggle('hidden');
+                            e.stopPropagation();
+                            const menu = document.getElementById('exportMenu');
+                            menu.classList.toggle('hidden');
                         });
-                      
+                    
                         // Ocultar menu quando clicar fora
-                        document.addEventListener('click', function() {
-                          document.getElementById('exportMenu').classList.add('hidden');
+                        document.addEventListener('click', function(e) {
+                            if (!e.target.closest('#exportButton') && !e.target.closest('#exportMenu')) {
+                                document.getElementById('exportMenu').classList.add('hidden');
+                            }
                         });
-                      </script>
+                    
+                        // Prevenir fechamento ao clicar no menu
+                        document.getElementById('exportMenu').addEventListener('click', function(e) {
+                            e.stopPropagation();
+                        });
+                    </script>
                  
                 </div>
             </fieldset>
@@ -192,5 +203,6 @@
             });
         });
     </script>
+    
 </body>
 {% endblock %}
