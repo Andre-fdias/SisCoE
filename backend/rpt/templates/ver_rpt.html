@@ -8,7 +8,9 @@
 <body>
 
     <br>
-    <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
+
+
+    <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="area-impressao">
      <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
        <fieldset class="p-2 mb-8 rounded-md rounded-[5px]">
       <div class="flex flex-col h-auto rounded-[10px]">
@@ -364,17 +366,25 @@
                                         {% endfor %}
                                     {% endif %}
                                     </script>
+                                      <button onclick="imprimirArea()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                                        Imprimir
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full md:w-1/2 text-right">
+                                <div class="container1">
+                                    <div class="flex justify-end">
+                                        <a href="{% url 'rpt:listar_rpt' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">
+                                            Voltar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                             </div>
                         </div>
                         
-                        <div class="w-full md:w-1/2 text-right">
-                            <div class="container1">
-                                <div class="flex justify-end">
-                                    <a href="{% url 'rpt:listar_rpt' %}"  class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                                </div>
-                            
-                            </div>
-                        </div>
+                     
                     </div>
                 </div>
             </div>
@@ -383,7 +393,73 @@
         </div>
 
 
-  
+<script>
+    function imprimirArea() {
+        var areaImpressao = document.getElementById('area-impressao');
+        var conteudoOriginal = document.body.innerHTML;
+
+        // Criar um elemento para a marca d'água
+        var marcaDagua = document.createElement('div');
+        marcaDagua.style.position = 'absolute';
+        marcaDagua.style.top = '0';
+        marcaDagua.style.left = '0';
+        marcaDagua.style.width = '100%';
+        marcaDagua.style.height = '100%';
+        marcaDagua.style.pointerEvents = 'none';
+        marcaDagua.style.zIndex = '1000';
+        marcaDagua.style.display = 'flex';
+        marcaDagua.style.flexDirection = 'column';
+        marcaDagua.style.alignItems = 'center';
+        marcaDagua.style.justifyContent = 'center';
+
+        // Criar elementos para o nome do usuário e CPF
+        var nomeUsuario = document.createElement('div');
+        nomeUsuario.textContent = "{{ request.user.profile.posto_grad }} {{ request.user.profile.re }}-{{ request.user.profile.dig }} {{ request.user.last_name }}";
+        nomeUsuario.style.fontSize = '15px';
+        nomeUsuario.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
+        nomeUsuario.style.transform = 'rotate(-45deg)';
+
+        var cpfMarcaDagua = document.createElement('div');
+        cpfMarcaDagua.textContent = "CPF: {{ request.user.profile.cpf }}";
+        cpfMarcaDagua.style.fontSize = '15px';
+        cpfMarcaDagua.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
+        cpfMarcaDagua.style.transform = 'rotate(-45deg)';
+        cpfMarcaDagua.style.marginTop = '20px';
+
+        // Adicionar os elementos ao container da marca d'água
+        marcaDagua.appendChild(nomeUsuario);
+        marcaDagua.appendChild(cpfMarcaDagua);
+
+        // Criar um container para repetir a marca d'água em toda a área de impressão
+        var containerMarcaDagua = document.createElement('div');
+        containerMarcaDagua.style.position = 'absolute';
+        containerMarcaDagua.style.top = '0';
+        containerMarcaDagua.style.left = '0';
+        containerMarcaDagua.style.width = '100%';
+        containerMarcaDagua.style.height = '100%';
+        containerMarcaDagua.style.pointerEvents = 'none';
+        containerMarcaDagua.style.zIndex = '1000';
+
+        // Repetir a marca d'água em toda a área de impressão
+        for (var i = -500; i < window.innerWidth * 2; i += 400) {
+            for (var j = -500; j < window.innerHeight * 2; j += 300) {
+                var cloneMarcaDagua = marcaDagua.cloneNode(true);
+                cloneMarcaDagua.style.transform = 'translate(' + i + 'px, ' + j + 'px) rotate(-45deg)';
+                containerMarcaDagua.appendChild(cloneMarcaDagua);
+            }
+        }
+
+        // Substituir o conteúdo do body com a área de impressão e a marca d'água repetida
+        document.body.innerHTML = areaImpressao.outerHTML;
+        document.body.appendChild(containerMarcaDagua);
+
+        // Imprimir
+        window.print();
+
+        // Restaurar o conteúdo original do body
+        document.body.innerHTML = conteudoOriginal;
+    }
+</script>
 <script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

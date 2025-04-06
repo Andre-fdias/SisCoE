@@ -1,24 +1,40 @@
+# backend/rpt/views.py
+
+# Standard library imports
+from datetime import datetime, timedelta
+from io import BytesIO
+
+# Third-party imports
+import pandas as pd
+# Note: reportlab imports are needed in export_utils.py, not directly here usually
+# from reportlab.lib.pagesizes import letter
+# from reportlab.pdfgen import canvas
+
+# Django imports
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.messages import constants
-from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem  # Ajuste a importação conforme necessário
-from .models import Cadastro_rpt, HistoricoRpt
+# Mantenha a importação do Prefetch
 from django.db.models import Prefetch
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import pandas as pd
-from django.shortcuts import render, redirect
-from django.contrib import messages
+# Importe FieldError do local correto
+from django.core.exceptions import FieldError # Import FieldError for specific handling
 from django.contrib.auth.decorators import login_required, user_passes_test
-from datetime import datetime, timedelta
-from .models import Cadastro_rpt
-from backend.efetivo.models import Cadastro  # Importe o modelo Cadastro
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+
+# Local application imports
+# Adjust the import path based on your project structure
+from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
+from .models import Cadastro_rpt, HistoricoRpt
+# --- FIX for ImportError: Import the correct function name from export_utils ---
 from .export_utils import export_rpt_data
-from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+
+# ==============================================
+# VIEWS
+# ==============================================
+
 
 @login_required
 def cadastrar_rpt(request):
@@ -212,252 +228,423 @@ def search_cadastro(request):
 
 
 
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def excluir_rpt(request, id):
+    """
+    View para excluir um registro de Cadastro_rpt após confirmação de senha.
+    Requer método POST.
+    """
+    # Tenta obter o objeto ou retorna 404 se não existir
+    cadastro_rpt_obj = get_object_or_404(Cadastro_rpt, id=id)
+    # Define a URL de redirecionamento em caso de falha ou GET (pode ser a lista ou a página de detalhes)
+    # Supondo que 'rpt:listar_rpt' é a URL da lista de RPTs
+    # Supondo que 'rpt:ver_rpt' é a URL de detalhes (se existir)
+    redirect_url = 'rpt:listar_rpt'
+    # Se existir uma URL de detalhes, use-a como fallback em caso de erro na exclusão
+    # Tente obter a URL de detalhes; se não existir, use a lista
+    try:
+        from django.urls import reverse
+        detail_url = reverse('rpt:ver_rpt', args=[id]) # Tenta montar a URL de detalhes
+        error_redirect_url = detail_url
+    except:
+        error_redirect_url = redirect('rpt:listar_rpt') # Fallback para a lista
+
     if request.method == 'POST':
         try:
-            # Obter objetos relevantes
-            cadastro = get_object_or_404(Cadastro_rpt, id=id)
             current_user = request.user
-            
-            # Verificar senha
             password = request.POST.get('password', '')
-            if not check_password(password, current_user.password):
-                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.', 
-                                   extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('rpt:ver_rpt', id=id)
-            
-            # Realizar exclusão
-            cadastro.delete()
-            messages.add_message(request, messages.SUCCESS, 'Cadastro excluído com sucesso.', 
-                               extra_tags='bg-green-500 text-white p-4 rounded')
-            return redirect('rpt:listar_rpt')
-            
-        except Exception as e:
-            messages.add_message(request, messages.ERROR, f'Erro ao excluir: {str(e)}', 
-                               extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('rpt:ver_rpt', id=id)
-    
-    return redirect('rpt:listar_rpt')
 
+            # Verificar senha
+            if not password:
+                 messages.add_message(request, messages.ERROR, 'Senha não fornecida. Operação cancelada.',
+                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                 return redirect(error_redirect_url) # Redireciona de volta
+
+            if not check_password(password, current_user.password):
+                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.',
+                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect(error_redirect_url) # Redireciona de volta
+
+            # Realizar exclusão
+            cadastro_rpt_obj.delete()
+            messages.add_message(request, messages.SUCCESS, 'Registro RPT excluído com sucesso.',
+                               extra_tags='bg-green-500 text-white p-4 rounded')
+            return redirect('rpt:listar_rpt') # Redireciona para a lista após sucesso
+
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f'Erro ao excluir o registro RPT: {str(e)}',
+                               extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(error_redirect_url) # Redireciona de volta em caso de erro
+
+    # Se a requisição não for POST, redirecionar para a lista ou página de detalhes
+    messages.warning(request, 'Método inválido para exclusão.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+    return redirect(redirect_url)
 
 
 @login_required
 def buscar_militar_rpt(request):
+    """
+    Busca um militar pelo RE (via POST) para pré-preencher o formulário de cadastro RPT,
+    ou exibe o formulário de busca (via GET).
+    """
+    # Template para exibir o formulário de busca RE
+    buscar_template = 'buscar_rpt.html'
+    # Template para exibir o formulário de cadastro RPT (preenchido ou vazio)
+    cadastrar_template = 'cadastrar_rpt.html'
+     # URL name da própria view (ou da view que exibe o form de cadastro)
+    cadastro_rpt_url_name = 'rpt:cadastrar_rpt'
+
     if request.method == "POST":
-        re = request.POST.get('re')
+        re = request.POST.get('re', '').strip()
+        if not re:
+             messages.add_message(request, constants.WARNING,'Por favor, informe o RE para buscar.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+             # Renderiza o form de cadastro vazio novamente, ou redireciona
+             return render(request, cadastrar_template, {
+                 'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
+                 'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
+                 'status_choices': Cadastro_rpt._meta.get_field('status').choices,
+             })
+
         try:
+            # Busca o cadastro principal
             cadastro = Cadastro.objects.get(re=re)
+
+            # Busca os dados relacionados mais recentes (ou relevantes)
+            # Usar select_related/prefetch_related aqui não é comum pois buscamos por RE específico,
+            # mas pode ser útil se houver muita lógica acessando relações no template/view.
+            # O uso de .first() após order_by('-id') pega o mais recente.
             detalhes = DetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-id').first()
             imagem = Imagem.objects.filter(cadastro=cadastro).order_by('-id').first()
             promocao = Promocao.objects.filter(cadastro=cadastro).order_by('-id').first()
 
+            # Adiciona mensagens informativas se dados relacionados não forem encontrados
             if not detalhes:
-                messages.error(request, 'Detalhes da situação não encontrados.')
-                return redirect('rpt:cadastrar_rpt')
+                messages.info(request, 'Informação: Detalhes da situação atual não encontrados para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
             if not promocao:
-                messages.error(request, 'Promoção não encontrada.')
-                return redirect('rpt:cadastrar_rpt')
+                 messages.info(request, 'Informação: Dados da última promoção não encontrados para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
+            if not imagem:
+                 messages.info(request, 'Informação: Imagem não encontrada para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
 
+
+            # Prepara o contexto para renderizar o formulário de cadastro preenchido
             context = {
                 'cadastro': cadastro,
-                'detalhes': detalhes,
-                'imagem': imagem,
-                'promocao': promocao,
+                'detalhes': detalhes, # Será None se não encontrado
+                'imagem': imagem,     # Será None se não encontrado
+                'promocao': promocao,   # Será None se não encontrado
+                # Passa as choices para os selects do formulário
                 'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
                 'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
                 'status_choices': Cadastro_rpt._meta.get_field('status').choices,
+                'found_re': re # Indica que a busca foi feita
             }
-            return render(request, 'cadastrar_rpt.html', context)
+            # Renderiza o template do formulário de cadastro com os dados encontrados
+            return render(request, cadastrar_template, context)
+
         except Cadastro.DoesNotExist:
-            messages.add_message(request, constants.ERROR,'Cadastro nao encontrado.', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('rpt:cadastrar_rpt')
-    return render(request, 'buscar_rpt.html')
+            messages.add_message(request, constants.ERROR, f'Cadastro com RE "{re}" não encontrado.', extra_tags='bg-red-500 text-white p-4 rounded')
+            # Renderiza o form de cadastro vazio novamente
+            return render(request, cadastrar_template, {
+                 'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
+                 'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
+                 'status_choices': Cadastro_rpt._meta.get_field('status').choices,
+                 'searched_re': re # Passa o RE pesquisado de volta
+             })
+        except Cadastro.MultipleObjectsReturned:
+             messages.add_message(request, constants.ERROR, f'Múltiplos cadastros encontrados com RE "{re}". Verifique a base de dados.', extra_tags='bg-red-500 text-white p-4 rounded')
+             return render(request, cadastrar_template, {
+                 'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
+                 'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
+                 'status_choices': Cadastro_rpt._meta.get_field('status').choices,
+                 'searched_re': re
+             })
+        except Exception as e:
+             messages.add_message(request, constants.ERROR, f'Ocorreu um erro inesperado ao buscar o militar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+             # Renderiza o form de cadastro vazio novamente
+             return render(request, cadastrar_template, {
+                 'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
+                 'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
+                 'status_choices': Cadastro_rpt._meta.get_field('status').choices,
+                 'searched_re': re
+             })
 
-
-@login_required
-def historico_rpt(request, id):
-    cadastro_rpt = get_object_or_404(Cadastro_rpt, id=id)
-    historico_rpt_list = HistoricoRpt.objects.filter(cadastro=cadastro_rpt).order_by('-data_alteracao')
-
-    return render(request, 'historico_rpt.html', {
-        'cadastro_rpt': cadastro_rpt,
-        'historicoRpt': historico_rpt_list,
+    # Se a requisição for GET, exibe o formulário de busca inicial
+    # (ou o formulário de cadastro RPT vazio, dependendo do fluxo desejado)
+    # Se 'buscar_rpt.html' é só para digitar o RE e 'cadastrar_rpt.html' é o form principal:
+    # return render(request, buscar_template)
+    # Se 'cadastrar_rpt.html' contém a busca e o formulário:
+    return render(request, cadastrar_template, {
+        'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
+        'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
+        'status_choices': Cadastro_rpt._meta.get_field('status').choices,
     })
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+def historico_rpt(request, id):
+    """
+    Exibe o histórico de alterações para um registro Cadastro_rpt específico.
+    """
+    cadastro_rpt = get_object_or_404(Cadastro_rpt.objects.select_related('cadastro'), id=id)
+    # Busca o histórico, otimizando a busca pelo usuário que fez a alteração
+    historico_rpt_list = HistoricoRpt.objects.filter(cadastro=cadastro_rpt).select_related('usuario_alteracao__profile').order_by('-data_alteracao') # Mais recente primeiro
+
+    return render(request, 'historico_rpt.html', {
+        'cadastro_rpt': cadastro_rpt,
+        'historicoRpt': historico_rpt_list, # Nome da variável no contexto
+    })
+
+
+# Permissão: Apenas superusuários ou quem tem permissão específica para adicionar RPT
+# Ajuste 'rpt.add_cadastro_rpt' conforme o nome da sua app e modelo
+permission_required = user_passes_test(lambda u: u.is_superuser or u.has_perm('rpt.add_cadastro_rpt'))
+
+@login_required
+@permission_required
 def importar_rpt(request):
-    if request.method == 'POST' and request.FILES.get('arquivo'):
-        arquivo = request.FILES['arquivo']
-        extensao = arquivo.name.split('.')[-1].lower()
+    """
+    View para importar dados de RPT a partir de um arquivo CSV ou Excel.
+    Requer permissão e método POST com um arquivo.
+    """
+    importar_template = 'importar_rpt.html'
+    listar_url_name = 'rpt:listar_rpt'
+    importar_url_name = 'rpt:importar_rpt'
+
+    if request.method == 'POST':
+        arquivo = request.FILES.get('arquivo')
+
+        # --- Validações Iniciais ---
+        if not arquivo:
+            messages.error(request, 'Nenhum arquivo selecionado para importação.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(importar_url_name)
 
         try:
-            if arquivo.size > 5 * 1024 * 1024:
-                messages.error(request, 'Arquivo muito grande (máximo 5MB).', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('rpt:importar_rpt')
+            extensao = arquivo.name.split('.')[-1].lower()
+        except IndexError:
+             messages.error(request, 'Nome de arquivo inválido ou sem extensão.', extra_tags='bg-red-500 text-white p-4 rounded')
+             return redirect(importar_url_name)
 
-            try:
-                if extensao == 'csv':
+
+        if arquivo.size > 10 * 1024 * 1024: # Aumentado limite para 10MB
+            messages.error(request, 'Arquivo excede o limite de tamanho (máximo 10MB).', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(importar_url_name)
+
+        # --- Leitura do Arquivo ---
+        try:
+            df = None
+            if extensao == 'csv':
+                # Tenta ler com UTF-8, depois Latin-1 como fallback comum no Brasil
+                try:
+                    # keep_default_na=False e na_filter=False evitam que 'NA' seja lido como NaN automaticamente
                     df = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig', dtype=str, keep_default_na=False, na_filter=False)
-                elif extensao in ['xls', 'xlsx']:
-                    df = pd.read_excel(arquivo, dtype=str, keep_default_na=False, na_values=[])
-                else:
-                    messages.error(request, 'Formato inválido (use CSV ou Excel).', extra_tags='bg-red-500 text-white p-4 rounded')
-                    return redirect('rpt:importar_rpt')
-            except Exception as e:
-                messages.error(request, f'Erro ao ler arquivo: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('rpt:importar_rpt')
-
-            colunas_obrigatorias = {'cadastro_re', 'data_pedido', 'status', 'sgb_destino', 'posto_secao_destino', 'doc_solicitacao'}
-
-            if missing := colunas_obrigatorias - set(df.columns):
-                messages.error(request, f'Colunas faltando: {", ".join(missing)}', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('rpt:importar_rpt')
-
-            erros_pre_validacao = []
-            for index, row in df.iterrows():
-                try:
-                    if all(str(v).strip() in ['', 'nan', 'N/A'] for v in row):
-                        continue
-                    for campo in colunas_obrigatorias:
-                        valor = str(row.get(campo, '')).strip()
-                        if valor in ['', 'nan', 'N/A']:
-                            raise ValueError(f'Campo "{campo}" está vazio ou é inválido')
-                except Exception as e:
-                    erros_pre_validacao.append(f"Linha {index + 2}: {str(e)}")
-
-            if erros_pre_validacao:
-                erros_msg = f'Erros críticos: {", ".join(erros_pre_validacao[:3])}... (total: {len(erros_pre_validacao)})'
-                messages.error(request, erros_msg, extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('rpt:importar_rpt')
-
-            campos_nao_obrigatorios = list(set(df.columns) - colunas_obrigatorias)
-            df[campos_nao_obrigatorios] = df[campos_nao_obrigatorios].replace(['', None, 'nan'], 'N/A')
-
-            registros_processados = 0
-            erros_processamento = []
-
-            def converter_data(valor, field_name):
-                valor = str(valor).strip()
-                if valor == 'N/A':
-                    return None
-
-                if valor.replace('.', '').isdigit():
-                    try:
-                        return (datetime(1899, 12, 30) + timedelta(days=float(valor))).date()
-                    except:
-                        pass
-
-                formatos = ['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d']
-                for fmt in formatos:
-                    try:
-                        return datetime.strptime(valor, fmt).date()
-                    except:
-                        continue
-                raise ValueError(f'Formato de data inválido: "{valor}"')
-
-            for index, row in df.iterrows():
-                try:
-                    if all(str(v) == 'N/A' for v in row):
-                        continue
-
-                    try:
-                        cadastro = Cadastro.objects.get(re=row['cadastro_re'].strip())
-                    except Cadastro.DoesNotExist:
-                        raise ValueError(f'Cadastro com RE {row["cadastro_re"]} não encontrado')
-
-                    data_pedido = converter_data(row['data_pedido'], 'data_pedido')
-
-                    Cadastro_rpt.objects.create(
-                        cadastro=cadastro,
-                        data_pedido=data_pedido,
-                        status=row['status'].strip(),
-                        sgb_destino=row['sgb_destino'].strip(),
-                        posto_secao_destino=row['posto_secao_destino'].strip(),
-                        doc_solicitacao=row['doc_solicitacao'].strip(),
-                        data_movimentacao=converter_data(row.get('data_movimentacao', 'N/A'), 'data_movimentacao'),
-                        data_alteracao=converter_data(row.get('data_alteracao', 'N/A'), 'data_alteracao'),
-                        doc_alteracao=row.get('doc_alteracao', 'N/A').strip(),
-                        doc_movimentacao=row.get('doc_movimentacao', 'N/A').strip(),
-                        alteracao=row.get('alteracao', 'N/A').strip(),
-                        usuario_alteracao=request.user
-                    )
-                    registros_processados += 1
-
-                except Exception as e:
-                    erros_processamento.append(f"Linha {index + 2}: {str(e)}")
-                    continue
-
-            if registros_processados > 0:
-                msg = f'✅ {registros_processados} registros importados com sucesso!'
-                messages.success(request, msg, extra_tags='bg-green-500 text-white p-4 rounded')
-
-            if erros_processamento:
-                erros_msg = f'⚠️ {len(erros_processamento)} erro(s): ' + ', '.join(erros_processamento[:3])
-                if len(erros_processamento) > 3:
-                    erros_msg += f' (...mais {len(erros_processamento)-3})'
-                messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
-
-            return redirect('rpt:listar_rpt')
+                except UnicodeDecodeError:
+                    arquivo.seek(0) # Volta ao início do arquivo
+                    df = pd.read_csv(arquivo, sep=';', encoding='latin-1', dtype=str, keep_default_na=False, na_filter=False)
+            elif extensao in ['xls', 'xlsx']:
+                df = pd.read_excel(arquivo, dtype=str, keep_default_na=False, na_values=[]) # na_values=[] similar a keep_default_na=False
+            else:
+                messages.error(request, f'Formato de arquivo "{extensao}" não suportado. Use CSV (separado por ponto e vírgula) ou Excel (XLS, XLSX).', extra_tags='bg-red-500 text-white p-4 rounded')
+                return redirect(importar_url_name)
 
         except Exception as e:
-            messages.error(request, f'❌ Falha na importação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('rpt:importar_rpt')
+            messages.error(request, f'Erro ao ler o arquivo: {e}. Verifique se o arquivo está no formato correto, não corrompido, e se a codificação/separador (para CSV) estão corretos.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(importar_url_name)
 
-    return render(request, 'importar_rpt.html')
+        # --- Validação de Colunas ---
+        colunas_obrigatorias = {'cadastro_re', 'data_pedido', 'status', 'sgb_destino', 'posto_secao_destino', 'doc_solicitacao'}
+        colunas_arquivo = set(df.columns)
 
+        if not colunas_obrigatorias.issubset(colunas_arquivo):
+            missing = colunas_obrigatorias - colunas_arquivo
+            messages.error(request, f'Colunas obrigatórias faltando no arquivo: {", ".join(sorted(list(missing)))}', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(importar_url_name)
+
+        # --- Função Auxiliar para Conversão de Datas ---
+        def converter_data(valor_str, field_name):
+            valor_str = str(valor_str).strip()
+            # Considera várias formas de vazio/NA
+            if not valor_str or valor_str.lower() in ['na', 'n/a', 'nan', 'none', '', '#n/d']:
+                return None
+
+            # Tenta converter de número serial do Excel
+            try:
+                if valor_str.replace('.', '', 1).isdigit():
+                    excel_date_num = float(valor_str)
+                    # Evita converter números muito grandes ou pequenos que não são datas
+                    if 1 < excel_date_num < 300000:
+                         # Base do Excel para Windows (1900) - Dia 0 é 30/12/1899
+                         base_date = datetime(1899, 12, 30)
+                         delta = timedelta(days=excel_date_num)
+                         return (base_date + delta).date()
+            except ValueError:
+                pass # Não era um número simples
+
+            # Tenta formatos de data comuns (Adicione mais se necessário)
+            formatos_data = ['%d/%m/%Y', '%Y-%m-%d', '%d-%m-%Y', '%Y/%m/%d', '%d/%m/%y', '%d.%m.%Y', '%d.%m.%y']
+            for fmt in formatos_data:
+                try:
+                    return datetime.strptime(valor_str, fmt).date()
+                except ValueError:
+                    continue
+
+            # Se nenhum formato funcionou
+            raise ValueError(f'Formato de data inválido ou não reconhecido ("{valor_str}") para o campo "{field_name}"')
+
+        # --- Processamento das Linhas ---
+        registros_processados = 0
+        erros_processamento = []
+        User = get_user_model() # Modelo de usuário ativo
+
+        for index, row in df.iterrows():
+            linha_num = index + 2 # Linha no arquivo (1-based + cabeçalho)
+            try:
+                # Ignora linhas completamente vazias (considerando várias formas de NA)
+                if row.isnull().all() or all(str(v).strip().lower() in ['', 'na', 'n/a', 'nan', 'none', '#n/d'] for v in row.values):
+                    continue
+
+                # --- Validação e Limpeza dos Dados da Linha ---
+                cadastro_re = str(row.get('cadastro_re', '')).strip()
+                if not cadastro_re: raise ValueError('Coluna "cadastro_re" não pode estar vazia.')
+
+                # Busca o Cadastro associado
+                try:
+                    # select_related(None) força a não buscar relações automaticamente aqui
+                    cadastro_obj = Cadastro.objects.select_related(None).get(re=cadastro_re)
+                except Cadastro.DoesNotExist:
+                    raise ValueError(f'Cadastro com RE "{cadastro_re}" não encontrado no sistema.')
+                except Cadastro.MultipleObjectsReturned:
+                    raise ValueError(f'Múltiplos cadastros encontrados com RE "{cadastro_re}". Corrija a base de dados.')
+
+                # Campos obrigatórios
+                data_pedido = converter_data(row.get('data_pedido'), 'data_pedido')
+                if not data_pedido: raise ValueError('Coluna "data_pedido" inválida ou vazia.')
+
+                status = str(row.get('status', '')).strip()
+                if not status: raise ValueError('Coluna "status" não pode estar vazia.')
+                # Opcional: Validar contra choices do modelo
+                status_choices = [choice[0] for choice in Cadastro_rpt._meta.get_field('status').choices]
+                if status not in status_choices: raise ValueError(f'Valor "{status}" inválido para o campo "status". Válidos: {", ".join(status_choices)}')
+
+                sgb_destino = str(row.get('sgb_destino', '')).strip()
+                if not sgb_destino: raise ValueError('Coluna "sgb_destino" não pode estar vazia.')
+                # Opcional: Validar SGB
+
+                posto_secao_destino = str(row.get('posto_secao_destino', '')).strip()
+                if not posto_secao_destino: raise ValueError('Coluna "posto_secao_destino" não pode estar vazia.')
+                # Opcional: Validar Posto/Seção
+
+                doc_solicitacao = str(row.get('doc_solicitacao', '')).strip()
+                if not doc_solicitacao: raise ValueError('Coluna "doc_solicitacao" não pode estar vazia.')
+
+                # Campos opcionais
+                data_movimentacao = converter_data(row.get('data_movimentacao'), 'data_movimentacao') # Permite None
+                data_alteracao = converter_data(row.get('data_alteracao'), 'data_alteracao') # Permite None
+
+                # Trata campos de texto opcionais, convertendo vazios/NA para None (se modelo permitir null=True)
+                def clean_optional_text(value):
+                    val = str(value).strip()
+                    return val if val and val.lower() not in ['na', 'n/a', 'nan', 'none', '#n/d'] else None
+
+                doc_alteracao = clean_optional_text(row.get('doc_alteracao'))
+                doc_movimentacao = clean_optional_text(row.get('doc_movimentacao'))
+                alteracao = clean_optional_text(row.get('alteracao'))
+
+                # --- Criação do Objeto RPT ---
+                # Opcional: Verificar duplicidade antes de criar
+                if Cadastro_rpt.objects.filter(
+                        cadastro=cadastro_obj, data_pedido=data_pedido, sgb_destino=sgb_destino,
+                        posto_secao_destino=posto_secao_destino, doc_solicitacao=doc_solicitacao
+                    ).exists():
+                    raise ValueError("Solicitação RPT duplicada já existe no sistema.")
+
+
+                Cadastro_rpt.objects.create(
+                    cadastro=cadastro_obj,
+                    data_pedido=data_pedido,
+                    status=status,
+                    sgb_destino=sgb_destino,
+                    posto_secao_destino=posto_secao_destino,
+                    doc_solicitacao=doc_solicitacao,
+                    data_movimentacao=data_movimentacao, # Passa None se for o caso
+                    data_alteracao=data_alteracao,      # Passa None se for o caso
+                    doc_alteracao=doc_alteracao,        # Passa None se for o caso
+                    doc_movimentacao=doc_movimentacao,  # Passa None se for o caso
+                    alteracao=alteracao,                # Passa None se for o caso
+                    usuario_alteracao=request.user      # Usuário que realizou a importação
+                )
+                registros_processados += 1
+
+            except Exception as e:
+                erros_processamento.append(f"Linha {linha_num}: {str(e)}")
+                # Continua para a próxima linha mesmo se houver erro nesta
+                continue
+
+        # --- Feedback Final da Importação ---
+        if registros_processados > 0:
+            messages.success(request, f'✅ {registros_processados} registro(s) RPT importado(s) com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+
+        if erros_processamento:
+            total_erros = len(erros_processamento)
+            erros_preview = "; ".join(erros_processamento[:5]) # Mostra os 5 primeiros erros
+            erros_msg = f'⚠️ {total_erros} erro(s) ocorreram durante a importação. '
+            if total_erros <= 5:
+                erros_msg += f'Erros: {erros_preview}'
+            else:
+                erros_msg += f'Primeiros {5} erros: {erros_preview} (...e mais {total_erros - 5})'
+            # Considerar logar todos os erros para análise posterior
+            messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
+            # Talvez oferecer download do log de erros?
+
+        return redirect(listar_url_name) # Redireciona para a lista após o processo
+
+    # Se GET, renderiza o formulário de importação
+    return render(request, importar_template)
+
+
+
+# views.py
+from django.http import HttpResponse
+from django.contrib import messages
+from django.shortcuts import redirect
+from .export_utils import export_rpt_data
+
+@login_required
 def exportar_rpt(request):
-    if request.method == 'POST':
-        format_type = request.POST.get('export_format')
-        if not format_type:
-            return HttpResponseBadRequest("Formato de exportação não especificado")
+    try:
+        # Coletar parâmetros
+        export_format = request.GET.get('format', 'xlsx').lower()
+        status = request.GET.get('status')
+        posto_secao = request.GET.get('posto_secao_destino')
 
-        queryset = Cadastro_rpt.objects.all().values(
-            'cadastro__re', 'cadastro__nome_de_guerra', 'data_pedido', 'status',
-            'sgb_destino', 'posto_secao_destino', 'doc_solicitacao',
-            'data_movimentacao', 'data_alteracao', 'doc_alteracao', 'doc_movimentacao',
-            'alteracao'
+        # Aplicar filtros
+        filters = {}
+        if status:
+            filters['status'] = status
+        if posto_secao:
+            filters['posto_secao_destino'] = posto_secao
+
+        # Gerar arquivo
+        buffer, filename = export_rpt_data(request, export_format, **filters)
+        
+        # Extrair conteúdo ANTES de fechar o buffer
+        file_content = buffer.getvalue()
+        buffer.close()
+
+        # Configurar resposta
+        content_types = {
+            'pdf': 'application/pdf',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'csv': 'text/csv; charset=utf-8-sig'
+        }
+        
+        response = HttpResponse(
+            file_content,
+            content_type=content_types[export_format]
         )
-        df = pd.DataFrame(list(queryset))
-        df.columns = [
-            'RE', 'Nome de Guerra', 'Data Pedido', 'Status', 'SGB Destino',
-            'Posto/Seção Destino', 'Doc. Solicitação', 'Data Movimentação',
-            'Data Alteração', 'Doc. Alteração', 'Doc. Movimentação', 'Alteração'
-        ]
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
 
-        if format_type == 'xlsx':
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename="rpt_data.xlsx"'
-            df.to_excel(response, index=False)
-            return response
-
-        elif format_type == 'csv':
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="rpt_data.csv"'
-            df.to_csv(response, index=False, sep=';', encoding='utf-8-sig')
-            return response
-
-        elif format_type == 'pdf':
-            buffer = BytesIO()
-            p = canvas.Canvas(buffer, pagesizes=letter)
-            p.drawString(100, 750, "Dados RPT")
-            y = 700
-            for index, row in df.iterrows():
-                row_str = ", ".join(map(str, row.values))
-                p.drawString(100, y, row_str)
-                y -= 20
-            p.save()
-            buffer.seek(0)
-            response = HttpResponse(buffer, content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="rpt_data.pdf"'
-            return response
-
-    return HttpResponseBadRequest("Método não permitido")
+    except Exception as e:
+        messages.error(request, f'Erro na exportação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('rpt:listar_rpt')
