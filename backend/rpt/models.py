@@ -22,7 +22,7 @@ class Cadastro_rpt(models.Model):
         ("Mov. serviço", "Mov. serviço"),
         ("Mov. própria", "Mov. própria"),
         ("Exclusão a pedido", "Exclusão a pedido"),
-        ("Tranferido de Unidade", "Tranferido de Unidade"),
+        ("Transferido de Unidade", "Transferido de Unidade"),
         ("Excluído Alt. quadro", "Excluído Alt. quadro"),
     )
 
