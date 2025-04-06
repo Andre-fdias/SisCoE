@@ -195,12 +195,13 @@ def editar_rpt(request, id):
             return redirect('rpt:listar_rpt')  # Redireciona para a lista em caso de erro
 
     context = {
-        'cadastro_rpt': cadastro_rpt,
-        'status_choices': status_choices,
-        'posto_secao_choices': posto_secao_choices,
-        'sgb_choices': sgb_choices,
-        'alteracao_choices': alteracao_choices,
-    }
+    'cadastro_rpt': cadastro_rpt,
+    'status_choices': Cadastro_rpt.status_choices,
+    'posto_secao_choices': Cadastro_rpt.posto_secao_choices,
+    'sgb_choices': Cadastro_rpt.sgb_choices,
+    'alteracao_choices': Cadastro_rpt.alteracao_choices,
+}
+
     return render(request, 'editar_rpt.html', context)
 
 @login_required
@@ -608,7 +609,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from .export_utils import export_rpt_data
 
-@login_required
+
 def exportar_rpt(request):
     try:
         # Coletar parâmetros
@@ -623,28 +624,13 @@ def exportar_rpt(request):
         if posto_secao:
             filters['posto_secao_destino'] = posto_secao
 
-        # Gerar arquivo
-        buffer, filename = export_rpt_data(request, export_format, **filters)
-        
-        # Extrair conteúdo ANTES de fechar o buffer
-        file_content = buffer.getvalue()
-        buffer.close()
-
-        # Configurar resposta
-        content_types = {
-            'pdf': 'application/pdf',
-            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'csv': 'text/csv; charset=utf-8-sig'
-        }
-        
-        response = HttpResponse(
-            file_content,
-            content_type=content_types[export_format]
-        )
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
+        # Gerar e retornar a resposta diretamente
+        response = export_rpt_data(request, export_format, **filters)
         return response
 
+    except ValueError as e:
+        messages.error(request, f'Erro na exportação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('rpt:listar_rpt')
     except Exception as e:
         messages.error(request, f'Erro na exportação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('rpt:listar_rpt')
