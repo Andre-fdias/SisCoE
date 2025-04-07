@@ -141,7 +141,7 @@
                             Exportar
                         </button>
                       
-                        <div id="exportMenu" class="hidden absolute right-0 mt-2 w-44 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 origin-bottom-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                             <form method="GET" action="{% url 'rpt:exportar_rpt' %}" class="py-1">
                                 {% csrf_token %}
                                 <!-- Manter os filtros ativos -->

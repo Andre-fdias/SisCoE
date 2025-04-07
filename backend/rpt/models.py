@@ -113,7 +113,7 @@ class Cadastro_rpt(models.Model):
 
     id = models.AutoField(primary_key=True)
     data_pedido = models.DateField(blank=False, null=False)
-    data_movimentacao = models.DateField(blank=True, null=True)  # Opcional
+    data_movimentacao = models.DateField(blank=True, null=True)
     data_alteracao = models.DateField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=status_choices)
     sgb_destino = models.CharField(max_length=50, choices=sgb_choices)
