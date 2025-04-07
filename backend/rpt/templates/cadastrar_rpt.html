@@ -4,182 +4,311 @@
 {% block title %}Cadastrar Rpt{% endblock %}
 
 
+<style>
+    .input-readonly {
+        @apply w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-medium 
+               cursor-default transition-colors duration-200 hover:border-gray-300;
+    }
+</style>
+
 
 {% block 'body' %}
 <body>
     <div class=" md:items-center md:justify-between rounded-lg mt-4  w-full" id="cad_efetivo">
     
-    <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-        <fieldset class="  bg-gray-800  p-4 mb-8 rounded-md">
-   
-            <div id="01" class="mb-4">
-                <div class="bg-gray-800 p-4 rounded-md">
-                    <div class="flex flex-wrap items-center justify-between py-3">
-                        <div class="w-full md:w-9/12">
-                            <h1 class="text-3xl text-gray-200">Cadastrar Novo Rpt</h1>
-                        </div>
-                        <div class="w-full md:w-3/12 text-right">
-                            <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
-                            
-                            <a href="{% url 'rpt:listar_rpt' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                        </div>
+    <fieldset class=" p-4 mb-4 rounded-md w-full" id="second-fieldset">
+        <fieldset class="bg-gray-800 rounded-md shadow-lg mb-2 border-0">
+            <div class="p-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Título -->
+                    <div class="flex-1 min-w-[200px]">
+                        <h1 class="text-3xl font-bold text-gray-200 tracking-tight drop-shadow-md">Cadastrar Novo RPT</h1>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Limpar
+                        </a>
+                        <a href="{% url 'rpt:listar_rpt' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Voltar
+                        </a>
                     </div>
                 </div>
             </div>
         </fieldset>
-        <fieldset class="    rounded-md">
-     
-                {% if messages %}
-                {% for message in messages %}
-                    <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                        {{ message }}
-                    </section>
-                {% endfor %}
-                {% endif %}
-           
+        
+        <!-- Mensagens -->
+        <fieldset class="space-y-3 mb-6">
+            {% if messages %}
+            {% for message in messages %}
+            <section class="alert {{ message.tags }} p-4 rounded-lg border-l-4 border-opacity-75 shadow-md">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if message.tags == 'success' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        {% endif %}
+                    </svg>
+                    {{ message }}
+                </div>
+            </section>
+            {% endfor %}
+            {% endif %}
         </fieldset>
-        <fieldset class="border bg-gray-600 border-gray-600 p-4 mb-8 rounded-md">
-       
-            <div class="mb-4">
-                <p class="text-gray-300 font-semibold">Digite abaixo o RE (sem dígito) do militar que será cadastrado!</p>
+        
+        <!-- Busca de Militar -->
+        <fieldset class="bg-gray-600 rounded-2xl p-4 mb-8 border border-gray-500 shadow-inner">
+            <div class="mb-3">
+                <p class="text-gray-300 font-semibold text-sm md:text-base">Digite abaixo o RE (sem dígito) do militar que será cadastrado!</p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <form class="grid grid-cols-1 md:grid-cols-2 gap-4 needs-validation" method="POST" action="{% url 'rpt:buscar_militar_rpt' %}">
+                    <form class="grid grid-cols-1 md:grid-cols-2 gap-4" method="POST" action="{% url 'rpt:buscar_militar_rpt' %}">
                         {% csrf_token %}
-                        <div class="col-md-4">
-                            <input type="text" name="re" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" placeholder="Digite o RE" required>
+                        <div class="col-md-4 relative">
+                            <input type="text" name="re" 
+                                   class="w-full pl-4 pr-10 py-2.5 bg-gray-700 border border-gray-400 rounded-md 
+                                          text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-teal-300 
+                                          focus:border-teal-400 transition-all duration-150"
+                                   placeholder="Digite o RE"
+                                   required>
                         </div>
                         <div class="col-md-2">
-                            <input type="submit" class="text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 dark:focus:ring-teal-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" value="Buscar">
+                            <input type="submit" 
+                                   class="w-full text-white bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 
+                                          hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 
+                                          font-medium rounded-lg text-sm px-5 py-2.5 text-center shadow-lg 
+                                          transition-all duration-200 cursor-pointer"
+                                   value="Buscar">
                         </div>
                     </form>
                 </div>
             </div>
         </fieldset>
     
-       <form class="row g-3 needs-validation" novalidate action="{% url 'rpt:cadastrar_rpt' %}" method="POST" enctype="multipart/form-data">  {% csrf_token %}
-         <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
-         <fieldset class=" p-2 mb-8 rounded-md rounded-[10px]">
-            <div class="flex flex-col h-auto rounded-[10px]">
-                <div class=" bg-gray-200 rounded-md shadow-2xl  w-full p-8 transition-all duration-300 animate-fade-in">
-                    <div class="flex flex-wrap tracking-wide">
-                        <div id="02" class="w-full lg:w-1/2 p-4 leading-relaxed space-y-4">
-                            <h2 class="text-md font-semibold text-gray-700  mb-4">Dados Funcionais</h2>
-                            <hr class="my-4 border-b-1 border-gray-500">
-                            <br>
-                            <div class="col-md-12">
-                                <label for="validationCustom01" class="block text-sm font-medium text-gray-700">RE</label>
-                                <input type="text" name="re" value="{{ cadastro.re }}" class="mt-1 block pl-3 pr-10 py-2 border border-gray-200 bg-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="validationCustom02" readonly>
+        <form class="row g-3 needs-validation" novalidate action="{% url 'rpt:cadastrar_rpt' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
+         {% if cadastro %}
+         <fieldset class="mb-8">
+            <div class="bg-gray-100 rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="grid lg:grid-cols-2 gap-8 p-8">
+                    <!-- Coluna de Dados Funcionais -->
+                    <div class="space-y-6">
+                        <div class="pb-4 border-b border-gray-100">
+                            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Dados Funcionais</h2>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <!-- Input Group -->
+                            <div class="space-y-1">
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Identificação Militar</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                        <p class="text-[0.8rem] text-gray-400  mb-1">RE</p>
+                                        <div class="input-readonly">{{ cadastro.re }}</div>
+                                    </div>
+                                    <div class="bg-gray-200 rounded-2xl p-2 ms-2 ">
+                                        <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Grad</p>
+                                        <div class="input-readonly">{{ promocao.posto_grad }}</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-12">
-                                <label for="validationCustom01" class="block text-sm font-medium text-gray-700">Posto/Grad</label>
-                                <input type="text" name="posto_grad" value="{{ promocao.posto_grad }}" class="mt-1 block pl-3 pr-10 py-2 border border-gray-200 bg-gray-100  rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="validationCustom02" readonly>
+        
+                            <!-- Input Group -->
+                            <div class="space-y-1 bg-gray-200 rounded-2xl p-2 ms-2">
+                                <p class="text-[0.8rem] text-gray-400 mb-1">Nome Completo</p>
+                                <div class="input-readonly">{{ cadastro.nome }}</div>
                             </div>
-                            <div class="col-md-12">
-                                <label for="validationCustom02" class="block text-sm font-medium text-gray-700">Nome</label>
-                                <input type="text" name="nome" value="{{ cadastro.nome }}" class="mt-1 block  pl-3 pr-10 py-2 border border-gray-200 bg-gray-100  rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="validationCustom02" readonly>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="validationCustom01" class="block text-sm font-medium text-gray-700">SGB</label>
-                                <input type="text" name="sgb" value="{{ detalhes.sgb }}" class="mt-1 block pl-3 pr-10 py-2 border border-gray-200 bg-gray-100  rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"id="validationCustom02" readonly>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="validationCustom01" class="block text-sm font-medium text-gray-700">Posto ou Seção</label>
-                                <input type="text" name="posto_secao" value="{{ detalhes.posto_secao }}" class="mt-1 block  pl-3 pr-10 py-2 border border-gray-200 bg-gray-100  rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="validationCustom02" readonly>
+        
+                            <!-- Input Group -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                    <p class="text-[0.8rem] text-gray-400 mb-1">SGB</p>
+                                    <div class="input-readonly">{{ detalhes.sgb }}</div>
+                                </div>
+                                <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                    <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Seção</p>
+                                    <div class="input-readonly">{{ detalhes.posto_secao }}</div>
+                                </div>
                             </div>
                         </div>
-                        <div id="03" class="w-full lg:w-1/2 p-4 leading-relaxed space-y-4">
-                            <h2 class="text-md font-semibold text-gray-700  mb-4">Foto de Perfil </h2>
-                            <hr class="my-4 border-b-1 border-gray-500">
-                            <br>
-                            <div class="col-md-12">
-                                <br><br>
-                                {% if imagem and imagem.image %}
-                                    <img id="preview" src="{{ imagem.image.url }}" alt="Pré-visualização da imagem" style="max-width: 200px;">
-                                {% else %}
-                                    <img id="preview" src="#" alt="Pré-visualização da imagem" style="display: none; max-width: 200px;">
-                                {% endif %}
-                                <br><br>
-                                <input class="form-control col-md-12" name="image" type="file" id="formFile" aria-label="file example" accept="image/*" onchange="previewImage(event)">
-                            </div>
+                    </div>
+        
+                    <!-- Coluna da Foto -->
+                    <div class="space-y-6">
+                        <div class="pb-4 border-b border-gray-100">
+                            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Foto de Perfil</h2>
                         </div>
-                    </div>
-                </div>
-            </div>
-         </fieldset> 
-         
-         
-        <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-            <h2 class="text-md font-semibold text-gray-700 mb-4">Insira abaixo o Local de destino solicitado</h2>
-            <hr class="my-4 border-b-1 border-gray-300">
-            <br>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <div class="form-group">
-                        <label for="sgb_destino" class="block text-sm font-medium text-gray-700">SGB Destino:</label>
-                        <select name="sgb_destino" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                            {% for value, label in sgb_choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                     
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        <label for="posto_secao_destino" class="block text-sm font-medium text-gray-700">Posto/Seção Destino:</label>
-                        <select name="posto_secao_destino" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                            {% for value, label in posto_secao_choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                      
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        <label for="data_pedido" class="block text-sm font-medium text-gray-700">Data do Pedido:</label>
-                        <input type="date" name="data_pedido" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                   
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        <label for="doc_solicitacao" class="block text-sm font-medium text-gray-700">Documento de Solicitação:</label>
-                        <input type="text" name="doc_solicitacao" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                     
-                    </div>
-                </div>
-                <div>
-                    <div class="form-group">
-                        <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
-                        <select name="status" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
-                            {% for value, label in status_choices %}
-                                <option value="{{ value }}" {% if value == "Aguardando" %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                      
+                        
+                        <div class="relative group w-96 h-96 mx-auto"> <!-- Adicionei mx-auto para centralizar horizontalmente -->
+                            {% if imagem and imagem.image %}
+                            <img id="preview" src="{{ imagem.image.url }}" 
+                                 class="w-full h-full object-contain rounded-xl border-4 border-white shadow-lg
+                                        transition-all duration-300">
+                            {% else %}
+                            <div class="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center">
+                                <span class="text-gray-400 text-sm">Sem imagem cadastrada</span>
+                            </div>
+                            {% endif %}
+                            
+                            <label class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity 
+                                        rounded-xl flex flex-col items-center justify-center cursor-pointer gap-2">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="text-white text-sm font-medium">Clique para alterar</span>
+                                <input type="file" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
         </fieldset>
-        <fieldset class="bg-gray-800  p-4 mb-8 rounded-md">
-            <div class="mb-4">
-                <div class="flex items-center justify-between py-3">
-                    <div class="w-full md:w-auto">
-                        <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Salvar</button>
+        
+      
+
+         
+        <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+            <div class="space-y-6">
+                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Local de Destino Solicitado</h2>
+                <hr class="border-t border-gray-100">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- SGB Destino -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Subunidade Destino</label>
+                        <div class="relative">
+                            <select name="sgb_destino" 
+                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                           transition-all duration-200 appearance-none
+                                           hover:border-gray-300 text-gray-700 font-medium
+                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>')]
+                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                <option value="" disabled selected>Selecione a Subunidade</option>
+                                {% for value, label in sgb_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="flex space-x-2">
-                        <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
-                                
-                        <a href="{% url 'rpt:listar_rpt' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
+        
+                    <!-- Posto/Seção Destino -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Seção Destino</label>
+                        <div class="relative">
+                            <select name="posto_secao_destino" 
+                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                           transition-all duration-200 appearance-none
+                                           hover:border-gray-300 text-gray-700 font-medium
+                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>')]
+                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                <option value="" disabled selected>Selecione o Posto/Seção</option>
+                                {% for value, label in posto_secao_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+        
+                    <!-- Data e Documento -->
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data do Pedido</label>
+                            <div class="relative">
+                                <input type="date" name="data_pedido" 
+                                       class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                              transition-all duration-200
+                                              hover:border-gray-300 text-gray-700 font-medium
+                                              [&::-webkit-calendar-picker-indicator]:opacity-0
+                                              bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyAxN0g1TTEyIDEzSDkiLz48L3N2Zz4K')]
+                                              bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                            </div>
+                        </div>
+        
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº do Documento</label>
+                            <input type="text" name="doc_solicitacao" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite o número do documento">
+                        </div>
+                    </div>
+        
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Status da Solicitação</label>
+                        <div class="relative">
+                            <select name="status" 
+                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                           transition-all duration-200 appearance-none
+                                           hover:border-gray-300 text-gray-700 font-medium
+                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>')]
+                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if value == "Aguardando" %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex-1 space-y-2">
+                    <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                        Verifique todos os dados antes de confirmar
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button type="submit" 
+                            class="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+                                   font-semibold rounded-xl shadow-sm hover:shadow-md
+                                   transition-all duration-200 hover:scale-[1.02]
+                                   flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Salvar
+                    </button>
+                    
+                    <div class="flex gap-3">
+                        
+                        
+                        <a href="{% url 'rpt:listar_rpt' %}" 
+                           class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
+                                  font-semibold rounded-xl shadow-sm hover:shadow-md
+                                  transition-all duration-200 hover:scale-[1.02]
+                                  flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            Voltar
+                        </a>
                     </div>
                 </div>
             </div>
         </fieldset>
        </form>
      
+{% endif %}
     </fieldset>
        
     <script>
