@@ -83,26 +83,95 @@
     <script src="../path/to/fullcalendar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-    <script>
-      // Controle do spinner
-      function showSpinner() {
-        document.getElementById('spinner-container').classList.remove('hidden');
-      }
-    
-      function hideSpinner() {
-        document.getElementById('spinner-container').classList.add('hidden');
-      }
-    
-      // Exemplo de uso durante o carregamento
-      document.addEventListener('DOMContentLoaded', function() {
-        hideSpinner(); // Esconde quando tudo carregar
-      });
+    <div id="spinner-container" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center">
+        <div class="relative w-64 h-64">
+          <!-- Base do Spinner -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <!-- Chamas -->
+            <div class="absolute bottom-8 w-32 h-32">
+              <div class="absolute w-4 h-4 bg-red-500 rounded-full animate-flame1"></div>
+              <div class="absolute left-4 w-6 h-6 bg-orange-500 rounded-full animate-flame2"></div>
+              <div class="absolute left-8 w-5 h-5 bg-yellow-500 rounded-full animate-flame3"></div>
+            </div>
+            
+            <!-- Caminhão -->
+            <div class="absolute bottom-0 z-10 animate-truck-bounce">
+              <div class="w-24 h-12 bg-red-600 rounded-lg"></div>
+              <div class="absolute top-0 left-4 w-8 h-6 bg-red-700 rounded-lg"></div>
+              <div class="absolute -bottom-2 left-8 w-8 h-8 bg-gray-300 rounded-full"></div>
+              <div class="absolute -bottom-2 left-16 w-8 h-8 bg-gray-300 rounded-full"></div>
+            </div>
       
-      // Mostrar spinner antes do carregamento da página
-      window.addEventListener('beforeunload', function() {
-        showSpinner();
-      });
-    </script>
+            <!-- Jato de Água -->
+            <div class="absolute bottom-12 left-16 w-32 h-16 overflow-hidden">
+              <div class="water-spray animate-water-spray">
+                <div class="w-full h-full bg-blue-400 opacity-50" style="clip-path: polygon(0 45%, 100% 15%, 100% 55%, 0 85%)"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Texto -->
+          <p class="absolute bottom-4 w-full text-center text-white font-bold animate-pulse">
+            Carregando...
+          </p>
+        </div>
+      </div>
+      
+      <style>
+      @keyframes truck-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      
+      @keyframes water-spray {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      @keyframes flame1 {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.2); opacity: 1; }
+      }
+      
+      @keyframes flame2 {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(0.8); opacity: 1; }
+      }
+      
+      @keyframes flame3 {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+      
+      .animate-truck-bounce {
+        animation: truck-bounce 1s ease-in-out infinite;
+      }
+      
+      .animate-water-spray {
+        animation: water-spray 1s linear infinite;
+      }
+      
+      .animate-flame1 {
+        animation: flame1 0.8s ease-in-out infinite;
+      }
+      
+      .animate-flame2 {
+        animation: flame2 0.9s ease-in-out infinite;
+      }
+      
+      .animate-flame3 {
+        animation: flame3 0.7s ease-in-out infinite;
+      }
+      
+      .water-spray {
+        background: linear-gradient(
+          to right,
+          rgba(96, 165, 250, 0) 0%,
+          rgba(96, 165, 250, 0.8) 50%,
+          rgba(96, 165, 250, 0) 100%
+        );
+      }
+      </style>
     
 
     {% block js %}{% endblock js %}

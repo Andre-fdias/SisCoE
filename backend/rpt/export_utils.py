@@ -20,6 +20,10 @@ from .models import Cadastro_rpt # Assuming Cadastro_rpt is in the same app's mo
 from django.utils.html import strip_tags
 # Import needed for watermark user info
 from django.contrib.auth import get_user_model
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # --- SEU MAPA DE POSTO/SEÇÃO ---
 POSTO_SECAO_MAP = {
@@ -101,13 +105,20 @@ POSTO_SECAO_MAP = {
 # A view deve passar o queryset preparado.
 
 # --- FUNÇÃO DISPATCHER CORRIGIDA ---
+
 def export_rpt_data(request, export_format='xlsx', **filters):
+    logger.debug(f"Filtros: {filters}")
+
     queryset = Cadastro_rpt.objects.all()
 
-    if filters.get('status'):
-        queryset = queryset.filter(status=filters['status'])
+    # Garantir que o filtro de status seja sempre "Aguardando"
+    queryset = queryset.filter(status='Aguardando')
+
     if filters.get('posto_secao_destino'):
         queryset = queryset.filter(posto_secao_destino=filters['posto_secao_destino'])
+
+    logger.debug(f"Queryset: {queryset.query}")
+    logger.debug(f"Número de registros encontrados: {queryset.count()}")
 
     if export_format == 'pdf':
         buffer_bytes, filename = export_to_pdf_rpt(request, queryset)
@@ -127,7 +138,6 @@ def export_rpt_data(request, export_format='xlsx', **filters):
     response = HttpResponse(buffer_bytes, content_type=content_type)
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
-
 
 # ==============================================
 # FUNÇÃO PARA EXPORTAÇÃO PDF COM MARCA D'ÁGUA

@@ -23,7 +23,9 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
-
+import logging
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 # Local application imports
 # Adjust the import path based on your project structure
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
@@ -131,9 +133,10 @@ def ver_rpt(request, id):
     promocao = cadastro.promocoes.last()
 
    
-      # Lista de inscritos com a mesma ordenação
+       # Lista de inscritos com a mesma ordenação E status Aguardando
     inscritos_secao = Cadastro_rpt.objects.filter(
-        posto_secao_destino=cadastro_rpt.posto_secao_destino
+        posto_secao_destino=cadastro_rpt.posto_secao_destino,
+        status='Aguardando'  # Filtro adicionado aqui
     ).annotate(
         posicao=Window(
             expression=RowNumber(),
@@ -142,7 +145,7 @@ def ver_rpt(request, id):
         )
     ).order_by('posicao')  # Ordenar pela posição calculada
     posicao_real = None
-    for idx, inscrito in enumerate(inscritos_secao, start=1):
+    for idx, inscrito in enumerate(inscritos_secao.filter(status='Aguardando'), start=1):
           if inscrito.id == cadastro_rpt.id:
             posicao_real = idx
             break
@@ -157,10 +160,14 @@ def ver_rpt(request, id):
         'promocao': promocao,
     }
     return render(request, 'ver_rpt.html', context)
+
+
+
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Cadastro_rpt
 from django.contrib.auth.decorators import login_required
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -168,15 +175,26 @@ logger = logging.getLogger(__name__)
 def editar_rpt(request, id):
     cadastro_rpt = get_object_or_404(Cadastro_rpt, id=id)
 
-    status_choices = Cadastro_rpt._meta.get_field('status').choices
-    posto_secao_choices = Cadastro_rpt._meta.get_field('posto_secao_destino').choices
-    sgb_choices = Cadastro_rpt._meta.get_field('sgb_destino').choices
-    alteracao_choices = Cadastro_rpt._meta.get_field('alteracao').choices
+    if request.method == "GET":
+        data = {
+            'id': cadastro_rpt.id,
+            'data_pedido': str(cadastro_rpt.data_pedido),
+            'data_movimentacao': str(cadastro_rpt.data_movimentacao) if cadastro_rpt.data_movimentacao else None,
+            'data_alteracao': str(cadastro_rpt.data_alteracao) if cadastro_rpt.data_alteracao else None,
+            'status': cadastro_rpt.status,
+            'sgb_destino': cadastro_rpt.sgb_destino,
+            'posto_secao_destino': cadastro_rpt.posto_secao_destino,
+            'doc_solicitacao': cadastro_rpt.doc_solicitacao,
+            'doc_alteracao': cadastro_rpt.doc_alteracao,
+            'doc_movimentacao': cadastro_rpt.doc_movimentacao,
+            'alteracao': cadastro_rpt.alteracao,
+        }
+        return JsonResponse(data)
 
-    if request.method == "POST":
+    elif request.method == "POST":
         cadastro_rpt.data_pedido = request.POST.get('data_pedido')
-        cadastro_rpt.data_movimentacao = request.POST.get('data_movimentacao')
-        cadastro_rpt.data_alteracao = request.POST.get('data_alteracao')
+        cadastro_rpt.data_movimentacao = request.POST.get('data_movimentacao') or None
+        cadastro_rpt.data_alteracao = request.POST.get('data_alteracao') or None  # Garante que None seja atribuído se vazio
         cadastro_rpt.status = request.POST.get('status')
         cadastro_rpt.sgb_destino = request.POST.get('sgb_destino')
         cadastro_rpt.posto_secao_destino = request.POST.get('posto_secao_destino')
@@ -188,22 +206,17 @@ def editar_rpt(request, id):
         try:
             cadastro_rpt.save()
             return redirect('rpt:ver_rpt', id=cadastro_rpt.id)
+        except ValidationError as e:
+            logger.error(f'Erro de validação ao salvar Cadastro_rpt: {e}', exc_info=True)
+            return JsonResponse({'error': f'Erro de validação: {e}'}, status=400)
+        except IntegrityError as e:
+            logger.error(f'Erro de integridade ao salvar Cadastro_rpt: {e}', exc_info=True)
+            return JsonResponse({'error': f'Erro de integridade: {e}'}, status=400)
         except Exception as e:
             logger.error(f'Erro ao salvar Cadastro_rpt: {e}', exc_info=True)
-            # Você pode adicionar uma mensagem de erro para o usuário aqui
-            # messages.error(request, 'Ocorreu um erro ao salvar o registro.')
-            return redirect('rpt:listar_rpt')  # Redireciona para a lista em caso de erro
+            return JsonResponse({'error': f'Erro ao salvar: {e}'}, status=500)
 
-    context = {
-    'cadastro_rpt': cadastro_rpt,
-    'status_choices': Cadastro_rpt.status_choices,
-    'posto_secao_choices': Cadastro_rpt.posto_secao_choices,
-    'sgb_choices': Cadastro_rpt.sgb_choices,
-    'alteracao_choices': Cadastro_rpt.alteracao_choices,
-}
-
-    return render(request, 'editar_rpt.html', context)
-
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 @login_required
 def search_cadastro(request):
     re = request.GET.get('re', None)
@@ -602,25 +615,21 @@ def importar_rpt(request):
     return render(request, importar_template)
 
 
-
-# views.py
 from django.http import HttpResponse
 from django.contrib import messages
 from django.shortcuts import redirect
 from .export_utils import export_rpt_data
 
-
 def exportar_rpt(request):
     try:
-        # Coletar parâmetros
+        # Coletar parâmetros COM VALOR PADRÃO PARA STATUS
         export_format = request.GET.get('format', 'xlsx').lower()
-        status = request.GET.get('status')
         posto_secao = request.GET.get('posto_secao_destino')
 
-        # Aplicar filtros
-        filters = {}
-        if status:
-            filters['status'] = status
+        # APLICAR FILTROS OBRIGATÓRIOS
+        filters = {
+            'status': 'Aguardando'  # Garante que o status seja sempre "Aguardando"
+        }
         if posto_secao:
             filters['posto_secao_destino'] = posto_secao
 
