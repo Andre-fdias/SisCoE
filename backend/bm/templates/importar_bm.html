@@ -2,21 +2,18 @@
 {% block title %}Importar Dados de Bombeiros{% endblock %}
 
 {% block 'body' %}
-<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 ">
     <div class="max-w-3xl mx-auto">
         <div class="bg-white shadow-xl rounded-lg overflow-hidden">
-            <!-- Cabeçalho -->
-            <div class="bg-gray-800 px-6 py-4">
-                <h1 class="text-2xl font-bold text-white">Importar Dados de Bombeiros</h1>
-                <p class="text-blue-100 mt-1">Preencha os campos abaixo para importar os dados</p>
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-4">
+                <h1 class="text-2xl font-bold text-white tracking-tight">Importar Dados de Bombeiros</h1>
+                <p class="text-indigo-100 mt-1">Siga as instruções abaixo para importar dados de bombeiros a partir de um arquivo CSV ou Excel.</p>
             </div>
-            
-            <!-- Formulário -->
+
             <div class="p-6 space-y-6">
                 <form method="post" enctype="multipart/form-data" class="space-y-6" id="import-form">
                     {% csrf_token %}
-                    
-                    <!-- Campo de Arquivo -->
+
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700" for="arquivo">
                             Selecione o arquivo
@@ -24,29 +21,28 @@
                         </label>
                         <div class="mt-1 flex items-center">
                             <label for="arquivo" class="cursor-pointer">
-                                <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                                     </svg>
                                     Selecionar arquivo
                                 </span>
                                 <input id="arquivo" name="arquivo" type="file" required
-                                    class="sr-only" accept=".csv,.xlsx,.xls">
+                                       class="sr-only" accept=".csv,.xlsx,.xls">
                             </label>
                             <span id="file-name" class="ml-4 text-sm text-gray-500">Nenhum arquivo selecionado</span>
                         </div>
-                        <p class="text-xs text-gray-500">Formatos suportados: .CSV, .XLSX (Excel)</p>
+                        <p class="text-xs text-gray-500">Formatos suportados: .CSV (separado por ponto e vírgula), .XLSX e .XLS (Excel)</p>
                     </div>
 
-                    <!-- Ações -->
                     <div class="flex items-center justify-end space-x-4 pt-4">
-                        <a href="{% url 'bm:listar_bm' %}" 
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <a href="{% url 'bm:listar_bm' %}"
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             Cancelar
                         </a>
                         <button type="submit" id="submit-btn"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                             <span id="btn-text">Importar Dados</span>
@@ -60,12 +56,11 @@
                     </div>
                 </form>
             </div>
-            
-            <!-- Seção de Ajuda -->
+
             <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
                 <div class="flex items-start">
                     <div class="flex-shrink-0 pt-0.5">
-                        <svg class="h-6 w-6 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
@@ -73,11 +68,36 @@
                         <h3 class="text-sm font-medium text-gray-900">Instruções para importação</h3>
                         <div class="mt-2 text-sm text-gray-700">
                             <ul class="list-disc pl-5 space-y-1">
-                                <li>O arquivo deve conter os cabeçalhos corretos na primeira linha</li>
-                                <li>Formatos de data devem seguir o padrão <code class="bg-gray-100 px-1 rounded">YYYY-MM-DD</code></li>
-                                <li>Certifique-se que os CPFs estão formatados corretamente (somente números)</li>
-                                <li>Registros com CPFs duplicados serão ignorados</li>
-                                <li>Baixe nosso <a href="/caminho/para/modelo.csv" class="text-blue-600 hover:text-blue-800 font-medium underline">modelo de arquivo CSV</a> para referência</li>
+                                <li>O arquivo deve estar no formato .CSV (separado por ponto e vírgula) ou .XLSX/.XLS (Excel).</li>
+                                <li>A primeira linha do arquivo deve conter os seguintes cabeçalhos de coluna, exatamente como mostrado:
+                                    <ul class="list-inside list-disc pl-5 space-y-1 mt-1">
+                                        <li><code>nome</code> (Nome completo - texto)</li>
+                                        <li><code>nome_de_guerra</code> (Nome de guerra - texto)</li>
+                                        <li><code>cpf</code> (CPF - somente números, 11 dígitos)</li>
+                                        <li><code>rg</code> (RG - texto)</li>
+                                        <li><code>admissao</code> (Data de admissão - formato: AAAA-MM-DD, DD/MM/AAAA, etc.)</li>
+                                        <li><code>nasc</code> (Data de nascimento - formato: AAAA-MM-DD, DD/MM/AAAA, etc.)</li>
+                                        <li><code>apresentacao_na_unidade</code> (Data de apresentação na unidade - formato: AAAA-MM-DD, DD/MM/AAAA, etc.)</li>
+                                        <li><code>posto_secao</code> (Posto/Seção - texto)</li>
+                                        <li><code>sgb</code> (SGB - texto)</li>
+                                        <li><code>situacao</code> (Opcional: Situação - texto, padrão: Efetivo)</li>
+                                        <li><code>cnh</code> (Opcional: CNH - texto, padrão: N/A)</li>
+                                        <li><code>cat_cnh</code> (Opcional: Categoria CNH - texto, padrão: N/A)</li>
+                                        <li><code>esb</code> (Opcional: ESB - texto, padrão: NÃO)</li>
+                                        <li><code>ovb</code> (Opcional: OVB - texto, padrão: NÃO POSSUI)</li>
+                                        <li><code>email</code> (Opcional: E-mail - texto, padrão: N/A)</li>
+                                        <li><code>telefone</code> (Opcional: Telefone - texto, padrão: N/A)</li>
+                                        <li><code>saida_da_unidade</code> (Opcional: Data de saída da unidade - formato: AAAA-MM-DD, DD/MM/AAAA, etc., padrão: N/A)</li>
+                                        <li><code>funcao</code> (Opcional: Função - texto, padrão: N/A)</li>
+                                        <li><code>genero</code> (Opcional: Gênero - texto, padrão: Masculino)</li>
+                                    </ul>
+                                </li>
+                                <li>Certifique-se de que os valores nas colunas correspondam aos tipos esperados (texto, data, número).</li>
+                                <li>O sistema tentará converter datas em diversos formatos comuns.</li>
+                                <li>CPFs devem conter apenas números e ter 11 dígitos. CPFs inválidos serão ignorados.</li>
+                                <li>Registros com CPFs já existentes no sistema não serão importados (duplicados).</li>
+                                <li>O tamanho máximo do arquivo permitido é de 5MB.</li>
+                                <li>Para referência, você pode baixar um <a href="/caminho/para/modelo.csv" class="text-indigo-600 hover:text-indigo-800 font-medium underline">modelo de arquivo CSV</a>.</li>
                             </ul>
                         </div>
                     </div>
@@ -87,29 +107,25 @@
     </div>
 </div>
 
-<!-- Modal de sucesso/erro -->
-<div id="result-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
+<div id="result-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
                     <div id="modal-icon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
-                        <!-- Ícone será inserido aqui via JS -->
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900"></h3>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
                         <div class="mt-2">
-                            <p id="modal-message" class="text-sm text-gray-500"></p>
+                            <p class="text-sm text-gray-500" id="modal-message"></p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button id="modal-confirm" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                <button id="modal-confirm" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                     OK
                 </button>
             </div>
@@ -118,70 +134,69 @@
 </div>
 
 <script>
-    // Mostrar nome do arquivo selecionado
     document.getElementById('arquivo').addEventListener('change', function(e) {
         const fileName = e.target.files[0] ? e.target.files[0].name : 'Nenhum arquivo selecionado';
         document.getElementById('file-name').textContent = fileName;
     });
 
-    // Manipular envio do formulário
     document.getElementById('import-form').addEventListener('submit', function(e) {
         const submitBtn = document.getElementById('submit-btn');
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
-        
-        // Mostrar spinner e desativar botão
+
         submitBtn.disabled = true;
         btnText.textContent = 'Processando...';
         btnSpinner.classList.remove('hidden');
     });
 
-    // Função para mostrar modal de resultado
     function showResultModal(title, message, isSuccess) {
         const modal = document.getElementById('result-modal');
         const modalIcon = document.getElementById('modal-icon');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalConfirm = document.getElementById('modal-confirm');
-        
-        // Configurar modal
+
         modalTitle.textContent = title;
         modalMessage.textContent = message;
-        
-        // Configurar ícone e cores
+
         if (isSuccess) {
             modalIcon.innerHTML = `
-                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             `;
             modalIcon.classList.add('bg-green-100');
         } else {
             modalIcon.innerHTML = `
-                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             `;
             modalIcon.classList.add('bg-red-100');
         }
-        
-        // Mostrar modal
+
         modal.classList.remove('hidden');
-        
-        // Configurar botão de confirmação
+
         modalConfirm.addEventListener('click', function() {
             modal.classList.add('hidden');
             if (isSuccess) {
                 window.location.href = "{% url 'bm:listar_bm' %}";
+            } else {
+                const submitBtn = document.getElementById('submit-btn');
+                const btnText = document.getElementById('btn-text');
+                const btnSpinner = document.getElementById('btn-spinner');
+
+                submitBtn.disabled = false;
+                btnText.textContent = 'Importar Dados';
+                btnSpinner.classList.add('hidden');
             }
         });
     }
 
-    // Verificar se há mensagens do Django para mostrar
     {% if messages %}
         {% for message in messages %}
             showResultModal(
-                "{% if message.tags == 'success' %}Sucesso{% else %}Erro{% endif %}",
+                "{% if message.tags == 'success' %}Sucesso{% elif message.tags == 'warning' %}Aviso{% else %}Erro{% endif %}",
                 "{{ message }}",
                 {% if message.tags == 'success' %}true{% else %}false{% endif %}
             );

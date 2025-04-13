@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from backend.agenda.models import Lembrete, Tarefa  # Importe os modelos Lembrete e Tarefa
 from django.views.generic import TemplateView, View
+from backend.documentos.models import Documento, Arquivo
 
 def capa(request):
     template_name = 'landing.html'
@@ -61,6 +62,8 @@ def index(request):
         for cargo in ['Ch Seç Adm', 'Cmt do 1º SGB', 'Cmt do 2º SGB', 
                      'Cmt do 3º SGB', 'Cmt do 4º SGB', 'Cmt do 5º SGB']
     }
+ # Buscar imagens para o carrossel
+    imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento')
 
   # Aniversariantes - agora sem paginação
     aniversariantes = Cadastro.objects.filter(
@@ -109,6 +112,7 @@ def index(request):
         'comandante': comandante,
         'subcomandante': subcomandante,
         'chefes': chefes,
+         'imagens_carrossel': imagens_carrossel,
     }
     return render(request, 'index.html', context)
 

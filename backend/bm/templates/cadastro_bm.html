@@ -376,59 +376,58 @@
 <!-- Imagem de Perfil -->
 <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
     <div class="space-y-6">
-        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Imagem de Perfil</h2>
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Imagem de Perfil e Motivo</h2>
         <hr class="border-t border-gray-100">
         
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-            <!-- Preview e Upload -->
-            <div class="md:col-span-1 relative group">
-                <div class="w-full aspect-square rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
-                    <img id="preview" src="#" alt="Pré-visualização" 
-                         class="w-full h-full object-cover rounded-xl hidden">
-                    <span id="upload-label" class="text-gray-400 text-sm text-center p-4">Clique no botão para enviar imagem</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <!-- Coluna 1 - Upload de Imagem (50%) -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-10">Imagem de Perfil</h3>
+                <div class="relative group">
+                    <div class="w-full aspect-square rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center">
+                        <img id="preview" src="#" alt="Pré-visualização" 
+                             class="w-full h-full object-cover rounded-xl hidden">
+                        <span id="upload-label" class="text-gray-400 text-sm text-center p-4">Clique no botão para enviar imagem</span>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <label class="w-1/2 flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
+                                  font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Buscar Imagem
+                            <input type="file" name="image" 
+                                   class="hidden" 
+                                   accept="image/*" 
+                                   onchange="previewImage(event)" 
+                                   required>
+                        </label>
+                    </div>
+                    <div class="text-red-500 text-sm mt-1 hidden" id="image_error">Por favor, envie uma imagem de perfil.</div>
                 </div>
-                
-                <div class="mt-4">
-                    <label class="w-full flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                              font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        Buscar Imagem
-                        <input type="file" name="image" 
-                               class="hidden" 
-                               accept="image/*" 
-                               onchange="previewImage(event)" 
-                               required>
-                    </label>
-                </div>
-                <div class="text-red-500 text-sm mt-1 hidden" id="image_error">Por favor, envie uma imagem de perfil.</div>
             </div>
 
-            <!-- Seção para outros campos (opcional) -->
-            <div class="md:col-span-3">
-                <div class="space-y-6">
-                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Motivo da Alteração</h2>
-                    <hr class="border-t border-gray-100">
-                    
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="space-y-2">
-                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Selecione o Motivo</label>
-                            <div class="relative">
-                                <select name="alteracao" id="alteracao" 
-                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                               transition-all duration-200 appearance-none
-                                               hover:border-gray-300 text-gray-700 font-medium
-                                               bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgOWwtNyA3LTctNyIvPjwvc3ZnPg==')]
-                                               bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]"
-                                        required>
-                                    <option value="" disabled selected>Selecione uma opção</option>
-                                    {% for i in alteracao %}
-                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+            <!-- Coluna 2 - Motivo da Alteração (50%) -->
+            <div class="space-y-4 ms-8">
+                <h3 class="ms-4 text-xs font-semibold text-gray-500 uppercase tracking-widest">Motivo da Alteração</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="space-y-2">
+                        <label class="ms-4 block text-xs font-medium text-gray-500 uppercase tracking-wide mb-8"></label>
+                        <div class="relative w-1/2"> <!-- Alterado para ocupar 1/2 da largura -->
+                            <select name="alteracao" id="alteracao" 
+                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                           transition-all duration-200 appearance-none
+                                           hover:border-gray-300 text-gray-700 font-medium
+                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgOWwtNyA3LTctNyIvPjwvc3ZnPg==')]
+                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]"
+                                    required>
+                                <option value="" disabled selected>Selecione uma opção</option>
+                                {% for i in alteracao %}
+                                <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                 </div>

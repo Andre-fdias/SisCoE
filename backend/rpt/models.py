@@ -124,7 +124,7 @@ class Cadastro_rpt(models.Model):
     alteracao = models.CharField(max_length=50, choices=alteracao_choices, blank=True, null=True)  # Opcional
     cadastro = models.ForeignKey(Cadastro, related_name='cadastro_rpt', on_delete=models.DO_NOTHING)
     usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    data_alteracao = models.DateTimeField(auto_now_add=True)
+    create = models.DateTimeField(auto_now_add=True)  # renomeado para criação
  
     def __str__(self):
         return f'{self.cadastro.re} {self.cadastro.dig} {self.cadastro.nome_de_guerra}'
@@ -203,7 +203,7 @@ class HistoricoRpt(models.Model):
     alteracao = models.CharField(max_length=50,blank=True, null=True)  # Opcional
     cadastro = models.ForeignKey(Cadastro_rpt, related_name='Historicorpt', on_delete=models.CASCADE)
     usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    data_alteracao = models.DateTimeField(auto_now_add=True)
+    create = models.DateTimeField(auto_now_add=True)  # renomeado para criação
  
     def __str__(self):
         return f'{self.cadastro.re} {self.cadastro.dig} {self.cadastro.nome_de_guerra}'
