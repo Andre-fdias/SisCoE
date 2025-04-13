@@ -1,22 +1,25 @@
-
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Cadastrar Rpt{% endblock %}
-
 
 <style>
     .input-readonly {
         @apply w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-medium 
                cursor-default transition-colors duration-200 hover:border-gray-300;
     }
+    .optional-field {
+        @apply border-gray-300 bg-white/90;
+    }
+    .optional-field:focus {
+        @apply border-indigo-500 ring-indigo-200;
+    }
 </style>
-
 
 {% block 'body' %}
 <body>
-    <div class=" md:items-center md:justify-between rounded-lg mt-4  w-full" id="cad_efetivo">
+    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
     
-    <fieldset class=" p-4 mb-4 rounded-md w-full" id="second-fieldset">
+    <fieldset class="p-4 mb-4 rounded-md w-full" id="second-fieldset">
         <fieldset class="bg-gray-800 rounded-md shadow-lg mb-2 border-0">
             <div class="p-4">
                 <div class="flex flex-wrap items-center justify-between gap-4">
@@ -27,9 +30,7 @@
                     
                     <!-- Botões -->
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
-                            Limpar
-                        </a>
+                      
                         <a href="{% url 'rpt:listar_rpt' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
                             Voltar
                         </a>
@@ -88,169 +89,175 @@
             </div>
         </fieldset>
     
-        <form class="row g-3 needs-validation" novalidate action="{% url 'rpt:cadastrar_rpt' %}" method="POST" enctype="multipart/form-data">
+        {% if cadastro %}
+        <form id="rptForm" class="row g-3 needs-validation" novalidate action="{% url 'rpt:cadastrar_rpt' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
-         {% if cadastro %}
-         <fieldset class="mb-8">
-            <div class="bg-gray-100 rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div class="grid lg:grid-cols-2 gap-8 p-8">
-                    <!-- Coluna de Dados Funcionais -->
-                    <div class="space-y-6">
-                        <div class="pb-4 border-b border-gray-100">
-                            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Dados Funcionais</h2>
-                        </div>
-                        
-                        <div class="space-y-5">
-                            <!-- Input Group -->
-                            <div class="space-y-1">
-                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Identificação Militar</label>
+            
+            <fieldset class="mb-8">
+                <div class="bg-gray-100 rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="grid lg:grid-cols-2 gap-8 p-8">
+                        <!-- Coluna de Dados Funcionais -->
+                        <div class="space-y-6">
+                            <div class="pb-4 border-b border-gray-100">
+                                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Dados Funcionais</h2>
+                            </div>
+                            
+                            <div class="space-y-5">
+                                <!-- Input Group -->
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Identificação Militar</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                            <p class="text-[0.8rem] text-gray-400 mb-1">RE</p>
+                                            <div class="input-readonly">{{ cadastro.re }}</div>
+                                        </div>
+                                        <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                            <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Grad</p>
+                                            <div class="input-readonly">{{ promocao.posto_grad }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+            
+                                <!-- Input Group -->
+                                <div class="space-y-1 bg-gray-200 rounded-2xl p-2 ms-2">
+                                    <p class="text-[0.8rem] text-gray-400 mb-1">Nome Completo</p>
+                                    <div class="input-readonly">{{ cadastro.nome }}</div>
+                                </div>
+            
+                                <!-- Input Group -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="bg-gray-200 rounded-2xl p-2 ms-2">
-                                        <p class="text-[0.8rem] text-gray-400  mb-1">RE</p>
-                                        <div class="input-readonly">{{ cadastro.re }}</div>
+                                        <p class="text-[0.8rem] text-gray-400 mb-1">SGB</p>
+                                        <div class="input-readonly">{{ detalhes.sgb }}</div>
                                     </div>
-                                    <div class="bg-gray-200 rounded-2xl p-2 ms-2 ">
-                                        <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Grad</p>
-                                        <div class="input-readonly">{{ promocao.posto_grad }}</div>
+                                    <div class="bg-gray-200 rounded-2xl p-2 ms-2">
+                                        <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Seção</p>
+                                        <div class="input-readonly">{{ detalhes.posto_secao }}</div>
                                     </div>
-                                </div>
-                            </div>
-        
-                            <!-- Input Group -->
-                            <div class="space-y-1 bg-gray-200 rounded-2xl p-2 ms-2">
-                                <p class="text-[0.8rem] text-gray-400 mb-1">Nome Completo</p>
-                                <div class="input-readonly">{{ cadastro.nome }}</div>
-                            </div>
-        
-                            <!-- Input Group -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-gray-200 rounded-2xl p-2 ms-2">
-                                    <p class="text-[0.8rem] text-gray-400 mb-1">SGB</p>
-                                    <div class="input-readonly">{{ detalhes.sgb }}</div>
-                                </div>
-                                <div class="bg-gray-200 rounded-2xl p-2 ms-2">
-                                    <p class="text-[0.8rem] text-gray-400 mb-1">Posto/Seção</p>
-                                    <div class="input-readonly">{{ detalhes.posto_secao }}</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-        
-                    <!-- Coluna da Foto -->
-                    <div class="space-y-6">
-                        <div class="pb-4 border-b border-gray-100">
-                            <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Foto de Perfil</h2>
-                        </div>
-                        
-                        <div class="relative group w-96 h-96 mx-auto"> <!-- Adicionei mx-auto para centralizar horizontalmente -->
-                            {% if imagem and imagem.image %}
-                            <img id="preview" src="{{ imagem.image.url }}" 
-                                 class="w-full h-full object-contain rounded-xl border-4 border-white shadow-lg
-                                        transition-all duration-300">
-                            {% else %}
-                            <div class="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center">
-                                <span class="text-gray-400 text-sm">Sem imagem cadastrada</span>
+            
+                        <!-- Coluna da Foto -->
+                        <div class="space-y-6">
+                            <div class="pb-4 border-b border-gray-100">
+                                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Foto de Perfil</h2>
                             </div>
-                            {% endif %}
                             
-                            <label class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity 
-                                        rounded-xl flex flex-col items-center justify-center cursor-pointer gap-2">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span class="text-white text-sm font-medium">Clique para alterar</span>
-                                <input type="file" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-        
-      
-
-         
-        <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
-            <div class="space-y-6">
-                <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Local de Destino Solicitado</h2>
-                <hr class="border-t border-gray-100">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- SGB Destino -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Subunidade Destino</label>
-                        <div class="relative">
-                            <select name="sgb_destino" 
-                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                           transition-all duration-200 appearance-none
-                                           hover:border-gray-300 text-gray-700 font-medium
-                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                            </svg>')]
-                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
-                                <option value="" disabled selected>Selecione a Subunidade</option>
-                                {% for value, label in sgb_choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-        
-                    <!-- Posto/Seção Destino -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Seção Destino</label>
-                        <div class="relative">
-                            <select name="posto_secao_destino" 
-                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                           transition-all duration-200 appearance-none
-                                           hover:border-gray-300 text-gray-700 font-medium
-                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                            </svg>')]
-                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
-                                <option value="" disabled selected>Selecione o Posto/Seção</option>
-                                {% for value, label in posto_secao_choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-        
-                    <!-- Data e Documento -->
-                    <div class="space-y-4">
-                        <div class="space-y-2">
-                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data do Pedido</label>
-                            <div class="relative">
-                                <input type="date" name="data_pedido" 
-                                       class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                              transition-all duration-200
-                                              hover:border-gray-300 text-gray-700 font-medium
-                                              [&::-webkit-calendar-picker-indicator]:opacity-0
-                                              bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyAxN0g1TTEyIDEzSDkiLz48L3N2Zz4K')]
-                                              bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                            <div class="relative group w-96 h-96 mx-auto">
+                                {% if imagem and imagem.image %}
+                                <img id="preview" src="{{ imagem.image.url }}" 
+                                     class="w-full h-full object-contain rounded-xl border-4 border-white shadow-lg
+                                            transition-all duration-300">
+                                {% else %}
+                                <div class="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">Sem imagem cadastrada</span>
+                                </div>
+                                {% endif %}
+                                
+                                <label class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity 
+                                            rounded-xl flex flex-col items-center justify-center cursor-pointer gap-2">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="text-white text-sm font-medium">Clique para alterar</span>
+                                    <input type="file" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
+                                </label>
                             </div>
                         </div>
-        
-                        <div class="space-y-2">
-                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº do Documento</label>
-                            <input type="text" name="doc_solicitacao" 
-                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                          transition-all duration-200 placeholder-gray-400
-                                          hover:border-gray-300 text-gray-700 font-medium"
-                                   placeholder="Digite o número do documento">
+                    </div>
+                </div>
+            </fieldset>
+            
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Local de Destino Solicitado</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Coluna 1 -->
+                        <div class="space-y-6">
+                            <!-- SGB Destino -->
+                            <div class="space-y-2">
+                                <label for="sgb_destino" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Subunidade Destino *</label>
+                                <div class="relative">
+                                    <select name="sgb_destino" id="sgb_destino" required
+                                            class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                   shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                   transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                                   appearance-none">
+                                        <option value="" disabled selected>Selecione a Subunidade</option>
+                                        <option value="EM">EM</option>
+                                        <option value="1ºSGB">1ºSGB</option>
+                                        <option value="2ºSGB">2ºSGB</option>
+                                        <option value="3ºSGB">3ºSGB</option>
+                                        <option value="4ºSGB">4ºSGB</option>
+                                        <option value="5ºSGB">5ºSGB</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <!-- Data do Pedido -->
+                            <div class="space-y-2">
+                                <label for="data_pedido" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data do Pedido *</label>
+                                <div class="relative">
+                                    <input type="date" name="data_pedido" id="data_pedido" required
+                                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                  transition-all duration-200
+                                                  hover:border-gray-300 text-gray-700 font-medium
+                                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                </div>
+                            </div>
+                        </div>
+            
+                        <!-- Coluna 2 -->
+                        <div class="space-y-6">
+                            <!-- Posto/Seção Destino -->
+                            <div class="space-y-2">
+                                <label for="posto_secao_destino" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Seção Destino *</label>
+                                <div class="relative">
+                                    <select name="posto_secao_destino" id="posto_secao_destino" required disabled
+                                            class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                   shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                   transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                                   appearance-none">
+                                        <option value="" disabled selected>Primeiro selecione a Subunidade</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+            
+                            <!-- Nº do Documento -->
+                            <div class="space-y-2">
+                                <label for="doc_solicitacao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº do Documento *</label>
+                                <input type="text" name="doc_solicitacao" id="doc_solicitacao" required
+                                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                              transition-all duration-200 placeholder-gray-400
+                                              hover:border-gray-300 text-gray-700 font-medium"
+                                       placeholder="Digite o número do documento">
+                            </div>
                         </div>
                     </div>
-        
-                    <!-- Status -->
+            
+                    <!-- Status (full width abaixo das colunas) -->
                     <div class="space-y-2">
-                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Status da Solicitação</label>
+                        <label for="status" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Status da Solicitação *</label>
                         <div class="relative">
-                            <select name="status" 
+                            <select name="status" id="status" required
                                     class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                            shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                            transition-all duration-200 appearance-none
@@ -259,59 +266,232 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                             </svg>')]
                                            bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
-                                {% for value, label in status_choices %}
-                                <option value="{{ value }}" {% if value == "Aguardando" %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
+                                <option value="Aguardando" selected>Aguardando</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Rejeitado">Rejeitado</option>
+                                <option value="Concluído">Concluído</option>
                             </select>
                         </div>
                     </div>
                 </div>
-            </div>
-        </fieldset>
-        
-        <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div class="flex-1 space-y-2">
-                    <p class="text-xs text-gray-500 font-medium text-center md:text-left">
-                        Verifique todos os dados antes de confirmar
-                    </p>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button type="submit" 
-                            class="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
-                                   font-semibold rounded-xl shadow-sm hover:shadow-md
-                                   transition-all duration-200 hover:scale-[1.02]
-                                   flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Salvar
-                    </button>
+            </fieldset>
+            
+            
+            <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex-1 space-y-2">
+                        <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                            * Campos obrigatórios
+                        </p>
+                    </div>
                     
-                    <div class="flex gap-3">
-                        
-                        
-                        <a href="{% url 'rpt:listar_rpt' %}" 
-                           class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                                  font-semibold rounded-xl shadow-sm hover:shadow-md
-                                  transition-all duration-200 hover:scale-[1.02]
-                                  flex items-center justify-center gap-2">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button type="submit" 
+                                class="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+                                       font-semibold rounded-xl shadow-sm hover:shadow-md
+                                       transition-all duration-200 hover:scale-[1.02]
+                                       flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Voltar
-                        </a>
+                            Salvar
+                        </button>
+                        
+                        <div class="flex gap-3">
+                            <a href="{% url 'rpt:listar_rpt' %}" 
+                               class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
+                                      font-semibold rounded-xl shadow-sm hover:shadow-md
+                                      transition-all duration-200 hover:scale-[1.02]
+                                      flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Voltar
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </fieldset>
-       </form>
-     
-{% endif %}
+            </fieldset>
+        </form>
+        {% endif %}
     </fieldset>
        
     <script>
+
+        
+        // Dados de mapeamento SGB -> Posto/Seção
+const postoSeccaoPorSGB = {
+    "EM": [
+        ["703150000 - CMT", "CMT"],
+        ["703159000 - SUB CMT", "SUB CMT"],
+        ["703159100 - SEC ADM", "SEC ADM"],
+        ["703159110 - B/1 E B/5", "B/1 E B/5"],
+        ["703159110-1 - B/5", "B/5"],
+        ["703159120 - AA", "AA"],
+        ["703159130 - B/3 E MOTOMEC", "B/3 E MOTOMEC"],
+        ["703159130-1 - MOTOMEC", "MOTOMEC"],
+        ["703159131 - COBOM", "COBOM"],
+        ["703159140 - B/4", "B/4"],
+        ["703159150 - ST UGE", "ST UGE"],
+        ["703159160 - ST PJMD", "ST PJMD"],
+        ["703159200 - SEC ATIV TEC", "SEC ATIV TEC"]
+    ],
+    "1ºSGB": [
+        ["703151000 - CMT 1º SGB", "CMT 1º SGB"],
+        ["703151100 - ADM PB CERRADO", "ADM PB CERRADO"],
+        ["703151101 - EB CERRADO", "EB CERRADO"],
+        ["703151102 - EB ZONA NORTE", "EB ZONA NORTE"],
+        ["703151200 - ADM PB SANTA ROSÁLIA", "ADM PB SANTA ROSÁLIA"],
+        ["703151201 - EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"],
+        ["703151202 - EB ÉDEM", "EB ÉDEM"],
+        ["703151300 - ADM PB VOTORANTIM", "ADM PB VOTORANTIM"],
+        ["703151301 - EB VOTORANTIM", "EB VOTORANTIM"],
+        ["703151302 - EB PIEDADE", "EB PIEDADE"],
+        ["703151800 - ADM 1º SGB", "ADM 1º SGB"]
+    ],
+    "2ºSGB": [
+        ["703152000 - CMT 2º SGB", "CMT 2º SGB"],
+        ["703152100 - ADM PB ITU", "ADM PB ITU"],
+        ["703152101 - EB ITU", "EB ITU"],
+        ["703152102 - EB PORTO FELIZ", "EB PORTO FELIZ"],
+        ["703152200 - ADM PB SALTO", "ADM PB SALTO"],
+        ["703152201 - EB SALTO", "EB SALTO"],
+        ["703152300 - ADM PB SÃO ROQUE", "ADM PB SÃO ROQUE"],
+        ["703152301 - EB SÃO ROQUE", "EB SÃO ROQUE"],
+        ["703152302 - EB IBIÚNA", "EB IBIÚNA"],
+        ["703152800 - ADM 2º SGB", "ADM 2º SGB"],
+        ["703152900 - NUCL ATIV TEC 2º SGB", "NUCL ATIV TEC 2º SGB"]
+    ],
+    "3ºSGB": [
+        ["703153000 - CMT 3º SGB", "CMT 3º SGB"],
+        ["703153100 - ADM PB ITAPEVA", "ADM PB ITAPEVA"],
+        ["703153101 - EB ITAPEVA", "EB ITAPEVA"],
+        ["703153102 - EB APIAÍ", "EB APIAÍ"],
+        ["703153103 - EB ITARARÉ", "EB ITARARÉ"],
+        ["703153104 - EB CAPÃO BONITO", "EB CAPÃO BONITO"],
+        ["703153800 - ADM 3º SGB", "ADM 3º SGB"],
+        ["703153900 - NUCL ATIV TEC 3º SGB", "NUCL ATIV TEC 3º SGB"]
+    ],
+    "4ºSGB": [
+        ["703154000 - CMT 4º SGB", "CMT 4º SGB"],
+        ["703154100 - ADM PB ITAPETININGA", "ADM PB ITAPETININGA"],
+        ["703154101 - EB ITAPETININGA", "EB ITAPETININGA"],
+        ["703154102 - EB BOITUVA", "EB BOITUVA"],
+        ["703154103 - EB ANGATUBA", "EB ANGATUBA"],
+        ["703154200 - ADM PB TATUÍ", "ADM PB TATUÍ"],
+        ["703154201 - EB TATUÍ", "EB TATUÍ"],
+        ["703154202 - EB TIETÊ", "EB TIETÊ"],
+        ["703154203 - EB LARANJAL PAULISTA", "EB LARANJAL PAULISTA"],
+        ["703154800 - ADM 4º SGB", "ADM 4º SGB"],
+        ["703154900 - NUCL ATIV TEC 4º SGB", "NUCL ATIV TEC 4º SGB"]
+    ],
+    "5ºSGB": [
+        ["703155000 - CMT 5º SGB", "CMT 5º SGB"],
+        ["703155100 - ADM PB BOTUCATU", "ADM PB BOTUCATU"],
+        ["703155101 - EB BOTUCATU", "EB BOTUCATU"],
+        ["703155102 - EB ITATINGA", "EB ITATINGA"],
+        ["703155200 - ADM PB AVARÉ", "ADM PB AVARÉ"],
+        ["703155201 - EB AVARÉ", "EB AVARÉ"],
+        ["703155202 - EB PIRAJU", "EB PIRAJU"],
+        ["703155203 - EB ITAÍ", "EB ITAÍ"],
+        ["703155800 - ADM 5º SGB", "ADM 5º SGB"],
+        ["703155900 - NUCL ATIV TEC 5º SGB", "NUCL ATIV TEC 5º SGB"]
+    ]
+};
+
+// Função para atualizar as opções do Posto/Seção
+function atualizarPostoSeccao() {
+    const sgbSelect = document.getElementById('sgb_destino');
+    const postoSeccaoSelect = document.getElementById('posto_secao_destino');
+    const sgbSelecionado = sgbSelect.value;
+    
+    // Limpar opções exceto a primeira
+    postoSeccaoSelect.innerHTML = '<option value="" disabled selected>Primeiro selecione a Subunidade</option>';
+    
+    // Habilitar/desabilitar select
+    postoSeccaoSelect.disabled = !sgbSelecionado;
+    
+    if (sgbSelecionado && postoSeccaoPorSGB[sgbSelecionado]) {
+        // Adicionar novas opções
+        postoSeccaoPorSGB[sgbSelecionado].forEach(([value, label]) => {
+            const option = new Option(label, value);
+            postoSeccaoSelect.add(option);
+        });
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar o select de Posto/Seção como desabilitado
+    document.getElementById('posto_secao_destino').disabled = true;
+    
+    // Adicionar o event listener para o select de SGB
+    document.getElementById('sgb_destino').addEventListener('change', atualizarPostoSeccao);
+});
+        // Função para pré-visualizar imagem
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('preview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Tratamento do formulário antes do envio
+        document.getElementById('rptForm').addEventListener('submit', function(e) {
+            // Desabilitar campos de data opcionais vazios para não serem enviados
+            const optionalDates = ['data_movimentacao', 'data_alteracao'];
+            optionalDates.forEach(field => {
+                const input = document.getElementById(field);
+                if (input && input.value === '') {
+                    input.disabled = true;
+                }
+            });
+
+            // Validação dos campos obrigatórios
+            const requiredFields = [
+                'data_pedido', 'sgb_destino', 
+                'posto_secao_destino', 'doc_solicitacao', 'status'
+            ];
+            
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field);
+                if (!input.value) {
+                    input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, preencha todos os campos obrigatórios marcados com *');
+                
+                // Rolagem para o primeiro erro
+                const firstError = document.querySelector('.border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
+            }
+        });
+
+        // Remover estilos de erro quando o usuário começa a digitar
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+            });
+        });
+
+        // Preenchimento automático da data de alteração com a data atual
+        document.getElementById('data_alteracao').valueAsDate = new Date();
+
+        // Busca de militar (se necessário)
         function buscarMilitar() {
             var re = document.getElementById('re').value;
             fetch("{% url 'rpt:buscar_militar_rpt' %}", {
@@ -327,33 +507,17 @@
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    document.getElementById('re').value = data.re;
-                    document.getElementById('posto_grad').value = data.posto_grad;
-                    document.getElementById('nome').value = data.nome;
-                    document.getElementById('sgb').value = data.sgb;
-                    document.getElementById('posto_secao').value = data.posto_secao;
-                    if (data.image_url) {
-                        document.getElementById('preview').src = data.image_url;
-                        document.getElementById('preview').style.display = 'block';
-                    } else {
-                        document.getElementById('preview').style.display = 'none';
+                    // Preencher campos com os dados retornados
+                    if (data.data_pedido) {
+                        document.getElementById('data_pedido').value = data.data_pedido;
                     }
+                    // ... outros campos conforme necessário
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Ocorreu um erro ao buscar os dados.');
             });
-        }
-    
-        function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function(){
-                var output = document.getElementById('preview');
-                output.src = reader.result;
-                output.style.display = 'block';
-            };
-            reader.readAsDataURL(event.target.files[0]);
         }
     </script>
 </div>

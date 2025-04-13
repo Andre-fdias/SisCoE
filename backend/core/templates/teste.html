@@ -1,935 +1,792 @@
-<div _ngcontent-gjg-c68="" class="col-12 md:col-12 lg:col-12">
-  <h2 _ngcontent-gjg-c68="" class="h2Custom">Eventos</h2><div _ngcontent-gjg-c68="" class="card border-round flex flex-wrap shadow-1 px-1 px-1">
-    <div _ngcontent-gjg-c68="" class="flex flex-wrap" style="width: 100%;">
-      <div _ngcontent-gjg-c68="" class="col-12 md:col-12 lg:col-6">
-        <h5 _ngcontent-gjg-c68="">Próximos Eventos</h5><div _ngcontent-gjg-c68="" class="card flex flex-wrap px-1">
-          <div _ngcontent-gjg-c68="" id="eventosHome" style="width: 100%;">
-            <p-table _ngcontent-gjg-c68="" class="p-element">
-              <div id="pr_id_5" class="p-datatable p-component p-datatable-responsive-stack">
-                <!--  -->
-                <!--  -->
-                <!--  -->
-                <div class="p-datatable-wrapper">
-                  <table role="table" class="p-datatable-table ng-star-inserted" id="pr_id_5-table">
-                    <!--  -->
-                    <thead class="p-datatable-thead">
-                      <!--  -->
-                    </thead>
-                    <!--  -->
-                    <tbody class="p-element p-datatable-tbody">
-                      <!--  -->
-                      <div _ngcontent-gjg-c68="" style="border-bottom: dotted 1px #ccc;" class="ng-star-inserted">
-                        <a _ngcontent-gjg-c68="" class="no-underline" style="overflow-wrap: anywhere;" title="ANIVERSÁRIO DO CSM/MOpB" href="#/eventos/detalhe/2886"><h4 _ngcontent-gjg-c68="">ANIVERSÁRIO DO CSM/MOpB</h4></a><p _ngcontent-gjg-c68="">14 de fevereiro de 2025.</p>
-                      </div>
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <div _ngcontent-gjg-c68="" style="border-bottom: dotted 1px #ccc;" class="ng-star-inserted">
-                        <a _ngcontent-gjg-c68="" class="no-underline" style="overflow-wrap: anywhere;" title="SOLENIDADE DE 62 ANOS DO 15º GB" href="#/eventos/detalhe/3089"><h4 _ngcontent-gjg-c68="">SOLENIDADE DE 62 ANOS DO 15º GB</h4></a><p _ngcontent-gjg-c68="">07 de março de 2025.</p>
-                      </div>
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <div _ngcontent-gjg-c68="" style="border-bottom: dotted 1px #ccc;" class="ng-star-inserted">
-                        <a _ngcontent-gjg-c68="" class="no-underline" style="overflow-wrap: anywhere;" title="ANIVERSÁRIO DO 1º GB" href="#/eventos/detalhe/3286"><h4 _ngcontent-gjg-c68="">ANIVERSÁRIO DO 1º GB</h4></a><p _ngcontent-gjg-c68="">27 de março de 2025.</p>
-                      </div>
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <div _ngcontent-gjg-c68="" style="border-bottom: dotted 1px #ccc;" class="ng-star-inserted">
-                        <a _ngcontent-gjg-c68="" class="no-underline" style="overflow-wrap: anywhere;" title="Solenidade de 23 anos do 18ºGB" href="#/eventos/detalhe/3290"><h4 _ngcontent-gjg-c68="">Solenidade de 23 anos do 18ºGB</h4></a><p _ngcontent-gjg-c68="">09 de abril de 2025.</p>
-                      </div>
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <div _ngcontent-gjg-c68="" style="border-bottom: dotted 1px #ccc;" class="ng-star-inserted">
-                        <a _ngcontent-gjg-c68="" class="no-underline" style="overflow-wrap: anywhere;" title="SOLENIDADE DE 13 ANOS DO 17º GB" href="#/eventos/detalhe/3376"><h4 _ngcontent-gjg-c68="">SOLENIDADE DE 13 ANOS DO 17º GB</h4></a><p _ngcontent-gjg-c68="">16 de abril de 2025.</p>
-                      </div>
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                      <!--  -->
-                    </tbody>
-                    <!--  -->
-                  </table>
-                  <!--  -->
-                  <!--  -->
-                </div>
-                <!--  -->
-                <!--  -->
-                <!--  -->
-                <!--  -->
-                <!--  -->
-              </div>
-            </p-table>
-          </div>
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Detalhe do Documento {% endblock %}
+
+{% block 'head' %}
+<!-- CSS e scripts externos -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+
+<style>
+    /* Seus estilos CSS existentes */
+    .markdown-content {
+      max-width: 100%;
+      overflow-wrap: break-word;
+  }
+  
+  .markdown-content img,
+  .markdown-content video {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1rem auto;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .markdown-content iframe {
+      max-width: 100%;
+      border: none;
+      border-radius: 0.5rem;
+      margin: 1rem auto;
+  }
+  .markdown-content {
+      line-height: 1.6;
+  }
+  
+  .markdown-content h1, 
+  .markdown-content h2, 
+  .markdown-content h3 {
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+  }
+  
+  .markdown-content h1 { font-size: 1.8em; }
+  .markdown-content h2 { font-size: 1.5em; }
+  .markdown-content h3 { font-size: 1.3em; }
+  
+  .markdown-content p {
+      margin-bottom: 1em;
+  }
+  
+  .markdown-content ul, 
+  .markdown-content ol {
+      margin-bottom: 1em;
+      padding-left: 2em;
+  }
+  
+  .markdown-content code {
+      background-color: #f3f4f6;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: monospace;
+  }
+  
+  .markdown-content pre {
+      background-color: #f3f4f6;
+      padding: 1em;
+      border-radius: 5px;
+      overflow-x: auto;
+  }
+  
+  .markdown-content blockquote {
+      border-left: 4px solid #ddd;
+      padding-left: 1em;
+      color: #666;
+      margin-left: 0;
+  }
+  .image-pdf-viewer {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: width 0.3s ease-in-out, height 0.3s ease-in-out, margin 0.3s ease-in-out;
+  }
+
+  .video-wrapper {
+      overflow: hidden;
+  }
+
+  .video-player {
+      max-width: 100%;
+      max-height: 100%;
+      margin: auto;
+      display: block;
+  }
+
+  .video-player::-webkit-media-controls {
+      opacity: 0;
+      transition: opacity 0.3s;
+  }
+
+  .video-player:hover::-webkit-media-controls {
+      opacity: 1;
+  }
+
+  /* Estilo para o loader */
+  .loader {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+  .animate-spin {
+      animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+  }
+
+</style>
+{% endblock %}
+
+{% block 'body' %}
+<!-- Conteúdo principal do template -->
+<div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="area-impressao">
+  <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
+    <fieldset class="p-2 mb-4 rounded-md rounded-[5px] bg-gray-800 p-4 ">   
+  <!-- Cabeçalho -->
+
+  <div class="p-4">
+    <div class="flex flex-wrap items-center justify-between gap-4 ">
+       
+
+        <div class="flex-1 min-w-[200px]">
+            <h1 class="text-3xl font-bold text-gray-200 tracking-tight drop-shadow-md">Detalhes do Documento</h1>
+            <p class="text-gray-300 mt-1">{{ documento.numero_documento }}</p>
         </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <a href="{% url 'documentos:galeria_documentos' %}"
+               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Ver Galeria
+            </a>
+            <a href="{% url 'documentos:editar_documento' documento.pk %}"
+               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br
+                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
+                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-edit mr-2"></i>Editar
+            </a>
+            <button onclick="openModal('modalArquivos')"
+                    class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:bg-gradient-to-br
+                           focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50
+                           font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-paperclip mr-2"></i>Arquivos
+            </button>
+            <a href="{% url 'documentos:listar_documentos' %}"
+               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:bg-gradient-to-br
+                      focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50
+                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+</div>
+  </fieldset>
+  <fieldset class="   rounded-md w-full" id="second-fieldset">
+    <div class="w-full"> {% if messages %}
+            {% for message in messages %}
+                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md w-full">
+                    {{ message }}
+                </section>
+            {% endfor %}
+        {% endif %}
+    </div>
+  </fieldset>  
+  <!-- Informações do Documento -->
+  <div class="bg-gray-100 rounded-2xl shadow-md p-6 border border-gray-200 mb-8">
+      
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Informações do Documento</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="space-y-1">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Assunto</p>
+              <p class="text-gray-700 font-medium">{{ documento.assunto }}</p>
+          </div>
+          
+          <div class="space-y-1">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Data do Documento</p>
+              <p class="text-gray-700 font-medium">{{ documento.data_documento|date:"d/m/Y" }}</p>
+          </div>
+          
+          <div class="space-y-1">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Assinado por</p>
+              <p class="text-gray-700 font-medium">{{ documento.assinada_por }}</p>
+          </div>
+          
+          <div class="space-y-1">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Criação</p>
+              <p class="text-gray-700 font-medium">{{ documento.data_criacao|date:"d/m/Y H:i" }}</p>
+          </div>
       </div>
-      <div _ngcontent-gjg-c68="" class="col-12 md:col-12 lg:col-6">
-        <div _ngcontent-gjg-c68="" class="card flex flex-wrap px-1">
-          <app-full-calendar _ngcontent-gjg-c68="" style="width: 100%;" _nghost-gjg-c67="">
-            <full-calendar _ngcontent-gjg-c67="" class="fc fc-media-screen fc-direction-ltr fc-theme-standard">
-              <div class="fc-header-toolbar fc-toolbar fc-toolbar-ltr">
-                <div class="fc-toolbar-chunk">
-                  <div class="fc-button-group">
-                    <button type="button" aria-pressed="false" class="fc-prev-button fc-button fc-button-primary"><span class="fc-icon fc-icon-chevron-left" role="img"></span></button><button type="button" aria-pressed="false" class="fc-next-button fc-button fc-button-primary"><span class="fc-icon fc-icon-chevron-right" role="img"></span></button>
-                  </div><button type="button" title="Hoje" disabled="" aria-pressed="false" class="fc-today-button fc-button fc-button-primary">Hoje</button>
-                </div>
-                <div class="fc-toolbar-chunk">
-                  <h2 class="fc-toolbar-title" id="fc-dom-1">março de 2025</h2>
-                </div>
-                <div class="fc-toolbar-chunk">
-                  <div class="fc-button-group">
-                    <button type="button" title="Mês" aria-pressed="false" class="fc-Mes-button fc-button fc-button-primary">Mês</button><button type="button" title="Semana" aria-pressed="false" class="fc-Semana-button fc-button fc-button-primary">Semana</button><button type="button" title="Dia" aria-pressed="false" class="fc-Dia-button fc-button fc-button-primary">Dia</button>
-                  </div>
-                </div>
-              </div>
-              <div aria-labelledby="fc-dom-1" class="fc-view-harness fc-view-harness-active" style="height: 631.111px;">
-                <div class="fc-dayGridMonth-view fc-view fc-daygrid">
-                  <table role="grid" class="fc-scrollgrid fc-scrollgrid-liquid">
-                    <thead role="rowgroup">
-                      <tr role="presentation" class="fc-scrollgrid-section fc-scrollgrid-section-header">
-                        <th role="presentation">
-                          <div class="fc-scroller-harness">
-                            <div class="fc-scroller" style="overflow: hidden;">
-                              <table role="presentation" class="fc-col-header" style="width: 849px;">
-                                <colgroup></colgroup>
-                                <thead role="presentation">
-                                  <tr role="row">
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-sun">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="domingo" class="fc-col-header-cell-cushion">dom.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-mon">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="segunda-feira" class="fc-col-header-cell-cushion">seg.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-tue">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="terça-feira" class="fc-col-header-cell-cushion">ter.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-wed">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="quarta-feira" class="fc-col-header-cell-cushion">qua.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-thu">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="quinta-feira" class="fc-col-header-cell-cushion">qui.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-fri">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="sexta-feira" class="fc-col-header-cell-cushion">sex.</a>
-                                      </div>
-                                    </th>
-                                    <th role="columnheader" class="fc-col-header-cell fc-day fc-day-sat">
-                                      <div class="fc-scrollgrid-sync-inner">
-                                        <a aria-label="sábado" class="fc-col-header-cell-cushion">sáb.</a>
-                                      </div>
-                                    </th>
-                                  </tr>
-                                </thead>
-                              </table>
-                            </div>
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody role="rowgroup">
-                      <tr role="presentation" class="fc-scrollgrid-section fc-scrollgrid-section-body fc-scrollgrid-section-liquid">
-                        <td role="presentation">
-                          <div class="fc-scroller-harness fc-scroller-harness-liquid">
-                            <div class="fc-scroller fc-scroller-liquid-absolute" style="overflow: hidden auto;">
-                              <div class="fc-daygrid-body fc-daygrid-body-balanced" style="width: 849px;">
-                                <table role="presentation" class="fc-scrollgrid-sync-table" style="width: 849px; height: 397px;">
-                                  <colgroup></colgroup>
-                                  <tbody role="presentation">
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-2" role="gridcell" data-date="2025-02-23" class="fc-day fc-day-sun fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="23 de fevereiro de 2025" id="fc-dom-2" class="fc-daygrid-day-number">23</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-4" role="gridcell" data-date="2025-02-24" class="fc-day fc-day-mon fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="24 de fevereiro de 2025" id="fc-dom-4" class="fc-daygrid-day-number">24</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-6" role="gridcell" data-date="2025-02-25" class="fc-day fc-day-tue fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="25 de fevereiro de 2025" id="fc-dom-6" class="fc-daygrid-day-number">25</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-8" role="gridcell" data-date="2025-02-26" class="fc-day fc-day-wed fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="26 de fevereiro de 2025" id="fc-dom-8" class="fc-daygrid-day-number">26</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-10" role="gridcell" data-date="2025-02-27" class="fc-day fc-day-thu fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="27 de fevereiro de 2025" id="fc-dom-10" class="fc-daygrid-day-number">27</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-12" role="gridcell" data-date="2025-02-28" class="fc-day fc-day-fri fc-day-past fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="28 de fevereiro de 2025" id="fc-dom-12" class="fc-daygrid-day-number">28</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-14" role="gridcell" data-date="2025-03-01" class="fc-day fc-day-sat fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="1 de março de 2025" id="fc-dom-14" class="fc-daygrid-day-number">1</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-16" role="gridcell" data-date="2025-03-02" class="fc-day fc-day-sun fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="2 de março de 2025" id="fc-dom-16" class="fc-daygrid-day-number">2</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-18" role="gridcell" data-date="2025-03-03" class="fc-day fc-day-mon fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="3 de março de 2025" id="fc-dom-18" class="fc-daygrid-day-number">3</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness" style="margin-top: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">ANIV. 18°GB</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-20" role="gridcell" data-date="2025-03-04" class="fc-day fc-day-tue fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="4 de março de 2025" id="fc-dom-20" class="fc-daygrid-day-number">4</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-22" role="gridcell" data-date="2025-03-05" class="fc-day fc-day-wed fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="5 de março de 2025" id="fc-dom-22" class="fc-daygrid-day-number">5</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-24" role="gridcell" data-date="2025-03-06" class="fc-day fc-day-thu fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="6 de março de 2025" id="fc-dom-24" class="fc-daygrid-day-number">6</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-26" role="gridcell" data-date="2025-03-07" class="fc-day fc-day-fri fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="7 de março de 2025" id="fc-dom-26" class="fc-daygrid-day-number">7</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness" style="margin-top: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">SOLENIDADE DE 62 ANOS DO 15º GB</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-28" role="gridcell" data-date="2025-03-08" class="fc-day fc-day-sat fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="8 de março de 2025" id="fc-dom-28" class="fc-daygrid-day-number">8</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness" style="margin-top: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">DIA DA MULHER</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-30" role="gridcell" data-date="2025-03-09" class="fc-day fc-day-sun fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="9 de março de 2025" id="fc-dom-30" class="fc-daygrid-day-number">9</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-32" role="gridcell" data-date="2025-03-10" class="fc-day fc-day-mon fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="10 de março de 2025" id="fc-dom-32" class="fc-daygrid-day-number">10</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness fc-daygrid-event-harness-abs" style="visibility: hidden; top: 0px; left: 0px; right: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">ANIV. 1°GB</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-event-harness fc-daygrid-event-harness-abs" style="visibility: hidden; top: 0px; left: 0px; right: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">ANIV. BOMBEIRO PAULISTA</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;">
-                                              <a tabindex="0" title="Ver +2 eventos" aria-expanded="false" aria-controls="" class="fc-daygrid-more-link fc-more-link">+2 mais</a>
-                                            </div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-34" role="gridcell" data-date="2025-03-11" class="fc-day fc-day-tue fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="11 de março de 2025" id="fc-dom-34" class="fc-daygrid-day-number">11</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-36" role="gridcell" data-date="2025-03-12" class="fc-day fc-day-wed fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="12 de março de 2025" id="fc-dom-36" class="fc-daygrid-day-number">12</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-38" role="gridcell" data-date="2025-03-13" class="fc-day fc-day-thu fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="13 de março de 2025" id="fc-dom-38" class="fc-daygrid-day-number">13</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-40" role="gridcell" data-date="2025-03-14" class="fc-day fc-day-fri fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="14 de março de 2025" id="fc-dom-40" class="fc-daygrid-day-number">14</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-42" role="gridcell" data-date="2025-03-15" class="fc-day fc-day-sat fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="15 de março de 2025" id="fc-dom-42" class="fc-daygrid-day-number">15</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-44" role="gridcell" data-date="2025-03-16" class="fc-day fc-day-sun fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="16 de março de 2025" id="fc-dom-44" class="fc-daygrid-day-number">16</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-46" role="gridcell" data-date="2025-03-17" class="fc-day fc-day-mon fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="17 de março de 2025" id="fc-dom-46" class="fc-daygrid-day-number">17</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-48" role="gridcell" data-date="2025-03-18" class="fc-day fc-day-tue fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="18 de março de 2025" id="fc-dom-48" class="fc-daygrid-day-number">18</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-50" role="gridcell" data-date="2025-03-19" class="fc-day fc-day-wed fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="19 de março de 2025" id="fc-dom-50" class="fc-daygrid-day-number">19</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-52" role="gridcell" data-date="2025-03-20" class="fc-day fc-day-thu fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="20 de março de 2025" id="fc-dom-52" class="fc-daygrid-day-number">20</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-54" role="gridcell" data-date="2025-03-21" class="fc-day fc-day-fri fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="21 de março de 2025" id="fc-dom-54" class="fc-daygrid-day-number">21</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-56" role="gridcell" data-date="2025-03-22" class="fc-day fc-day-sat fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="22 de março de 2025" id="fc-dom-56" class="fc-daygrid-day-number">22</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-58" role="gridcell" data-date="2025-03-23" class="fc-day fc-day-sun fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="23 de março de 2025" id="fc-dom-58" class="fc-daygrid-day-number">23</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness fc-daygrid-event-harness-abs" style="visibility: hidden; top: 0px; left: 0px; right: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">ANIV. 17°GB</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-event-harness fc-daygrid-event-harness-abs" style="visibility: hidden; top: 0px; left: 0px; right: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-past fc-daygrid-event fc-daygrid-block-event fc-h-event">
-                                                <div class="fc-event-main">
-                                                  <div class="fc-event-main-frame">
-                                                    <div class="fc-event-title-container">
-                                                      <div class="fc-event-title fc-sticky">ANIV. 5°GB</div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div class="fc-event-resizer fc-event-resizer-end"></div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;">
-                                              <a tabindex="0" title="Ver +2 eventos" aria-expanded="false" aria-controls="" class="fc-daygrid-more-link fc-more-link">+2 mais</a>
-                                            </div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-60" role="gridcell" data-date="2025-03-24" class="fc-day fc-day-mon fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="24 de março de 2025" id="fc-dom-60" class="fc-daygrid-day-number">24</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-62" role="gridcell" data-date="2025-03-25" class="fc-day fc-day-tue fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="25 de março de 2025" id="fc-dom-62" class="fc-daygrid-day-number">25</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-64" role="gridcell" data-date="2025-03-26" class="fc-day fc-day-wed fc-day-past fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="26 de março de 2025" id="fc-dom-64" class="fc-daygrid-day-number">26</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-past fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-66" role="gridcell" data-date="2025-03-27" class="fc-day fc-day-thu fc-day-today fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="27 de março de 2025" id="fc-dom-66" class="fc-daygrid-day-number">27</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-event-harness" style="margin-top: 0px;">
-                                              <a tabindex="0" class="fc-event fc-event-draggable fc-event-resizable fc-event-start fc-event-end fc-event-today fc-daygrid-event fc-daygrid-dot-event">
-                                                <div class="fc-daygrid-event-dot"></div>
-                                                <div class="fc-event-time">09</div>
-                                                <div class="fc-event-title">ANIVERSÁRIO DO 1º GB</div>
-                                              </a>
-                                            </div>
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-today fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-68" role="gridcell" data-date="2025-03-28" class="fc-day fc-day-fri fc-day-future fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="28 de março de 2025" id="fc-dom-68" class="fc-daygrid-day-number">28</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-70" role="gridcell" data-date="2025-03-29" class="fc-day fc-day-sat fc-day-future fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="29 de março de 2025" id="fc-dom-70" class="fc-daygrid-day-number">29</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr role="row">
-                                      <td aria-labelledby="fc-dom-72" role="gridcell" data-date="2025-03-30" class="fc-day fc-day-sun fc-day-future fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="30 de março de 2025" id="fc-dom-72" class="fc-daygrid-day-number">30</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-74" role="gridcell" data-date="2025-03-31" class="fc-day fc-day-mon fc-day-future fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="31 de março de 2025" id="fc-dom-74" class="fc-daygrid-day-number">31</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-76" role="gridcell" data-date="2025-04-01" class="fc-day fc-day-tue fc-day-future fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="1 de abril de 2025" id="fc-dom-76" class="fc-daygrid-day-number">1</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-78" role="gridcell" data-date="2025-04-02" class="fc-day fc-day-wed fc-day-future fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="2 de abril de 2025" id="fc-dom-78" class="fc-daygrid-day-number">2</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-80" role="gridcell" data-date="2025-04-03" class="fc-day fc-day-thu fc-day-future fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="3 de abril de 2025" id="fc-dom-80" class="fc-daygrid-day-number">3</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(144, 205, 147);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-82" role="gridcell" data-date="2025-04-04" class="fc-day fc-day-fri fc-day-future fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="4 de abril de 2025" id="fc-dom-82" class="fc-daygrid-day-number">4</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(253, 216, 125);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td aria-labelledby="fc-dom-84" role="gridcell" data-date="2025-04-05" class="fc-day fc-day-sat fc-day-future fc-day-other fc-daygrid-day">
-                                        <div class="fc-daygrid-day-frame fc-scrollgrid-sync-inner">
-                                          <div class="fc-daygrid-day-top">
-                                            <a aria-label="5 de abril de 2025" id="fc-dom-84" class="fc-daygrid-day-number">5</a>
-                                          </div>
-                                          <div class="fc-daygrid-day-events">
-                                            <div class="fc-daygrid-day-bottom" style="margin-top: 0px;"></div>
-                                          </div>
-                                          <div class="fc-daygrid-day-bg">
-                                            <div class="fc-daygrid-bg-harness" style="left: 0px; right: 0px;">
-                                              <div class="fc-event fc-event-start fc-event-end fc-event-future fc-bg-event" style="background-color: rgb(117, 190, 248);"></div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </full-calendar>
-          </app-full-calendar>
-          <div _ngcontent-gjg-c68="" class="btnVejaMais" style="float: right; width: 100%; margin: auto; margin-top: 10px;">
-            <p-button _ngcontent-gjg-c68="" label="Veja mais" styleclass="p-button-raised p-button-secondary p-button-sm px-2 py-0 mr-2" class="p-element" tabindex="0">
-              <button pripple="" class="p-ripple p-element p-button-raised p-button-secondary p-button-sm px-2 py-0 mr-2 p-button p-component" type="button">
-                <!--  -->
-                <!--  --><span class="p-button-label ng-star-inserted">Veja mais</span><!--  -->
-                <!--  --><span class="p-ink"></span>
-              </button>
-            </p-button>
+      
+      <div>
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Descrição</p>
+          <div class="markdown-content bg-white p-4 rounded-lg border border-gray-200">
+              {{ descricao_html|safe }}
           </div>
+      </div>
+  </div>
+
+  <!-- Visualizador de Arquivos -->
+  <div class="bg-gray-100 rounded-2xl shadow-md p-6 border border-gray-200 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Visualização do Documento</h2>
+      
+      <!-- Visualizador Principal -->
+      <div id="arquivo-principal" class="image-pdf-viewer video-container mb-6 bg-black rounded-xl overflow-hidden relative"
+   style="width: 640px; height: 360px; margin: 0 auto;">
+  <div class="placeholder h-full flex items-center justify-center text-gray-400">
+      <div class="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <p>Selecione um arquivo para visualização</p>
+      </div>
+  </div>
+
+  <div id="image-controls" class="absolute top-2 left-2 bg-gray-800 text-white rounded-md p-2 space-x-2 z-20 hidden">
+      <button onclick="zoomInImage()" title="Zoom In">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7h-14" />
+          </svg>
+      </button>
+      <button onclick="zoomOutImage()" title="Zoom Out">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13h-14" />
+          </svg>
+      </button>
+  </div>
+
+  <button id="fullscreen-button" class="absolute top-2 right-2 bg-gray-800 text-white rounded-md p-2 z-20 hidden" onclick="toggleFullscreen()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 16v4m0 0h4m-8-8h.01M16 8V4m0 0h4m-4 12v4m0 0h4" />
+      </svg>
+  </button>
+</div>
+
+        <!-- Galeria de Arquivos -->
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Arquivos Anexados</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {% for arquivo in arquivos %}
+            <div class="group relative cursor-pointer bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow 
+                        border border-gray-200 flex flex-col overflow-hidden h-48"
+                 onclick="carregarArquivo('{{ arquivo.arquivo.url }}', '{{ arquivo.tipo }}', {{ forloop.counter }})">
+                
+                <!-- Miniatura -->
+                <div class="h-32 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden">
+                    {% if arquivo.tipo == 'IMAGEM' %}
+                        <img src="{{ arquivo.arquivo.url }}" alt="Thumbnail" 
+                             class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200">
+                    
+                    {% elif arquivo.tipo == 'VIDEO' %}
+                        <div class="relative w-full h-full">
+                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <i class="fas fa-play text-white text-2xl"></i>
+                            </div>
+                            <video class="h-full w-full object-cover" muted>
+                                <source src="{{ arquivo.arquivo.url }}" type="video/mp4">
+                            </video>
+                        </div>
+                    
+                    {% else %}
+                        <div class="text-indigo-500 text-4xl flex flex-col items-center justify-center h-full gap-2">
+                            {% if arquivo.tipo == 'PDF' %}
+                                <i class="fas fa-file-pdf"></i>
+                            {% elif arquivo.tipo == 'DOC' %}
+                                <i class="fas fa-file-word"></i>
+                            {% elif arquivo.tipo == 'SHEET' %}
+                                <i class="fas fa-file-excel"></i>
+                            {% elif arquivo.tipo == 'TEXT' %}
+                                <i class="fas fa-file-alt"></i>
+                            {% else %}
+                                <i class="fas fa-file"></i>
+                            {% endif %}
+                            <span class="text-xs text-gray-500">{{ arquivo.get_tipo_display }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Badge de Tamanho -->
+                    <div class="absolute bottom-1 left-1 px-2 py-1 bg-black/70 text-white rounded text-xs">
+                        {{ arquivo.arquivo.size|filesizeformat }}
+                    </div>
+                </div>
+
+                <!-- Footer do Card -->
+                <div class="p-2 border-t flex flex-col justify-between flex-1">
+                    <p class="text-sm font-medium text-gray-700 truncate px-1">
+                        {{ arquivo.arquivo.name|truncatechars:20 }}
+                    </p>
+                    
+                    <div class="flex justify-between items-center mt-1">
+                        <!-- Botão de Download -->
+                        <a href="{{ arquivo.arquivo.url }}" download 
+                           class="text-indigo-600 hover:text-indigo-800 text-xs flex items-center"
+                           onclick="event.stopPropagation()">
+                            <i class="fas fa-download mr-1"></i>
+                        </a>
+                        
+                        <!-- Tipo de Arquivo -->
+                        <span class="text-xs text-gray-500">
+                            {{ arquivo.get_tipo_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-6">
+                <p class="text-gray-500">Nenhum arquivo anexado</p>
+            </div>
+            {% endfor %}
         </div>
+    </div>
+
+    
+    <!-- Modal de Arquivos -->
+    <div id="modalArquivos" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <!-- Cabeçalho -->
+          <div class="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h3 class="text-2xl font-bold text-gray-800">Gerenciar Arquivos</h3>
+              <button onclick="closeModal('modalArquivos')" class="text-gray-500 hover:text-gray-700 text-2xl">
+                  &times;
+              </button>
+          </div>
+          
+          <!-- Corpo com scroll -->
+          <div class="p-6 overflow-y-auto flex-1">
+              <!-- Arquivos existentes -->
+              <div class="mb-8">
+                  <h4 class="text-lg font-semibold mb-4">Arquivos Anexados</h4>
+                  <div class="space-y-3 max-h-60 overflow-y-auto" id="lista-arquivos">
+                      {% for arquivo in documento.arquivos.all %}
+                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div class="flex items-center gap-3">
+                              <i class="fas fa-file text-blue-500"></i>
+                              <div>
+                                  <p class="text-sm font-medium">{{ arquivo.arquivo.name|truncatechars:30 }}</p>
+                                  <p class="text-xs text-gray-500">{{ arquivo.get_tipo_display }}</p>
+                              </div>
+                          </div>
+                          <button onclick="excluirArquivo({{ arquivo.id }})" 
+                                  class="text-red-500 hover:text-red-700 p-1">
+                              <i class="fas fa-trash"></i>
+                          </button>
+                      </div>
+                      {% empty %}
+                      <p class="text-gray-500 text-center py-4">Nenhum arquivo anexado</p>
+                      {% endfor %}
+                  </div>
+              </div>
+              
+              <!-- Formulário de upload -->
+              <form id="formArquivos" method="post" enctype="multipart/form-data" class="space-y-4">
+                  {% csrf_token %}
+                  
+                  <div id="camposArquivos" class="space-y-4">
+                      <!-- Campo inicial -->
+                      <div class="flex gap-3 items-center campo-arquivo">
+                          <input type="file" name="novos_arquivos[]" required
+                                 class="flex-1 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
+                                        file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700
+                                        hover:file:bg-blue-100">
+                          <select name="novos_tipos[]" class="w-32 px-3 py-2 border rounded-lg text-sm" required>
+                              <option value="PDF">PDF</option>
+                              <option value="VIDEO">Vídeo</option>
+                              <option value="AUDIO">Áudio</option>
+                              <option value="DOC">Documento</option>
+                              <option value="SHEET">Planilha</option>
+                              <option value="IMAGEM">Imagem</option>
+                              <option value="OUTRO">Outro</option>
+                          </select>
+                          <button type="button" onclick="removerCampo(this)" 
+                                  class="text-red-500 hover:text-red-700 p-2">
+                              <i class="fas fa-times"></i>
+                          </button>
+                      </div>
+                  </div>
+                  
+                  <div class="flex justify-between items-center pt-4 border-t">
+                      <button type="button" onclick="adicionarCampo()"
+                              class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
+                          <i class="fas fa-plus-circle"></i> Adicionar arquivo
+                      </button>
+                      
+                      <div class="flex gap-3">
+                          <button type="button" onclick="closeModal('modalArquivos')"
+                                  class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+                              Cancelar
+                          </button>
+                          <button type="submit" id="btnSalvar"
+                                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
+                              <i class="fas fa-save"></i> Salvar
+                          </button>
+                      </div>
+                  </div>
+              </form>
+          </div>
       </div>
     </div>
+     
+      
+    
+    <!-- Outros modais e elementos -->
+     
+
+    <!-- Adicione isto no seu template base para garantir CSRF -->
+    <div id="csrf-token" data-token="{{ csrf_token }}" style="display:none;"></div>
+
+    <!-- Modal de Notificação -->
+    <div id="notificationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="notificationTitle" class="text-xl font-bold"></h3>
+                <button onclick="document.getElementById('notificationModal').classList.add('hidden')" 
+                        class="text-gray-500 hover:text-gray-700">
+                    &times;
+                </button>
+            </div>
+            <p id="notificationMessage" class="mb-4"></p>
+            <button onclick="document.getElementById('notificationModal').classList.add('hidden')"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                OK
+            </button>
+        </div>
+    </div>
+
+
+  <!-- Modal de Exclusão -->
+  <div id="modalExcluir" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+        <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
+            <p class="text-gray-600 mb-6">Tem certeza que deseja excluir este documento permanentemente?</p>
+            
+            <div class="flex justify-center gap-4">
+                <button id="cancelarExclusao" 
+                        class="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancelar
+                </button>
+                <a href="{% url 'documentos:excluir_documento' documento.pk %}" 
+                  class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Excluir
+                </a>
+            </div>
+        </div>
+    </div>
   </div>
+
 </div>
+
+<!-- Scripts organizados por funcionalidade -->
+<script>
+/**************************************************
+ * FUNÇÕES PARA VISUALIZAÇÃO DE ARQUIVOS
+ **************************************************/
+ function carregarArquivo(url, tipo, counter) {
+    const visualizador = document.getElementById('arquivo-principal');
+    const placeholder = visualizador.querySelector('.placeholder');
+    const controls = visualizador.querySelector('#image-controls');
+    const fullscreenBtn = visualizador.querySelector('#fullscreen-button');
+    
+    // Limpa o visualizador
+    visualizador.innerHTML = '';
+    visualizador.appendChild(placeholder);
+    visualizador.appendChild(controls);
+    visualizador.appendChild(fullscreenBtn);
+    
+    // Esconde o placeholder
+    placeholder.classList.add('hidden');
+    
+    // Mostra controles se for imagem
+    if (tipo === 'IMAGEM') {
+        controls.classList.remove('hidden');
+        fullscreenBtn.classList.remove('hidden');
+    } else {
+        controls.classList.add('hidden');
+        fullscreenBtn.classList.add('hidden');
+    }
+    
+    // Cria elemento baseado no tipo
+    switch(tipo) {
+        case 'IMAGEM':
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'max-w-full max-h-full object-contain';
+            img.onload = () => {
+                placeholder.classList.add('hidden');
+                visualizador.insertBefore(img, controls);
+                currentImageElement = img;
+                currentZoom = 1;
+            };
+            break;
+            
+        case 'VIDEO':
+            const videoWrapper = document.createElement('div');
+            videoWrapper.className = 'video-wrapper w-full h-full flex items-center justify-center';
+            
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            video.className = 'video-player';
+            
+            videoWrapper.appendChild(video);
+            visualizador.insertBefore(videoWrapper, controls);
+            break;
+            
+        case 'PDF':
+            const pdfContainer = document.createElement('div');
+            pdfContainer.className = 'w-full h-full flex items-center justify-center';
+            pdfContainer.innerHTML = `
+                <iframe src="${url}" class="w-full h-full border-none"></iframe>
+            `;
+            visualizador.insertBefore(pdfContainer, controls);
+            break;
+            
+        default:
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.className = 'flex flex-col items-center justify-center w-full h-full p-4 text-blue-600';
+            downloadLink.innerHTML = `
+                <i class="fas fa-file-download text-4xl mb-2"></i>
+                <span class="text-lg">Clique para baixar</span>
+                <span class="text-sm text-gray-500 mt-1">Arquivo não suportado para visualização</span>
+            `;
+            downloadLink.target = '_blank';
+            visualizador.insertBefore(downloadLink, controls);
+    }
+}
+
+/**************************************************
+ * FUNÇÕES PARA GERENCIAMENTO DE ARQUIVOS (MODAL)
+ **************************************************/
+// Na seção de FUNÇÕES PARA GERENCIAMENTO DE ARQUIVOS (MODAL)
+function adicionarCampo() {  // Mudei o nome para adicionarCampo para bater com o onclick
+    const container = document.getElementById('camposArquivos');
+    const novoCampo = document.createElement('div');
+    novoCampo.className = 'flex gap-3 items-center campo-arquivo mt-3';
+    novoCampo.innerHTML = `
+        <input type="file" name="novos_arquivos[]"
+               class="flex-1 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
+                      file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100">
+        <select name="novos_tipos[]" class="w-32 px-3 py-2 border rounded-lg text-sm">
+            <option value="">Selecione...</option>
+            <option value="PDF">PDF</option>
+            <option value="VIDEO">Vídeo</option>
+            <option value="AUDIO">Áudio</option>
+            <option value="DOC">Documento</option>
+            <option value="SHEET">Planilha</option>
+            <option value="IMAGEM">Imagem</option>
+            <option value="OUTRO">Outro</option>
+        </select>
+        <button type="button" onclick="removerCampo(this)" 
+                class="text-red-500 hover:text-red-700 p-2">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    container.appendChild(novoCampo);
+}
+
+function removerCampo(btn) {
+    const campos = document.querySelectorAll('.campo-arquivo');
+    if (campos.length > 1) {
+        btn.closest('.campo-arquivo').remove();
+    }
+}
+
+async function excluirArquivo(arquivoId) {
+    if (!confirm('Tem certeza que deseja excluir este arquivo?')) return;
+    
+    try {
+        const response = await fetch(`/documentos/arquivo/excluir/${arquivoId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Accept': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            showNotification('Sucesso', 'Arquivo excluído com sucesso', true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error('Erro ao excluir arquivo');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro', error.message || 'Falha na comunicação com o servidor', false);
+    }
+}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configura o botão de adicionar campo
+        const btnAdicionar = document.querySelector('[onclick="adicionarCampo()"]');
+        if (btnAdicionar) {
+            btnAdicionar.addEventListener('click', adicionarCampo);
+        }
+        
+        // Remove os eventos onclick inline e substitui por event listeners
+        document.querySelectorAll('[onclick^="excluirArquivo("]').forEach(btn => {
+            const arquivoId = btn.getAttribute('onclick').match(/excluirArquivo\((\d+)\)/)[1];
+            btn.removeAttribute('onclick');
+            btn.addEventListener('click', () => excluirArquivo(arquivoId));
+        });
+    });
+/**************************************************
+ * FUNÇÕES PARA ENVIO DE FORMULÁRIO (MODAL)
+ **************************************************/
+document.getElementById('formArquivos').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const btnSalvar = document.getElementById('btnSalvar');
+    
+    // Adiciona o ID do documento
+    formData.append('documento_id', '{{ documento.pk }}');
+    
+    btnSalvar.disabled = true;
+    btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
+    
+    try {
+        // Filtra apenas os arquivos com arquivo selecionado
+        const arquivos = formData.getAll('novos_arquivos[]');
+        const tipos = formData.getAll('novos_tipos[]');
+        
+        const arquivosValidos = arquivos.filter((arquivo, index) => {
+            return arquivo.size > 0 && tipos[index];
+        });
+
+        // Se não há arquivos válidos, apenas fecha o modal
+        if (arquivosValidos.length === 0) {
+            closeModal('modalArquivos');
+            return;
+        }
+
+        // Envia apenas os arquivos válidos
+        const formDataFiltrado = new FormData();
+        formDataFiltrado.append('documento_id', '{{ documento.pk }}');
+        formDataFiltrado.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        
+        arquivosValidos.forEach((arquivo, index) => {
+            formDataFiltrado.append('novos_arquivos[]', arquivo);
+            formDataFiltrado.append('novos_tipos[]', tipos[index]);
+        });
+
+        const response = await fetch("{% url 'documentos:editar_documento_arquivos' documento.pk %}", {
+            method: 'POST',
+            body: formDataFiltrado,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        // Verifica se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(text.includes('CSRF verification failed') ? 
+                'Sessão expirada. Por favor, recarregue a página.' : 
+                'Resposta inválida do servidor');
+        }
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || `Erro ${response.status}`);
+        }
+
+        if (data.success) {
+            showNotification('Sucesso', data.message || 'Arquivos salvos com sucesso', true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.error || 'Erro ao processar a requisição');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro', error.message || 'Erro na comunicação com o servidor', false);
+        
+        if (error.message.includes('Sessão expirada')) {
+            setTimeout(() => location.reload(), 2000);
+        }
+    } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = '<i class="fas fa-save mr-2"></i> Salvar';
+    }
+});
+
+/**************************************************
+ * FUNÇÕES PARA CONTROLE DE MODAIS
+ **************************************************/
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+/**************************************************
+ * FUNÇÕES PARA NOTIFICAÇÕES
+ **************************************************/
+function showNotification(title, message, isSuccess = true) {
+    const modal = document.getElementById('notificationModal');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    titleEl.className = `text-xl font-bold ${isSuccess ? 'text-green-600' : 'text-red-600'}`;
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    modal.classList.remove('hidden');
+}
+
+function hideNotification() {
+    document.getElementById('notificationModal').classList.add('hidden');
+}
+
+/**************************************************
+ * INICIALIZAÇÃO
+ **************************************************/
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurações iniciais se necessário
+});
+
+
+/**************************************************
+ * FUNÇÕES PARA EXCLUSAO DE ARQUIVOS
+ **************************************************/
+ async function excluirArquivo(arquivoId) {
+    if (!confirm('Tem certeza que deseja excluir este arquivo?')) return;
+    
+    try {
+        const response = await fetch(`/documentos/arquivo/excluir/${arquivoId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Accept': 'application/json',
+            }
+        });
+
+        // Verifica se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(text.includes('CSRF verification failed') ? 
+                'Sessão expirada. Por favor, recarregue a página.' : 
+                'Resposta inválida do servidor');
+        }
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Sucesso', data.message || 'Arquivo excluído com sucesso', true);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.error || 'Erro ao excluir arquivo');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('Erro', error.message || 'Falha na comunicação com o servidor', false);
+        
+        // Se for erro de CSRF, recarrega a página
+        if (error.message.includes('Sessão expirada')) {
+            setTimeout(() => location.reload(), 2000);
+        }
+    }
+}
+</script>
+
+<!-- Scripts externos -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+{% endblock %}
+

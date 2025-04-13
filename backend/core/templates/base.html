@@ -83,45 +83,26 @@
     <script src="../path/to/fullcalendar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-<script>
-  // Controle refinado do spinner
-  let spinnerVisible = false;
-
-  function showSpinner() {
-    if (!spinnerVisible) {
-      document.getElementById('spinner-container').classList.remove('hidden');
-      spinnerVisible = true;
-    }
-  }
-
-  function hideSpinner() {
-    if (spinnerVisible) {
-      document.getElementById('spinner-container').classList.add('hidden');
-      spinnerVisible = true;
-    }
-  }
-
-  // Gerenciamento de transições entre páginas
-  document.addEventListener('readystatechange', (event) => {
-    if (document.readyState === 'complete') {
-      hideSpinner();
-    }
-  });
-
-  // Monitorar todas as navegações
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (link && !link.target && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-      showSpinner();
-      window.location.href = link.href;
-    }
-  });
-
-  // Garantir que o spinner seja escondido mesmo se houver erro
-  window.addEventListener('error', () => hideSpinner());
-  window.addEventListener('unhandledrejection', () => hideSpinner());
-</script>
+    <script>
+        // Controle do spinner
+        function showSpinner() {
+          document.getElementById('spinner-container').classList.remove('hidden');
+        }
+      
+        function hideSpinner() {
+          document.getElementById('spinner-container').classList.add('hidden');
+        }
+      
+        // Exemplo de uso durante o carregamento
+        document.addEventListener('DOMContentLoaded', function() {
+          hideSpinner(); // Esconde quando tudo carregar
+        });
+        
+        // Mostrar spinner antes do carregamento da página
+        window.addEventListener('beforeunload', function() {
+          showSpinner();
+        });
+      </script>
     
 
     {% block js %}{% endblock js %}

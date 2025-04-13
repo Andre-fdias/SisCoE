@@ -91,9 +91,7 @@ def listar_rpt(request):
         Prefetch('cadastro__detalhes_situacao', to_attr='detalhes_situacao_list'),
         Prefetch('cadastro__imagens', to_attr='imagens_list')
     )
-    
     return render(request, 'listar_rpt.html', {'cadastros_rpt': cadastros_rpt})
-
 
 
 from django.db import models  # Adicione esta linha
@@ -180,7 +178,7 @@ def editar_rpt(request, id):
             'id': cadastro_rpt.id,
             'data_pedido': str(cadastro_rpt.data_pedido),
             'data_movimentacao': str(cadastro_rpt.data_movimentacao) if cadastro_rpt.data_movimentacao else None,
-            'data_alteracao': str(cadastro_rpt.data_alteracao) if cadastro_rpt.data_alteracao else None,
+            'create': str(cadastro_rpt.create) if cadastro_rpt.create else None,
             'status': cadastro_rpt.status,
             'sgb_destino': cadastro_rpt.sgb_destino,
             'posto_secao_destino': cadastro_rpt.posto_secao_destino,
@@ -217,6 +215,8 @@ def editar_rpt(request, id):
             return JsonResponse({'error': f'Erro ao salvar: {e}'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
 @login_required
 def search_cadastro(request):
     re = request.GET.get('re', None)
@@ -583,7 +583,7 @@ def importar_rpt(request):
                     data_alteracao=data_alteracao,      # Passa None se for o caso
                     doc_alteracao=doc_alteracao,        # Passa None se for o caso
                     doc_movimentacao=doc_movimentacao,  # Passa None se for o caso
-                    alteracao=alteracao,                # Passa None se for o caso
+                    create=datetime.now(),                # Passa None se for o caso
                     usuario_alteracao=request.user      # Usuário que realizou a importação
                 )
                 registros_processados += 1

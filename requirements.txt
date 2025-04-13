@@ -1,46 +1,95 @@
-# requirements.txt
+# ==============================================
+# DEPENDÊNCIAS PRINCIPAIS DO DJANGO E FRAMEWORK
+# ==============================================
+Django==5.2                  # Framework web principal
+django-appconf==1.1.0        # Configuração de aplicativos Django
+django-compressor==4.5.1     # Compactação de arquivos estáticos
+django-extensions==3.2.3     # Extensões úteis para desenvolvimento
+django-widget-tweaks==1.5.0  # Personalização de widgets de formulário
+whitenoise==6.9.0            # Servidor de arquivos estáticos
+psycopg2-binary==2.9.10      # Adaptador PostgreSQL para Django
+gunicorn==23.0.0             # Servidor WSGI para produção
 
+# ==============================================
+# BANCO DE DADOS E ORM
+# ==============================================
+sqlparse==0.5.3              # Parser SQL para Django ORM
+pandas==2.2.3                # Manipulação de dados
+openpyxl==3.1.5              # Leitura/escrita de arquivos Excel
+pypdf==5.4.0                 # Manipulação de PDFs
+python-docx==1.1.2           # Manipulação de documentos Word
 
-# Django e extensões
-Django==5.1.4
-django-extensions==3.2.3
-django-widget-tweaks==1.5.0
-django-seed==0.3.1
-django-compressor==4.5.1  # Nome CORRETO
-whitenoise==6.8.2
-Pillow==10.3.0
+# ==============================================
+# AUTENTICAÇÃO E SEGURANÇA
+# ==============================================
+argon2-cffi==23.1.0          # Algoritmo de hash para senhas
+bcrypt==4.3.0                # Criptografia de senhas
+cryptography==44.0.2         # Criptografia básica
+python-decouple==3.8         # Gerenciamento de configurações
+python-dotenv==1.1.0         # Carregamento de variáveis de ambiente
 
-# Banco de dados
-psycopg2-binary==2.9.10
+# ==============================================
+# PROCESSAMENTO DE TEXTO E MARKDOWN
+# ==============================================
+Markdown==3.7                # Renderização de Markdown
+beautifulsoup4==4.13.3       # Parsing HTML/XML
+lxml==5.3.2                  # Processamento XML/HTML
+Pygments==2.19.1             # Realce de sintaxe para código
+python-magic==0.4.27         # Detecção de tipo de arquivo
 
-# Channels e ASGI
-channels==4.1.0
-channels_redis==4.2.1
-daphne==4.1.0
+# ==============================================
+# REQUESTS E COMUNICAÇÃO HTTP
+# ==============================================
+requests==2.32.3             # Cliente HTTP
+httpx==0.28.1                # Cliente HTTP assíncrono
+urllib3==2.4.0               # Biblioteca URL
+aiofiles==24.1.0             # Manipulação assíncrona de arquivos
 
-# Configurações de ambiente
-python-decouple==3.8  # Versão CORRETA substituindo django-decouple
+# ==============================================
+# FRONTEND E TEMPLATES
+# ==============================================
+Jinja2==3.1.6                # Engine de templates
+fontawesomefree==6.6.0       # Ícones Font Awesome
+bleach==6.2.0                # Sanitização de HTML
+html5lib==1.1                # Parser HTML
 
-# Frontend/Assets
-fontawesomefree==6.6.0
+# ==============================================
+# TESTES E DESENVOLVIMENTO
+# ==============================================
+Faker==37.0.0                # Geração de dados fictícios
+django-seed==0.3.1           # Popular banco de dados com dados fictícios
+pytest==8.2.1                # Framework de testes
+ipython==9.0.2               # Console Python interativo
+autopep8==2.3.1              # Formatação de código
+isort==5.13.2                # Organização de imports
 
+# ==============================================
+# IA E PROCESSAMENTO DE LINGUAGEM
+# ==============================================
+langchain-core==0.3.44       # Framework para aplicações de IA
+transformers==4.51.2         # Modelos de linguagem
+sentence-transformers==4.0.2 # Embeddings de texto
+chromadb==1.0.4              # Banco de dados vetorial
+nltk==3.9.1                  # Processamento de linguagem natural
 
-# Utilitários
-python-dateutil==2.9.0.post0
-python-json-logger==3.3.0
-requests==2.32.3
-gunicorn==23.0.0
-orjson==3.10.15
-langchain-groq==0.2.2
-Markdown==3.7
-pytz==2024.2
+# ==============================================
+# OUTRAS DEPENDÊNCIAS IMPORTANTES
+# ==============================================
+pillow==11.0.0               # Processamento de imagens
+python-dateutil==2.9.0.post0 # Manipulação de datas
+pytz==2024.2                 # Fusos horários
+tzdata==2025.2               # Dados de fuso horário
+reportlab==4.3.1             # Geração de PDFs
+orjson==3.10.15              # JSON rápido
+cachetools==5.5.2            # Caching
 
-# Segurança
-argon2-cffi==23.1.0
-cryptography==42.0.5
-
-# Dev Tools (opcional para produção)
-ipython==9.0.2
-django-debug-toolbar==3.8.1  # Adicione se necessário
-
-
+# ==============================================
+# DEPENDÊNCIAS DE BAIXO NÍVEL
+# ==============================================
+# Essas são dependências transitivas importantes
+cffi==1.17.1                 # Interface para código C
+pycparser==2.22              # Parser para C
+typing_extensions==4.13.2    # Extensões de tipagem
+six==1.17.0                  # Compatibilidade Python 2/3
+numpy==2.2.4                 # Computação numérica
+scipy==1.15.2                # Computação científica

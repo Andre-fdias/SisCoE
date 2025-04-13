@@ -7,16 +7,26 @@ locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
 class Conversation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(
+        max_length=20,
+        choices=[
+            ('geral', 'Geral'),
+            ('interno', 'Interno'),
+        ],
+        default='geral'
+    )
+
+    def __str__(self):
+        return f"Conversa de {self.user.username} ({self.tipo}) em {self.created_at}"
 
 class Chat(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='chats')
+    conversation = models.ForeignKey(Conversation, related_name='chats', on_delete=models.CASCADE)
     message = models.TextField()
     response = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    arquivado = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.message
+        return f"Mensagem em {self.conversation.id} em {self.created_at}"
     
 
     # backend/faisca/models.py
@@ -73,3 +83,23 @@ class FaiscaAgentQueryLog(models.Model):
 
     def __str__(self):
         return f"Consulta de {self.user} em {self.created_at}"
+
+
+class DocumentoInterno(models.Model):
+    """Modelo para representar um arquivo PDF interno."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=255)
+    arquivo = models.FileField(upload_to='documentos_internos/')
+    data_upload = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.titulo
+
+# Opcional: Modelo para armazenar informações sobre o índice (se necessário)
+class IndiceInterno(models.Model):
+    """Modelo para rastrear o índice vetorial interno."""
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    # Adicione campos relevantes sobre o índice (caminho do arquivo, etc.)
+
+    def __str__(self):
+        return f"Índice interno criado em {self.data_criacao}"
