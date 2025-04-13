@@ -1,792 +1,1105 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %} Detalhe do Documento {% endblock %}
-
+{% block title %} Consultar Efetivo{% endblock %}
 {% block 'head' %}
-<!-- CSS e scripts externos -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+<link rel="stylesheet" href="{% static 'efetivo\css\ver_militar.css' %}">
 
-<style>
-    /* Seus estilos CSS existentes */
-    .markdown-content {
-      max-width: 100%;
-      overflow-wrap: break-word;
-  }
-  
-  .markdown-content img,
-  .markdown-content video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 1rem auto;
-      border-radius: 0.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  
-  .markdown-content iframe {
-      max-width: 100%;
-      border: none;
-      border-radius: 0.5rem;
-      margin: 1rem auto;
-  }
-  .markdown-content {
-      line-height: 1.6;
-  }
-  
-  .markdown-content h1, 
-  .markdown-content h2, 
-  .markdown-content h3 {
-      margin-top: 1em;
-      margin-bottom: 0.5em;
-      font-weight: bold;
-  }
-  
-  .markdown-content h1 { font-size: 1.8em; }
-  .markdown-content h2 { font-size: 1.5em; }
-  .markdown-content h3 { font-size: 1.3em; }
-  
-  .markdown-content p {
-      margin-bottom: 1em;
-  }
-  
-  .markdown-content ul, 
-  .markdown-content ol {
-      margin-bottom: 1em;
-      padding-left: 2em;
-  }
-  
-  .markdown-content code {
-      background-color: #f3f4f6;
-      padding: 0.2em 0.4em;
-      border-radius: 3px;
-      font-family: monospace;
-  }
-  
-  .markdown-content pre {
-      background-color: #f3f4f6;
-      padding: 1em;
-      border-radius: 5px;
-      overflow-x: auto;
-  }
-  
-  .markdown-content blockquote {
-      border-left: 4px solid #ddd;
-      padding-left: 1em;
-      color: #666;
-      margin-left: 0;
-  }
-  .image-pdf-viewer {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: width 0.3s ease-in-out, height 0.3s ease-in-out, margin 0.3s ease-in-out;
-  }
 
-  .video-wrapper {
-      overflow: hidden;
-  }
-
-  .video-player {
-      max-width: 100%;
-      max-height: 100%;
-      margin: auto;
-      display: block;
-  }
-
-  .video-player::-webkit-media-controls {
-      opacity: 0;
-      transition: opacity 0.3s;
-  }
-
-  .video-player:hover::-webkit-media-controls {
-      opacity: 1;
-  }
-
-  /* Estilo para o loader */
-  .loader {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  }
-  .animate-spin {
-      animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-  }
-
-</style>
-{% endblock %}
+{% endblock 'head' %}
 
 {% block 'body' %}
-<!-- Conteúdo principal do template -->
-<div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="area-impressao">
-  <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
-    <fieldset class="p-2 mb-4 rounded-md rounded-[5px] bg-gray-800 p-4 ">   
-  <!-- Cabeçalho -->
+<style>
+    @keyframes diagonal-scroll {
+    0% { transform: translateY(-100%) translateX(-100%); }
+    100% { transform: translateY(100%) translateX(100%); }
+}
 
-  <div class="p-4">
-    <div class="flex flex-wrap items-center justify-between gap-4 ">
+.diagonal-overlay {
+    animation: diagonal-scroll 40s linear infinite;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0,0,0,0.1) 10px,
+        rgba(0,0,0,0.1) 20px
+    );
+}
+</style>
+
+<body>
+
+    <br>
+    <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
+        
+        
+     <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">   
+      
+        <fieldset class=" p-2 mb-8 rounded-md w-full" id="first-fieldset">
        
+               <div class="flex flex-col h-auto rounded-[10px]">
+                <div class=" bg-gradient-to-r from-gray-600 to-gray-900 rounded-xl shadow-2xl  w-full p-8 transition-all duration-300 animate-fade-in">
+                    <div class="flex flex-col md:flex-row">
+                        <div class="md:w-1/3 text-center mb-8 md:mb-0 relative">
+                            {% if cadastro.imagens.exists %}
+                                {% with cadastro.promocoes.last as promocao %}
+                                <div class="relative group">
+                                    <div class="absolute inset-0 overflow-hidden rounded-full w-60 h-60 mx-auto mb-4 ">
+                                        <div class="absolute inset-0 grid grid-cols-6 grid-rows-5 -rotate-45 gap-4 opacity-20 pointer-events-none">
+                                            {% for _ in "x"|ljust:20 %}
+                                            <span class="text-gray-200 text-xs font-mono tracking-wider transform rotate-45">
+                                                {{ request.user.profile.cpf|default:"CPF Não Cadastrado" }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    {% if promocao.posto_grad == "Cel PM" or promocao.posto_grad == "Ten Cel PM" or promocao.posto_grad == "Maj PM" or promocao.posto_grad == "CAP PM" or promocao.posto_grad == "1º Ten PM" or promocao.posto_grad == "1º Ten QAPM" or promocao.posto_grad == "2º Ten PM" or promocao.posto_grad == "2º Ten QAPM" or promocao.posto_grad == "Asp OF PM" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-500 transition-transform duration-300 hover:scale-105 object-cover">
+                                             {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-red-500 transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% elif promocao.posto_grad == "Cb PM" or promocao.posto_grad == "Sd PM" or promocao.posto_grad == "Sd PM 2ºCL" %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-black transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% else %}
+                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
+                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-800 transition-transform duration-300 hover:scale-105 object-cover">
+                                    {% endif %}
+                                </div>
+                                {% endwith %}
+                            {% else %}
+                                <div class="text-gray-500">Sem imagem</div>
+                            {% endif %}
+                    
+                            <p class="text-gray-300 "> {{ cadastro.promocoes.last.grad|safe }}</p><br>
+                            <p class="text-gray-300 font-bold "> {{ cadastro.nome_de_guerra }}</p><br>
+                            
+                             <!-- Container dos Botões -->
+                        <div class="flex flex-col md:flex-row md:flex-wrap gap-3 justify-center w-full mt-4">
+                            <!-- Botão Trocar Foto -->
+                            <button type="button" 
+                                    class="w-full md:w-auto bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white 
+                                        font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
+                                        flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Trocar Foto
+                            </button>
+                                         <!-- Botão Editar Posto/Grad -->
+                            <button type="button" 
+                            class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white 
+                                font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
+                                flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
+                                </svg>
+                                Editar Posto/Grad
+                            </button>
+                        </div>
+    
 
-        <div class="flex-1 min-w-[200px]">
-            <h1 class="text-3xl font-bold text-gray-200 tracking-tight drop-shadow-md">Detalhes do Documento</h1>
-            <p class="text-gray-300 mt-1">{{ documento.numero_documento }}</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <a href="{% url 'documentos:galeria_documentos' %}"
-               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                Ver Galeria
-            </a>
-            <a href="{% url 'documentos:editar_documento' documento.pk %}"
-               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br
-                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
-                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
-                <i class="fas fa-edit mr-2"></i>Editar
-            </a>
-            <button onclick="openModal('modalArquivos')"
-                    class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:bg-gradient-to-br
-                           focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50
-                           font-medium rounded-lg text-center transition-all duration-200 ease-out">
-                <i class="fas fa-paperclip mr-2"></i>Arquivos
-            </button>
-            <a href="{% url 'documentos:listar_documentos' %}"
-               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:bg-gradient-to-br
-                      focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50
-                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
-                <i class="fas fa-arrow-left mr-2"></i>Voltar
-            </a>
-        </div>
-    </div>
-</div>
-  </fieldset>
-  <fieldset class="   rounded-md w-full" id="second-fieldset">
-    <div class="w-full"> {% if messages %}
+                        <!-- Modal de Troca de Foto -->
+                        <div id="trocaFotoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+                        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">Alterar Foto do Perfil</h3>
+                            <button type="button" 
+                                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                                    data-modal-close="#trocaFotoModal">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Corpo do Modal -->
+                        <form method="POST" action="{% url 'efetivo:editar_imagem' cadastro.id %}" enctype="multipart/form-data" class="p-6">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <!-- Área de Upload -->
+                                <div class="group relative">
+                                    <input type="file" 
+                                        name="image" 
+                                        id="image" 
+                                        accept="image/*"
+                                        onchange="previewImage(event)"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                    
+                                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center transition-all
+                                            group-hover:border-cyan-500 group-hover:bg-gray-50">
+                                        <div class="max-w-xs mx-auto">
+                                            <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full overflow-hidden
+                                                    flex items-center justify-center">
+                                                <img id="preview" src="#" alt="Pré-visualização" class="hidden w-full h-full object-cover">
+                                                <svg class="w-12 h-12 text-gray-400 group-hover:text-cyan-500 transition-colors" 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm text-gray-500 mb-2">
+                                                Arraste ou clique para enviar
+                                            </p>
+                                            <p class="text-xs text-gray-400">
+                                                Formatos suportados: JPG, PNG (máx. 5MB)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ações -->
+                                <div class="flex justify-end gap-3">
+                                    <button type="button" 
+                                            data-modal-close="#trocaFotoModal"
+                                            class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" 
+                                            class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white 
+                                                font-medium rounded-lg hover:shadow-md transition-all">
+                                        Salvar Alterações
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        </div>
+                        </div>
+
+                        <script>
+                            function previewImage(event) {
+                                const reader = new FileReader();
+                                const preview = document.getElementById('preview');
+                                const icon = preview.parentElement.querySelector('svg');
+
+                                reader.onload = (e) => {
+                                    preview.src = e.target.result;
+                                    preview.classList.remove('hidden');
+                                    icon?.classList.add('hidden');
+                                }
+                                reader.readAsDataURL(event.target.files[0]);
+                            }
+
+                            // Controle do Modal
+                            document.querySelectorAll('[data-modal-target]').forEach(button => {
+                                button.addEventListener('click', () => {
+                                    const modal = document.querySelector(button.dataset.modalTarget);
+                                    modal.classList.remove('hidden');
+                                });
+                            });
+
+                            document.querySelectorAll('[data-modal-close]').forEach(button => {
+                                button.addEventListener('click', () => {
+                                    const modal = button.closest('.fixed');
+                                    modal.classList.add('hidden');
+                                });
+                            });
+                        </script>
+            
+
+                    <!-- Modal Principal -->
+                    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                        <h3 class="text-2xl font-bold text-gray-800">Editar Posto e Graduação</h3>
+                        <button type="button" 
+                                class="text-gray-400 hover:text-gray-600 transition-colors"
+                                data-modal-close="#editModal">
+                            &times;
+                        </button>
+                    </div>
+
+                    <!-- Corpo do Formulário -->
+                    <form id="editForm" method="POST" action="{% url 'efetivo:editar_posto_graduacao' cadastro.id %}" 
+                        class="p-6 space-y-6" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Posto/Grad -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Posto/Graduação</label>
+                                <select name="posto_grad" 
+                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
+                                            focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        required>
+                                    {% for i in posto_grad %}
+                                    <option value="{{ i.0 }}" {% if promocao and promocao.posto_grad == i.0 %}selected{% endif %}>
+                                        {{ i.1 }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Quadro -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Quadro</label>
+                                <select name="quadro" 
+                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
+                                            focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        required>
+                                    {% for i in quadro %}
+                                    <option value="{{ i.0 }}" {% if promocao and promocao.quadro == i.0 %}selected{% endif %}>
+                                        {{ i.1 }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Grupo -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Grupo</label>
+                                <select name="grupo" 
+                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
+                                            focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        required>
+                                    {% for i in grupo %}
+                                    <option value="{{ i.0 }}" {% if promocao and promocao.grupo == i.0 %}selected{% endif %}>
+                                        {{ i.1 }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Data Promoção -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Última Promoção</label>
+                                <input type="date" 
+                                    name="ultima_promocao" 
+                                    value="{% if promocao %}{{ promocao.ultima_promocao|date:'Y-m-d' }}{% endif %}"
+                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
+                                            focus:ring-indigo-500 focus:border-transparent transition-all"
+                                    required>
+                            </div>
+                        </div>
+
+                        <!-- Ações -->
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" 
+                                    data-modal-close="#editModal"
+                                    class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="button" 
+                                    onclick="showConfirmation()"
+                                    class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
+                                        hover:bg-indigo-700 transition-colors">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                    </div>
+                    </div>
+
+                    <!-- Modal de Confirmação -->
+                    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="p-6 flex items-center gap-4 border-b border-gray-100">
+                        <div class="p-2 bg-yellow-100 rounded-full">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Confirmar Alterações</h3>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <p class="text-gray-600">Tem certeza que deseja atualizar as informações de posto/graduação?</p>
+                        
+                        <div class="flex justify-end gap-3">
+                            <button type="button" 
+                                    onclick="closeConfirmation()"
+                                    class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="button" 
+                                    onclick="submitForm()"
+                                    class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
+                                        hover:bg-indigo-700 transition-colors">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                    </div>
+
+                    <script>
+                        function showConfirmation() {
+                            document.getElementById('confirmModal').classList.remove('hidden');
+                        }
+
+                        function closeConfirmation() {
+                            document.getElementById('confirmModal').classList.add('hidden');
+                        }
+
+                        function submitForm() {
+                            document.getElementById('editForm').submit();
+                            closeConfirmation();
+                        }
+
+                        // Controle Modal Principal
+                        document.querySelectorAll('[data-modal-target]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                const modal = document.querySelector(button.dataset.modalTarget);
+                                modal.classList.remove('hidden');
+                            });
+                        });
+
+                        document.querySelectorAll('[data-modal-close]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                const modal = button.closest('.fixed');
+                                modal.classList.add('hidden');
+                            });
+                        });
+                    </script>
+                        </div>
+                        <div class="md:w-2/3 md:pl-8">
+                            <h1 class="text-3xl font-semibold text-gray-300 mb-4">{{ cadastro.nome}}</h1>
+                            <h4 class="text-1xl text-gray-500 mb-4" ><b>RE:</b> <span>{{ cadastro.re }}-{{ cadastro.dig }}</span></h4>
+                            <br>
+                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Principais Cursos</h2>
+                            <div class="flex flex-wrap gap-2 mb-6">
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">CSalt</span>
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Terrestre</span>
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Mergulho</span>
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">OVB</span>
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Incêndio</span>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Informações de Contato</h2>
+                            <ul class="space-y-2 text-gray-500 ">
+                                <li class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 " viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                    {{ cadastro.email }}    </li>
+                                <li class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                    </svg>
+                                    {{ cadastro.telefone }}
+                                </li>
+                                <li class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 dark:text-blue-900" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                    </svg>
+                                    {{ cadastro.detalhes_situacao.last.sgb }}-     {{ cadastro.detalhes_situacao.last.posto_secao }}
+
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+        </fieldset> 
+        <fieldset class="    rounded-md">
+     
+            {% if messages %}
             {% for message in messages %}
-                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md w-full">
+                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
                     {{ message }}
                 </section>
             {% endfor %}
-        {% endif %}
-    </div>
-  </fieldset>  
-  <!-- Informações do Documento -->
-  <div class="bg-gray-100 rounded-2xl shadow-md p-6 border border-gray-200 mb-8">
-      
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Informações do Documento</h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div class="space-y-1">
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Assunto</p>
-              <p class="text-gray-700 font-medium">{{ documento.assunto }}</p>
-          </div>
-          
-          <div class="space-y-1">
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Data do Documento</p>
-              <p class="text-gray-700 font-medium">{{ documento.data_documento|date:"d/m/Y" }}</p>
-          </div>
-          
-          <div class="space-y-1">
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Assinado por</p>
-              <p class="text-gray-700 font-medium">{{ documento.assinada_por }}</p>
-          </div>
-          
-          <div class="space-y-1">
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Criação</p>
-              <p class="text-gray-700 font-medium">{{ documento.data_criacao|date:"d/m/Y H:i" }}</p>
-          </div>
-      </div>
-      
-      <div>
-          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Descrição</p>
-          <div class="markdown-content bg-white p-4 rounded-lg border border-gray-200">
-              {{ descricao_html|safe }}
-          </div>
-      </div>
-  </div>
-
-  <!-- Visualizador de Arquivos -->
-  <div class="bg-gray-100 rounded-2xl shadow-md p-6 border border-gray-200 mb-8">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Visualização do Documento</h2>
-      
-      <!-- Visualizador Principal -->
-      <div id="arquivo-principal" class="image-pdf-viewer video-container mb-6 bg-black rounded-xl overflow-hidden relative"
-   style="width: 640px; height: 360px; margin: 0 auto;">
-  <div class="placeholder h-full flex items-center justify-center text-gray-400">
-      <div class="text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          <p>Selecione um arquivo para visualização</p>
-      </div>
-  </div>
-
-  <div id="image-controls" class="absolute top-2 left-2 bg-gray-800 text-white rounded-md p-2 space-x-2 z-20 hidden">
-      <button onclick="zoomInImage()" title="Zoom In">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7h-14" />
-          </svg>
-      </button>
-      <button onclick="zoomOutImage()" title="Zoom Out">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13h-14" />
-          </svg>
-      </button>
-  </div>
-
-  <button id="fullscreen-button" class="absolute top-2 right-2 bg-gray-800 text-white rounded-md p-2 z-20 hidden" onclick="toggleFullscreen()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 16v4m0 0h4m-8-8h.01M16 8V4m0 0h4m-4 12v4m0 0h4" />
-      </svg>
-  </button>
-</div>
-
-        <!-- Galeria de Arquivos -->
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Arquivos Anexados</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {% for arquivo in arquivos %}
-            <div class="group relative cursor-pointer bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow 
-                        border border-gray-200 flex flex-col overflow-hidden h-48"
-                 onclick="carregarArquivo('{{ arquivo.arquivo.url }}', '{{ arquivo.tipo }}', {{ forloop.counter }})">
-                
-                <!-- Miniatura -->
-                <div class="h-32 w-full bg-gray-50 flex items-center justify-center relative overflow-hidden">
-                    {% if arquivo.tipo == 'IMAGEM' %}
-                        <img src="{{ arquivo.arquivo.url }}" alt="Thumbnail" 
-                             class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200">
-                    
-                    {% elif arquivo.tipo == 'VIDEO' %}
-                        <div class="relative w-full h-full">
-                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <i class="fas fa-play text-white text-2xl"></i>
-                            </div>
-                            <video class="h-full w-full object-cover" muted>
-                                <source src="{{ arquivo.arquivo.url }}" type="video/mp4">
-                            </video>
-                        </div>
-                    
-                    {% else %}
-                        <div class="text-indigo-500 text-4xl flex flex-col items-center justify-center h-full gap-2">
-                            {% if arquivo.tipo == 'PDF' %}
-                                <i class="fas fa-file-pdf"></i>
-                            {% elif arquivo.tipo == 'DOC' %}
-                                <i class="fas fa-file-word"></i>
-                            {% elif arquivo.tipo == 'SHEET' %}
-                                <i class="fas fa-file-excel"></i>
-                            {% elif arquivo.tipo == 'TEXT' %}
-                                <i class="fas fa-file-alt"></i>
-                            {% else %}
-                                <i class="fas fa-file"></i>
-                            {% endif %}
-                            <span class="text-xs text-gray-500">{{ arquivo.get_tipo_display }}</span>
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Badge de Tamanho -->
-                    <div class="absolute bottom-1 left-1 px-2 py-1 bg-black/70 text-white rounded text-xs">
-                        {{ arquivo.arquivo.size|filesizeformat }}
-                    </div>
-                </div>
-
-                <!-- Footer do Card -->
-                <div class="p-2 border-t flex flex-col justify-between flex-1">
-                    <p class="text-sm font-medium text-gray-700 truncate px-1">
-                        {{ arquivo.arquivo.name|truncatechars:20 }}
-                    </p>
-                    
-                    <div class="flex justify-between items-center mt-1">
-                        <!-- Botão de Download -->
-                        <a href="{{ arquivo.arquivo.url }}" download 
-                           class="text-indigo-600 hover:text-indigo-800 text-xs flex items-center"
-                           onclick="event.stopPropagation()">
-                            <i class="fas fa-download mr-1"></i>
-                        </a>
-                        
-                        <!-- Tipo de Arquivo -->
-                        <span class="text-xs text-gray-500">
-                            {{ arquivo.get_tipo_display }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-span-full text-center py-6">
-                <p class="text-gray-500">Nenhum arquivo anexado</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    
-    <!-- Modal de Arquivos -->
-    <div id="modalArquivos" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-          <!-- Cabeçalho -->
-          <div class="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
-              <h3 class="text-2xl font-bold text-gray-800">Gerenciar Arquivos</h3>
-              <button onclick="closeModal('modalArquivos')" class="text-gray-500 hover:text-gray-700 text-2xl">
-                  &times;
-              </button>
-          </div>
-          
-          <!-- Corpo com scroll -->
-          <div class="p-6 overflow-y-auto flex-1">
-              <!-- Arquivos existentes -->
-              <div class="mb-8">
-                  <h4 class="text-lg font-semibold mb-4">Arquivos Anexados</h4>
-                  <div class="space-y-3 max-h-60 overflow-y-auto" id="lista-arquivos">
-                      {% for arquivo in documento.arquivos.all %}
-                      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div class="flex items-center gap-3">
-                              <i class="fas fa-file text-blue-500"></i>
-                              <div>
-                                  <p class="text-sm font-medium">{{ arquivo.arquivo.name|truncatechars:30 }}</p>
-                                  <p class="text-xs text-gray-500">{{ arquivo.get_tipo_display }}</p>
-                              </div>
-                          </div>
-                          <button onclick="excluirArquivo({{ arquivo.id }})" 
-                                  class="text-red-500 hover:text-red-700 p-1">
-                              <i class="fas fa-trash"></i>
-                          </button>
-                      </div>
-                      {% empty %}
-                      <p class="text-gray-500 text-center py-4">Nenhum arquivo anexado</p>
-                      {% endfor %}
-                  </div>
-              </div>
-              
-              <!-- Formulário de upload -->
-              <form id="formArquivos" method="post" enctype="multipart/form-data" class="space-y-4">
-                  {% csrf_token %}
-                  
-                  <div id="camposArquivos" class="space-y-4">
-                      <!-- Campo inicial -->
-                      <div class="flex gap-3 items-center campo-arquivo">
-                          <input type="file" name="novos_arquivos[]" required
-                                 class="flex-1 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
-                                        file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700
-                                        hover:file:bg-blue-100">
-                          <select name="novos_tipos[]" class="w-32 px-3 py-2 border rounded-lg text-sm" required>
-                              <option value="PDF">PDF</option>
-                              <option value="VIDEO">Vídeo</option>
-                              <option value="AUDIO">Áudio</option>
-                              <option value="DOC">Documento</option>
-                              <option value="SHEET">Planilha</option>
-                              <option value="IMAGEM">Imagem</option>
-                              <option value="OUTRO">Outro</option>
-                          </select>
-                          <button type="button" onclick="removerCampo(this)" 
-                                  class="text-red-500 hover:text-red-700 p-2">
-                              <i class="fas fa-times"></i>
-                          </button>
-                      </div>
-                  </div>
-                  
-                  <div class="flex justify-between items-center pt-4 border-t">
-                      <button type="button" onclick="adicionarCampo()"
-                              class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2">
-                          <i class="fas fa-plus-circle"></i> Adicionar arquivo
-                      </button>
-                      
-                      <div class="flex gap-3">
-                          <button type="button" onclick="closeModal('modalArquivos')"
-                                  class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
-                              Cancelar
-                          </button>
-                          <button type="submit" id="btnSalvar"
-                                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
-                              <i class="fas fa-save"></i> Salvar
-                          </button>
-                      </div>
-                  </div>
-              </form>
-          </div>
-      </div>
-    </div>
-     
-      
-    
-    <!-- Outros modais e elementos -->
-     
-
-    <!-- Adicione isto no seu template base para garantir CSRF -->
-    <div id="csrf-token" data-token="{{ csrf_token }}" style="display:none;"></div>
-
-    <!-- Modal de Notificação -->
-    <div id="notificationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="notificationTitle" class="text-xl font-bold"></h3>
-                <button onclick="document.getElementById('notificationModal').classList.add('hidden')" 
-                        class="text-gray-500 hover:text-gray-700">
-                    &times;
-                </button>
-            </div>
-            <p id="notificationMessage" class="mb-4"></p>
-            <button onclick="document.getElementById('notificationModal').classList.add('hidden')"
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                OK
-            </button>
-        </div>
-    </div>
+            {% endif %}
+       
+    </fieldset>
 
 
-  <!-- Modal de Exclusão -->
-  <div id="modalExcluir" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
-    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-        <div class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
-            <p class="text-gray-600 mb-6">Tem certeza que deseja excluir este documento permanentemente?</p>
-            
-            <div class="flex justify-center gap-4">
-                <button id="cancelarExclusao" 
-                        class="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancelar
-                </button>
-                <a href="{% url 'documentos:excluir_documento' documento.pk %}" 
-                  class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                    Excluir
+    <!-- Dados da Situação Funcional e Documentos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
+        <!-- Situação Funcional -->
+        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
+            <div class="flex-grow"> <!-- Conteúdo principal -->
+                <h2 class="text-xl font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
+                    </svg>
+                    Situação Funcional
+                </h2>
+                <a href="{% url 'efetivo:historico_movimentacoes' cadastro.id %}" class="text-xs text-gray-600 hover:text-indigo-400 transition duration-300 block mb-2">
+                    Histórico de Movimentações e Promoções →
                 </a>
+                <hr class="my-4 border-gray-200">
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Situação:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Status:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status_cat|default:"- " }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">SGB:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Posto/Seção:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Adido ao:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Função:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Operacional/Adm:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</span>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Rodapé fixo -->
+            <div class="mt-auto pt-4">
+            
+                <button type="button" class="mt-4 w-2/4 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all" data-modal-target="#editSituacaoModal">
+                    Editar Sit. Funcional
+                </button>
+                    <!-- Primeiro Modal (Edição da Situação Atual) -->
+                    <div id="editSituacaoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                    <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
+                        <div class="flex justify-between bg-gray-800 p-4 ">
+                            <h5 class="text-xl text-gray-300">Editar Situação Funcional</h5>
+                            <button type="button" class="text-gray-500 hover:text-gray-700 w-5 h-5" data-modal-close="#editSituacaoModal">×</button>
+                        </div>
+                        <div class="p-4">
+                            <!-- Formulário de Edição -->
+                            <form id="editSituacaoForm" method="POST" action="{% url 'efetivo:editar_situacao_atual' cadastro.id %}">
+                                {% csrf_token %}
+                                <!-- Campos do formulário -->
+                                <br>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="situacao_atual" class="block mb-2 text-sm font-medium text-gray-400 ">Situação Atual</label>
+                                        <select name="situacao_atual" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="situacao_atual" required>
+                                            {% for value, label in situacao %}
+                                            <option value="{{ value }}" {% if detalhes and detalhes.situacao == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="cat_efetivo" class="block mb-2 text-sm font-medium text-gray-400">Detalhamento</label>
+                                        <select name="cat_efetivo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cat_efetivo" required>
+                                            {% for value, label in cat_efetivo %}
+                                            <option value="{{ value }}" {% if detalhes and detalhes.cat_efetivo == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="prontidao" class="block mb-2 text-sm font-medium text-gray-400">Qual Prontidão</label>
+                                        <select name="prontidao" id="prontidao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                            {% for i in prontidao %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione sua prontidão.</div>
+                                    </div>
+                                    <div>
+                                        <label for="saida_da_unidade" class="block mb-2 text-sm font-medium text-gray-400 ">Data de Saída da Unidade</label>
+                                        <input type="date" name="saida_da_unidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="saida_da_unidade" value="{% if detalhes %}{{ detalhes.saida_da_unidade|date:'Y-m-d' }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="flex justify-end space-x-2"> 
+                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#editSituacaoModal">Cancelar</button>
+                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Escolha -->
+                <div id="choiceModal" class="fixed inset-0 flex items-center justify-center w-120 bg-black bg-opacity-50 hidden">
+                    <div class="bg-gray-300 rounded-lg shadow-lg w-full max-w-md">
+                        <div class="flex justify-between  bg-gray-400 p-4">
+                            <h5 class="text-xl text-gray-00">Você deseja cadastrar nova Situação Funcional?</h5>
+                            <button type="button" class="text-gray-500 hover:text-gray-700 w-10 h-10" data-modal-close="#choiceModal">×</button>
+                        </div>
+                        <div class="p-4 text-center">
+                            <br>
+                            <br>
+
+                            <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#newSituacaoModal">SIM</button>
+                            <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#choiceModal" onclick="window.location.href='{% url 'efetivo:ver_militar' cadastro.id %}'">NÃO</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Segundo Modal (Cadastro da Nova Situação) -->
+                <div id="newSituacaoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                    <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
+                        <div class="flex justify-between bg-gray-800 items-center p-4 text-gray-300">
+                            <h5 class="text-xl font-medium">Cadastrar Nova Situação</h5>
+                            <button type="button" class="text-gray-500 hover:text-gray-700 w-5 h-5" data-modal-close="#newSituacaoModal">×</button>
+                        </div>
+                        <div class="p-4">
+                            <!-- Formulário de Cadastro -->
+                            <form id="newSituacaoForm" method="POST" action="{% url 'efetivo:cadastrar_nova_situacao' cadastro.id %}" class="row g-3 needs-validation" novalidate>
+                                {% csrf_token %}
+                                <!-- Campos do formulário -->
+                                <h2 class="text-lg text-gray-200 mb-4">Nova Situação</h2>
+                                <br>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="situacao" class="block mb-2 text-sm font-medium text-gray-400">Situação</label>
+                                        <select name="situacao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="situacao" required>
+                                            {% for i in situacao %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione a nova situação.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="cat_efetivo" class="block mb-2 text-sm font-medium text-gray-400">Detalhamento</label>
+                                        <select name="cat_efetivo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cat_efetivo" required>
+                                            {% for i in cat_efetivo %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione a nova situação.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="sgb" class="block mb-2 text-sm font-medium text-gray-400">SGB</label>
+                                        <select name="sgb" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="sgb" required>
+                                            {% for i in sgb %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione o SGB.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="posto_secao" class="block mb-2 text-sm font-medium text-gray-400">Posto ou Seção</label>
+                                        <select name="posto_secao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_secao" required>
+                                            {% for i in posto_secao %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione o posto ou seção.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="esta_adido" class="block mb-2 text-sm font-medium text-gray-400">Está Adido?</label>
+                                        <select name="esta_adido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="esta_adido" required>
+                                            {% for i in esta_adido %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione se está adido a outro posto ou seção.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="funcao" class="block mb-2 text-sm font-medium text-gray-400">Função que exerce</label>
+                                        <select name="funcao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="funcao" required>
+                                            {% for i in funcao %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione a função que exerce.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="op_adm" class="block mb-2 text-sm font-medium text-gray-400">Operacional ou Adm</label>
+                                        <select name="op_adm" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="op_adm" required>
+                                            {% for i in op_adm %}
+                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, selecione se é operacional ou administrativo.
+                                        </div>
+                                    </div>
+                                
+                                    <div>
+                                        <label for="apresentacao_na_unidade" class="block mb-2 text-sm font-medium text-gray-400">Data da Apresentação</label>
+                                        <input type="date" name="apresentacao_na_unidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="apresentacao_na_unidade" required>
+                                        <div class="text-red-500 text-sm mt-1 hidden">
+                                            Por favor, insira a data da apresentação na unidade.
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                                <div class="flex justify-end space-x-2">
+                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#newSituacaoModal">Cancelar</button>
+                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- Documentos e Contatos -->
+        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
+            <div class="flex-grow"> <!-- Conteúdo principal -->
+                <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Documentos e Contatos
+                </h2>
+                <hr class="my-4 border-gray-200">
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">CPF:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.cpf|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">RG:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.rg|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">E-mail:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.email|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Telefone:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.telefone|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Matrícula:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.matricula|date:"d/m/Y"|default:"-" }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-gray-600 font-medium">Admissão:</span>
+                        <span class="text-gray-800 font-semibold">{{ cadastro.admissao|date:"d/m/Y"|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé fixo -->
+            <div class="mt-auto pt-4">
+                <button type="button" class="mt-4 w-2/4 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all" data-modal-target="#editarDadosPessoaisModal">
+                    Editar Dados Pessoais e Contatos
+                </button>
+            </div>
+               <!-- Modal de Edição de Dados Pessoais e Contatos -->
+               <div id="editarDadosPessoaisModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
+                    <div class="flex justify-between items-center p-4 bg-gray-800">
+                        <h5 class="text-xl text-gray-200">Editar Dados Pessoais e Contatos</h5>
+                        <button type="button" class="text-gray-300 hover:text-gray-500" data-modal-close="#editarDadosPessoaisModal">&times;</button>
+                    </div>
+                    <div class="p-4">
+                        <br><br>
+                        <form method="POST" action="{% url 'efetivo:editar_dados_pessoais_contatos' cadastro.id %}" enctype="multipart/form-data" id="editForm1">
+                            {% csrf_token %}
+                        
+                                <div class="grid grid-cols-3 gap-4">
+                                    
+                                        <div>
+                                            <label for="re" class="block text-sm font-medium text-gray-400 dark:text-white">RE</label>
+                                            <input type="text" name="re" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="re" value="{{ cadastro.re }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="dig" class="block text-sm font-medium text-gray-400 dark:text-white">Dig</label>
+                                            <input type="text" name="dig" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="dig" value="{{ cadastro.dig }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="nome" class="block text-sm font-medium text-gray-400 dark:text-white">Nome</label>
+                                            <input type="text" name="nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nome" value="{{ cadastro.nome }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="nome_de_guerra" class="block text-sm font-medium text-gray-400 dark:text-white">Nome de Guerra</label>
+                                            <input type="text" name="nome_de_guerra" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nome_de_guerra" value="{{ cadastro.nome_de_guerra }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="genero" class="block text-sm font-medium text-gray-400 dark:text-white">Gênero</label>
+                                            <select name="genero" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="genero" required>
+                                                {% for i in genero %}
+                                                <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="nasc" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Nascimento</label>
+                                            <input type="date" name="nasc" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nasc" value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="matricula" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Matrícula</label>
+                                            <input type="date" name="matricula" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="matricula" value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="admissao" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Admissão</label>
+                                            <input type="date" name="admissao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="admissao" value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="previsao_de_inatividade" class="block text-sm font-medium text-gray-400 dark:text-white">Prev. de Inatividade</label>
+                                            <input type="date" name="previsao_de_inatividade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="previsao_de_inatividade" value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="cpf" class="block text-sm font-medium text-gray-400 dark:text-white">CPF</label>
+                                            <input type="text" name="cpf" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cpf" value="{{ cadastro.cpf }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="rg" class="block text-sm font-medium text-gray-400 dark:text-white">RG</label>
+                                            <input type="text" name="rg" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="rg" value="{{ cadastro.rg }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="tempo_para_averbar_inss" class="block text-sm font-medium text-gray-400 dark:text-white">INSS</label>
+                                            <input type="text" name="tempo_para_averbar_inss" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="tempo_para_averbar_inss" value="{{ cadastro.tempo_para_averbar_inss }}">
+                                        </div>
+                                        <div>
+                                            <label for="tempo_para_averbar_militar" class="block text-sm font-medium text-gray-400 dark:text-white">Militar</label>
+                                            <input type="text" name="tempo_para_averbar_militar" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="tempo_para_averbar_militar" value="{{ cadastro.tempo_para_averbar_militar }}">
+                                        </div>
+                                        <div>
+                                            <label for="email" class="block text-sm font-medium text-gray-400 dark:text-white">Email</label>
+                                            <input type="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="email" value="{{ cadastro.email}}" required>
+                                        </div>
+                                        <div>
+                                            <label for="telefone" class="block text-sm font-medium text-gray-400 dark:text-white">Telefone</label>
+                                            <input type="tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="telefone" value="{{ cadastro.telefone }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="alteracao" class="block text-sm font-medium text-gray-400 dark:text-white">Motivo da Alteração</label>
+                                            <select name="alteracao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="alteracao" required>
+                                                {% for i in alteracao %}
+                                                <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    
+                            <div class="flex justify-end space-x-2 mt-4">
+
+                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#editarDadosPessoaisModal">Cancelar</button>
+                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#confirmModal-geral">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Confirmação -->
+            <div id="confirmModal-geral" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
+                    <div class="flex justify-between items-center p-4 bg-gray-800">
+                        <h5 class="text-xl text-gray-200">Confirmar Alterações</h5>
+                        <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close="#confirmModal-geral">&times;</button>
+                    </div>
+                    <br>
+                    <br>
+                    <div class="p-4 text-gray-400">
+                        Tem certeza de que deseja salvar as alterações?
+                    </div>
+                    <div class="flex justify-end space-x-2 p-4">
+
+                        <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#confirmModal-geral">Cancelar</button>
+                        <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"  id="confirmSave1">Salvar</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const openModalButtons = document.querySelectorAll('[data-modal-target]');
+                    const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+
+                    openModalButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            const modal = document.querySelector(button.dataset.modalTarget);
+                            openModal(modal);
+                        });
+                    });
+
+                    closeModalButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            const modal = button.closest('.fixed');
+                            closeModal(modal);
+                        });
+                    });
+
+                    function openModal(modal) {
+                        if (modal == null) return;
+                        modal.classList.remove('hidden');
+                    }
+
+                    function closeModal(modal) {
+                        if (modal == null) return;
+                        modal.classList.add('hidden');
+                    }
+
+                    const confirmSave1 = document.getElementById('confirmSave1');
+                    confirmSave1.addEventListener('click', () => {
+                        document.getElementById('editForm1').submit();
+                        const modal = document.getElementById('confirmModal-geral');
+                        closeModal(modal);
+                    });
+                });
+            </script>
+        </fieldset>
     </div>
-  </div>
 
-</div>
 
-<!-- Scripts organizados por funcionalidade -->
-<script>
-/**************************************************
- * FUNÇÕES PARA VISUALIZAÇÃO DE ARQUIVOS
- **************************************************/
- function carregarArquivo(url, tipo, counter) {
-    const visualizador = document.getElementById('arquivo-principal');
-    const placeholder = visualizador.querySelector('.placeholder');
-    const controls = visualizador.querySelector('#image-controls');
-    const fullscreenBtn = visualizador.querySelector('#fullscreen-button');
-    
-    // Limpa o visualizador
-    visualizador.innerHTML = '';
-    visualizador.appendChild(placeholder);
-    visualizador.appendChild(controls);
-    visualizador.appendChild(fullscreenBtn);
-    
-    // Esconde o placeholder
-    placeholder.classList.add('hidden');
-    
-    // Mostra controles se for imagem
-    if (tipo === 'IMAGEM') {
-        controls.classList.remove('hidden');
-        fullscreenBtn.classList.remove('hidden');
-    } else {
-        controls.classList.add('hidden');
-        fullscreenBtn.classList.add('hidden');
-    }
-    
-    // Cria elemento baseado no tipo
-    switch(tipo) {
-        case 'IMAGEM':
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = 'max-w-full max-h-full object-contain';
-            img.onload = () => {
-                placeholder.classList.add('hidden');
-                visualizador.insertBefore(img, controls);
-                currentImageElement = img;
-                currentZoom = 1;
-            };
-            break;
-            
-        case 'VIDEO':
-            const videoWrapper = document.createElement('div');
-            videoWrapper.className = 'video-wrapper w-full h-full flex items-center justify-center';
-            
-            const video = document.createElement('video');
-            video.src = url;
-            video.controls = true;
-            video.className = 'video-player';
-            
-            videoWrapper.appendChild(video);
-            visualizador.insertBefore(videoWrapper, controls);
-            break;
-            
-        case 'PDF':
-            const pdfContainer = document.createElement('div');
-            pdfContainer.className = 'w-full h-full flex items-center justify-center';
-            pdfContainer.innerHTML = `
-                <iframe src="${url}" class="w-full h-full border-none"></iframe>
-            `;
-            visualizador.insertBefore(pdfContainer, controls);
-            break;
-            
-        default:
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.className = 'flex flex-col items-center justify-center w-full h-full p-4 text-blue-600';
-            downloadLink.innerHTML = `
-                <i class="fas fa-file-download text-4xl mb-2"></i>
-                <span class="text-lg">Clique para baixar</span>
-                <span class="text-sm text-gray-500 mt-1">Arquivo não suportado para visualização</span>
-            `;
-            downloadLink.target = '_blank';
-            visualizador.insertBefore(downloadLink, controls);
-    }
-}
-
-/**************************************************
- * FUNÇÕES PARA GERENCIAMENTO DE ARQUIVOS (MODAL)
- **************************************************/
-// Na seção de FUNÇÕES PARA GERENCIAMENTO DE ARQUIVOS (MODAL)
-function adicionarCampo() {  // Mudei o nome para adicionarCampo para bater com o onclick
-    const container = document.getElementById('camposArquivos');
-    const novoCampo = document.createElement('div');
-    novoCampo.className = 'flex gap-3 items-center campo-arquivo mt-3';
-    novoCampo.innerHTML = `
-        <input type="file" name="novos_arquivos[]"
-               class="flex-1 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
-                      file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100">
-        <select name="novos_tipos[]" class="w-32 px-3 py-2 border rounded-lg text-sm">
-            <option value="">Selecione...</option>
-            <option value="PDF">PDF</option>
-            <option value="VIDEO">Vídeo</option>
-            <option value="AUDIO">Áudio</option>
-            <option value="DOC">Documento</option>
-            <option value="SHEET">Planilha</option>
-            <option value="IMAGEM">Imagem</option>
-            <option value="OUTRO">Outro</option>
-        </select>
-        <button type="button" onclick="removerCampo(this)" 
-                class="text-red-500 hover:text-red-700 p-2">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(novoCampo);
-}
-
-function removerCampo(btn) {
-    const campos = document.querySelectorAll('.campo-arquivo');
-    if (campos.length > 1) {
-        btn.closest('.campo-arquivo').remove();
-    }
-}
-
-async function excluirArquivo(arquivoId) {
-    if (!confirm('Tem certeza que deseja excluir este arquivo?')) return;
-    
-    try {
-        const response = await fetch(`/documentos/arquivo/excluir/${arquivoId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Accept': 'application/json',
-            }
-        });
-        
-        if (response.ok) {
-            showNotification('Sucesso', 'Arquivo excluído com sucesso', true);
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            throw new Error('Erro ao excluir arquivo');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        showNotification('Erro', error.message || 'Falha na comunicação com o servidor', false);
-    }
-}
-    document.addEventListener('DOMContentLoaded', function() {
-        // Configura o botão de adicionar campo
-        const btnAdicionar = document.querySelector('[onclick="adicionarCampo()"]');
-        if (btnAdicionar) {
-            btnAdicionar.addEventListener('click', adicionarCampo);
-        }
-        
-        // Remove os eventos onclick inline e substitui por event listeners
-        document.querySelectorAll('[onclick^="excluirArquivo("]').forEach(btn => {
-            const arquivoId = btn.getAttribute('onclick').match(/excluirArquivo\((\d+)\)/)[1];
-            btn.removeAttribute('onclick');
-            btn.addEventListener('click', () => excluirArquivo(arquivoId));
-        });
-    });
-/**************************************************
- * FUNÇÕES PARA ENVIO DE FORMULÁRIO (MODAL)
- **************************************************/
-document.getElementById('formArquivos').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const btnSalvar = document.getElementById('btnSalvar');
-    
-    // Adiciona o ID do documento
-    formData.append('documento_id', '{{ documento.pk }}');
-    
-    btnSalvar.disabled = true;
-    btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
-    
-    try {
-        // Filtra apenas os arquivos com arquivo selecionado
-        const arquivos = formData.getAll('novos_arquivos[]');
-        const tipos = formData.getAll('novos_tipos[]');
-        
-        const arquivosValidos = arquivos.filter((arquivo, index) => {
-            return arquivo.size > 0 && tipos[index];
+      
+ 
+    <script>
+        <script>
+// Adicione este script no final do body ou garanta que ele rode após o DOM estar carregado
+document.addEventListener('DOMContentLoaded', () => {
+    // Função genérica para controle de modais
+    const modalController = (openButtons, closeButtons) => {
+        openButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const target = button.dataset.modalTarget;
+                const modal = document.querySelector(target);
+                if (modal) modal.classList.remove('hidden');
+            });
         });
 
-        // Se não há arquivos válidos, apenas fecha o modal
-        if (arquivosValidos.length === 0) {
-            closeModal('modalArquivos');
-            return;
-        }
-
-        // Envia apenas os arquivos válidos
-        const formDataFiltrado = new FormData();
-        formDataFiltrado.append('documento_id', '{{ documento.pk }}');
-        formDataFiltrado.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        
-        arquivosValidos.forEach((arquivo, index) => {
-            formDataFiltrado.append('novos_arquivos[]', arquivo);
-            formDataFiltrado.append('novos_tipos[]', tipos[index]);
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.fixed');
+                if (modal) modal.classList.add('hidden');
+            });
         });
+    };
 
-        const response = await fetch("{% url 'documentos:editar_documento_arquivos' documento.pk %}", {
-            method: 'POST',
-            body: formDataFiltrado,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
+    // Configurar para todos os modais
+    const allOpenButtons = document.querySelectorAll('[data-modal-target]');
+    const allCloseButtons = document.querySelectorAll('[data-modal-close]');
+    modalController(allOpenButtons, allCloseButtons);
 
-        // Verifica se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(text.includes('CSRF verification failed') ? 
-                'Sessão expirada. Por favor, recarregue a página.' : 
-                'Resposta inválida do servidor');
-        }
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || `Erro ${response.status}`);
-        }
-
-        if (data.success) {
-            showNotification('Sucesso', data.message || 'Arquivos salvos com sucesso', true);
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            throw new Error(data.error || 'Erro ao processar a requisição');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        showNotification('Erro', error.message || 'Erro na comunicação com o servidor', false);
-        
-        if (error.message.includes('Sessão expirada')) {
-            setTimeout(() => location.reload(), 2000);
-        }
-    } finally {
-        btnSalvar.disabled = false;
-        btnSalvar.innerHTML = '<i class="fas fa-save mr-2"></i> Salvar';
+    // Funções específicas para o modal de confirmação
+    function showConfirmation() {
+        document.getElementById('confirmModal').classList.remove('hidden');
     }
+
+    function closeConfirmation() {
+        document.getElementById('confirmModal').classList.add('hidden');
+    }
+
+    function submitForm() {
+        document.getElementById('editForm').submit();
+        closeConfirmation();
+    }
+
+    // Atribuir eventos aos botões de confirmação
+    document.getElementById('confirmSave')?.addEventListener('click', submitForm);
 });
 
-/**************************************************
- * FUNÇÕES PARA CONTROLE DE MODAIS
- **************************************************/
-function openModal(modalId) {
-    document.getElementById(modalId).classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-}
+// Função de preview de imagem (mantida igual)
+function previewImage(event) {
+    const reader = new FileReader();
+    const preview = document.getElementById('preview');
+    const icon = preview.parentElement.querySelector('svg');
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
-
-/**************************************************
- * FUNÇÕES PARA NOTIFICAÇÕES
- **************************************************/
-function showNotification(title, message, isSuccess = true) {
-    const modal = document.getElementById('notificationModal');
-    const titleEl = document.getElementById('notificationTitle');
-    const messageEl = document.getElementById('notificationMessage');
-    
-    titleEl.className = `text-xl font-bold ${isSuccess ? 'text-green-600' : 'text-red-600'}`;
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    
-    modal.classList.remove('hidden');
-}
-
-function hideNotification() {
-    document.getElementById('notificationModal').classList.add('hidden');
-}
-
-/**************************************************
- * INICIALIZAÇÃO
- **************************************************/
-document.addEventListener('DOMContentLoaded', function() {
-    // Configurações iniciais se necessário
-});
-
-
-/**************************************************
- * FUNÇÕES PARA EXCLUSAO DE ARQUIVOS
- **************************************************/
- async function excluirArquivo(arquivoId) {
-    if (!confirm('Tem certeza que deseja excluir este arquivo?')) return;
-    
-    try {
-        const response = await fetch(`/documentos/arquivo/excluir/${arquivoId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Accept': 'application/json',
-            }
-        });
-
-        // Verifica se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(text.includes('CSRF verification failed') ? 
-                'Sessão expirada. Por favor, recarregue a página.' : 
-                'Resposta inválida do servidor');
-        }
-
-        const data = await response.json();
-        
-        if (response.ok) {
-            showNotification('Sucesso', data.message || 'Arquivo excluído com sucesso', true);
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            throw new Error(data.error || 'Erro ao excluir arquivo');
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        showNotification('Erro', error.message || 'Falha na comunicação com o servidor', false);
-        
-        // Se for erro de CSRF, recarrega a página
-        if (error.message.includes('Sessão expirada')) {
-            setTimeout(() => location.reload(), 2000);
-        }
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.classList.remove('hidden');
+        icon?.classList.add('hidden');
     }
+    reader.readAsDataURL(event.target.files[0]);
 }
 </script>
+    // Controle do Modal
+    function openDeleteModal() {
+        document.getElementById('exampleModal').classList.remove('hidden');
+        document.getElementById('passwordInput').focus();
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('exampleModal').classList.add('hidden');
+        document.getElementById('passwordError').classList.add('hidden');
+    }
+    
+    // Tratamento de mensagens de erro
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.extra_tags == 'delete_error' %}
+                document.getElementById('passwordError').innerText = '{{ message }}';
+                document.getElementById('passwordError').classList.remove('hidden');
+                openDeleteModal();
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    </script>
+     </fieldset>
 
-<!-- Scripts externos -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-{% endblock %}
+        <script>
+            function validatePassword() {
+                const password = document.getElementById('password').value;
+                const correctPassword = 'suaSenhaAqui'; // Substitua por sua lógica de verificação de senha
+        
+                if (password === correctPassword) {
+                    window.location.href = "{% url 'efetivo:excluir_militar' cadastro.id %}";
+                } else {
+                    alert('Senha incorreta. Tente novamente.');
+                }
+            }
+        
+            document.querySelectorAll('[data-modal-target]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = document.querySelector(button.getAttribute('data-modal-target'));
+                    modal.classList.remove('hidden');
+                });
+            });
+        
+            document.querySelectorAll('[data-modal-close]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = document.querySelector(button.getAttribute('data-modal-close'));
+                    modal.classList.add('hidden');
+                });
+            });
+        </script>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const openModalButtons = document.querySelectorAll('[data-modal-target]');
+                const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+    
+                openModalButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const modal = document.querySelector(button.dataset.modalTarget);
+                        openModal(modal);
+                    });
+                });
+    
+                closeModalButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const modal = button.closest('.fixed');
+                        closeModal(modal);
+                    });
+                });
+    
+                function openModal(modal) {
+                    if (modal == null) return;
+                    modal.classList.remove('hidden');
+                }
+    
+                function closeModal(modal) {
+                    if (modal == null) return;
+                    modal.classList.add('hidden');
+                }
+            });
+        </script>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openModalButtons = document.querySelectorAll('[data-modal-target]');
+            const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+    
+            openModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = document.querySelector(button.dataset.modalTarget);
+                    openModal(modal);
+                });
+            });
+    
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.fixed');
+                    closeModal(modal);
+                });
+            });
+    
+            function openModal(modal) {
+                if (modal == null) return;
+                modal.classList.remove('hidden');
+            }
+    
+            function closeModal(modal) {
+                if (modal == null) return;
+                modal.classList.add('hidden');
+            }
+        });
+        </script>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openModalButtons = document.querySelectorAll('[data-modal-target]');
+            const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+            
+            openModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = document.querySelector(button.dataset.modalTarget);
+                    openModal(modal);
+                });
+            });
+            
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.fixed');
+                    closeModal(modal);
+                });
+            });
+            
+            function openModal(modal) {
+                if (modal == null) return;
+                modal.classList.remove('hidden');
+            }
+            
+            function closeModal(modal) {
+                if (modal == null) return;
+                modal.classList.add('hidden');
+            }
+            
+            const editSituacaoForm = document.getElementById('editSituacaoForm');
+            editSituacaoForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const formData = new FormData(editSituacaoForm);
+                fetch(editSituacaoForm.action, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const choiceModal = document.getElementById('choiceModal');
+                        openModal(choiceModal);
+                    } else {
+                        alert('Erro ao salvar a situação atual.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao salvar a situação atual.');
+                });
+            });
+            
+            const newSituacaoForm = document.getElementById('newSituacaoForm');
+            newSituacaoForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                newSituacaoForm.submit();
+            });
+        });
+   </script>
+        
+<script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+</body>
 
+{% endblock  %}
