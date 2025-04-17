@@ -62,7 +62,7 @@ def index(request):
         for cargo in ['Ch Seç Adm', 'Cmt do 1º SGB', 'Cmt do 2º SGB', 
                      'Cmt do 3º SGB', 'Cmt do 4º SGB', 'Cmt do 5º SGB']
     }
-    # Buscar as 2 últimas publicações de imagens para o carrossel
+   # Buscar as 2 últimas publicações de imagens para o carrossel
     imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')[:2]
 
   # Aniversariantes - agora sem paginação

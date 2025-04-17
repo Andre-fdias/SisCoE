@@ -9,27 +9,56 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/pt-br.js"></script>
+<style>
 
+.fc-view-container {
+        overflow: hidden !important;
+        height: 100% !important;
+    }
 
-<div class="md:items-center md:justify-between rounded-lg mt-2 w-full" id="cad_efetivo">
-    <fieldset class=" p-4 mb-2 rounded-md w-full" id="second-fieldset">
+    .fc-toolbar {
+        @apply text-blue-900;
+    }
 
-        <fieldset class="bg-gray-800 p-2  rounded-md w-full" id="first-fieldset">
-            <div id="01" class="mb-4">
-                <div class="bg-gray-800 p-4 rounded-md">
-                    <div class="flex flex-wrap items-center justify-between py-3">
-                        <div class="col-12 md:w-auto">
-                            <h1 class="text-3xl text-gray-200">Agenda Pessoal</h1>
-                            <p class="text-gray-400" >Consulte abaixo seus compromisso.</p>
-                        </div>
-                        <div class="w-full md:w-auto text-right">
-                           
-                            <button onclick="openModal('escolhaModal')" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">+ Adicionar</button>
-                        </div>
+    .fc-button-primary {
+        @apply bg-blue-600 border-blue-700 hover:bg-blue-700 !important;
+    }
+
+    .fc-event {
+        @apply border-blue-100 bg-blue-600/90 hover:bg-blue-700 transition-colors;
+    }
+
+    .fc-day-header {
+        @apply bg-blue-50 text-blue-900 font-medium;
+    }
+
+    .fc-today {
+        @apply bg-blue-50/50;
+    }
+</style>
+
+<div class="md:items-center md:justify-between rounded-lg mt-2 w-full">
+    <fieldset class="p-4 mb-2 rounded-md w-full">
+        <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-xl shadow-2xl border-0">
+            <div class="p-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">Agenda Pessoal</h1>
+                        <p class="text-blue-200 mt-1 tracking-wide">Consulte abaixo seus compromissos</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <button onclick="openModal('escolhaModal')" 
+                                class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br 
+                                       focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 
+                                       font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+                            + Adicionar Evento
+                        </button>
                     </div>
                 </div>
             </div>
-         </fieldset>
+        </fieldset>
+
+ 
          <fieldset class="bg-gray-100 p-4 mb-8 rounded-md w-full" id="first-fieldset">   
             <legend  class=" mb-8 rounded-md w-full" >
                 {% if messages %}
@@ -42,130 +71,175 @@
             </legend>   
         
 
-            <div class="flex flex-col min-h-screen w-full">
-                <!-- Cabeçalho e outros elementos (se houver) -->
-                <div class="flex-grow">
-                    <div id="calendar" class="h-full w-full"></div>
-                </div>
-            </div>
-
-            <div id="escolhaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-                    <div class="flex items-center justify-between p-4 border-b">
-                        <h3 class="text-lg font-semibold text-gray-900">Escolha o Tipo de Cadastro</h3>
-                        <button type="button" onclick="closeModal('escolhaModal')" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <button onclick="openModal('lembreteModal'); closeModal('escolhaModal')" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                            Cadastrar Lembrete
-                        </button>
-                        <button onclick="openModal('tarefaModal'); closeModal('escolhaModal')" class="w-full text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                            Cadastrar Tarefa
-                        </button>
+            <fieldset class="bg-white p-4 mb-8 rounded-xl shadow-md w-full">
+                <div class="flex flex-col min-h-screen w-full">
+                    <div class="flex-grow">
+                        <div id="calendar" class="h-full w-full rounded-lg overflow-hidden border border-blue-50"></div>
                     </div>
                 </div>
+            </fieldset>
+    
+ <!-- Modal Escolha Tipo Evento -->
+<div id="escolhaModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+        <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-6 rounded-t-xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-calendar-plus mr-2"></i>
+                    Novo Evento
+                </h3>
+                <button type="button" onclick="closeModal('escolhaModal')" 
+                        class="text-indigo-100 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
+        </div>
 
-
-
-<!-- Modal para Tarefa -->
-<div id="tarefaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-        <div class="flex items-center justify-between p-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-900">Nova Tarefa</h3>
-            <button type="button" onclick="closeModal('tarefaModal')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+        <div class="p-6 space-y-4 bg-gray-50">
+            <button onclick="openModal('lembreteModal'); closeModal('escolhaModal')" 
+                    class="w-full flex items-center justify-center p-4 bg-white rounded-lg border border-indigo-100 
+                           hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm">
+                <i class="fas fa-bell text-indigo-600 mr-3"></i>
+                <span class="font-medium text-gray-700">Cadastrar Lembrete</span>
+            </button>
+            
+            <button onclick="openModal('tarefaModal'); closeModal('escolhaModal')" 
+                    class="w-full flex items-center justify-center p-4 bg-white rounded-lg border border-indigo-100 
+                           hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm">
+                <i class="fas fa-tasks text-indigo-600 mr-3"></i>
+                <span class="font-medium text-gray-700">Cadastrar Tarefa</span>
             </button>
         </div>
-        <form id="tarefaForm" method="post" action="{% url 'agenda:tarefa_nova' %}" onsubmit="submitForm(event, 'tarefaForm', 'tarefaModal')" class="p-4 space-y-4">
-            {% csrf_token %}
-            <div>
-                <label for="titulo" class="block text-sm font-medium text-gray-700">Título</label>
-                <input type="text" name="titulo" id="titulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite o título" required>
-            </div>
-            <div>
-                <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                <textarea id="descricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite a descrição"></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="data_inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
-                    <input type="datetime-local" name="data_inicio" id="data_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="data_fim" class="block text-sm font-medium text-gray-700">Data de Término</label>
-                    <input type="datetime-local" name="data_fim" id="data_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                </div>
-                <div>
-                    <label for="cor" class="block text-sm font-medium text-gray-700">Cor</label>
-                    <input type="color" name="cor" id="cor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="#3788d8" required>
-                </div>
-            </div>
-            <div class="mt-6 mb-8">
-                <button type="submit" class="mt-8 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                    Salvar Tarefa
+    </div>
+</div>
+
+    
+<!-- Modal Tarefa -->
+<div id="tarefaModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-500 text-white p-6 rounded-t-xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-tasks mr-2"></i>
+                    Nova Tarefa
+                </h3>
+                <button type="button" onclick="closeModal('tarefaModal')" 
+                        class="text-indigo-100 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
+            </div>
+        </div>
+
+        <form id="tarefaForm" method="post" action="{% url 'agenda:tarefa_nova' %}" 
+              class="p-6 space-y-6 bg-gray-50" onsubmit="submitForm(event, 'tarefaForm', 'tarefaModal')">
+            {% csrf_token %}
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        <i class="fas fa-heading mr-2 text-indigo-600"></i>
+                        Título
+                    </label>
+                    <input type="text" name="titulo" required
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                  focus:ring-2 focus:ring-indigo-200 bg-white placeholder-gray-400">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        <i class="fas fa-align-left mr-2 text-indigo-600"></i>
+                        Descrição
+                    </label>
+                    <textarea name="descricao" rows="3"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                  focus:ring-2 focus:ring-indigo-200 bg-white placeholder-gray-400"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-clock mr-2 text-indigo-600"></i>
+                            Início
+                        </label>
+                        <input type="datetime-local" name="data_inicio" required
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                      focus:ring-2 focus:ring-indigo-200 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-flag-checkered mr-2 text-indigo-600"></i>
+                            Término
+                        </label>
+                        <input type="datetime-local" name="data_fim" required
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                      focus:ring-2 focus:ring-indigo-200 bg-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-palette mr-2 text-indigo-600"></i>
+                            Cor
+                        </label>
+                        <input type="color" name="cor" value="#2563eb" required
+                               class="w-full h-10 rounded-lg border-2 border-gray-200 cursor-pointer shadow-sm">
+                    </div>
+                </div>
+
+                <div class="sticky bottom-0 bg-gray-50 pt-6">
+                    <button type="submit" 
+                            class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 
+                                   transition-colors shadow-md font-medium">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar Tarefa
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
+
+
 <!-- Modal de Visualização -->
+
 <div id="visualizarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-        <!-- Cabeçalho do Modal -->
+    <div class="bg-white rounded-lg shadow-lg max-w-[90vw] max-h-[90vh] w-2/3 md:max-w-[50vw] md:max-h-[80vh] mx-auto">
         <div class="flex justify-between items-center p-4 border-b">
             <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Detalhes do Evento</h3>
             <div class="flex space-x-2">
-              
-                    <!-- Botão de Editar -->
-        <button onclick="abrirModalEdicao()" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-            </svg>
-        </button>
-        <!-- Botão de Excluir -->
-        <button onclick="abrirModalExclusao()" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-        </button>
-          <!-- Botão de Fechar -->
-          <button onclick="closeModal('visualizarModal')" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-        </button>
+                <button onclick="abrirModalEdicao()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                </button>
+                <button onclick="abrirModalExclusao()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+                <button onclick="closeModal('visualizarModal')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- Corpo do Modal -->
-        <div class="p-4 space-y-4">
-            <!-- Ícone de Cor -->
+        <div class="p-4 space-y-4 overflow-y-auto max-h-[calc(80vh-100px)]">
             <div class="flex items-center space-x-2">
                 <div class="w-4 h-4 rounded-full" id="eventoCor" style="background-color: #3788d8;"></div>
                 <span id="eventoTitulo" class="text-xl font-semibold">Título do Evento</span>
             </div>
 
-            <!-- Data e Hora -->
             <div>
                 <span class="text-sm text-gray-600">Data:</span>
                 <span id="eventoData" class="text-sm text-gray-900">10 de março de 2024</span>
             </div>
 
-            <!-- Descrição -->
-            <div>
+            <div class="max-h-[30vh] overflow-y-auto">
                 <span class="text-sm text-gray-600">Descrição:</span>
-                <p id="eventoDescricao" class="text-sm text-gray-900">Descrição do evento.</p>
+                <p id="eventoDescricao" class="text-sm text-gray-900">Descrição do evento. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
             </div>
 
-            <!-- Organizador -->
             <div>
                 <span class="text-sm text-gray-600">Organizador:</span>
                 <span id="eventoOrganizador" class="text-sm text-gray-900">Nome do Organizador</span>
@@ -350,6 +424,87 @@
 </div>
 
     </fieldset>
+    <!-- Modal de Edição para Lembretes -->
+<div id="editarLembreteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Editar Lembrete</h3>
+            <button type="button" onclick="closeModal('editarLembreteModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="editarLembreteForm" method="post" action="" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="editarLembreteTitulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="editarLembreteTitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarLembreteDescricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="editarLembreteDescricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+            <div>
+                <label for="editarLembreteData" class="block text-sm font-medium text-gray-700">Data</label>
+                <input type="datetime-local" name="data" id="editarLembreteData" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarLembreteCor" class="block text-sm font-medium text-gray-700">Cor</label>
+                <input type="color" name="cor" id="editarLembreteCor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div class="mt-6 mb-8">
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Atualizar Lembrete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Edição para Tarefas -->
+<div id="editarTarefaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Editar Tarefa</h3>
+            <button type="button" onclick="closeModal('editarTarefaModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="editarTarefaForm" method="post" action="" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="editarTarefaTitulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="editarTarefaTitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarTarefaDescricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="editarTarefaDescricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="editarTarefaDataInicio" class="block text-sm font-medium text-gray-700">Data Início</label>
+                    <input type="datetime-local" name="data_inicio" id="editarTarefaDataInicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="editarTarefaDataFim" class="block text-sm font-medium text-gray-700">Data Término</label>
+                    <input type="datetime-local" name="data_fim" id="editarTarefaDataFim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="editarTarefaCor" class="block text-sm font-medium text-gray-700">Cor</label>
+                    <input type="color" name="cor" id="editarTarefaCor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+            </div>
+            <div class="mt-6 mb-8">
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Atualizar Tarefa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
     <script>
         function openModal(modalId) {
             document.getElementById(modalId).classList.remove('hidden');
@@ -377,8 +532,12 @@
     
         $(document).ready(function() {
             $('#calendar').fullCalendar({
-                height: 'parent',  // Corrigido - usa altura do container pai
+                height: 'parent',
                 contentHeight: 'auto',
+                handleWindowResize: true,
+                windowResize: function(view) {
+                    $('.fc-view-container').height($('#calendar').height());
+                },
                 header: {
                     left: 'prev,next today',
                     center: 'title',
@@ -609,19 +768,63 @@
             }
         }
         function abrirModalEdicao() {
-            // Fecha o modal de visualização
-            closeModal('visualizarModal');
+    closeModal('visualizarModal');
+    
+    if (eventoAtual.id.startsWith('lembrete-')) {
+        const form = document.getElementById('editarLembreteForm');
+        const id = eventoAtual.id.split('-')[1];
         
-            // Abre o modal de edição
-            openModal('editarModal');
+        form.action = `/agenda/lembrete/editar/${id}/`;
+        document.getElementById('editarLembreteTitulo').value = eventoAtual.title.replace(' (Lembrete)', '');
+        document.getElementById('editarLembreteDescricao').value = eventoAtual.descricao || '';
+        document.getElementById('editarLembreteData').value = moment(eventoAtual.start).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarLembreteCor').value = eventoAtual.color;
         
-            // Preenche os campos do modal de edição com os dados do evento atual
-            document.getElementById('editarTitulo').value = eventoAtual.title;
-            document.getElementById('editarDescricao').value = eventoAtual.descricao || '';
-            document.getElementById('editarDataInicio').value = eventoAtual.start.format('YYYY-MM-DDTHH:mm:ss');
-            document.getElementById('editarDataFim').value = eventoAtual.end ? eventoAtual.end.format('YYYY-MM-DDTHH:mm:ss') : '';
-            document.getElementById('editarCor').value = eventoAtual.color || '#3788d8';
+        openModal('editarLembreteModal');
+    } else if (eventoAtual.id.startsWith('tarefa-')) {
+        const form = document.getElementById('editarTarefaForm');
+        const id = eventoAtual.id.split('-')[1];
+        
+        form.action = `/agenda/tarefa/editar/${id}/`;
+        document.getElementById('editarTarefaTitulo').value = eventoAtual.title.replace(' (Tarefa)', '');
+        document.getElementById('editarTarefaDescricao').value = eventoAtual.descricao || '';
+        document.getElementById('editarTarefaDataInicio').value = moment(eventoAtual.start).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarTarefaDataFim').value = moment(eventoAtual.end).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarTarefaCor').value = eventoAtual.color;
+        
+        openModal('editarTarefaModal');
+    }
+}
+
+// Atualize a função submitForm para lidar com a edição
+function submitForm(event, formId, modalId) {
+    event.preventDefault();
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal(modalId);
+            $('#calendar').fullCalendar('refetchEvents');
+            showToast('Evento atualizado com sucesso!', 'success');
+        } else {
+            showToast(data.message || 'Erro ao atualizar evento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erro na comunicação com o servidor', 'error');
+    });
+}
         
         function abrirModalExclusao() {
             // Fecha o modal de visualização
@@ -632,7 +835,7 @@
         }
 
        
-        </script>
+    </script>
 
     
     </fieldset>

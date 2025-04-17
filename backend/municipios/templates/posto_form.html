@@ -2,363 +2,885 @@
 {% load static %}
 {% block title %}Cadastrar Posto{% endblock %}
 
-{% block 'body' %}
+<style>
+    .input-readonly {
+        @apply w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-medium 
+               cursor-default transition-colors duration-200 hover:border-gray-300;
+    }
+</style>
 
-    <br>
-<div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
-    <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
-      <fieldset class="bg-gray-800 p-4 mb-8 rounded-md">
-                <div id="01" class="mb-4">
-                    <div class="bg-gray-800 p-4 rounded-md">
-                        <div class="flex flex-wrap items-center justify-between py-3">
-                            <div class="w-full md:w-9/12">
-                                <h1 class="text-3xl text-gray-200">Cadastrar Posto</h1>
+{% block 'body' %}
+<body>
+    <div class="md:items-center md:justify-between rounded-lg mt-2 w-full" id="cad_posto">
+    
+    <fieldset class="p-4 mb-2 rounded-md w-full" id="second-fieldset">
+        <!-- Cabeçalho -->
+        <fieldset class="bg-gray-800 rounded-md shadow-lg mb-2 border-0">
+            <div class="p-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Título -->
+                    <div class="flex-1 min-w-[200px]">
+                        <h1 class="text-3xl font-bold text-gray-200 tracking-tight drop-shadow-md">Cadastrar Posto</h1>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                     
+                        <a href="{% url 'municipios:posto_list' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <!-- Mensagens -->
+        <fieldset class="space-y-3 mb-6">
+            {% if messages %}
+            {% for message in messages %}
+            <section class="alert {{ message.tags }} p-4 rounded-lg border-l-4 border-opacity-75 shadow-md">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if message.tags == 'success' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        {% endif %}
+                    </svg>
+                    {{ message }}
+                </div>
+            </section>
+            {% endfor %}
+            {% endif %}
+        </fieldset>
+        
+
+        <form class="needs-validation" novalidate action="{% if form.instance.pk %}{% url 'municipios:posto_update' form.instance.pk %}{% else %}{% url 'municipios:posto_create' %}{% endif %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Dados do Posto -->
+            <fieldset class="bg-gray-100 rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados do Posto</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label for="sgb" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">SGB *</label>
+                            <div class="relative">
+                                <select name="sgb" id="sgb" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    <option value="" disabled selected>Selecione o SGB</option>
+                                    <option value="EM">EM</option>
+                                    <option value="1ºSGB">1ºSGB</option>
+                                    <option value="2ºSGB">2ºSGB</option>
+                                    <option value="3ºSGB">3ºSGB</option>
+                                    <option value="4ºSGB">4ºSGB</option>
+                                    <option value="5ºSGB">5ºSGB</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
                             </div>
-                            <div class="w-full md:w-3/12 text-right">
-                                <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
-                                <a href="{% url 'municipios:posto_list' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
+                        </div>
+                    
+                        <div class="space-y-2">
+                            <label for="posto_secao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Seção *</label>
+                            <div class="relative">
+                                <select name="posto_secao" id="posto_secao" required disabled
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    <option value="" disabled selected>Primeiro selecione o SGB</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    
+                     
+                       <!-- Posto de Atendimento -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto de Atendimento</label>
+                            <div class="relative">
+                                <select name="posto_atendimento" id="posto_atendimento"
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 appearance-none
+                                               hover:border-gray-300 text-gray-700 font-medium
+                                               bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>')]
+                                               bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]" required>
+                                    {% for value, label in posto_atendimento_choices %}
+                                        <option value="{{ value }}" {% if posto.posto_atendimento == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="posto_atendimento_error">Por favor, selecione um posto de atendimento.</div>
+                        </div>
+                        
+                        <!-- Tipo de Cidade -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Tipo de Cidade</label>
+                            <div class="relative">
+                                <select name="tipo_cidade" id="tipo_cidade"
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 appearance-none
+                                               hover:border-gray-300 text-gray-700 font-medium
+                                               bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>')]
+                                               bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]" required>
+                                    {% for value, label in tipo_choices %}
+                                        <option value="{{ value }}" {% if posto.tipo_cidade == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="tipo_cidade_error">Por favor, selecione o tipo de cidade.</div>
+                        </div>
+                        
+                        <!-- Cidade do Posto/Seção -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Cidade do Posto/Seção</label>
+                            <div class="relative">
+                                <select name="cidade_posto" id="cidade_posto"
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 appearance-none
+                                               hover:border-gray-300 text-gray-700 font-medium
+                                               bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>')]
+                                               bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]" required>
+                                    {% for value, label in cidade_posto_choices %}
+                                        <option value="{{ value }}" {% if posto.cidade_posto == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="cidade_posto_error">Por favor, selecione uma.</div>
+                        </div>
+                        
+                        <!-- Operacional/Administrativo -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Operacional/Administrativo</label>
+                            <div class="relative">
+                                <select name="op_adm" id="op_adm"
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 appearance-none
+                                               hover:border-gray-300 text-gray-700 font-medium
+                                               bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>')]
+                                               bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]" required>
+                                    {% for value, label in op_adm_choices %}
+                                        <option value="{{ value }}" {% if posto.op_adm == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="operacional_ou_adm_error">Por favor, selecione o tipo de operação.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagem do Quartel -->
+                    <div class="mt-8 space-y-6">
+                        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Imagem do Quartel</h2>
+                        <hr class="border-t border-gray-100">
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <img id="preview" src="#" alt="Pré-visualização da imagem" class="hidden max-w-[200px] rounded-lg border border-gray-200 shadow-sm">
+                                    <div class="flex-1">
+                                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Envie uma foto do quartel</label>
+                                        <input type="file" name="image" id="image" accept="image/*" onchange="previewImage(event)"
+                                               class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                      shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                      transition-all duration-200
+                                                      hover:border-gray-300 text-gray-700 font-medium
+                                                      file:mr-4 file:py-2 file:px-4
+                                                      file:rounded-lg file:border-0
+                                                      file:text-sm file:font-semibold
+                                                      file:bg-gray-100 file:text-gray-700
+                                                      hover:file:bg-gray-200" required>
+                                    </div>
+                                </div>
+                                <div class="text-red-500 text-sm mt-1 hidden" id="image_error">Por favor, envie uma imagem de perfil.</div>
                             </div>
                         </div>
                     </div>
                 </div>
-      </fieldset>
-
-      <form class="row g-3 needs-validation" novalidate action="{% if form.instance.pk %}{% url 'municipios:posto_update' form.instance.pk %}{% else %}{% url 'municipios:posto_create' %}{% endif %}" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-      <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-            <div class="mb-4">
-                <p class="text-lg font-bold">Dados do Posto</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Campos do Posto -->
-                <div>
-                <label for="sgb" class="block text-sm font-medium text-gray-700">SGB</label>
-                <select name="sgb" id="sgb" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for value, label in sgb_choices %}
-                        <option value="{{ value }}" {% if posto.sgb == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="sgb_error">Por favor, selecione um SGB.</div>
-                </div>
-                <div>
-                    <label for="posto_secao" class="block text-sm font-medium text-gray-700">Posto/Seção</label>
-                    <select name="posto_secao" id="posto_secao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for value, label in posto_secao_choices %}
-                            <option value="{{ value }}" {% if posto.posto_secao == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="posto_secao_error">Por favor, selecione um posto/seção.</div>
-                </div>
-                <div>
-                    <label for="posto_atendimento" class="block text-sm font-medium text-gray-700">Posto de Atendimento</label>
-                    <select name="posto_atendimento" id="posto_atendimento" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for value, label in posto_atendimento_choices %}
-                            <option value="{{ value }}" {% if posto.posto_atendimento == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="posto_atendimento_error">Por favor, selecione um posto de atendimento.</div>
-                </div>
-                <div>
-                    <label for="tipo_cidade" class="block text-sm font-medium text-gray-700">Tipo de Cidade</label>
-                    <select name="tipo_cidade" id="tipo_cidade" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for value, label in tipo_choices %}
-                            <option value="{{ value }}" {% if posto.tipo_cidade == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="tipo_cidade_error">Por favor, selecione o tipo de cidade.</div>
-                </div>
-                <div>
-                    <label for="cidade_posto" class="block text-sm font-medium text-gray-700">Cidade do Posto/Seção</label>
-                    <select name="cidade_posto" id="cidade_posto" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for value, label in cidade_posto_choices %}
-                            <option value="{{ value }}" {% if posto.cidade_posto == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="cidade_posto_error">Por favor, selecione uma.</div>
-                </div>
-
-                <div>
-                    <label for="op_adm" class="block text-sm font-medium text-gray-700">Operacional/Administrativo</label>
-                    <select name="op_adm" id="op_adm" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for value, label in op_adm_choices %}
-                            <option value="{{ value }}" {% if posto.op_adm == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="operacional_ou_adm_error">Por favor, selecione o tipo de operação.</div>
-                </div>
-            </div>
-            <br>
-            <br>
-
-            <div>
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="mb-4">
-                        <p class="text-lg font-bold">Imagem do Quartel</p>
-                    </div>
-                    <div class="mb-3">
-                        <label for="image" class="block text-sm font-medium text-gray-700">Envie uma foto do quartel</label>
-                        <br><br>
-                        <img id="preview" src="#" alt="Pré-visualização da imagem" style="display: none; max-width: 200px;">
-                        <br><br>
-                        <input class="mt-1 block w-full text-base border-gray-300 border-blue-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" name="image" type="file" id="image" accept="image/*" onchange="previewImage(event)" required>
-                        <div class="text-red-500 text-sm mt-1 hidden" id="image_error">Por favor, envie uma imagem de perfil.</div>
-                    </div>
-                    <div class="flex justify-start">
-                        <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 remove-cidade">Remover</button>
-                    </div>
-                </div>
-            </div>
-    </fieldset>
-                
-
-                            <!-- Campos para Contato -->
-                <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-                    <div class="mb-4">
-                        <p class="text-lg font-bold">Endereço e Contato</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                            <label for="cep" class="block text-sm font-medium text-gray-700">CEP</label>
-                            <input type="text" name="cep" id="cep" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required oninput="buscarEnderecoPorCEP(this.value)">
+            </fieldset>
+            
+            <!-- Endereço e Contato -->
+            <fieldset class="bg-gray-100 rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Endereço e Contato</h2>
+                    <h2 class="text-xs font-semibold text-gray-500  tracking-widest mb-2">Digite o cep abaixo e espere carregar as informações</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- CEP -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">CEP</label>
+                            <input type="text" name="cep" id="cep" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite o CEP" required oninput="buscarEnderecoPorCEP(this.value)">
                             <div class="text-red-500 text-sm mt-1 hidden" id="cep_error">Por favor, insira o CEP.</div>
                         </div>
-                   
-                        <div>
-                            <label for="rua" class="block text-sm font-medium text-gray-700">Rua</label>
-                            <input type="text" name="rua" id="rua" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Rua -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Rua</label>
+                            <input type="text" name="rua" id="rua" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite a rua" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="rua_error">Por favor, insira a rua.</div>
                         </div>
-                        <div>
-                            <label for="numero" class="block text-sm font-medium text-gray-700">Número</label>
-                            <input type="text" name="numero" id="numero" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Número -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Número</label>
+                            <input type="text" name="numero" id="numero" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite o número" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="numero_error">Por favor, insira o número.</div>
                         </div>
-                        <div>
-                            <label for="complemento" class="block text-sm font-medium text-gray-700">Complemento</label>
-                            <input type="text" name="complemento" id="complemento" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        
+                        <!-- Complemento -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Complemento</label>
+                            <input type="text" name="complemento" id="complemento" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite o complemento">
                         </div>
-                        <div>
-                            <label for="bairro" class="block text-sm font-medium text-gray-700">Bairro</label>
-                            <input type="text" name="bairro" id="bairro" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Bairro -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Bairro</label>
+                            <input type="text" name="bairro" id="bairro" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite o bairro" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="bairro_error">Por favor, insira o bairro.</div>
                         </div>
-                        <div>
-                            <label for="cidade" class="block text-sm font-medium text-gray-700">Cidade</label>
-                            <input type="text" name="cidade" id="cidade" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Cidade -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Cidade</label>
+                            <input type="text" name="cidade" id="cidade" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite a cidade" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="cidade_error">Por favor, insira a cidade.</div>
                         </div>
-                        <div>
-                            <label for="latitude_contato" class="block text-sm font-medium text-gray-700">Latitude</label>
-                            <input type="text" name="latitude_contato" id="latitude_contato" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Latitude -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Latitude</label>
+                            <input type="text" name="latitude_contato" id="latitude_contato" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite a latitude" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="latitude_contato_error">Por favor, insira a latitude.</div>
                         </div>
-                        <div>
-                            <label for="longitude_contato" class="block text-sm font-medium text-gray-700">Longitude</label>
-                            <input type="text" name="longitude_contato" id="longitude_contato" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Longitude -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Longitude</label>
+                            <input type="text" name="longitude_contato" id="longitude_contato" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium"
+                                   placeholder="Digite a longitude" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="longitude_contato_error">Por favor, insira a longitude.</div>
                         </div>
-                        <div>
-                            <label for="email_funcional" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" name="email_funcional" id="email_funcional" placeholder=".......@policiamilitar.sp.gov.br" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Email -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Email</label>
+                            <input type="email" name="email_funcional" id="email_funcional" placeholder=".......@policiamilitar.sp.gov.br" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="email_funcional_error">Por favor, insira um email válido.</div>
                         </div>
-                        <div>
-                            <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone</label>
-                            <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Telefone -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Telefone</label>
+                            <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx" 
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="telefone_error">Por favor, insira um telefone válido.</div>
                         </div>
-                   
                     </div>
-                </fieldset>
-
-                <!-- Campos para Pessoal -->
-                <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-                    <div class="mb-4">
-                        <p class="text-lg font-bold">QPO Fixado</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div>
-                            <label for="cel" class="block text-sm font-medium text-gray-700">Cel</label>
-                            <input type="number" name="cel" id="cel" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                </div>
+            </fieldset>
+            
+    
+          <!-- QPO Fixado -->
+            <fieldset class="bg-gray-100 rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">QPO Fixado</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        <!-- Cel -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/ten_cel.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="cel">
+                                Cel
+                            </label>
+                            <input type="number" name="cel" id="cel" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="cel_error">Por favor, insira o número de cel.</div>
                         </div>
-                        <div>
-                            <label for="ten_cel" class="block text-sm font-medium text-gray-700">Ten Cel</label>
-                            <input type="number" name="ten_cel" id="ten_cel" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Ten Cel -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/ten_cel.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="ten-cel">
+                                Ten Cel
+                            </label>
+                            <input type="number" name="ten_cel" id="ten_cel" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="ten_cel_error">Por favor, insira o número de ten cel.</div>
                         </div>
-                        <div>
-                            <label for="maj" class="block text-sm font-medium text-gray-700">Maj</label>
-                            <input type="number" name="maj" id="maj" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Maj -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/major-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="major">
+                                Maj
+                            </label>
+                            <input type="number" name="maj" id="maj" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="maj_error">Por favor, insira o número de maj.</div>
                         </div>
-                        <div>
-                            <label for="cap" class="block text-sm font-medium text-gray-700">Cap</label>
-                            <input type="number" name="cap" id="cap" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Cap -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/capitao-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="capitao">
+                                Cap
+                            </label>
+                            <input type="number" name="cap" id="cap" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="cap_error">Por favor, insira o número de cap.</div>
                         </div>
-                        <div>
-                            <label for="ten" class="block text-sm font-medium text-gray-700">Ten</label>
-                            <input type="number" name="ten" id="ten" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Ten -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/1-tenente-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="ten">
+                                Ten
+                            </label>
+                            <input type="number" name="ten" id="ten" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="ten_error">Por favor, insira o número de ten.</div>
                         </div>
-                        <div>
-                            <label for="tenqa" class="block text-sm font-medium text-gray-700">Ten QA</label>
-                            <input type="number" name="tenqa" id="tenqa" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Ten QA -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/1-tenente-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="ten-qa">
+                                Ten QA
+                            </label>
+                            <input type="number" name="tenqa" id="tenqa" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="tenqa_error">Por favor, insira o número de ten QA.</div>
                         </div>
-                        <div>
-                            <label for="asp" class="block text-sm font-medium text-gray-700">Asp</label>
-                            <input type="number" name="asp" id="asp" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- Asp -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/1-tenente-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="asp">
+                                Asp
+                            </label>
+                            <input type="number" name="asp" id="asp" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="asp_error">Por favor, insira o número de asp.</div>
                         </div>
-                        <div>
-                            <label for="st_sgt" class="block text-sm font-medium text-gray-700">ST Sgt</label>
-                            <input type="number" name="st_sgt" id="st_sgt" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- ST Sgt -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/1-sargento-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="st-sgt">
+                                ST Sgt
+                            </label>
+                            <input type="number" name="st_sgt" id="st_sgt" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="st_sgt_error">Por favor, insira o número de ST Sgt.</div>
                         </div>
-                        <div>
-                            <label for="cb_sd" class="block text-sm font-medium text-gray-700">CB/SD</label>
-                            <input type="number" name="cb_sd" id="cb_sd" value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                        
+                        <!-- CB/SD -->
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-center">
+                                <img src="{% static 'img/cabo-pm.jpg' %}" class="w-10 h-8 rounded-full mr-2" role="img" aria-label="cb-sd">
+                                CB/SD
+                            </label>
+                            <input type="number" name="cb_sd" id="cb_sd" value="0"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 
+                                        focus:ring-2 focus:ring-indigo-200 bg-white text-center font-medium"
+                                required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="cb_sd_error">Por favor, insira o número de CB/SD.</div>
                         </div>
                     </div>
-                </fieldset>
-
+                </div>
+            </fieldset>
 
               <!-- Campo Dinâmico para Cidades -->
-<fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-    <div class="mb-6">
-        <p class="text-lg font-bold">Cidades Atendidas</p>
-    </div>
-    <div id="cidades-container">
-        <!-- Item inicial -->
-        <div class="cidade-item space-y-4 mb-4 mt-4">
-            <!-- Primeira Linha -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Campos Município, Latitude, Longitude -->
-            </div>
-
-            <!-- Segunda Linha -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Descrição e Bandeira -->
-                <div class="flex flex-col justify-between">
-                    <!-- Botão Remover alinhado no final -->
-                    <div class="mt-auto">
-                        <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 remove-cidade">Remover</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Linha dos Botões -->
-    <div class="flex gap-2 mt-4">
-        <button type="button" id="add-cidade" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50 font-medium rounded-lg text-sm px-5 py-2.5">Adicionar Cidade</button>
-    </div>
-</fieldset>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const cidadesContainer = document.getElementById('cidades-container');
-    const addCidadeButton = document.getElementById('add-cidade');
-    let cidadeIndex = cidadesContainer.children.length; // Índice baseado nos itens existentes
-
-    // Função para criar novo item
-    function createCidadeItem(index) {
-        const div = document.createElement('div');
-        div.className = 'cidade-item space-y-4 mb-4 mt-4';
-        div.innerHTML = `
-            <!-- Primeira Linha -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Município</label>
-                    <input type="text" name="municipios[]" 
-                           class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Latitude</label>
-                    <input type="text" name="latitudes[]" 
-                           class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Longitude</label>
-                    <input type="text" name="longitudes[]" 
-                           class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                </div>
-            </div>
-
-            <!-- Segunda Linha -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Descrição</label>
-                    <textarea name="descricoes[]" 
-                              class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" rows="3"></textarea>
-                </div>
-                <div>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <div class="mb-4">
-                                <p class="text-lg font-bold">Bandeira Municipal</p>
+            <!-- Cidades Atendidas -->
+            <fieldset class="bg-gray-100 rounded-2xl p-6 mb-8 border border-gray-200 shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Cidades Atendidas</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div id="cidades-container" class="space-y-4">
+                        <!-- Item inicial -->
+                        <div class="cidade-item bg-white p-6 rounded-xl border border-gray-200 shadow-xs">
+                            <!-- Primeira Linha -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <!-- Município -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Município</label>
+                                    <input type="text" name="municipios[]" 
+                                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                transition-all duration-200 placeholder-gray-400
+                                                hover:border-gray-300 text-gray-700 font-medium" required>
+                                </div>
+                                
+                                <!-- Latitude -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Latitude</label>
+                                    <input type="text" name="latitudes[]" 
+                                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                transition-all duration-200 placeholder-gray-400
+                                                hover:border-gray-300 text-gray-700 font-medium" required>
+                                </div>
+                                
+                                <!-- Longitude -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Longitude</label>
+                                    <input type="text" name="longitudes[]" 
+                                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                transition-all duration-200 placeholder-gray-400
+                                                hover:border-gray-300 text-gray-700 font-medium" required>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <img src="#" alt="Preview" class="hidden max-w-[200px] preview-image" id="preview_${index}">
-                                <input class="mt-1 block w-full text-base border-gray-300 border-blue-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                                       name="bandeiras[]"
-                                       type="file"
-                                       accept="image/*"
-                                       onchange="previewImage(event, ${index})">
+
+                            <!-- Segunda Linha -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Descrição -->
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
+                                    <textarea name="descricoes[]" rows="3"
+                                            class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                    shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                    transition-all duration-200 placeholder-gray-400
+                                                    hover:border-gray-300 text-gray-700 font-medium"></textarea>
+                                </div>
+                                
+                                <!-- Bandeira Municipal -->
+                                <div class="space-y-4">
+                                    <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bandeira Municipal</h3>
+                                    
+                                    <div class="flex flex-col items-center space-y-4">
+                                        <!-- Preview da Imagem -->
+                                        <img src="#" alt="Preview" class="hidden max-w-[200px] max-h-[120px] object-contain preview-image border border-gray-200 rounded-lg" id="preview_0">
+                                        
+                                        <!-- Upload de Arquivo -->
+                                        <div class="w-full">
+                                            <input type="file" name="bandeiras[]" accept="image/*"
+                                                class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                        shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                        transition-all duration-200
+                                                        hover:border-gray-300 text-gray-700 font-medium
+                                                        file:mr-4 file:py-2 file:px-4
+                                                        file:rounded-lg file:border-0
+                                                        file:text-sm file:font-semibold
+                                                        file:bg-gray-100 file:text-gray-700
+                                                        hover:file:bg-gray-200"
+                                                onchange="previewImage(event, 0)">
+                                        </div>
+                                        
+                                        <!-- Botão Remover -->
+                                        <button type="button" 
+                                                class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white 
+                                                    font-medium rounded-xl shadow-sm hover:shadow-md
+                                                    transition-all duration-200 hover:scale-[1.02]
+                                                    flex items-center justify-center gap-2 remove-cidade">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                            Remover Cidade
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex justify-start">
-                            <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 remove-cidade">Remover</button>
-                        </div>
+                    </div>
+                    
+                    <!-- Botão Adicionar Cidade -->
+                    <div>
+                        <button type="button" id="add-cidade"
+                                class="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+                                    font-semibold rounded-xl shadow-sm hover:shadow-md
+                                    transition-all duration-200 hover:scale-[1.02]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Adicionar Cidade
+                        </button>
                     </div>
                 </div>
-            </div>
-        `;
-        return div;
-    }
+            </fieldset>
 
-    // Adicionar nova cidade
-    addCidadeButton.addEventListener('click', () => {
-        const newItem = createCidadeItem(cidadeIndex);
-        cidadesContainer.appendChild(newItem);
-        cidadeIndex++;
-    });
+            <script>
 
-    // Delegation para remover
-    cidadesContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-cidade')) {
-            e.target.closest('.cidade-item').remove();
-        }
-    });
-});
+            document.addEventListener('DOMContentLoaded', function () {
+                const cidadesContainer = document.getElementById('cidades-container');
+                const addCidadeButton = document.getElementById('add-cidade');
+                let cidadeIndex = cidadesContainer.children.length;
 
- // Função para pré-visualizar a imagem
- function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const preview = document.getElementById('preview');
-            preview.src = reader.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(event.target.files[0]);
-    }
+                // Função para criar novo item de cidade
+                function createCidadeItem(index) {
+                    const div = document.createElement('div');
+                    div.className = 'cidade-item bg-white p-6 rounded-xl border border-gray-200 shadow-xs mt-4';
+                    div.innerHTML = `
+                        <!-- Primeira Linha -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <!-- Município -->
+                            <div class="space-y-2">
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Município</label>
+                                <input type="text" name="municipios[]" 
+                                    class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                            shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                            transition-all duration-200 placeholder-gray-400
+                                            hover:border-gray-300 text-gray-700 font-medium" required>
+                            </div>
+                            
+                            <!-- Latitude -->
+                            <div class="space-y-2">
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Latitude</label>
+                                <input type="text" name="latitudes[]" 
+                                    class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                            shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                            transition-all duration-200 placeholder-gray-400
+                                            hover:border-gray-300 text-gray-700 font-medium" required>
+                            </div>
+                            
+                            <!-- Longitude -->
+                            <div class="space-y-2">
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Longitude</label>
+                                <input type="text" name="longitudes[]" 
+                                    class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                            shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                            transition-all duration-200 placeholder-gray-400
+                                            hover:border-gray-300 text-gray-700 font-medium" required>
+                            </div>
+                        </div>
 
-    document.getElementById('image').addEventListener('change', previewImage);
-</script>
+                        <!-- Segunda Linha -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Descrição -->
+                            <div class="space-y-2">
+                                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
+                                <textarea name="descricoes[]" rows="3"
+                                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                transition-all duration-200 placeholder-gray-400
+                                                hover:border-gray-300 text-gray-700 font-medium"></textarea>
+                            </div>
+                            
+                            <!-- Bandeira Municipal -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bandeira Municipal</h3>
+                                
+                                <div class="flex flex-col items-center space-y-4">
+                                    <!-- Preview da Imagem -->
+                                    <img src="#" alt="Preview" class="hidden max-w-[200px] max-h-[120px] object-contain preview-image border border-gray-200 rounded-lg" id="preview_${index}">
+                                    
+                                    <!-- Upload de Arquivo -->
+                                    <div class="w-full">
+                                        <input type="file" name="bandeiras[]" accept="image/*"
+                                            class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                                    shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                                    transition-all duration-200
+                                                    hover:border-gray-300 text-gray-700 font-medium
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-lg file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-gray-100 file:text-gray-700
+                                                    hover:file:bg-gray-200"
+                                            onchange="previewImage(event, ${index})">
+                                    </div>
+                                    
+                                    <!-- Botão Remover -->
+                                    <button type="button" 
+                                            class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white 
+                                                font-medium rounded-xl shadow-sm hover:shadow-md
+                                                transition-all duration-200 hover:scale-[1.02]
+                                                flex items-center justify-center gap-2 remove-cidade">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                        Remover Cidade
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    return div;
+                }
+
+                // Adicionar nova cidade
+                addCidadeButton.addEventListener('click', () => {
+                    const newItem = createCidadeItem(cidadeIndex);
+                    cidadesContainer.appendChild(newItem);
+                    cidadeIndex++;
+                });
+
+                // Delegation para remover cidades
+                cidadesContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-cidade') || e.target.closest('.remove-cidade')) {
+                        const itemToRemove = e.target.closest('.cidade-item');
+                        if (itemToRemove && cidadesContainer.children.length > 1) {
+                            itemToRemove.remove();
+                        }
+                    }
+                });
+            });
+
+            // Função para preview da imagem (assumindo que já existe)
+            function previewImage(event, index) {
+                const input = event.target;
+                const preview = document.getElementById(`preview_${index}`);
+                
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        preview.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+            // Função para pré-visualizar a imagem
+            function previewImage(event) {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const preview = document.getElementById('preview');
+                        preview.src = reader.result;
+                        preview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(event.target.files[0]);
+                }
+
+                document.getElementById('image').addEventListener('change', previewImage);
+            </script>
+
                 <!-- Botão de Envio -->
-                <fieldset class="bg-gray-800 p-4 mb-8 rounded-md">
-                    <div class="flex items-center justify-between py-3">
-                        <input type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" value="Salvar">
+                <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex-1 space-y-2">
+                            <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                               Verifique todos itens antes de confirmar
+                            </p>
+                        </div>
+                
+                        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            <button type="submit"
+                                    class="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white
+                                           font-semibold rounded-xl shadow-sm hover:shadow-md
+                                           transition-all duration-200 hover:scale-[1.02]
+                                           flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Salvar
+                            </button>
+                
+                            <a href="{% url 'municipios:posto_list' %}" 
+                               class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white
+                                      font-semibold rounded-xl shadow-sm hover:shadow-md
+                                      transition-all duration-200 hover:scale-[1.02]
+                                      flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Voltar
+                            </a>
+                        </div>
                     </div>
                 </fieldset>
-            </form>
+        </form>
         </fieldset>
     </div>
 
-
+    <script>
+        const postoSeccaoPorSGB = {
+            "EM": [
+                ["703150000 - CMT", "CMT"],
+                ["703159000 - SUB CMT", "SUB CMT"],
+                ["703159100 - SEC ADM", "SEC ADM"],
+                ["703159110 - B/1 E B/5", "B/1 E B/5"],
+                ["703159110-1 - B/5", "B/5"],
+                ["703159120 - AA", "AA"],
+                ["703159130 - B/3 E MOTOMEC", "B/3 E MOTOMEC"],
+                ["703159130-1 - MOTOMEC", "MOTOMEC"],
+                ["703159131 - COBOM", "COBOM"],
+                ["703159140 - B/4", "B/4"],
+                ["703159150 - ST UGE", "ST UGE"],
+                ["703159160 - ST PJMD", "ST PJMD"],
+                ["703159200 - SEC ATIV TEC", "SEC ATIV TEC"]
+            ],
+            "1ºSGB": [
+                ["703151000 - CMT 1º SGB", "CMT 1º SGB"],
+                ["703151100 - ADM PB CERRADO", "ADM PB CERRADO"],
+                ["703151101 - EB CERRADO", "EB CERRADO"],
+                ["703151102 - EB ZONA NORTE", "EB ZONA NORTE"],
+                ["703151200 - ADM PB SANTA ROSÁLIA", "ADM PB SANTA ROSÁLIA"],
+                ["703151201 - EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"],
+                ["703151202 - EB ÉDEM", "EB ÉDEM"],
+                ["703151300 - ADM PB VOTORANTIM", "ADM PB VOTORANTIM"],
+                ["703151301 - EB VOTORANTIM", "EB VOTORANTIM"],
+                ["703151302 - EB PIEDADE", "EB PIEDADE"],
+                ["703151800 - ADM 1º SGB", "ADM 1º SGB"]
+            ],
+            "2ºSGB": [
+                ["703152000 - CMT 2º SGB", "CMT 2º SGB"],
+                ["703152100 - ADM PB ITU", "ADM PB ITU"],
+                ["703152101 - EB ITU", "EB ITU"],
+                ["703152102 - EB PORTO FELIZ", "EB PORTO FELIZ"],
+                ["703152200 - ADM PB SALTO", "ADM PB SALTO"],
+                ["703152201 - EB SALTO", "EB SALTO"],
+                ["703152300 - ADM PB SÃO ROQUE", "ADM PB SÃO ROQUE"],
+                ["703152301 - EB SÃO ROQUE", "EB SÃO ROQUE"],
+                ["703152302 - EB IBIÚNA", "EB IBIÚNA"],
+                ["703152800 - ADM 2º SGB", "ADM 2º SGB"],
+                ["703152900 - NUCL ATIV TEC 2º SGB", "NUCL ATIV TEC 2º SGB"]
+            ],
+            "3ºSGB": [
+                ["703153000 - CMT 3º SGB", "CMT 3º SGB"],
+                ["703153100 - ADM PB ITAPEVA", "ADM PB ITAPEVA"],
+                ["703153101 - EB ITAPEVA", "EB ITAPEVA"],
+                ["703153102 - EB APIAÍ", "EB APIAÍ"],
+                ["703153103 - EB ITARARÉ", "EB ITARARÉ"],
+                ["703153104 - EB CAPÃO BONITO", "EB CAPÃO BONITO"],
+                ["703153800 - ADM 3º SGB", "ADM 3º SGB"],
+                ["703153900 - NUCL ATIV TEC 3º SGB", "NUCL ATIV TEC 3º SGB"]
+            ],
+            "4ºSGB": [
+                ["703154000 - CMT 4º SGB", "CMT 4º SGB"],
+                ["703154100 - ADM PB ITAPETININGA", "ADM PB ITAPETININGA"],
+                ["703154101 - EB ITAPETININGA", "EB ITAPETININGA"],
+                ["703154102 - EB BOITUVA", "EB BOITUVA"],
+                ["703154103 - EB ANGATUBA", "EB ANGATUBA"],
+                ["703154200 - ADM PB TATUÍ", "ADM PB TATUÍ"],
+                ["703154201 - EB TATUÍ", "EB TATUÍ"],
+                ["703154202 - EB TIETÊ", "EB TIETÊ"],
+                ["703154203 - EB LARANJAL PAULISTA", "EB LARANJAL PAULISTA"],
+                ["703154800 - ADM 4º SGB", "ADM 4º SGB"],
+                ["703154900 - NUCL ATIV TEC 4º SGB", "NUCL ATIV TEC 4º SGB"]
+            ],
+            "5ºSGB": [
+                ["703155000 - CMT 5º SGB", "CMT 5º SGB"],
+                ["703155100 - ADM PB BOTUCATU", "ADM PB BOTUCATU"],
+                ["703155101 - EB BOTUCATU", "EB BOTUCATU"],
+                ["703155102 - EB ITATINGA", "EB ITATINGA"],
+                ["703155200 - ADM PB AVARÉ", "ADM PB AVARÉ"],
+                ["703155201 - EB AVARÉ", "EB AVARÉ"],
+                ["703155202 - EB PIRAJU", "EB PIRAJU"],
+                ["703155203 - EB ITAÍ", "EB ITAÍ"],
+                ["703155800 - ADM 5º SGB", "ADM 5º SGB"],
+                ["703155900 - NUCL ATIV TEC 5º SGB", "NUCL ATIV TEC 5º SGB"]
+            ]
+        };
+    
+        function atualizarPostoSeccao() {
+            const sgbSelect = document.getElementById('sgb');
+            const postoSeccaoSelect = document.getElementById('posto_secao');
+            const sgbSelecionado = sgbSelect.value;
+    
+            // Limpar opções exceto a primeira
+            postoSeccaoSelect.innerHTML = '<option value="" disabled selected>Primeiro selecione o SGB</option>';
+    
+            // Habilitar/desabilitar select
+            postoSeccaoSelect.disabled = !sgbSelecionado;
+    
+            if (sgbSelecionado && postoSeccaoPorSGB[sgbSelecionado]) {
+                // Adicionar novas opções
+                postoSeccaoPorSGB[sgbSelecionado].forEach(([value, label]) => {
+                    const option = new Option(label, value);
+                    postoSeccaoSelect.add(option);
+                });
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar o select de Posto/Seção como desabilitado
+            document.getElementById('posto_secao').disabled = true;
+    
+            // Adicionar o event listener para o select de SGB
+            document.getElementById('sgb').addEventListener('change', atualizarPostoSeccao);
+        });
+    </script>
    <script>
     function buscarEnderecoPorCEP(cep) {
         // Remove caracteres não numéricos do CEP
@@ -447,16 +969,16 @@ document.addEventListener('DOMContentLoaded', function () {
     <script>
             // Função para pré-visualizar a imagem
             function previewImage(event, index) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        const preview = document.getElementById(`preview_${index}`);
-        preview.src = reader.result;
-        preview.style.display = 'block';
-    }
-    if (event.target.files[0]) {
-        reader.readAsDataURL(event.target.files[0]);
-    }
-}
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById(`preview_${index}`);
+                preview.src = reader.result;
+                preview.style.display = 'block';
+            }
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
     </script>
 </body>
 {% endblock 'body' %}

@@ -9,8 +9,6 @@
 
 
 <body>
-
-    
     <div class=" md:items-center md:justify-between rounded-lg  w-full" id="cad_efetivo">
      <fieldset class=" p-4 mb-2   rounded-md w-full" id="second-fieldset">
         <fieldset class="  bg-gray-800  p-2 mb-4 rounded-md">
@@ -30,18 +28,19 @@
                 </div>
             </div>
         </fieldset>
-    <legend  class=" mb-8 rounded-md w-full" >
-        {% if messages %}
-        {% for message in messages %}
-            <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                {{ message }}
-            </section>
-        {% endfor %}
-        {% endif %}
-    </legend>
+
 
     <form class="row g-3 needs-validation" novalidate action="{% url 'bm:cadastrar_bm' %}" method="POST" enctype="multipart/form-data">  {% csrf_token %}
         <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+            <legend  class=" mb-2 rounded-md w-full" >
+                {% if messages %}
+                {% for message in messages %}
+                    <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
+                        {{ message }}
+                    </section>
+                {% endfor %}
+                {% endif %}
+            </legend>
             <div class="space-y-6">
                 <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados Pessoais</h2>
                 <hr class="border-t border-gray-100">
@@ -274,13 +273,13 @@
             <!-- CPF -->
             <div class="space-y-2">
                 <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">CPF</label>
-                <input type="text" name="cpf" id="cpf" placeholder="xxx.xxx.xxx-xx" 
+                <input type="text" name="cpf" id="cpf" placeholder="xxx.xxx.xxx-xx"
                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                               transition-all duration-200 placeholder-gray-400
                               hover:border-gray-300 text-gray-700 font-medium"
-                       required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="cpf_error">Por favor, insira o CPF.</div>
+                       required onblur="validateCPF(this)" oninput="formatCPF(this)" maxlength="14">
+                <div class="text-red-500 text-sm mt-1 hidden" id="cpf_error">Por favor, insira um CPF válido.</div>
             </div>
 
             <!-- RG -->
@@ -362,12 +361,12 @@
             <!-- Telefone -->
             <div class="space-y-2">
                 <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Telefone</label>
-                <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx" 
+                <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx"
                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                               transition-all duration-200 placeholder-gray-400
                               hover:border-gray-300 text-gray-700 font-medium"
-                       required>
+                       required oninput="formatTelefone(this)" onblur="validateTelefone(this)" maxlength="15">
                 <div class="text-red-500 text-sm mt-1 hidden" id="telefone_error">Por favor, insira um telefone válido.</div>
             </div>
         </div>
@@ -545,6 +544,131 @@ function previewImage(event) {
     </form>
      </fieldset>
 </div>
+<script>
+    function formatCPF(input) {
+      let value = input.value.replace(/\D/g, '');
+      let formattedValue = '';
+  
+      if (value.length > 0) {
+        formattedValue += value.substring(0, 3);
+        if (value.length > 3) {
+          formattedValue += '.' + value.substring(3, 6);
+          if (value.length > 6) {
+            formattedValue += '.' + value.substring(6, 9);
+            if (value.length > 9) {
+              formattedValue += '-' + value.substring(9, 11);
+            }
+          }
+        }
+      }
+      input.value = formattedValue;
+    }
+  
+    function validateCPF(input) {
+      const cpf = input.value.replace(/\D/g, '');
+      const errorDiv = document.getElementById('cpf_error');
+  
+      if (!cpf || cpf.length !== 11 || isInvalidCPFPattern(cpf)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      if (!validateCPFDigits(cpf)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      errorDiv.classList.add('hidden');
+      input.classList.remove('border-red-500');
+      return true;
+    }
+  
+    function isInvalidCPFPattern(cpf) {
+      // Check for common invalid patterns (all digits the same)
+      return cpf === '00000000000' ||
+             cpf === '11111111111' ||
+             cpf === '22222222222' ||
+             cpf === '33333333333' ||
+             cpf === '44444444444' ||
+             cpf === '55555555555' ||
+             cpf === '66666666666' ||
+             cpf === '77777777777' ||
+             cpf === '88888888888' ||
+             cpf === '99999999999';
+    }
+  
+    function validateCPFDigits(cpf) {
+      let sum;
+      let remainder;
+  
+      sum = 0;
+      for (let i = 1; i <= 9; i++) {
+        sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if ((remainder === 10) || (remainder === 11)) {
+        remainder = 0;
+      }
+      if (remainder !== parseInt(cpf.substring(9, 10))) {
+        return false;
+      }
+  
+      sum = 0;
+      for (let i = 1; i <= 10; i++) {
+        sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if ((remainder === 10) || (remainder === 11)) {
+        remainder = 0;
+      }
+      if (remainder !== parseInt(cpf.substring(10, 11))) {
+        return false;
+      }
+  
+      return true;
+    }
+  </script>
+  <script>
+    function formatTelefone(input) {
+      let value = input.value.replace(/\D/g, '');
+      let formattedValue = '';
+  
+      if (value.length > 0) {
+        formattedValue += '(' + value.substring(0, 2);
+        if (value.length > 2) {
+          formattedValue += ') ' + value.substring(2, 7);
+          if (value.length > 7) {
+            formattedValue += '-' + value.substring(7, 11);
+          }
+        }
+      }
+      input.value = formattedValue;
+    }
+  
+    function validateTelefone(input) {
+      const telefone = input.value.replace(/\D/g, '');
+      const errorDiv = document.getElementById('telefone_error');
+  
+      if (!telefone || (telefone.length !== 10 && telefone.length !== 11)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      // Basic check for common invalid patterns (all digits the same)
+      if (/^(\d)\1+$/.test(telefone)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      errorDiv.classList.add('hidden');
+      input.classList.remove('border-red-500');
+      return true;
+    }
+  </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Previne o submit do formulário ao pressionar Enter em qualquer campo de entrada
