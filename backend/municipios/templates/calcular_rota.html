@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Calcular Rota{% endblock %}
+
+{% block 'head' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #route-map {
+            height: 600px;
+            width: 100%;
+            border-radius: 0.5rem;
+            z-index: 0;
+            min-height: 400px;
+            background-color: #eaeaea;
+            position: relative; /* Adicionado */
+        }
+        
+        .leaflet-container {
+            background: #f8fafc !important;
+            height: 100% !important; /* Forçando altura */
+            width: 100% !important; /* Forçando largura */
+        }
+
+        .departure-marker {
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+        }
+
+        .arrival-marker {
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7));
+        }
+        
+        #map-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block 'body' %}
+<div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="flex flex-col lg:flex-row">
+                <div class="bg-gray-50 p-6 w-full lg:w-96 border-r border-gray-200">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Calcular Rota Entre Municípios</h1>
+
+                    <div class="mb-4">
+                        <label for="departure" class="block text-sm font-medium text-gray-700 mb-2">Município de Saída:</label>
+                        <select id="departure" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
+                            <option value="">Selecione um município</option>
+                            {% for cidade in cidades %}
+                                <option value="{{ cidade.id }}" 
+                                        data-lat="{{ cidade.latitude }}" 
+                                        data-lng="{{ cidade.longitude }}">
+                                    {{ cidade.municipio }} - {{ cidade.posto.posto_atendimento }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="arrival" class="block text-sm font-medium text-gray-700 mb-2">Município de Chegada:</label>
+                        <select id="arrival" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
+                            <option value="">Selecione um município</option>
+                            {% for cidade in cidades %}
+                                <option value="{{ cidade.id }}" 
+                                        data-lat="{{ cidade.latitude }}" 
+                                        data-lng="{{ cidade.longitude }}">
+                                    {{ cidade.municipio }} - {{ cidade.posto.posto_atendimento }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button id="calculate-route-btn" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-route mr-2"></i>
+                        Calcular Rota
+                    </button>
+
+                    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-3">Resultado da Rota</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600">Distância:</p>
+                                <p class="text-lg font-bold text-blue-800"><span id="route-distance">--</span> km</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Tempo estimado:</p>
+                                <p class="text-lg font-bold text-blue-800"><span id="route-duration">--</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <a href="{% url 'municipios:posto_list' %}" class="w-full block text-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-1 relative">
+                    <div id="route-map"></div>
+                    <div id="map-loading">
+                        <div class="text-center">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-2"></div>
+                            <p class="text-gray-700">Calculando rota...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapContainer = document.getElementById('route-map');
+        if (!mapContainer) {
+          console.error('Container do mapa não encontrado!');
+          return;
+        }
+      
+        // Aguarda um tempo maior para garantir que o container tenha dimensões definidas
+        setTimeout(() => {
+          if (mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
+            console.error('Container do mapa não tem dimensões visíveis após um delay maior!');
+            return;
+          }
+      
+          const initialLat = -23.4861018;
+          const initialLng = -47.438217;
+          const initialZoom = 10;
+      
+          const map = L.map('route-map').setView([initialLat, initialLng], initialZoom);
+      
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+      
+          // Função para corrigir o tamanho do mapa
+          function fixMapSize() {
+            map.invalidateSize();
+            setTimeout(() => map.invalidateSize(), 150); // Aumentei o delay
+            setTimeout(() => map.invalidateSize(), 600); // Aumentei o delay
+          }
+      
+          // Chama a função de correção e adiciona listener para resize da janela
+          fixMapSize();
+          window.addEventListener('resize', fixMapSize);
+      
+          let departureMarker = null;
+          let arrivalMarker = null;
+          let routeLayer = null;
+      
+          async function calculateRoute() {
+            const departureSelect = document.getElementById('departure');
+            const arrivalSelect = document.getElementById('arrival');
+      
+            if (!departureSelect.value || !arrivalSelect.value) {
+              alert('Por favor, selecione os municípios de saída e chegada.');
+              return;
+            }
+      
+            if (departureSelect.value === arrivalSelect.value) {
+              alert('Os municípios de saída e chegada devem ser diferentes.');
+              return;
+            }
+      
+            const departureOption = departureSelect.options[departureSelect.selectedIndex];
+            const arrivalOption = arrivalSelect.options[arrivalSelect.selectedIndex];
+      
+            const departureLat = parseFloat(departureOption.dataset.lat);
+            const departureLng = parseFloat(departureOption.dataset.lng);
+            const arrivalLat = parseFloat(arrivalOption.dataset.lat);
+            const arrivalLng = parseFloat(arrivalOption.dataset.lng);
+      
+            document.getElementById('map-loading').style.display = 'flex';
+            fixMapSize(); // Garante que o mapa tenha o tamanho correto antes do cálculo
+      
+            try {
+              // Remove camadas anteriores
+              if (routeLayer) {
+                map.removeLayer(routeLayer);
+                routeLayer = null;
+              }
+              if (departureMarker) {
+                map.removeLayer(departureMarker);
+                departureMarker = null;
+              }
+              if (arrivalMarker) {
+                map.removeLayer(arrivalMarker);
+                arrivalMarker = null;
+              }
+      
+              // Cria marcadores
+              departureMarker = L.marker([departureLat, departureLng], {
+                icon: L.divIcon({
+                  className: 'departure-marker',
+                  html: '<i class="fas fa-map-marker-alt text-blue-600 text-3xl"></i>',
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 30]
+                })
+              }).addTo(map).bindPopup(`<b>Saída:</b> ${departureOption.text}`).openPopup();
+      
+              arrivalMarker = L.marker([arrivalLat, arrivalLng], {
+                icon: L.divIcon({
+                  className: 'arrival-marker',
+                  html: '<i class="fas fa-map-marker-alt text-green-500 text-3xl"></i>',
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 30]
+                })
+              }).addTo(map).bindPopup(`<b>Chegada:</b> ${arrivalOption.text}`);
+      
+              let routeData;
+              try {
+                const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${departureLng},${departureLat};${arrivalLng},${arrivalLat}?overview=full&geometries=geojson`);
+                if (!response.ok) {
+                  throw new Error(`Erro na API primária: ${response.status}`);
+                }
+                routeData = await response.json();
+              } catch (primaryError) {
+                console.warn('Erro na API primária, tentando fallback...', primaryError);
+                const fallbackResponse = await fetch(`https://routing.openstreetmap.de/routed-car/route/v1/driving/${departureLng},${departureLat};${arrivalLng},${arrivalLat}?overview=full&geometries=geojson`);
+                if (!fallbackResponse.ok) {
+                  throw new Error(`Erro na API de fallback: ${fallbackResponse.status}`);
+                }
+                routeData = await fallbackResponse.json();
+              }
+      
+              if (routeData && routeData.routes && routeData.routes.length > 0) {
+                const route = routeData.routes[0];
+                const distanceKm = (route.distance / 1000).toFixed(1);
+                const durationSeconds = route.duration;
+                const durationMinutes = Math.floor(durationSeconds / 60);
+                const durationHours = Math.floor(durationMinutes / 60);
+                const remainingMinutes = durationMinutes % 60;
+                const durationText = `${durationHours > 0 ? durationHours + ' h ' : ''}${remainingMinutes} min`;
+      
+                document.getElementById('route-distance').textContent = distanceKm;
+                document.getElementById('route-duration').textContent = durationText;
+      
+                routeLayer = L.geoJSON({
+                  type: 'Feature',
+                  geometry: route.geometry
+                }, {
+                  style: {
+                    color: '#3b82f6',
+                    weight: 5,
+                    opacity: 0.7
+                  }
+                }).addTo(map);
+      
+                map.fitBounds(L.featureGroup([departureMarker, arrivalMarker, routeLayer]).getBounds(), { padding: [50, 50] });
+              } else {
+                throw new Error('Rota não encontrada na resposta da API.');
+              }
+      
+            } catch (error) {
+              console.error('Erro ao calcular rota:', error);
+              alert(`Erro ao calcular a rota: ${error.message}`);
+            } finally {
+              document.getElementById('map-loading').style.display = 'none';
+              fixMapSize();
+            }
+          }
+      
+          document.getElementById('calculate-route-btn').addEventListener('click', calculateRoute);
+      
+          const departureSelect = document.getElementById('departure');
+          const arrivalSelect = document.getElementById('arrival');
+      
+          if (departureSelect && arrivalSelect) {
+            departureSelect.addEventListener('change', function() {
+              if (this.value && arrivalSelect.value) {
+                calculateRoute();
+              }
+            });
+      
+            arrivalSelect.addEventListener('change', function() {
+              if (this.value && departureSelect.value) {
+                calculateRoute();
+              }
+            });
+          }
+      
+        }, 150); // Aumentei o delay para inicialização do mapa
+      });
+      
+</script>
+{% endblock %}

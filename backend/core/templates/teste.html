@@ -1,1105 +1,1620 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %} Consultar Efetivo{% endblock %}
+
+{% block title %}Calcular Rota{% endblock %}
+
 {% block 'head' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.78.0/dist/L.Control.Locate.min.css" />
+    <style>
+        #route-map, #print-map {
+            height: 500px;
+            width: 100%;
+            border-radius: 0.5rem;
+            z-index: 0;
+            position: relative;
+    min-height: 400px;
+    background-color: #eaeaea;
+        }
 
-<link rel="stylesheet" href="{% static 'efetivo\css\ver_militar.css' %}">
+        .leaflet-container {
+            background: #f8fafc !important;
+            transform: none !important;
+            transition: none !important;
+        }
 
+        .suggestions-container {
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            position: absolute;
+            width: 100%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
 
-{% endblock 'head' %}
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .suggestion-item:not(:last-child) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #map-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .current-location-marker {
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+        }
+
+        .departure-marker {
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+        }
+
+        .arrival-marker {
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7));
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        #route-map {
+            height: calc(100vh - 200px); /* Ajuste conforme necessário */
+            min-height: 400px;
+            width: 100%;
+            border-radius: 0.5rem;
+            z-index: 0;
+        }
+
+        .container-route {
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        .map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+{% endblock %}
 
 {% block 'body' %}
+<div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="flex flex-col lg:flex-row">
+                <div class="bg-gray-50 p-6 w-full lg:w-96 border-r border-gray-200">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-6">Calcular Rota</h1>
+
+                    <div class="mb-4 relative">
+                        <label for="departure" class="block text-sm font-medium text-gray-700 mb-2">Local de Saída:</label>
+                        <div class="relative">
+                            <input type="text" id="departure" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="Digite o endereço de saída">
+                            <button id="use-current-location" class="absolute right-2 top-2 text-gray-500 hover:text-blue-600" title="Usar minha localização atual">
+                                <i class="fas fa-location-arrow"></i>
+                            </button>
+                        </div>
+                        <div id="departure-suggestions" class="suggestions-container"></div>
+                    </div>
+
+                    <div class="mb-4 relative">
+                        <label for="arrival" class="block text-sm font-medium text-gray-700 mb-2">Local de Chegada:</label>
+                        <input type="text" id="arrival" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="Digite o endereço de chegada">
+                        <div id="arrival-suggestions" class="suggestions-container"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="fuel-efficiency" class="block text-sm font-medium text-gray-700 mb-2">Consumo (km/l):</label>
+                            <input type="number" id="fuel-efficiency" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="10" min="1" step="0.1" value="10">
+                        </div>
+                        <div>
+                            <label for="fuel-price" class="block text-sm font-medium text-gray-700 mb-2">Preço do combustível (R$/l):</label>
+                            <input type="number" id="fuel-price" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="5.50" min="0.1" step="0.01" value="5.50">
+                        </div>
+                    </div>
+
+                    <button id="calculate-route-btn" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-route mr-2"></i>
+                        Calcular Rota
+                    </button>
+
+                    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-3">Resultado da Rota</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600">Distância:</p>
+                                <p class="text-lg font-bold text-blue-800"><span id="route-distance">--</span> km</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Tempo estimado:</p>
+                                <p class="text-lg font-bold text-blue-800"><span id="route-duration">--</span></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                                <p class="text-sm text-gray-600">Combustível:</p>
+                                <p class="text-lg font-bold text-blue-800"><span id="route-fuel">--</span> litros</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Custo total:</p>
+                                <p class="text-lg font-bold text-blue-800">R$ <span id="route-cost">--</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-between">
+                        <button id="print-route-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimir Rota
+                        </button>
+                        <a href="{% url 'municipios:posto_list' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-1 relative">
+                    <div id="route-map" style="height: 500px;"></div>
+                    <div id="map-loading">
+                        <div class="text-center">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-2"></div>
+                            <p class="text-gray-700">Calculando rota...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="print-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Imprimir Rota</h2>
+            <button id="close-print-modal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="print-content">
+            </div>
+        <div class="mt-4 flex justify-end">
+            <button id="do-print" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-print mr-2"></i>
+                Imprimir
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.locatecontrol@0.78.0/dist/L.Control.Locate.min.js"></script>
+<script>
+    // Configurações
+    const config = {
+        nominatimUrl: 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=br&q=',
+        graphhopperUrl: 'https://graphhopper.com/api/1/route?key=6c6af96d-a385-488c-8551-596acfa0ad81&vehicle=car&locale=pt-BR&instructions=false&points_encoded=false',
+        defaultFuelEfficiency: 10,
+        defaultFuelPrice: 5.50,
+        debounceTime: 300
+    };
+    
+    // Elementos do DOM
+    const elements = {
+        departureInput: document.getElementById('departure'),
+        arrivalInput: document.getElementById('arrival'),
+        fuelEfficiencyInput: document.getElementById('fuel-efficiency'),
+        fuelPriceInput: document.getElementById('fuel-price'),
+        departureSuggestions: document.getElementById('departure-suggestions'),
+        arrivalSuggestions: document.getElementById('arrival-suggestions'),
+        calculateRouteBtn: document.getElementById('calculate-route-btn'),
+        useCurrentLocationBtn: document.getElementById('use-current-location'),
+        printRouteBtn: document.getElementById('print-route-btn'),
+        routeMap: document.getElementById('route-map'),
+        mapLoading: document.getElementById('map-loading'),
+        routeDistance: document.getElementById('route-distance'),
+        routeDuration: document.getElementById('route-duration'),
+        routeFuel: document.getElementById('route-fuel'),
+        routeCost: document.getElementById('route-cost'),
+        printModal: document.getElementById('print-modal'),
+        closePrintModal: document.getElementById('close-print-modal'),
+        doPrint: document.getElementById('do-print'),
+        printContent: document.getElementById('print-content')
+    };
+    
+    // Estado da aplicação
+    const state = {
+        map: null,
+        routeLayer: null,
+        departureMarker: null,
+        arrivalMarker: null,
+        currentLocation: null,
+        lastDepartureQuery: '',
+        lastArrivalQuery: '',
+        debounceTimer: null,
+        routeData: null
+    };
+    
+    // Inicialização do mapa
+    // Substitua a função initMap por esta versão corrigida
+    function initMap() {
+        // 1. Remova qualquer mapa existente
+        if (state.map) {
+            state.map.remove();
+        }
+    
+        // 2. Garanta que o container está visível e com dimensões
+        elements.routeMap.style.display = 'block';
+        elements.routeMap.style.height = '500px';
+        elements.routeMap.style.width = '100%';
+    
+        // 3. Pequeno delay para garantir renderização
+        setTimeout(() => {
+            // 4. Crie o mapa
+            state.map = L.map(elements.routeMap, {
+                center: [-15.788, -47.879],
+                zoom: 12,
+                zoomControl: true
+            });
+    
+            // 5. Adicione tiles com tratamento de erro
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19,
+                subdomains: ['a', 'b', 'c']
+            }).addTo(state.map);
+    
+            // 6. Forçar redimensionamento imediato
+            setTimeout(() => {
+                state.map.invalidateSize(true);
+            }, 0);
+        }, 100);
+    }
+    // Obter localização do usuário
+    async function getCurrentLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject('Geolocalização não suportada pelo navegador');
+                return;
+            }
+            
+            elements.departureInput.disabled = true;
+            elements.useCurrentLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const coords = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    state.currentLocation = coords;
+                    elements.departureInput.value = "Minha localização";
+                    elements.departureInput.disabled = false;
+                    elements.useCurrentLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i>';
+                    
+                    // Adiciona marcador da localização atual
+                    if (state.map) {
+                        if (state.departureMarker) {
+                            state.map.removeLayer(state.departureMarker);
+                        }
+                        
+                        state.departureMarker = L.marker([coords.lat, coords.lng], {
+                            icon: L.divIcon({
+                                className: 'current-location-marker',
+                                html: '<div class="relative"><div class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></div><div class="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></div></div>',
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12]
+                            })
+                        }).addTo(state.map)
+                        .bindPopup("Sua localização atual");
+                        
+                        state.map.setView([coords.lat, coords.lng], 14);
+                    }
+                    
+                    resolve(coords);
+                },
+                error => {
+                    console.error("Erro ao obter localização:", error);
+                    elements.departureInput.disabled = false;
+                    elements.useCurrentLocationBtn.innerHTML = '<i class="fas fa-location-arrow"></i>';
+                    
+                    let errorMessage = "Erro ao obter localização";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "Permissão de localização negada";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "Informações de localização indisponíveis";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "Tempo de espera para localização expirado";
+                            break;
+                    }
+                    
+                    reject(errorMessage);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+    
+    // Buscar sugestões de endereço
+    async function fetchAddressSuggestions(query, type) {
+        if (!query || query.length < 3) {
+            hideSuggestions(type);
+            return [];
+        }
+      
+        try {
+            const response = await fetch(`${config.nominatimUrl}${encodeURIComponent(query)}`);
+            if (!response.ok) throw new Error('Erro na API');
+        
+            const data = await response.json();
+            if (!Array.isArray(data)) {
+                throw new Error('Formato de resposta inválido');
+            }
+        
+            return data.map(item => ({
+                display_name: item.display_name,
+                lat: parseFloat(item.lat),
+                lon: parseFloat(item.lon)
+            }));
+        } catch (error) {
+            console.error('Erro ao buscar sugestões:', error);
+            hideSuggestions(type);
+            return [];
+        }
+    }
+    
+    // Exibir sugestões de endereço
+    function showSuggestions(suggestions, type, inputElement) {
+        const suggestionsElement = type === 'departure' ? elements.departureSuggestions : elements.arrivalSuggestions;
+        if (!suggestionsElement) return;
+        
+        suggestionsElement.innerHTML = '';
+        
+        if (suggestions.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'suggestion-item text-gray-500';
+            noResults.textContent = 'Nenhum resultado encontrado';
+            suggestionsElement.appendChild(noResults);
+        } else {
+            suggestions.forEach(item => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                
+                const mainText = document.createElement('div');
+                mainText.className = 'font-medium text-gray-800 truncate';
+                mainText.textContent = item.display_name.split(',')[0];
+                
+                const subText = document.createElement('div');
+                subText.className = 'text-xs text-gray-500 truncate';
+                subText.textContent = item.display_name.split(',').slice(1, 3).join(',').trim();
+                
+                suggestionItem.appendChild(mainText);
+                suggestionItem.appendChild(subText);
+                
+                suggestionItem.addEventListener('click', () => {
+                    inputElement.value = item.display_name;
+                    inputElement.dataset.lat = item.lat;
+                    inputElement.dataset.lng = item.lon;
+                    hideSuggestions(type);
+                    
+                    if (state.map) {
+                        state.map.setView([item.lat, item.lon], 14);
+                    }
+                });
+                
+                suggestionsElement.appendChild(suggestionItem);
+            });
+        }
+        
+        suggestionsElement.style.display = 'block';
+    }
+    
+    // Ocultar sugestões
+    function hideSuggestions(type) {
+        const suggestionsElement = type === 'departure' ? elements.departureSuggestions : elements.arrivalSuggestions;
+        if (suggestionsElement) {
+            suggestionsElement.style.display = 'none';
+        }
+    }
+    
+    // Obter coordenadas de partida
+    async function getDepartureCoords() {
+        if (elements.departureInput.value === "Minha localização") {
+            if (state.currentLocation) {
+                return state.currentLocation;
+            }
+            
+            try {
+                return await getCurrentLocation();
+            } catch (error) {
+                alert(error);
+                return null;
+            }
+        }
+        
+        if (elements.departureInput.dataset.lat && elements.departureInput.dataset.lng) {
+            return {
+                lat: parseFloat(elements.departureInput.dataset.lat),
+                lng: parseFloat(elements.departureInput.dataset.lng)
+            };
+        }
+        
+        alert('Por favor, selecione um local de partida válido');
+        return null;
+    }
+    
+    // Obter coordenadas de chegada
+    async function getArrivalCoords() {
+        if (elements.arrivalInput.dataset.lat && elements.arrivalInput.dataset.lng) {
+            return {
+                lat: parseFloat(elements.arrivalInput.dataset.lat),
+                lng: parseFloat(elements.arrivalInput.dataset.lng)
+            };
+        }
+        
+        alert('Por favor, selecione um local de chegada válido');
+        return null;
+    }
+    
+    // Buscar rota da API GraphHopper
+    async function fetchRoute(start, end) {
+        const url = `${config.graphhopperUrl}&point=${start.lat},${start.lng}&point=${end.lat},${end.lng}`;
+        
+        try {
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Erro na API: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao buscar rota:', error);
+            throw error;
+        }
+    }
+    
+    // Exibir rota no mapa
+    function displayRoute(routeData) {
+        if (!state.map || !routeData?.points?.coordinates) {
+            console.error('Dados da rota inválidos:', routeData);
+            throw new Error('Dados da rota inválidos');
+        }
+    
+        const coordinates = routeData.points.coordinates.map(coord => [coord[1], coord[0]]);
+        
+        if (state.routeLayer) {
+            state.map.removeLayer(state.routeLayer);
+        }
+        
+        state.routeLayer = L.polyline(coordinates, {
+            color: '#3b82f6',
+            weight: 6,
+            opacity: 0.8,
+            lineJoin: 'round'
+        }).addTo(state.map);
+        
+        // Ajusta a visualização para a rota completa
+        state.map.fitBounds(state.routeLayer.getBounds(), {
+            padding: [50, 50]
+        });
+        
+        // Atualiza o tamanho do mapa após renderização
+        setTimeout(() => {
+            state.map.invalidateSize();
+        }, 100);
+    }
+    
+    // Atualizar marcadores no mapa
+    function updateMarkers(departureCoords, arrivalCoords) {
+        if (!state.map) return;
+    
+        // Remove marcadores existentes
+        if (state.departureMarker) {
+            state.map.removeLayer(state.departureMarker);
+        }
+        if (state.arrivalMarker) {
+            state.map.removeLayer(state.arrivalMarker);
+        }
+        
+        // Adiciona marcador de partida (se não for a localização atual)
+        if (!state.currentLocation || 
+            departureCoords.lat !== state.currentLocation.lat || 
+            departureCoords.lng !== state.currentLocation.lng) {
+            
+            state.departureMarker = L.marker([departureCoords.lat, departureCoords.lng], {
+                icon: L.divIcon({
+                    className: 'departure-marker',
+                    html: '<div class="bg-blue-600 text-white rounded-full p-2 flex items-center justify-center shadow-lg"><i class="fas fa-map-marker-alt"></i></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(state.map)
+            .bindPopup("Ponto de partida");
+        }
+        
+        // Adiciona marcador de chegada
+        state.arrivalMarker = L.marker([arrivalCoords.lat, arrivalCoords.lng], {
+            icon: L.divIcon({
+                className: 'arrival-marker',
+                html: '<div class="bg-green-600 text-white rounded-full p-2 flex items-center justify-center shadow-lg"><i class="fas fa-flag-checkered"></i></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            })
+        }).addTo(state.map)
+        .bindPopup("Destino");
+    }
+    
+    // Exibir informações da rota
+    function displayRouteInfo(routeInfo) {
+        if (!routeInfo) return;
+    
+        const fuelEfficiency = parseFloat(elements.fuelEfficiencyInput.value) || config.defaultFuelEfficiency;
+        const fuelPrice = parseFloat(elements.fuelPriceInput.value) || config.defaultFuelPrice;
+        
+        const distanceKm = (routeInfo.distance / 1000).toFixed(1);
+        elements.routeDistance.textContent = distanceKm;
+        
+        const hours = Math.floor(routeInfo.time / 3600000);
+        const minutes = Math.floor((routeInfo.time % 3600000) / 60000);
+        
+        let durationText = '';
+        if (hours > 0) durationText += `${hours}h `;
+        durationText += `${minutes}min`;
+        
+        elements.routeDuration.textContent = durationText;
+        
+        const fuel = (distanceKm / fuelEfficiency).toFixed(1);
+        elements.routeFuel.textContent = fuel;
+        
+        const cost = (fuel * fuelPrice).toFixed(2);
+        elements.routeCost.textContent = cost;
+    }
+    
+    // Calcular rota
+    async function calculateRoute() {
+        if (!state.map) {
+            alert('Mapa não inicializado');
+            return;
+        }
+    
+        try {
+            const departureCoords = await getDepartureCoords();
+            const arrivalCoords = await getArrivalCoords();
+    
+            if (!departureCoords || !arrivalCoords) {
+                throw new Error('Coordenadas inválidas');
+            }
+    
+            elements.mapLoading.style.display = 'flex';
+            elements.calculateRouteBtn.disabled = true;
+    
+            updateMarkers(departureCoords, arrivalCoords);
+    
+            const route = await fetchRoute(departureCoords, arrivalCoords);
+    
+            if (route.paths && route.paths.length > 0) {
+                state.routeData = route.paths[0];
+                displayRoute(state.routeData);
+                displayRouteInfo(state.routeData);
+                elements.printRouteBtn.disabled = false;
+            } else {
+                throw new Error('Nenhuma rota encontrada');
+            }
+        } catch (error) {
+            console.error('Erro ao calcular rota:', error);
+            alert('Não foi possível calcular a rota. Por favor, verifique os locais e tente novamente.');
+        } finally {
+            elements.mapLoading.style.display = 'none';
+            elements.calculateRouteBtn.disabled = false;
+        }
+    }
+    
+    // Preparar impressão da rota
+    function preparePrint() {
+        if (!state.routeLayer || !state.routeData) {
+            alert('Nenhuma rota para imprimir');
+            return;
+        }
+        
+        const bounds = state.routeLayer.getBounds();
+        const departure = elements.departureInput.value;
+        const arrival = elements.arrivalInput.value;
+        
+        elements.printContent.innerHTML = `
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Resumo da Rota</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Origem:</p>
+                        <p class="font-medium">${departure}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Destino:</p>
+                        <p class="font-medium">${arrival}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Distância:</p>
+                        <p class="font-medium">${elements.routeDistance.textContent} km</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Tempo estimado:</p>
+                        <p class="font-medium">${elements.routeDuration.textContent}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Combustível estimado:</p>
+                        <p class="font-medium">${elements.routeFuel.textContent} litros</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Custo estimado:</p>
+                        <p class="font-medium">R$ ${elements.routeCost.textContent}</p>
+                    </div>
+                </div>
+            </div>
+            <div id="print-map" style="height: 400px;"></div>
+        `;
+        
+        elements.printModal.classList.remove('hidden');
+        
+        // Inicializar mapa de impressão
+        setTimeout(() => {
+            const printMap = L.map('print-map').setView(state.map.getCenter(), state.map.getZoom());
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(printMap);
+            
+            const coordinates = state.routeData.points.coordinates.map(coord => [coord[1], coord[0]]);
+            L.polyline(coordinates, {
+                color: '#3b82f6',
+                weight: 6,
+                opacity: 0.8,
+                lineJoin: 'round'
+            }).addTo(printMap);
+            
+            if (state.departureMarker) {
+                const depLatLng = state.departureMarker.getLatLng();
+                L.marker([depLatLng.lat, depLatLng.lng], {
+                    icon: L.divIcon({
+                        html: '<div class="bg-blue-600 text-white rounded-full p-2 flex items-center justify-center shadow-lg"><i class="fas fa-map-marker-alt"></i></div>',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30]
+                    })
+                }).addTo(printMap).bindPopup("Origem");
+            }
+            
+            if (state.arrivalMarker) {
+                const arrLatLng = state.arrivalMarker.getLatLng();
+                L.marker([arrLatLng.lat, arrLatLng.lng], {
+                    icon: L.divIcon({
+                        html: '<div class="bg-green-600 text-white rounded-full p-2 flex items-center justify-center shadow-lg"><i class="fas fa-flag-checkered"></i></div>',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30]
+                    })
+                }).addTo(printMap).bindPopup("Destino");
+            }
+            
+            printMap.fitBounds(bounds);
+        }, 100);
+    }
+    
+    // Debounce para pesquisas
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                func.apply(context, args);
+            }, wait);
+        };
+    }
+    
+    // Event Listeners
+    function setupEventListeners() {
+        // Eventos de input para sugestões
+        elements.departureInput.addEventListener('input', debounce(async () => {
+            const query = elements.departureInput.value.trim();
+            
+            if (query === "Minha localização") {
+                hideSuggestions('departure');
+                return;
+            }
+            
+            if (query.length >= 3 && query !== state.lastDepartureQuery) {
+                state.lastDepartureQuery = query;
+                const suggestions = await fetchAddressSuggestions(query, 'departure');
+                showSuggestions(suggestions, 'departure', elements.departureInput);
+            } else if (query.length < 3) {
+                hideSuggestions('departure');
+            }
+        }, config.debounceTime));
+        
+        elements.arrivalInput.addEventListener('input', debounce(async () => {
+            const query = elements.arrivalInput.value.trim();
+            
+            if (query.length >= 3 && query !== state.lastArrivalQuery) {
+                state.lastArrivalQuery = query;
+                const suggestions = await fetchAddressSuggestions(query, 'arrival');
+                showSuggestions(suggestions, 'arrival', elements.arrivalInput);
+            } else if (query.length < 3) {
+                hideSuggestions('arrival');
+            }
+        }, config.debounceTime));
+        
+        // Usar localização atual
+        elements.useCurrentLocationBtn.addEventListener('click', async () => {
+            try {
+                await getCurrentLocation();
+            } catch (error) {
+                alert(error);
+            }
+        });
+        
+        // Calcular rota
+        elements.calculateRouteBtn.addEventListener('click', calculateRoute);
+        
+        // Imprimir rota
+        elements.printRouteBtn.addEventListener('click', preparePrint);
+        
+        // Fechar modal de impressão
+        elements.closePrintModal.addEventListener('click', () => {
+            elements.printModal.classList.add('hidden');
+        });
+        
+        // Executar impressão
+        elements.doPrint.addEventListener('click', () => {
+            window.print();
+        });
+        
+        // Fechar sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+            if (!elements.departureInput.contains(e.target) && !elements.departureSuggestions.contains(e.target)) {
+                hideSuggestions('departure');
+            }
+            
+            if (!elements.arrivalInput.contains(e.target) && !elements.arrivalSuggestions.contains(e.target)) {
+                hideSuggestions('arrival');
+            }
+        });
+    }
+    
+    // Inicialização da aplicação
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        setupEventListeners();
+    });
+    </script>
+    {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% extends "base.html" %}
+{% load static %}
+{% block title %} Calendário {% endblock %}
+
+{% block 'body' %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/pt-br.js"></script>
 <style>
-    @keyframes diagonal-scroll {
-    0% { transform: translateY(-100%) translateX(-100%); }
-    100% { transform: translateY(100%) translateX(100%); }
+
+.fc-view-container {
+    overflow: hidden !important;
+    height: 100% !important;
 }
 
-.diagonal-overlay {
-    animation: diagonal-scroll 40s linear infinite;
-    background-image: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 10px,
-        rgba(0,0,0,0.1) 10px,
-        rgba(0,0,0,0.1) 20px
-    );
+.fc-scroller-liquid {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+.fc-scroller {
+    overflow: hidden !important;
+    height: 100% !important;
 }
 </style>
 
-<body>
+<div class="md:items-center md:justify-between rounded-lg mt-2 w-full" id="cad_efetivo">
+    <fieldset class=" p-4 mb-2 rounded-md w-full" id="second-fieldset">
 
-    <br>
-    <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
+  
+            <fieldset class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-md shadow-lg border-0">
+                <div class="p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">Agenda Pessoal</h1>
+                            <p class="text-gray-400 mt-1 tracking-wide">Consulte abaixo seus compromissos.</p>
+                        </div>
         
+                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button onclick="openModal('escolhaModal')" 
+                                    class="text-white bg-gradient-to-r from-green-400 to-green-600 hover:bg-gradient-to-br 
+                                            focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50 
+                                            font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+                                + Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+ 
+         <fieldset class="bg-gray-100 p-4 mb-8 rounded-md w-full" id="first-fieldset">   
+            <legend  class=" mb-8 rounded-md w-full" >
+                {% if messages %}
+                {% for message in messages %}
+                    <section class="alert {{ message.tags }}">
+                        {{ message }}
+                    </section>
+                {% endfor %}
+                {% endif %}
+            </legend>   
         
-     <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">   
-      
-        <fieldset class=" p-2 mb-8 rounded-md w-full" id="first-fieldset">
-       
-               <div class="flex flex-col h-auto rounded-[10px]">
-                <div class=" bg-gradient-to-r from-gray-600 to-gray-900 rounded-xl shadow-2xl  w-full p-8 transition-all duration-300 animate-fade-in">
-                    <div class="flex flex-col md:flex-row">
-                        <div class="md:w-1/3 text-center mb-8 md:mb-0 relative">
-                            {% if cadastro.imagens.exists %}
-                                {% with cadastro.promocoes.last as promocao %}
-                                <div class="relative group">
-                                    <div class="absolute inset-0 overflow-hidden rounded-full w-60 h-60 mx-auto mb-4 ">
-                                        <div class="absolute inset-0 grid grid-cols-6 grid-rows-5 -rotate-45 gap-4 opacity-20 pointer-events-none">
-                                            {% for _ in "x"|ljust:20 %}
-                                            <span class="text-gray-200 text-xs font-mono tracking-wider transform rotate-45">
-                                                {{ request.user.profile.cpf|default:"CPF Não Cadastrado" }}
-                                            </span>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    
-                                    {% if promocao.posto_grad == "Cel PM" or promocao.posto_grad == "Ten Cel PM" or promocao.posto_grad == "Maj PM" or promocao.posto_grad == "CAP PM" or promocao.posto_grad == "1º Ten PM" or promocao.posto_grad == "1º Ten QAPM" or promocao.posto_grad == "2º Ten PM" or promocao.posto_grad == "2º Ten QAPM" or promocao.posto_grad == "Asp OF PM" %}
-                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-500 transition-transform duration-300 hover:scale-105 object-cover">
-                                             {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
-                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-red-500 transition-transform duration-300 hover:scale-105 object-cover">
-                                    {% elif promocao.posto_grad == "Cb PM" or promocao.posto_grad == "Sd PM" or promocao.posto_grad == "Sd PM 2ºCL" %}
-                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-black transition-transform duration-300 hover:scale-105 object-cover">
-                                    {% else %}
-                                        <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-800 transition-transform duration-300 hover:scale-105 object-cover">
-                                    {% endif %}
-                                </div>
-                                {% endwith %}
-                            {% else %}
-                                <div class="text-gray-500">Sem imagem</div>
-                            {% endif %}
-                    
-                            <p class="text-gray-300 "> {{ cadastro.promocoes.last.grad|safe }}</p><br>
-                            <p class="text-gray-300 font-bold "> {{ cadastro.nome_de_guerra }}</p><br>
-                            
-                             <!-- Container dos Botões -->
-                        <div class="flex flex-col md:flex-row md:flex-wrap gap-3 justify-center w-full mt-4">
-                            <!-- Botão Trocar Foto -->
-                            <button type="button" 
-                                    class="w-full md:w-auto bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white 
-                                        font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
-                                        flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                Trocar Foto
-                            </button>
-                                         <!-- Botão Editar Posto/Grad -->
-                            <button type="button" 
-                            class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white 
-                                font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
-                                flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
-                                </svg>
-                                Editar Posto/Grad
-                            </button>
-                        </div>
-    
 
-                        <!-- Modal de Troca de Foto -->
-                        <div id="trocaFotoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                        <!-- Header -->
-                        <div class="flex items-center justify-between p-6 border-b border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Alterar Foto do Perfil</h3>
-                            <button type="button" 
-                                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                                    data-modal-close="#trocaFotoModal">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
+            <div class="flex flex-col min-h-screen w-full">
+                <!-- Cabeçalho e outros elementos (se houver) -->
+                <div class="flex-grow">
+                    <div id="calendar" class="h-full w-full"></div>
+                </div>
+            </div>
 
-                        <!-- Corpo do Modal -->
-                        <form method="POST" action="{% url 'efetivo:editar_imagem' cadastro.id %}" enctype="multipart/form-data" class="p-6">
-                            {% csrf_token %}
-                            <div class="space-y-6">
-                                <!-- Área de Upload -->
-                                <div class="group relative">
-                                    <input type="file" 
-                                        name="image" 
-                                        id="image" 
-                                        accept="image/*"
-                                        onchange="previewImage(event)"
-                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                                    
-                                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center transition-all
-                                            group-hover:border-cyan-500 group-hover:bg-gray-50">
-                                        <div class="max-w-xs mx-auto">
-                                            <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full overflow-hidden
-                                                    flex items-center justify-center">
-                                                <img id="preview" src="#" alt="Pré-visualização" class="hidden w-full h-full object-cover">
-                                                <svg class="w-12 h-12 text-gray-400 group-hover:text-cyan-500 transition-colors" 
-                                                    fill="none" 
-                                                    stroke="currentColor" 
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                </svg>
-                                            </div>
-                                            <p class="text-sm text-gray-500 mb-2">
-                                                Arraste ou clique para enviar
-                                            </p>
-                                            <p class="text-xs text-gray-400">
-                                                Formatos suportados: JPG, PNG (máx. 5MB)
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Ações -->
-                                <div class="flex justify-end gap-3">
-                                    <button type="button" 
-                                            data-modal-close="#trocaFotoModal"
-                                            class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" 
-                                            class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white 
-                                                font-medium rounded-lg hover:shadow-md transition-all">
-                                        Salvar Alterações
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                        </div>
-                        </div>
-
-                        <script>
-                            function previewImage(event) {
-                                const reader = new FileReader();
-                                const preview = document.getElementById('preview');
-                                const icon = preview.parentElement.querySelector('svg');
-
-                                reader.onload = (e) => {
-                                    preview.src = e.target.result;
-                                    preview.classList.remove('hidden');
-                                    icon?.classList.add('hidden');
-                                }
-                                reader.readAsDataURL(event.target.files[0]);
-                            }
-
-                            // Controle do Modal
-                            document.querySelectorAll('[data-modal-target]').forEach(button => {
-                                button.addEventListener('click', () => {
-                                    const modal = document.querySelector(button.dataset.modalTarget);
-                                    modal.classList.remove('hidden');
-                                });
-                            });
-
-                            document.querySelectorAll('[data-modal-close]').forEach(button => {
-                                button.addEventListener('click', () => {
-                                    const modal = button.closest('.fixed');
-                                    modal.classList.add('hidden');
-                                });
-                            });
-                        </script>
-            
-
-                    <!-- Modal Principal -->
-                    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between p-6 border-b border-gray-100">
-                        <h3 class="text-2xl font-bold text-gray-800">Editar Posto e Graduação</h3>
-                        <button type="button" 
-                                class="text-gray-400 hover:text-gray-600 transition-colors"
-                                data-modal-close="#editModal">
-                            &times;
+            <div id="escolhaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+                    <div class="flex items-center justify-between p-4 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Escolha o Tipo de Cadastro</h3>
+                        <button type="button" onclick="closeModal('escolhaModal')" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
                         </button>
                     </div>
-
-                    <!-- Corpo do Formulário -->
-                    <form id="editForm" method="POST" action="{% url 'efetivo:editar_posto_graduacao' cadastro.id %}" 
-                        class="p-6 space-y-6" novalidate>
-                        {% csrf_token %}
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Posto/Grad -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Posto/Graduação</label>
-                                <select name="posto_grad" 
-                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                            focus:ring-indigo-500 focus:border-transparent transition-all"
-                                        required>
-                                    {% for i in posto_grad %}
-                                    <option value="{{ i.0 }}" {% if promocao and promocao.posto_grad == i.0 %}selected{% endif %}>
-                                        {{ i.1 }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Quadro -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Quadro</label>
-                                <select name="quadro" 
-                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                            focus:ring-indigo-500 focus:border-transparent transition-all"
-                                        required>
-                                    {% for i in quadro %}
-                                    <option value="{{ i.0 }}" {% if promocao and promocao.quadro == i.0 %}selected{% endif %}>
-                                        {{ i.1 }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Grupo -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Grupo</label>
-                                <select name="grupo" 
-                                        class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                            focus:ring-indigo-500 focus:border-transparent transition-all"
-                                        required>
-                                    {% for i in grupo %}
-                                    <option value="{{ i.0 }}" {% if promocao and promocao.grupo == i.0 %}selected{% endif %}>
-                                        {{ i.1 }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Data Promoção -->
-                            <div class="space-y-2">
-                                <label class="block text-sm font-medium text-gray-700">Última Promoção</label>
-                                <input type="date" 
-                                    name="ultima_promocao" 
-                                    value="{% if promocao %}{{ promocao.ultima_promocao|date:'Y-m-d' }}{% endif %}"
-                                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                            focus:ring-indigo-500 focus:border-transparent transition-all"
-                                    required>
-                            </div>
-                        </div>
-
-                        <!-- Ações -->
-                        <div class="flex justify-end gap-3 pt-4">
-                            <button type="button" 
-                                    data-modal-close="#editModal"
-                                    class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                                Cancelar
-                            </button>
-                            <button type="button" 
-                                    onclick="showConfirmation()"
-                                    class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
-                                        hover:bg-indigo-700 transition-colors">
-                                Salvar Alterações
-                            </button>
-                        </div>
-                    </form>
-                    </div>
-                    </div>
-
-                    <!-- Modal de Confirmação -->
-                    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                    <div class="p-6 flex items-center gap-4 border-b border-gray-100">
-                        <div class="p-2 bg-yellow-100 rounded-full">
-                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800">Confirmar Alterações</h3>
-                    </div>
-
-                    <div class="p-6 space-y-6">
-                        <p class="text-gray-600">Tem certeza que deseja atualizar as informações de posto/graduação?</p>
-                        
-                        <div class="flex justify-end gap-3">
-                            <button type="button" 
-                                    onclick="closeConfirmation()"
-                                    class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                                Cancelar
-                            </button>
-                            <button type="button" 
-                                    onclick="submitForm()"
-                                    class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
-                                        hover:bg-indigo-700 transition-colors">
-                                Confirmar
-                            </button>
-                        </div>
-                    </div>
-                    </div>
-                    </div>
-
-                    <script>
-                        function showConfirmation() {
-                            document.getElementById('confirmModal').classList.remove('hidden');
-                        }
-
-                        function closeConfirmation() {
-                            document.getElementById('confirmModal').classList.add('hidden');
-                        }
-
-                        function submitForm() {
-                            document.getElementById('editForm').submit();
-                            closeConfirmation();
-                        }
-
-                        // Controle Modal Principal
-                        document.querySelectorAll('[data-modal-target]').forEach(button => {
-                            button.addEventListener('click', () => {
-                                const modal = document.querySelector(button.dataset.modalTarget);
-                                modal.classList.remove('hidden');
-                            });
-                        });
-
-                        document.querySelectorAll('[data-modal-close]').forEach(button => {
-                            button.addEventListener('click', () => {
-                                const modal = button.closest('.fixed');
-                                modal.classList.add('hidden');
-                            });
-                        });
-                    </script>
-                        </div>
-                        <div class="md:w-2/3 md:pl-8">
-                            <h1 class="text-3xl font-semibold text-gray-300 mb-4">{{ cadastro.nome}}</h1>
-                            <h4 class="text-1xl text-gray-500 mb-4" ><b>RE:</b> <span>{{ cadastro.re }}-{{ cadastro.dig }}</span></h4>
-                            <br>
-                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Principais Cursos</h2>
-                            <div class="flex flex-wrap gap-2 mb-6">
-                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">CSalt</span>
-                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Terrestre</span>
-                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Mergulho</span>
-                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">OVB</span>
-                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Incêndio</span>
-                            </div>
-                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Informações de Contato</h2>
-                            <ul class="space-y-2 text-gray-500 ">
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 " viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                    </svg>
-                                    {{ cadastro.email }}    </li>
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                                    </svg>
-                                    {{ cadastro.telefone }}
-                                </li>
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 dark:text-blue-900" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                    {{ cadastro.detalhes_situacao.last.sgb }}-     {{ cadastro.detalhes_situacao.last.posto_secao }}
-
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-        </fieldset> 
-        <fieldset class="    rounded-md">
-     
-            {% if messages %}
-            {% for message in messages %}
-                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                    {{ message }}
-                </section>
-            {% endfor %}
-            {% endif %}
-       
-    </fieldset>
-
-
-    <!-- Dados da Situação Funcional e Documentos -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
-        <!-- Situação Funcional -->
-        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-            <div class="flex-grow"> <!-- Conteúdo principal -->
-                <h2 class="text-xl font-semibold text-indigo-900 mb-2 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
-                    </svg>
-                    Situação Funcional
-                </h2>
-                <a href="{% url 'efetivo:historico_movimentacoes' cadastro.id %}" class="text-xs text-gray-600 hover:text-indigo-400 transition duration-300 block mb-2">
-                    Histórico de Movimentações e Promoções →
-                </a>
-                <hr class="my-4 border-gray-200">
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Situação:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Status:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status_cat|default:"- " }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">SGB:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Posto/Seção:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Adido ao:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Função:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Operacional/Adm:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</span>
+                    <div class="p-4 space-y-4">
+                        <button onclick="openModal('lembreteModal'); closeModal('escolhaModal')" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                            Cadastrar Lembrete
+                        </button>
+                        <button onclick="openModal('tarefaModal'); closeModal('escolhaModal')" class="w-full text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                            Cadastrar Tarefa
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Rodapé fixo -->
-            <div class="mt-auto pt-4">
-            
-                <button type="button" class="mt-4 w-2/4 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all" data-modal-target="#editSituacaoModal">
-                    Editar Sit. Funcional
-                </button>
-                    <!-- Primeiro Modal (Edição da Situação Atual) -->
-                    <div id="editSituacaoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                    <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
-                        <div class="flex justify-between bg-gray-800 p-4 ">
-                            <h5 class="text-xl text-gray-300">Editar Situação Funcional</h5>
-                            <button type="button" class="text-gray-500 hover:text-gray-700 w-5 h-5" data-modal-close="#editSituacaoModal">×</button>
-                        </div>
-                        <div class="p-4">
-                            <!-- Formulário de Edição -->
-                            <form id="editSituacaoForm" method="POST" action="{% url 'efetivo:editar_situacao_atual' cadastro.id %}">
-                                {% csrf_token %}
-                                <!-- Campos do formulário -->
-                                <br>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="situacao_atual" class="block mb-2 text-sm font-medium text-gray-400 ">Situação Atual</label>
-                                        <select name="situacao_atual" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="situacao_atual" required>
-                                            {% for value, label in situacao %}
-                                            <option value="{{ value }}" {% if detalhes and detalhes.situacao == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="cat_efetivo" class="block mb-2 text-sm font-medium text-gray-400">Detalhamento</label>
-                                        <select name="cat_efetivo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cat_efetivo" required>
-                                            {% for value, label in cat_efetivo %}
-                                            <option value="{{ value }}" {% if detalhes and detalhes.cat_efetivo == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="prontidao" class="block mb-2 text-sm font-medium text-gray-400">Qual Prontidão</label>
-                                        <select name="prontidao" id="prontidao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                                            {% for i in prontidao %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione sua prontidão.</div>
-                                    </div>
-                                    <div>
-                                        <label for="saida_da_unidade" class="block mb-2 text-sm font-medium text-gray-400 ">Data de Saída da Unidade</label>
-                                        <input type="date" name="saida_da_unidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="saida_da_unidade" value="{% if detalhes %}{{ detalhes.saida_da_unidade|date:'Y-m-d' }}{% endif %}" required>
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="flex justify-end space-x-2"> 
-                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#editSituacaoModal">Cancelar</button>
-                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Modal de Escolha -->
-                <div id="choiceModal" class="fixed inset-0 flex items-center justify-center w-120 bg-black bg-opacity-50 hidden">
-                    <div class="bg-gray-300 rounded-lg shadow-lg w-full max-w-md">
-                        <div class="flex justify-between  bg-gray-400 p-4">
-                            <h5 class="text-xl text-gray-00">Você deseja cadastrar nova Situação Funcional?</h5>
-                            <button type="button" class="text-gray-500 hover:text-gray-700 w-10 h-10" data-modal-close="#choiceModal">×</button>
-                        </div>
-                        <div class="p-4 text-center">
-                            <br>
-                            <br>
 
-                            <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#newSituacaoModal">SIM</button>
-                            <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#choiceModal" onclick="window.location.href='{% url 'efetivo:ver_militar' cadastro.id %}'">NÃO</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Segundo Modal (Cadastro da Nova Situação) -->
-                <div id="newSituacaoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                    <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
-                        <div class="flex justify-between bg-gray-800 items-center p-4 text-gray-300">
-                            <h5 class="text-xl font-medium">Cadastrar Nova Situação</h5>
-                            <button type="button" class="text-gray-500 hover:text-gray-700 w-5 h-5" data-modal-close="#newSituacaoModal">×</button>
-                        </div>
-                        <div class="p-4">
-                            <!-- Formulário de Cadastro -->
-                            <form id="newSituacaoForm" method="POST" action="{% url 'efetivo:cadastrar_nova_situacao' cadastro.id %}" class="row g-3 needs-validation" novalidate>
-                                {% csrf_token %}
-                                <!-- Campos do formulário -->
-                                <h2 class="text-lg text-gray-200 mb-4">Nova Situação</h2>
-                                <br>
-                                <div class="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label for="situacao" class="block mb-2 text-sm font-medium text-gray-400">Situação</label>
-                                        <select name="situacao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="situacao" required>
-                                            {% for i in situacao %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione a nova situação.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="cat_efetivo" class="block mb-2 text-sm font-medium text-gray-400">Detalhamento</label>
-                                        <select name="cat_efetivo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cat_efetivo" required>
-                                            {% for i in cat_efetivo %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione a nova situação.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="sgb" class="block mb-2 text-sm font-medium text-gray-400">SGB</label>
-                                        <select name="sgb" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="sgb" required>
-                                            {% for i in sgb %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione o SGB.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="posto_secao" class="block mb-2 text-sm font-medium text-gray-400">Posto ou Seção</label>
-                                        <select name="posto_secao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="posto_secao" required>
-                                            {% for i in posto_secao %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione o posto ou seção.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="esta_adido" class="block mb-2 text-sm font-medium text-gray-400">Está Adido?</label>
-                                        <select name="esta_adido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="esta_adido" required>
-                                            {% for i in esta_adido %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione se está adido a outro posto ou seção.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="funcao" class="block mb-2 text-sm font-medium text-gray-400">Função que exerce</label>
-                                        <select name="funcao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="funcao" required>
-                                            {% for i in funcao %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione a função que exerce.
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="op_adm" class="block mb-2 text-sm font-medium text-gray-400">Operacional ou Adm</label>
-                                        <select name="op_adm" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="op_adm" required>
-                                            {% for i in op_adm %}
-                                            <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, selecione se é operacional ou administrativo.
-                                        </div>
-                                    </div>
-                                
-                                    <div>
-                                        <label for="apresentacao_na_unidade" class="block mb-2 text-sm font-medium text-gray-400">Data da Apresentação</label>
-                                        <input type="date" name="apresentacao_na_unidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="apresentacao_na_unidade" required>
-                                        <div class="text-red-500 text-sm mt-1 hidden">
-                                            Por favor, insira a data da apresentação na unidade.
-                                        </div>
-                                    </div>
-                                </div>
-                                <br>
-                                <div class="flex justify-end space-x-2">
-                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#newSituacaoModal">Cancelar</button>
-                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
+<!-- Modal para Tarefa -->
+<div id="tarefaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Nova Tarefa</h3>
+            <button type="button" onclick="closeModal('tarefaModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="tarefaForm" method="post" action="{% url 'agenda:tarefa_nova' %}" onsubmit="submitForm(event, 'tarefaForm', 'tarefaModal')" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="titulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="titulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite o título" required>
             </div>
-        </fieldset>
-
-        <!-- Documentos e Contatos -->
-        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-            <div class="flex-grow"> <!-- Conteúdo principal -->
-                <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Documentos e Contatos
-                </h2>
-                <hr class="my-4 border-gray-200">
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">CPF:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.cpf|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">RG:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.rg|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">E-mail:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.email|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Telefone:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.telefone|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Matrícula:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.matricula|date:"d/m/Y"|default:"-" }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Admissão:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.admissao|date:"d/m/Y"|default:"-" }}</span>
-                    </div>
+            <div>
+                <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="descricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite a descrição"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="data_inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                    <input type="datetime-local" name="data_inicio" id="data_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="data_fim" class="block text-sm font-medium text-gray-700">Data de Término</label>
+                    <input type="datetime-local" name="data_fim" id="data_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="cor" class="block text-sm font-medium text-gray-700">Cor</label>
+                    <input type="color" name="cor" id="cor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="#3788d8" required>
                 </div>
             </div>
-
-            <!-- Rodapé fixo -->
-            <div class="mt-auto pt-4">
-                <button type="button" class="mt-4 w-2/4 text-gray-900 bg-gradient-to-r from-lime-200 via-lime-400 to-lime-500 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-lime-300 dark:focus:ring-lime-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all" data-modal-target="#editarDadosPessoaisModal">
-                    Editar Dados Pessoais e Contatos
+            <div class="mt-6 mb-8">
+                <button type="submit" class="mt-8 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Salvar Tarefa
                 </button>
             </div>
-               <!-- Modal de Edição de Dados Pessoais e Contatos -->
-               <div id="editarDadosPessoaisModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-2xl">
-                    <div class="flex justify-between items-center p-4 bg-gray-800">
-                        <h5 class="text-xl text-gray-200">Editar Dados Pessoais e Contatos</h5>
-                        <button type="button" class="text-gray-300 hover:text-gray-500" data-modal-close="#editarDadosPessoaisModal">&times;</button>
-                    </div>
-                    <div class="p-4">
-                        <br><br>
-                        <form method="POST" action="{% url 'efetivo:editar_dados_pessoais_contatos' cadastro.id %}" enctype="multipart/form-data" id="editForm1">
-                            {% csrf_token %}
-                        
-                                <div class="grid grid-cols-3 gap-4">
-                                    
-                                        <div>
-                                            <label for="re" class="block text-sm font-medium text-gray-400 dark:text-white">RE</label>
-                                            <input type="text" name="re" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="re" value="{{ cadastro.re }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="dig" class="block text-sm font-medium text-gray-400 dark:text-white">Dig</label>
-                                            <input type="text" name="dig" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="dig" value="{{ cadastro.dig }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="nome" class="block text-sm font-medium text-gray-400 dark:text-white">Nome</label>
-                                            <input type="text" name="nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nome" value="{{ cadastro.nome }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="nome_de_guerra" class="block text-sm font-medium text-gray-400 dark:text-white">Nome de Guerra</label>
-                                            <input type="text" name="nome_de_guerra" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nome_de_guerra" value="{{ cadastro.nome_de_guerra }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="genero" class="block text-sm font-medium text-gray-400 dark:text-white">Gênero</label>
-                                            <select name="genero" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="genero" required>
-                                                {% for i in genero %}
-                                                <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label for="nasc" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Nascimento</label>
-                                            <input type="date" name="nasc" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="nasc" value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="matricula" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Matrícula</label>
-                                            <input type="date" name="matricula" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="matricula" value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="admissao" class="block text-sm font-medium text-gray-400 dark:text-white">Data de Admissão</label>
-                                            <input type="date" name="admissao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="admissao" value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="previsao_de_inatividade" class="block text-sm font-medium text-gray-400 dark:text-white">Prev. de Inatividade</label>
-                                            <input type="date" name="previsao_de_inatividade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="previsao_de_inatividade" value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="cpf" class="block text-sm font-medium text-gray-400 dark:text-white">CPF</label>
-                                            <input type="text" name="cpf" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="cpf" value="{{ cadastro.cpf }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="rg" class="block text-sm font-medium text-gray-400 dark:text-white">RG</label>
-                                            <input type="text" name="rg" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="rg" value="{{ cadastro.rg }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="tempo_para_averbar_inss" class="block text-sm font-medium text-gray-400 dark:text-white">INSS</label>
-                                            <input type="text" name="tempo_para_averbar_inss" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="tempo_para_averbar_inss" value="{{ cadastro.tempo_para_averbar_inss }}">
-                                        </div>
-                                        <div>
-                                            <label for="tempo_para_averbar_militar" class="block text-sm font-medium text-gray-400 dark:text-white">Militar</label>
-                                            <input type="text" name="tempo_para_averbar_militar" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="tempo_para_averbar_militar" value="{{ cadastro.tempo_para_averbar_militar }}">
-                                        </div>
-                                        <div>
-                                            <label for="email" class="block text-sm font-medium text-gray-400 dark:text-white">Email</label>
-                                            <input type="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="email" value="{{ cadastro.email}}" required>
-                                        </div>
-                                        <div>
-                                            <label for="telefone" class="block text-sm font-medium text-gray-400 dark:text-white">Telefone</label>
-                                            <input type="tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="telefone" value="{{ cadastro.telefone }}" required>
-                                        </div>
-                                        <div>
-                                            <label for="alteracao" class="block text-sm font-medium text-gray-400 dark:text-white">Motivo da Alteração</label>
-                                            <select name="alteracao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="alteracao" required>
-                                                {% for i in alteracao %}
-                                                <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    
-                            <div class="flex justify-end space-x-2 mt-4">
-
-                                    <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#editarDadosPessoaisModal">Cancelar</button>
-                                    <button type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#confirmModal-geral">Salvar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal de Confirmação -->
-            <div id="confirmModal-geral" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
-                    <div class="flex justify-between items-center p-4 bg-gray-800">
-                        <h5 class="text-xl text-gray-200">Confirmar Alterações</h5>
-                        <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close="#confirmModal-geral">&times;</button>
-                    </div>
-                    <br>
-                    <br>
-                    <div class="p-4 text-gray-400">
-                        Tem certeza de que deseja salvar as alterações?
-                    </div>
-                    <div class="flex justify-end space-x-2 p-4">
-
-                        <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#confirmModal-geral">Cancelar</button>
-                        <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"  id="confirmSave1">Salvar</button>
-                    </div>
-                </div>
-            </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const openModalButtons = document.querySelectorAll('[data-modal-target]');
-                    const closeModalButtons = document.querySelectorAll('[data-modal-close]');
-
-                    openModalButtons.forEach(button => {
-                        button.addEventListener('click', () => {
-                            const modal = document.querySelector(button.dataset.modalTarget);
-                            openModal(modal);
-                        });
-                    });
-
-                    closeModalButtons.forEach(button => {
-                        button.addEventListener('click', () => {
-                            const modal = button.closest('.fixed');
-                            closeModal(modal);
-                        });
-                    });
-
-                    function openModal(modal) {
-                        if (modal == null) return;
-                        modal.classList.remove('hidden');
-                    }
-
-                    function closeModal(modal) {
-                        if (modal == null) return;
-                        modal.classList.add('hidden');
-                    }
-
-                    const confirmSave1 = document.getElementById('confirmSave1');
-                    confirmSave1.addEventListener('click', () => {
-                        document.getElementById('editForm1').submit();
-                        const modal = document.getElementById('confirmModal-geral');
-                        closeModal(modal);
-                    });
-                });
-            </script>
-        </fieldset>
+        </form>
     </div>
+</div>
+
+<!-- Modal de Visualização -->
+
+<div id="visualizarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-[90vw] max-h-[90vh] w-2/3 md:max-w-[50vw] md:max-h-[80vh] mx-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Detalhes do Evento</h3>
+            <div class="flex space-x-2">
+                <button onclick="abrirModalEdicao()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                </button>
+                <button onclick="abrirModalExclusao()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+                <button onclick="closeModal('visualizarModal')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 space-y-4 overflow-y-auto max-h-[calc(80vh-100px)]">
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 rounded-full" id="eventoCor" style="background-color: #3788d8;"></div>
+                <span id="eventoTitulo" class="text-xl font-semibold">Título do Evento</span>
+            </div>
+
+            <div>
+                <span class="text-sm text-gray-600">Data:</span>
+                <span id="eventoData" class="text-sm text-gray-900">10 de março de 2024</span>
+            </div>
+
+            <div class="max-h-[30vh] overflow-y-auto">
+                <span class="text-sm text-gray-600">Descrição:</span>
+                <p id="eventoDescricao" class="text-sm text-gray-900">Descrição do evento. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            </div>
+
+            <div>
+                <span class="text-sm text-gray-600">Organizador:</span>
+                <span id="eventoOrganizador" class="text-sm text-gray-900">Nome do Organizador</span>
+            </div>
+        </div>
+    </div>
+</div>
 
 
-      
- 
-    <script>
-        <script>
-// Adicione este script no final do body ou garanta que ele rode após o DOM estar carregado
-document.addEventListener('DOMContentLoaded', () => {
-    // Função genérica para controle de modais
-    const modalController = (openButtons, closeButtons) => {
-        openButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const target = button.dataset.modalTarget;
-                const modal = document.querySelector(target);
-                if (modal) modal.classList.remove('hidden');
-            });
-        });
+<!-- Badge Flutuante -->
+<div class="fixed bottom-4 right-4 z-50">
+    <button onclick="abrirPopupEventosProximos()" class="bg-red-500 text-white rounded-full p-3 relative">
+        <span id="badgeNotificacoesFlutuante" class="absolute -top-2 -right-2 bg-red-700 text-white rounded-full px-2 py-1 text-xs">0</span>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+        </svg>
+    </button>
+</div>
+<!-- Pop-up de Eventos Próximos -->
+<div id="popupEventosProximos" class="hidden fixed bottom-20 right-4 bg-white rounded-lg shadow-lg w-80 p-4 z-50">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Eventos Próximos</h3>
+        <button onclick="fecharPopupEventosProximos()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <div id="listaEventosProximos" class="space-y-2">
+        <!-- Eventos serão carregados aqui -->
+    </div>
+</div>
 
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const modal = button.closest('.fixed');
-                if (modal) modal.classList.add('hidden');
-            });
-        });
-    };
-
-    // Configurar para todos os modais
-    const allOpenButtons = document.querySelectorAll('[data-modal-target]');
-    const allCloseButtons = document.querySelectorAll('[data-modal-close]');
-    modalController(allOpenButtons, allCloseButtons);
-
-    // Funções específicas para o modal de confirmação
-    function showConfirmation() {
-        document.getElementById('confirmModal').classList.remove('hidden');
-    }
-
-    function closeConfirmation() {
-        document.getElementById('confirmModal').classList.add('hidden');
-    }
-
-    function submitForm() {
-        document.getElementById('editForm').submit();
-        closeConfirmation();
-    }
-
-    // Atribuir eventos aos botões de confirmação
-    document.getElementById('confirmSave')?.addEventListener('click', submitForm);
-});
-
-// Função de preview de imagem (mantida igual)
-function previewImage(event) {
-    const reader = new FileReader();
-    const preview = document.getElementById('preview');
-    const icon = preview.parentElement.querySelector('svg');
-
-    reader.onload = (e) => {
-        preview.src = e.target.result;
-        preview.classList.remove('hidden');
-        icon?.classList.add('hidden');
-    }
-    reader.readAsDataURL(event.target.files[0]);
-}
-</script>
-    // Controle do Modal
-    function openDeleteModal() {
-        document.getElementById('exampleModal').classList.remove('hidden');
-        document.getElementById('passwordInput').focus();
-    }
+<script>
+    function abrirPopupEventosProximos() {
+        fetch('/agenda/eventos-proximos/')
+            .then(response => response.json())
+            .then(data => {
+                const listaEventos = document.getElementById('listaEventosProximos');
+                listaEventos.innerHTML = ''; // Limpa a lista
     
-    function closeDeleteModal() {
-        document.getElementById('exampleModal').classList.add('hidden');
-        document.getElementById('passwordError').classList.add('hidden');
-    }
+                if (data.eventos.length > 0) {
+                    data.eventos.forEach(evento => {
+                        const item = document.createElement('div');
+                        item.className = 'bg-gray-100 p-2 rounded-lg mb-2';
     
-    // Tratamento de mensagens de erro
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.extra_tags == 'delete_error' %}
-                document.getElementById('passwordError').innerText = '{{ message }}';
-                document.getElementById('passwordError').classList.remove('hidden');
-                openDeleteModal();
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-    </script>
-     </fieldset>
-
-        <script>
-            function validatePassword() {
-                const password = document.getElementById('password').value;
-                const correctPassword = 'suaSenhaAqui'; // Substitua por sua lógica de verificação de senha
-        
-                if (password === correctPassword) {
-                    window.location.href = "{% url 'efetivo:excluir_militar' cadastro.id %}";
+                        // Calcula o tempo restante
+                        const dataEvento = new Date(evento.data);
+                        const agora = new Date();
+                        const diferenca = dataEvento - agora; // Diferença em milissegundos
+    
+                        const horasRestantes = Math.floor(diferenca / (1000 * 60 * 60));
+                        const minutosRestantes = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+    
+                        // Formata a data para exibição amigável
+                        const opcoesData = { 
+                            weekday: 'long', 
+                            day: 'numeric', 
+                            month: 'long', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        };
+                        const dataFormatada = dataEvento.toLocaleDateString('pt-BR', opcoesData);
+    
+                        // Exibe o tempo restante e a data formatada
+                        item.innerHTML = `
+                            <strong>${evento.titulo}</strong><br>
+                            <span class="text-sm text-gray-600">${evento.tipo}</span><br>
+                            <span class="text-sm text-gray-600">Data: ${dataFormatada}</span><br>
+                            <span class="text-sm text-gray-600">Vence em: ${horasRestantes}h ${minutosRestantes}m</span>
+                        `;
+                        listaEventos.appendChild(item);
+                    });
                 } else {
-                    alert('Senha incorreta. Tente novamente.');
+                    listaEventos.innerHTML = '<p class="text-gray-500">Nenhum evento próximo.</p>';
                 }
+    
+                // Abre o pop-up
+                document.getElementById('popupEventosProximos').classList.remove('hidden');
+            });
+    }
+    
+    function fecharPopupEventosProximos() {
+        document.getElementById('popupEventosProximos').classList.add('hidden');
+    }
+    
+    // Atualiza o badge flutuante e o badge no aside
+    function atualizarBadge() {
+        fetch('/agenda/eventos-proximos/')
+            .then(response => response.json())
+            .then(data => {
+                const badgeFlutuante = document.getElementById('badgeNotificacoesFlutuante');
+                const badgeAside = document.getElementById('badgeNotificacoesAside');
+    
+                if (data.eventos.length > 0) {
+                    badgeFlutuante.textContent = data.eventos.length;
+                    badgeAside.textContent = data.eventos.length;
+    
+                    badgeFlutuante.classList.remove('hidden');
+                    badgeAside.classList.remove('hidden');
+                } else {
+                    badgeFlutuante.textContent = '0';
+                    badgeAside.textContent = '0';
+    
+                    badgeFlutuante.classList.add('hidden');
+                    badgeAside.classList.add('hidden');
+                }
+            });
+    }
+    
+    // Atualiza os badges a cada 5 minutos (300000 ms)
+    setInterval(atualizarBadge, 300000);
+    
+    // Atualiza os badges ao carregar a página
+    document.addEventListener('DOMContentLoaded', atualizarBadge);
+</script>
+<!-- Modal para Lembrete -->
+<div id="lembreteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Novo Lembrete</h3>
+            <button type="button" onclick="closeModal('lembreteModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="lembreteForm" method="post" action="{% url 'agenda:lembrete_novo' %}" onsubmit="submitForm(event, 'lembreteForm', 'lembreteModal')" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="lembreteTitulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="lembreteTitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite o título" required>
+            </div>
+            <div>
+                <label for="lembreteDescricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="lembreteDescricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Digite a descrição"></textarea>
+            </div>
+            <div>
+                <label for="lembreteData" class="block text-sm font-medium text-gray-700">Data</label>
+                <input type="datetime-local" name="data" id="lembreteData" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="lembreteCor" class="block text-sm font-medium text-gray-700">Cor</label>
+                <input type="color" name="cor" id="lembreteCor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" value="#3788d8" required>
+            </div>
+            <div class="mt-6 mb-8">
+                <button type="submit" class="mt-8 w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Salvar Lembrete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Exclusão -->
+<div id="excluirModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Excluir Evento</h3>
+            <button onclick="closeModal('excluirModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="p-4 space-y-4">
+            <p class="text-gray-700">Tem certeza que deseja excluir este evento?</p>
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="closeModal('excluirModal')" class="text-gray-700 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmarExclusao()" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </fieldset>
+    <!-- Modal de Edição para Lembretes -->
+<div id="editarLembreteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Editar Lembrete</h3>
+            <button type="button" onclick="closeModal('editarLembreteModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="editarLembreteForm" method="post" action="" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="editarLembreteTitulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="editarLembreteTitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarLembreteDescricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="editarLembreteDescricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+            <div>
+                <label for="editarLembreteData" class="block text-sm font-medium text-gray-700">Data</label>
+                <input type="datetime-local" name="data" id="editarLembreteData" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarLembreteCor" class="block text-sm font-medium text-gray-700">Cor</label>
+                <input type="color" name="cor" id="editarLembreteCor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div class="mt-6 mb-8">
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Atualizar Lembrete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Edição para Tarefas -->
+<div id="editarTarefaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">Editar Tarefa</h3>
+            <button type="button" onclick="closeModal('editarTarefaModal')" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="editarTarefaForm" method="post" action="" class="p-4 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="editarTarefaTitulo" class="block text-sm font-medium text-gray-700">Título</label>
+                <input type="text" name="titulo" id="editarTarefaTitulo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label for="editarTarefaDescricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea id="editarTarefaDescricao" name="descricao" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="editarTarefaDataInicio" class="block text-sm font-medium text-gray-700">Data Início</label>
+                    <input type="datetime-local" name="data_inicio" id="editarTarefaDataInicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="editarTarefaDataFim" class="block text-sm font-medium text-gray-700">Data Término</label>
+                    <input type="datetime-local" name="data_fim" id="editarTarefaDataFim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label for="editarTarefaCor" class="block text-sm font-medium text-gray-700">Cor</label>
+                    <input type="color" name="cor" id="editarTarefaCor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+            </div>
+            <div class="mt-6 mb-8">
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Atualizar Tarefa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+    
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    
+        function setModalData(modalId, date) {
+            if (modalId === 'lembreteModal') {
+                document.getElementById('lembreteData').value = date.format('YYYY-MM-DDTHH:mm:ss');
+            } else if (modalId === 'tarefaModal') {
+                document.getElementById('tarefaDataInicio').value = date.format('YYYY-MM-DDTHH:mm:ss');
+                document.getElementById('tarefaDataFim').value = date.format('YYYY-MM-DDTHH:mm:ss');
             }
-        
-            document.querySelectorAll('[data-modal-target]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = document.querySelector(button.getAttribute('data-modal-target'));
-                    modal.classList.remove('hidden');
-                });
+        }
+    
+        // Fechar o modal de escolha após clicar em uma opção
+        document.querySelectorAll('#escolhaModal button').forEach(button => {
+            button.addEventListener('click', function() {
+                closeModal('escolhaModal');
             });
-        
-            document.querySelectorAll('[data-modal-close]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = document.querySelector(button.getAttribute('data-modal-close'));
-                    modal.classList.add('hidden');
-                });
-            });
-        </script>
-        
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const openModalButtons = document.querySelectorAll('[data-modal-target]');
-                const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+        });
     
-                openModalButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modal = document.querySelector(button.dataset.modalTarget);
-                        openModal(modal);
-                    });
-                });
+        $(document).ready(function() {
+            $('#calendar').fullCalendar({
+                height: 'parent',
+                contentHeight: 'auto',
+                handleWindowResize: true,
+                windowResize: function(view) {
+                    $('.fc-view-container').height($('#calendar').height());
+                },
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay, list'
+                },
+                locale: 'pt-br',
+                selectable: true,
+                selectHelper: true,
+                select: function(start, end) {
+                    openModal('escolhaModal');
+                    setModalData('lembreteModal', start);
+                    setModalData('tarefaModal', start);
+                },
+                events: [
+                    {% for lembrete in lembretes %}
+                    {
+                        title: '{{ lembrete.titulo|escapejs }} (Lembrete)',
+                        start: '{{ lembrete.data|date:"Y-m-d\\TH:i:s" }}',
+                        color: '{{ lembrete.cor|escapejs }}',
+                        id: 'lembrete-{{ lembrete.id }}',
+                        descricao: '{{ lembrete.descricao|escapejs }}'
+                    },
+                    {% endfor %}
+                    {% for tarefa in tarefas %}
+                    {
+                        title: '{{ tarefa.titulo|escapejs }} (Tarefa)',
+                        start: '{{ tarefa.data_inicio|date:"Y-m-d\\TH:i:s" }}',
+                        end: '{{ tarefa.data_fim|date:"Y-m-d\\TH:i:s" }}',
+                        color: '{{ tarefa.cor|escapejs }}',
+                        id: 'tarefa-{{ tarefa.id }}',
+                        descricao: '{{ tarefa.descricao|escapejs }}'
+                    },
+                    {% endfor %}
+                ],
+                dayRender: function(date, cell) {
+                    const dataBase = moment('2024-03-23');
+                    const diffDays = date.diff(dataBase, 'days');
+                    const colorClasses = ['green', 'yellow', 'blue'];
+                    const colorIndex = Math.abs(diffDays % 3);
     
-                closeModalButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modal = button.closest('.fixed');
-                        closeModal(modal);
-                    });
-                });
-    
-                function openModal(modal) {
-                    if (modal == null) return;
-                    modal.classList.remove('hidden');
-                }
-    
-                function closeModal(modal) {
-                    if (modal == null) return;
-                    modal.classList.add('hidden');
-                }
-            });
-        </script>
-        <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const openModalButtons = document.querySelectorAll('[data-modal-target]');
-            const closeModalButtons = document.querySelectorAll('[data-modal-close]');
-    
-            openModalButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = document.querySelector(button.dataset.modalTarget);
-                    openModal(modal);
-                });
-            });
-    
-            closeModalButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = button.closest('.fixed');
-                    closeModal(modal);
-                });
-            });
-    
-            function openModal(modal) {
-                if (modal == null) return;
-                modal.classList.remove('hidden');
-            }
-    
-            function closeModal(modal) {
-                if (modal == null) return;
-                modal.classList.add('hidden');
+                    const colorPoint = document.createElement('div');
+                    colorPoint.style.position = 'absolute';
+                    colorPoint.style.top = '2px';
+                    colorPoint.style.left = '2px';
+                    colorPoint.style.width = '10px';
+                    colorPoint.style.height = '10px';
+                    colorPoint.style.backgroundColor = colorClasses[colorIndex];
+                    colorPoint.style.borderRadius = '50%';
+                    cell.css('position', 'relative');
+                    cell.append(colorPoint);
+                },
+                eventClick: function(event) {
+                    abrirModalVisualizacao(event);
+                },
+                views: {
+                    list: {
+                        listDayFormat: 'DD [de] MMMM [de] YYYY',
+                        listDayAltFormat: 'DD [de] MMMM [de] YYYY',
+                        listWeekends: true,
+                        listGroupField: 'start',
+                        listGroupFormat: { month: 'long', day: 'numeric', year: 'numeric' },
+                        visibleRange: function(currentDate) {
+                            return {
+                                start: currentDate.clone().startOf('day'),
+                                end: currentDate.clone().add(1, 'year')
+                            };
+                        }
+                    }
+                },
+                viewRender: function() {
+                // Aplicar classes personalizadas ao botão "today"
+                $('.fc-today-button').addClass('text-white bg-gray-500 hover:bg-gray-700 px-4 py-2 rounded-md');
+                $('.fc-center h2').addClass('text-3xl font-semibold text-gray-700');
+
+                // Verificar se o botão "today" foi estilizado corretamente
+                console.log('Botão "today" estilizado:', $('.fc-today-button').hasClass('text-white'));
+                
             }
         });
-        </script>
-    </div>
+        
+    });
+    
+        function abrirModalVisualizacao(evento) {
+            eventoAtual = evento;
+            document.getElementById('eventoTitulo').textContent = evento.title;
+            document.getElementById('eventoDescricao').textContent = evento.descricao || 'Sem descrição.';
+            document.getElementById('eventoCor').style.backgroundColor = evento.color || '#3788d8';
+    
+            const dataInicio = new Date(evento.start);
+            const dataFim = new Date(evento.end);
+            const opcoesData = { year: 'numeric', month: 'long', day: 'numeric' };
+            const opcoesHora = { hour: '2-digit', minute: '2-digit' };
+    
+            let textoData = dataInicio.toLocaleDateString('pt-BR', opcoesData);
+            if (evento.end) {
+                textoData += ` - ${dataFim.toLocaleDateString('pt-BR', opcoesData)}`;
+            }
+            document.getElementById('eventoData').textContent = textoData;
+            document.getElementById('eventoOrganizador').textContent = evento.organizador || 'Sem organizador.';
+            openModal('visualizarModal');
+        }
+    </script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const openModalButtons = document.querySelectorAll('[data-modal-target]');
-            const closeModalButtons = document.querySelectorAll('[data-modal-close]');
-            
-            openModalButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = document.querySelector(button.dataset.modalTarget);
-                    openModal(modal);
-                });
-            });
-            
-            closeModalButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const modal = button.closest('.fixed');
-                    closeModal(modal);
-                });
-            });
-            
-            function openModal(modal) {
-                if (modal == null) return;
-                modal.classList.remove('hidden');
+        function submitForm(event, formId, modalId) {
+            event.preventDefault();
+            var form = document.getElementById(formId);
+            var formData = new FormData(form);
+        
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal(modalId);
+                window.location.reload(); // Recarrega a página inteira
+            } else {
+                alert(data.message);
             }
-            
-            function closeModal(modal) {
-                if (modal == null) return;
-                modal.classList.add('hidden');
+        })
+        .catch(error => console.error('Error:', error));
+        }
+
+
+        let eventoAtual = null; // Variável para armazenar o evento atual
+
+       
+        function abrirModalVisualizacao(evento) {
+            console.log('Evento clicado:', evento); // Verifique os dados no console
+            eventoAtual = evento;
+        
+            // Preenche os campos do modal com os dados do evento
+            document.getElementById('eventoTitulo').textContent = evento.title;
+            document.getElementById('eventoDescricao').textContent = evento.descricao || 'Sem descrição.';
+            document.getElementById('eventoCor').style.backgroundColor = evento.color || '#3788d8';
+        
+            // Formata a data
+            const dataInicio = new Date(evento.start);
+            const dataFim = new Date(evento.end);
+            const opcoesData = { year: 'numeric', month: 'long', day: 'numeric' };
+            const opcoesHora = { hour: '2-digit', minute: '2-digit' };
+        
+            let textoData = dataInicio.toLocaleDateString('pt-BR', opcoesData);
+            if (evento.end) {
+                textoData += ` - ${dataFim.toLocaleDateString('pt-BR', opcoesData)}`;
             }
-            
-            const editSituacaoForm = document.getElementById('editSituacaoForm');
-            editSituacaoForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const formData = new FormData(editSituacaoForm);
-                fetch(editSituacaoForm.action, {
+            document.getElementById('eventoData').textContent = textoData;
+        
+            // Organizador (se disponível)
+            document.getElementById('eventoOrganizador').textContent = evento.organizador || 'Sem organizador.';
+        
+            // Abre o modal
+            openModal('visualizarModal');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+        
+        function enviarEmail() {
+            alert('Enviar e-mail com detalhes do evento.');
+        }
+        
+        function abrirOpcoes() {
+            alert('Abrir menu de opções.');
+        }
+
+
+        function excluirEvento() {
+            if (eventoAtual) {
+                closeModal('visualizarModal'); // Fecha o modal de visualização
+                openModal('excluirModal'); // Abre o modal de exclusão
+            }
+        }
+        
+        function confirmarExclusao() {
+            if (eventoAtual) {
+                const eventoId = eventoAtual.id.split('-')[1]; // Obtém o ID do evento
+                const tipoEvento = eventoAtual.id.split('-')[0]; // Obtém o tipo do evento (lembrete ou tarefa)
+        
+                fetch(`/agenda/${tipoEvento}/excluir/${eventoId}/`, {
                     method: 'POST',
-                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const choiceModal = document.getElementById('choiceModal');
-                        openModal(choiceModal);
+                        $('#calendar').fullCalendar('refetchEvents'); // Recarrega os eventos no calendário
+                        closeModal('excluirModal');
                     } else {
-                        alert('Erro ao salvar a situação atual.');
+                        alert(data.message);
                     }
                 })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('Erro ao salvar a situação atual.');
-                });
-            });
-            
-            const newSituacaoForm = document.getElementById('newSituacaoForm');
-            newSituacaoForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                newSituacaoForm.submit();
-            });
-        });
-   </script>
-        
-<script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
-</body>
+                .catch(error => console.error('Erro:', error));
+            }
+        }
 
-{% endblock  %}
+        function editarEvento() {
+            if (eventoAtual) {
+                closeModal('visualizarModal'); // Fecha o modal de visualização
+                if (eventoAtual.id.startsWith('lembrete-')) {
+                    // Abre o modal de edição de lembrete
+                    openModal('lembreteModal');
+                    // Preenche os campos do modal de edição com os dados do lembrete
+                    document.getElementById('lembreteForm').titulo.value = eventoAtual.title;
+                    document.getElementById('lembreteForm').descricao.value = eventoAtual.descricao || '';
+                    document.getElementById('lembreteForm').data.value = eventoAtual.start.format('YYYY-MM-DDTHH:mm:ss');
+                    document.getElementById('lembreteForm').cor.value = eventoAtual.color || '#3788d8';
+                } else if (eventoAtual.id.startsWith('tarefa-')) {
+                    // Abre o modal de edição de tarefa
+                    openModal('tarefaModal');
+                    // Preenche os campos do modal de edição com os dados da tarefa
+                    document.getElementById('tarefaForm').titulo.value = eventoAtual.title;
+                    document.getElementById('tarefaForm').descricao.value = eventoAtual.descricao || '';
+                    document.getElementById('tarefaForm').data_inicio.value = eventoAtual.start.format('YYYY-MM-DDTHH:mm:ss');
+                    document.getElementById('tarefaForm').data_fim.value = eventoAtual.end.format('YYYY-MM-DDTHH:mm:ss');
+                    document.getElementById('tarefaForm').cor.value = eventoAtual.color || '#3788d8';
+                }
+            }
+        }
+        function abrirModalEdicao() {
+    closeModal('visualizarModal');
+    
+    if (eventoAtual.id.startsWith('lembrete-')) {
+        const form = document.getElementById('editarLembreteForm');
+        const id = eventoAtual.id.split('-')[1];
+        
+        form.action = `/agenda/lembrete/editar/${id}/`;
+        document.getElementById('editarLembreteTitulo').value = eventoAtual.title.replace(' (Lembrete)', '');
+        document.getElementById('editarLembreteDescricao').value = eventoAtual.descricao || '';
+        document.getElementById('editarLembreteData').value = moment(eventoAtual.start).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarLembreteCor').value = eventoAtual.color;
+        
+        openModal('editarLembreteModal');
+    } else if (eventoAtual.id.startsWith('tarefa-')) {
+        const form = document.getElementById('editarTarefaForm');
+        const id = eventoAtual.id.split('-')[1];
+        
+        form.action = `/agenda/tarefa/editar/${id}/`;
+        document.getElementById('editarTarefaTitulo').value = eventoAtual.title.replace(' (Tarefa)', '');
+        document.getElementById('editarTarefaDescricao').value = eventoAtual.descricao || '';
+        document.getElementById('editarTarefaDataInicio').value = moment(eventoAtual.start).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarTarefaDataFim').value = moment(eventoAtual.end).format('YYYY-MM-DDTHH:mm');
+        document.getElementById('editarTarefaCor').value = eventoAtual.color;
+        
+        openModal('editarTarefaModal');
+    }
+}
+
+// Atualize a função submitForm para lidar com a edição
+function submitForm(event, formId, modalId) {
+    event.preventDefault();
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal(modalId);
+            $('#calendar').fullCalendar('refetchEvents');
+            showToast('Evento atualizado com sucesso!', 'success');
+        } else {
+            showToast(data.message || 'Erro ao atualizar evento', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erro na comunicação com o servidor', 'error');
+    });
+}
+        
+        function abrirModalExclusao() {
+            // Fecha o modal de visualização
+            closeModal('visualizarModal');
+        
+            // Abre o modal de exclusão
+            openModal('excluirModal');
+        }
+
+       
+    </script>
+
+    
+    </fieldset>
+</div>
+{% endblock %}

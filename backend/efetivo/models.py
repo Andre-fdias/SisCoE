@@ -52,10 +52,10 @@ class Cadastro(models.Model):
     previsao_de_inatividade = models.DateField(blank=False, null=False)
     cpf = models.CharField(max_length=14, blank=False, null=False, unique=True)
     rg = models.CharField(max_length=14, blank=False, null=False)
-    tempo_para_averbar_inss = models.IntegerField(blank=False, null=False, default=0)
-    tempo_para_averbar_militar = models.IntegerField(blank=False, null=False, default=0)
+    tempo_para_averbar_inss = models.IntegerField(blank=False, null=False, default=1)
+    tempo_para_averbar_militar = models.IntegerField(blank=False, null=False, default=1)
     email = models.EmailField(max_length=100, unique=True, blank=False, null=False)
-    telefone = models.CharField(max_length=14, blank=False, null=False)
+    telefone = models.CharField(max_length=1, blank=False, null=False)
     alteracao = models.CharField(max_length=20, blank=False, null=False, choices=alteracao_choices)
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cadastros', default=1)  # 

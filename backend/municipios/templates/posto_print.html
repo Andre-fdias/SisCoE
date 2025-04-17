@@ -1,0 +1,94 @@
+{% extends "base_print.html" %}  <!-- Você pode criar um base_print.html com estilos otimizados para impressão -->
+
+{% block content %}
+<div class="print-container">
+    <!-- Cabeçalho da impressão -->
+    <div class="print-header">
+        <h1>{{ posto.posto_atendimento }}</h1>
+        <p class="print-subtitle">Dados do Posto de Atendimento</p>
+        <hr>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="print-content">
+        <!-- Informações básicas -->
+        <div class="print-section">
+            <h2>Informações Gerais</h2>
+            <p><strong>SGB:</strong> {{ posto.sgb }}</p>
+            <p><strong>Posto/Seção:</strong> {{ posto.posto_secao }}</p>
+            <p><strong>Tipo:</strong> {{ posto.get_op_adm_display }}</p>
+        </div>
+
+        <!-- Municípios atendidos -->
+        <div class="print-section">
+            <h2>Municípios Atendidos</h2>
+            <ul>
+                {% for cidade in posto.cidades.all %}
+                <li>{{ cidade.municipio }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Efetivo -->
+        <div class="print-section">
+            <h2>Efetivo</h2>
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>Ten Cel</th>
+                        <th>Maj</th>
+                        <th>Cap</th>
+                        <th>Ten QO</th>
+                        <th>Ten QA</th>
+                        <th>St/Sgt</th>
+                        <th>Cb/Sd</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% with pessoal=posto.pessoal.first %}
+                    <tr>
+                        <td>{{ pessoal.ten_cel|default:"0" }}</td>
+                        <td>{{ pessoal.maj|default:"0" }}</td>
+                        <td>{{ pessoal.cap|default:"0" }}</td>
+                        <td>{{ pessoal.tenqo|default:"0" }}</td>
+                        <td>{{ pessoal.tenqa|default:"0" }}</td>
+                        <td>{{ pessoal.st_sgt|default:"0" }}</td>
+                        <td>{{ pessoal.cb_sd|default:"0" }}</td>
+                        <td>{{ pessoal.total }}</td>
+                    </tr>
+                    {% endwith %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contatos -->
+        <div class="print-section">
+            <h2>Contatos</h2>
+            <p><strong>Endereço:</strong> {{ posto.contato.rua }}, {{ posto.contato.numero }} - {{ posto.contato.bairro }}</p>
+            <p><strong>Cidade:</strong> {{ posto.contato.cidade }}</p>
+            <p><strong>Telefone:</strong> {{ posto.contato.telefone|default:"-" }}</p>
+            <p><strong>Email:</strong> {{ posto.contato.email|default:"-" }}</p>
+        </div>
+    </div>
+
+    <!-- Rodapé da impressão -->
+    <div class="print-footer">
+        <hr>
+        <p>Impresso em {% now "d/m/Y H:i" %}</p>
+    </div>
+</div>
+
+<script>
+    // Imprime automaticamente quando a página carrega
+    window.onload = function() {
+        setTimeout(function() {
+            window.print();
+            // Fecha a janela após impressão (pode não funcionar em todos os navegadores)
+            setTimeout(function() {
+                window.close();
+            }, 300);
+        }, 500);
+    };
+</script>
+{% endblock %}

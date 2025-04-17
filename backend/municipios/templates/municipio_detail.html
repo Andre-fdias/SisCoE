@@ -1,270 +1,484 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}{{ cidade.municipio }}{% endblock %}
 
-{% block 'body' %}
 
-<!-- Adicione os links do Leaflet no head do base.html ou aqui -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-
-<body>
-    <br>
-    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
-        <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-   
-            <!-- Seção Superior - Informações Gerais -->
-            <fieldset class="bg-gray-800 mb-4 rounded-md w-full " id="qpoHeader">
-                  <div class="flex flex-col h-auto rounded-[10px]">
-                     <div class="bg-gray-800 rounded-xl shadow-2xl w-full transition-all duration-300 animate-fade-in">
-                      <div class="flex flex-col md:flex-row">
-                        <!-- Bandeira e Imagem -->
-                        <div class="md:w-1/2 relative mb-8 md:mb-0">
-                            {% if cidade.bandeira %}
-                            <div class="relative w-full h-full">
-                                <img src="{{ cidade.bandeira.url }}" 
-                                     class="foto-perfil rounded-sm w-full h-full object-cover object-center" 
-                                     alt="Bandeira de {{ cidade.municipio }}">
-                                <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gray-800"></div>
-                            </div>
-                            {% else %}
-                            <div class="flex items-center justify-center h-full">
-                                <span class="text-gray-500">Sem imagem disponível</span>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Detalhes do Município -->
-                        <div class="md:w-1/2 md:pl-8 mt-8">
-                            <h1 class="text-5xl font-semibold text-gray-300 mb-4">
-                                {{ cidade.municipio }}
-                            </h1>
-                            
-                    
-                            <div class="mb-6">
-                                <h2 class="text-xl font-semibold text-gray-300 mb-4">Posto de Atendimento</h2>
-                                 
-                                {% for cidade in posto.cidades.all %}
-                                <div class="flex flex-wrap gap-2">
-                                     {% for cidade in posto.cidades.all %}
-                                        <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">
-                                            {{ posto.posto_atendimento }}
-                                        </span>
-                                     {% endfor %}
-                                </div>
-                                {% endfor %}
-                            </div>
-                           
-                            
-
-                            <!-- Informações de Localização -->
-                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Localização</h2>
-                            <ul class="space-y-2 text-gray-500">
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                    {{ cidade.posto.sgb }} - {{ cidade.posto.posto_secao }}
-                                </li>
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                    Latitude: {{ cidade.latitude }}
-                                </li>
-                                <li class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                    Longitude: {{ cidade.longitude }}
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </fieldset>
-            <fieldset class="bg-gray-800 rounded-xl shadow-2xl p-4 mb-4">
-                <h2 class="text-xl font-semibold text-gray-300 mb-3">Descrição</h2>
-                <div class="prose prose-invert text-gray-300">
-                    {{ cidade.descricao|linebreaks }}
-                </div>
-            </fieldset>
-
-
-            <!-- Container do Mapa - Altura fixa importante -->
-            <fieldset class="bg-gray-800 rounded-xl shadow-2xl p-4 mb-4">
-                <legend class="text-xl font-semibold text-white mb-4"></legend>
-                <div id="mapDetail" class="h-[500px] rounded-lg z-0"></div>
-            </fieldset>
-
-
-
-            <fieldset class="border bg-gray-800 border-gray-800 p-4 mb-8 rounded-md">
-                <legend></legend>
-                <div id="01" class="flex flex-wrap">
-                    <div class="w-full bg-lightblue p-4 rounded-md">
-                        <div class="flex flex-wrap">
-                            <div class="w-full md:w-1/2">
-                                <div class="container1">
-                                    <div class="flex justify-start">
-                                        <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-target="#exampleModal">Excluir</button>
-                                    </div>
-                                    <div id="exampleModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-                                        <div class="bg-gray-600 rounded-lg shadow-lg w-full max-w-md">
-                                            <div class="flex justify-between items-center p-4 bg-gray-800">
-                                                <h1 class="text-xl text-gray-200 font-medium">Excluir</h1>
-                                                <button type="button" class="text-gray-500 hover:text-gray-700" data-modal-close="#exampleModal">&times;</button>
-                                            </div>
-                                            <br>
-                                        
-                                            <div class="p-4 text-gray-400">
-                                                <p>Você tem certeza que deseja excluir o cadastro?</p>
-                                                <br>
-                                                <br>
-                                                <label for="password" class="block text-sm font-medium text-gray-400">Senha:</label>
-                                                <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                            </div>
-                                            <div class="flex justify-end space-x-2 p-4">
-                                                <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" data-modal-close="#exampleModal">Voltar</button>
-                                                <button type="button" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" onclick="validatePassword()">Excluir</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="w-full md:w-1/2 text-right">
-                                <div class="container1">
-                                    <div class="flex justify-end">
-                                        <a href="{% url 'municipios:posto_list' %}"  class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                                    </div>
-                                
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-        </fieldset>
-    </div>
-
-<!-- Leaflet CSS e JS -->
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
+{% block 'head' %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.78.0/dist/L.Control.Locate.min.css" />
 <style>
-    /* Estilos consolidados */
-    #mapDetail {
-        height: 500px;
-        z-index: 0;
-        position: relative;
-        border-radius: 0.5rem;
+    .input-readonly {
+        @apply w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-medium 
+               cursor-default transition-colors duration-200 hover:border-gray-300;
     }
-    
-    .leaflet-container {
-        background: #1a202c !important;
-        font-family: inherit;
+    .bg-gradient-indigo {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
     }
-    
-    .leaflet-control-attribution {
-        background: rgba(26, 32, 44, 0.8) !important;
-        color: #cbd5e0 !important;
-        font-size: 0.75rem;
+    .hover-bg-gradient-indigo:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
     }
-    
     .pulsing-circle {
         animation: pulse 1.5s infinite;
     }
-    
     @keyframes pulse {
         0% { transform: scale(1); opacity: 1; }
         70% { transform: scale(2.5); opacity: 0; }
         100% { transform: scale(1); opacity: 0; }
     }
-    </style>
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 0.5rem;
+        z-index: 0;
+    }
+    .leaflet-container {
+        background: #f8fafc !important;
+    }
+</style>
+{% endblock %}
+
+{% block 'body' %}
+
+<body class="bg-gray-50">
+    <div class="md:items-center md:justify-between rounded-lg mt-42 w-full" id="cad_efetivo">
     
-    <div id="mapDetail" class="rounded-lg"></div>
+        <!-- Cabeçalho -->
+        <fieldset class="p-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg border-0">
+                <div class="p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <!-- Título -->
+                        <div class="flex-1 min-w-[200px]">
+                            <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">{{ cidade.municipio }}</h1>
+                        </div>
+                        
+                        <!-- Botões -->
+                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <a href="{% url 'municipios:posto_list' %}" 
+                            class="text-white bg-gradient-to-r from-gray-500 to-gray-600 hover:bg-gradient-to-br 
+                                    focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50 
+                                    font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+                                Voltar
+                            </a>
+
+                               <!--    <a href="{% url 'municipios:calcular_rota' %}" 
+                                class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
+                                        focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
+                                        font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+                                    <i class="fas fa-route mr-2"></i>
+                                    Calcular Rota
+                            </a>-->
+
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+   
+        <!-- Perfil da Cidade -->
+        <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
+            <div class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300 animate-fade-in">
+                <div class="flex flex-col md:flex-row">
+                    <!-- Bandeira Municipal -->
+                    <div class="md:w-1/3 relative mb-8 md:mb-0 max-h-[300px] overflow-hidden rounded-xl">
+                        {% if cidade.bandeira %}
+                            <img src="{{ cidade.bandeira.url }}" 
+                                class="w-full h-full object-cover rounded-xl shadow-lg transition-transform duration-300 hover:scale-105"
+                                alt="Bandeira de {{ cidade.municipio }}">
+                            <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gray-900/80"></div>
+                        {% else %}
+                            <div class="w-full h-full bg-gray-700 flex items-center justify-center rounded-xl">
+                                <span class="text-gray-400">Sem bandeira disponível</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Detalhes da Cidade -->
+                    <div class="md:w-2/3 md:pl-8">
+                        <h1 class="text-3xl font-semibold text-white mb-4">{{ cidade.municipio }}</h1>
+                        
+                        <!-- Postos de Atendimento -->
+                        <div class="mb-6">
+                            <h2 class="text-xl font-semibold text-gray-300 mb-4">Postos de Atendimento</h2>
+                            <div class="flex flex-wrap gap-2">
+                                {% for posto in cidade.posto_set.all %}
+                                <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">{{ posto.posto_atendimento }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Informações de Localização -->
+                        <h2 class="text-xl font-semibold text-gray-300 mb-4">Localização</h2>
+                        <ul class="space-y-3 text-indigo-100">
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                                Latitude: {{ cidade.latitude }}
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                                Longitude: {{ cidade.longitude }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Descrição da Cidade -->
+        <fieldset class="p-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg border-0">
+                <div class="flex flex-col h-auto rounded">
+                    <div class="bg-white rounded-lg shadow-md w-full p-6">
+                        <h2 class="text-lg font-semibold text-gray-700 mb-3">Descrição</h2>
+                        <hr class="my-3 border-b-1 border-gray-400">
+                        <div class="prose max-w-none text-gray-700">
+                            {{ cidade.descricao|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+
+        <!-- Mapa da Cidade -->
+        <fieldset class="p-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg border-0">
+                <div class="relative p-4 w-full">
+                    <div class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-lg shadow-md h-full w-full">
+                        <div id="map-container" class="relative w-full h-96 rounded-lg overflow-hidden">
+                            <div id="map" class="absolute inset-0 w-full h-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
     
-    <script>
+        <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
+            <div class="bg-gray-100 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300 animate-fade-in">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex-1 space-y-2">
+                        <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                            Sistema de Gerenciamento de Municípios
+                        </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button type="button"
+                                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center"
+                                data-modal-target="#editCidadeModal">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Cidade
+                        </button>
+    
+                        <button type="button"
+                                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center"
+                                data-modal-target="#deleteModal">
+                            <i class="fas fa-trash-alt mr-2"></i>
+                            Excluir Cidade
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    
+        <div id="editCidadeModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-gray-800">
+                            <i class="fas fa-city mr-2 text-indigo-600"></i>
+                            Editar Município
+                        </h3>
+                        <button type="button"
+                                class="text-gray-500 hover:text-gray-700 transition-colors"
+                                data-modal-close="#editCidadeModal">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+    
+                <form id="editCidadeForm" method="post" enctype="multipart/form-data" class="p-6 space-y-8 bg-gray-50">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-map-marked mr-2 text-indigo-600"></i>
+                                Município
+                            </label>
+                            <input type="text" name="municipio"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                                   value="{{ cidade.municipio }}">
+                        </div>
+    
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-map-pin mr-2 text-indigo-600"></i>
+                                Latitude
+                            </label>
+                            <input type="text" name="latitude"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                                   value="{{ cidade.latitude }}">
+                        </div>
+    
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-map-pin mr-2 text-indigo-600"></i>
+                                Longitude
+                            </label>
+                            <input type="text" name="longitude"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                                   value="{{ cidade.longitude }}">
+                        </div>
+    
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-align-left mr-2 text-indigo-600"></i>
+                                Descrição
+                            </label>
+                            <textarea name="descricao"
+                                      class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                                      rows="4">{{ cidade.descricao }}</textarea>
+                        </div>
+    
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-flag mr-2 text-indigo-600"></i>
+                                Bandeira Municipal
+                            </label>
+                            <input type="file" name="bandeira"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                                   accept="image/*">
+                            {% if cidade.bandeira %}
+                                <img src="{{ cidade.bandeira.url }}" alt="Bandeira Municipal" class="mt-4 max-w-xs rounded-lg shadow-md">
+                            {% endif %}
+                        </div>
+                    </div>
+    
+                    <div class="sticky bottom-0 bg-white pt-6 border-t border-gray-200">
+                        <div class="flex justify-end space-x-4">
+                            <button type="button"
+                                    class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    data-modal-close="#editCidadeModal">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                    class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+                                <i class="fas fa-save mr-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    
+        <div id="deleteModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-gray-800">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-600"></i>
+                            Confirmar Exclusão
+                        </h3>
+                        <button type="button"
+                                class="text-gray-500 hover:text-gray-700 transition-colors"
+                                data-modal-close="#deleteModal">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+        
+                <div class="p-6 space-y-6 bg-gray-50">
+                    <p class="text-gray-700">Você tem certeza que deseja excluir o município <strong>{{ cidade.municipio }}</strong>?</p>
+                    <p class="text-sm text-gray-500">Esta ação não pode ser desfeita e removerá todos os dados associados.</p>
+        
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-lock mr-2 text-gray-600"></i>
+                            Digite sua senha para confirmar:
+                        </label>
+                        <input type="password" id="confirmPassword"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white">
+                        <div id="passwordError" class="text-red-500 text-sm mt-2 hidden">Senha incorreta.</div>
+                    </div>
+                </div>
+        
+                <div class="sticky bottom-0 bg-white pt-6 border-t border-gray-200">
+                    <div class="flex justify-end space-x-4">
+                        <button type="button"
+                                class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                data-modal-close="#deleteModal">
+                            Cancelar
+                        </button>
+                        <button type="button"
+                                id="confirmDeleteButton"
+                                class="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-md">
+                            <i class="fas fa-trash-alt mr-2"></i>Confirmar Exclusão
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            // Função para obter o token CSRF (coloque isso fora do event listener se usar em outros lugares)
+            function getCsrfToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+        </script>
+  
+        
+       <!-- Adicione esses scripts no final do body, ANTES do fechamento do bloco -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.locatecontrol@0.78.0/dist/L.Control.Locate.min.js"></script>
+
+<script>
     document.addEventListener('DOMContentLoaded', function() {
-        const mapContainer = document.getElementById('mapDetail');
-        if (!mapContainer) {
-            console.error('Elemento mapDetail não encontrado');
-            return;
-        }
-    
-        // Converter e validar coordenadas
-        const latStr = "{{ cidade.latitude|default:0 }}".replace(',', '.');
-        const lngStr = "{{ cidade.longitude|default:0 }}".replace(',', '.');
-        const lat = parseFloat(latStr);
-        const lng = parseFloat(lngStr);
-    
-        if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
-            mapContainer.innerHTML = `
-                <div class="p-4 text-center bg-red-50 text-red-600 rounded-lg">
-                    <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="mt-2 font-medium">Coordenadas inválidas</p>
-                    <p class="text-sm">Lat: ${latStr}, Lon: ${lngStr}</p>
-                </div>
-            `;
-            return;
-        }
-    
-        try {
-            // Inicializar mapa
-            const map = L.map('mapDetail', {
-                center: [lat, lng],
-                zoom: 13,
-                zoomControl: false,
-                preferCanvas: true
+        // Configurar caminho dos ícones do Leaflet
+        L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
+        
+        // Inicializar o mapa
+        const initMap = () => {
+            const mapElement = document.getElementById('map');
+            if (!mapElement || mapElement._leaflet_id) return;
+            
+            try {
+                // Converter coordenadas (substituir vírgula por ponto se necessário)
+                const lat = parseFloat("{{ cidade.latitude|default:'0' }}".replace(',', '.'));
+                const lng = parseFloat("{{ cidade.longitude|default:'0' }}".replace(',', '.'));
+                
+                // Verificar se as coordenadas são válidas
+                if (isNaN(lat) || isNaN(lng)) {
+                    throw new Error('Coordenadas inválidas');
+                }
+                
+                // Criar o mapa
+                const map = L.map(mapElement, {
+                    center: [lat, lng],
+                    zoom: 13,
+                    zoomControl: true
+                });
+
+                // Adicionar camada base
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+
+                // Adicionar marcador
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup(`<b>${"{{ cidade.municipio }}"}</b><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`)
+                    .openPopup();
+
+                // Adicionar controle de localização
+                L.control.locate({
+                    position: 'topleft',
+                    strings: {
+                        title: "Minha localização",
+                        popup: "Você está dentro de {distance} {unit} deste ponto"
+                    },
+                    locateOptions: {
+                        enableHighAccuracy: true
+                    }
+                }).addTo(map);
+
+                // Redimensionar o mapa após um pequeno delay
+                setTimeout(() => map.invalidateSize(), 100);
+                
+                return map;
+                
+            } catch (error) {
+                console.error('Erro no mapa:', error);
+                mapElement.innerHTML = `
+                    <div class="flex items-center justify-center h-full bg-red-50 text-red-600 p-4">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span>Erro ao carregar o mapa: ${error.message}</span>
+                    </div>`;
+                return null;
+            }
+        };
+
+        // Inicializar modais
+        const initModals = () => {
+            const modalTriggers = document.querySelectorAll('[data-modal-target]');
+            const modalClosers = document.querySelectorAll('[data-modal-close]');
+            
+            modalTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                    const modalId = trigger.dataset.modalTarget;
+                    const modal = document.querySelector(modalId);
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
             });
-    
-            // Camada base
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-    
-            // Marcador circular principal
-            const marker = L.circleMarker([lat, lng], {
-                radius: 14,
-                color: '#1e1b4b',
-                fillColor: '#4338ca',
-                fillOpacity: 0.8,
-                weight: 2
-            }).addTo(map);
-    
-            // Efeito de pulso
-            const pulse = L.circle([lat, lng], {
-                color: '#6366f1',
-                fillColor: '#6366f1',
-                radius: 40,
-                weight: 0,
-                fillOpacity: 0.2,
-                className: 'pulsing-circle'
-            }).addTo(map);
-    
-            // Popup interativo
-            marker.bindPopup(`
-                <div class="text-sm">
-                    <h3 class="font-bold mb-1">{{ cidade.municipio }}</h3>
-                    <p class="text-gray-600">📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
-                </div>
-            `);
-    
-            // Ajustes finais
-            setTimeout(() => map.invalidateSize(), 100);
-            map.attributionControl.setPrefix('');
-    
-        } catch (error) {
-            console.error('Erro ao carregar mapa:', error);
-            mapContainer.innerHTML = `
-                <div class="p-4 text-center bg-yellow-50 text-yellow-700 rounded-lg">
-                    Erro ao carregar o mapa. Recarregue a página.
-                </div>
-            `;
-        }
+            
+            modalClosers.forEach(closer => {
+                closer.addEventListener('click', () => {
+                    const modalId = closer.dataset.modalClose;
+                    const modal = document.querySelector(modalId);
+                    if (modal) {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            });
+        };
+
+        // Função para validar senha
+        window.validatePassword = () => {
+            const passwordInput = document.getElementById('confirmPassword');
+            const passwordError = document.getElementById('passwordError');
+            
+            if (!passwordInput.value.trim()) {
+                passwordError.textContent = 'Por favor, digite sua senha.';
+                passwordError.classList.remove('hidden');
+                return false;
+            }
+            
+            passwordError.classList.add('hidden');
+            return true;
+        };
+
+        // Inicializar tudo
+        const map = initMap();
+        initModals();
+
+        // Redimensionar mapa quando a janela mudar de tamanho
+        window.addEventListener('resize', () => {
+            if (map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        });
     });
-    </script>
+</script>
+<script>             
+                // Validar senha antes de excluir
+                window.validatePassword = () => {
+                    const passwordInput = document.getElementById('confirmPassword');
+                    const passwordToDeleteInput = document.getElementById('passwordToDelete');
+                    const passwordError = document.getElementById('passwordError');
+                    const password = passwordInput.value;
+    
+                    if (password.trim() === '') {
+                        passwordError.textContent = 'Por favor, digite sua senha.';
+                        passwordError.classList.remove('hidden');
+                        return false;
+                    }
+    
+                    // Aqui você normalmente faria uma requisição AJAX para verificar a senha no servidor
+                    // Para este exemplo frontend, vamos apenas passar a senha para o input hidden do formulário
+                    passwordToDeleteInput.value = password;
+                    passwordError.classList.add('hidden');
+                    return true; // O formulário será submetido
+                };
+    
+          
+        </script>
+        
+</script>
+    </body>
     {% endblock %}

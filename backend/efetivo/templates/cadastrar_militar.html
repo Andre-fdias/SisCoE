@@ -1,443 +1,1306 @@
-
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Cadastrar Militares{% endblock %}
 
+<style>
+    .input-readonly {
+        @apply w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-medium 
+               cursor-default transition-colors duration-200 hover:border-gray-300;
+    }
+    .optional-field {
+        @apply border-gray-300 bg-white/90;
+    }
+    .optional-field:focus {
+        @apply border-indigo-500 ring-indigo-200;
+    }
+</style>
 
 {% block 'body' %}
 <body>
-    <div class=" md:items-center md:justify-between rounded-lg mt-4  w-full" id="cad_efetivo">
+    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
     
-    <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-        <fieldset class="bg-gray-800 p-4 mb-8 rounded-md w-full" id="first-fieldset">
-           <div id="01" class="mb-4">
-                <div class="bg-gray-800 p-4 rounded-md">
-                    <div class="flex flex-wrap items-center justify-between py-3">
-                        <div class="w-full md:w-9/12">
-                            <h1 class="text-3xl text-gray-200">Cadastrar Militar</h1>
-                        </div>
-                        <div class="w-full md:w-3/12 text-right">
-                            <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
-                            
-                            <a href="{% url 'efetivo:listar_militar' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                        </div>
+    <fieldset class="p-4 mb-4 rounded-md w-full" id="second-fieldset">
+        <fieldset class="bg-gray-800 rounded-md shadow-lg mb-2 border-0">
+            <div class="p-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- Título -->
+                    <div class="flex-1 min-w-[200px]">
+                        <h1 class="text-3xl font-bold text-gray-200 tracking-tight drop-shadow-md">Cadastrar Novo Militar</h1>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <button type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 shadow-lg shadow-red-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Limpar
+                        </button>
+                        <a href="{% url 'efetivo:listar_militar' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Voltar
+                        </a>
                     </div>
                 </div>
             </div>
         </fieldset>
-        <legend  class=" mb-8 rounded-md w-full" >
+        
+        <!-- Mensagens -->
+        <fieldset class="space-y-3 mb-6">
             {% if messages %}
             {% for message in messages %}
-                <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
+            <section class="alert {{ message.tags }} p-4 rounded-lg border-l-4 border-opacity-75 shadow-md">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if message.tags == 'success' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        {% endif %}
+                    </svg>
                     {{ message }}
-                </section>
+                </div>
+            </section>
             {% endfor %}
             {% endif %}
-        </legend>
-    <form class="needs-validation" novalidate action="{% url 'efetivo:cadastrar_militar' %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-            <div class="mb-4">
-                <p class="text-lg font-bold">Dados de Posto e Graduação</p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <label for="posto_grad" class="block text-sm font-medium text-gray-700">Posto/Grad</label>
-                    <select name="posto_grad" id="posto_grad" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for i in posto_grad %}
-                        <option value="{{ i.0 }}">{{ i.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="posto_grad_error">Por favor, selecione um posto/graduação.</div>
-                </div>
-                <div>
-                    <label for="quadro" class="block text-sm font-medium text-gray-700">Quadro</label>
-                    <select name="quadro" id="quadro" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for i in quadro %}
-                        <option value="{{ i.0 }}">{{ i.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="quadro_error">Por favor, selecione um quadro.</div>
-                </div>
-                <div>
-                    <label for="grupo" class="block text-sm font-medium text-gray-700">Grupo</label>
-                    <select name="grupo" id="grupo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for i in grupo %}
-                        <option value="{{ i.0 }}">{{ i.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="grupo_error">Por favor, selecione um grupo.</div>
-                </div>
-                <div>
-                    <label for="re" class="block text-sm font-medium text-gray-700">RE</label>
-                    <input type="text" name="re" id="re" placeholder="Digite o RE ..." class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="re_error">Por favor, insira o RE.</div>
-                </div>
-                <div>
-                    <label for="dig" class="block text-sm font-medium text-gray-700">Dig</label>
-                    <input type="text" name="dig" id="dig" placeholder="Digite o Dígito ..." class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="dig_error">Por favor, insira o dígito.</div>
-                </div>
-                <div>
-                    <label for="genero" class="block text-sm font-medium text-gray-700">Gênero</label>
-                    <select name="genero" id="genero" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                        {% for i in genero %}
-                        <option value="{{ i.0 }}">{{ i.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="genero_error">Por favor, selecione um gênero.</div>
-                </div>
-                <div class="col-span-2">
-                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
-                    <input type="text" name="nome" id="nome" placeholder="Digite o nome do militar ..." class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="nome_error">Por favor, insira o nome.</div>
-                </div>
-                <div>
-                    <label for="nome_de_guerra" class="block text-sm font-medium text-gray-700">Nome de Guerra</label>
-                    <input type="text" name="nome_de_guerra" id="nome_de_guerra" placeholder="Digite o nome de Guerra ..." class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    <div class="text-red-500 text-sm mt-1 hidden" id="nome_de_guerra_error">Por favor, insira o nome de guerra.</div>
-                </div>
-            </div>
         </fieldset>
-
-
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Situação Funcional</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label for="situacao" class="block text-sm font-medium text-gray-700">Situação</label>
-                <select name="situacao" id="situacao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in situacao %}
-                    <option value="{{ i.0 }}" {% if i.1 == "Efetivo" %}selected{% endif %}>{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="situacao_error">Por favor, selecione uma situação.</div>
-            </div>
-            <div>
-                <label for="cad_efetivo" class="block text-sm font-medium text-gray-700">Detalhamento</label>
-                <select name="cad_efetivo" id="cad_efetivo" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in cad_efetivo %}
-                    <option value="{{ i.0 }}" {% if i.1 == "Ativo" %}selected{% endif %}>{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="cad_efetivo_error">Por favor, selecione um Detalhamento.</div>
-            </div>
-            <div>
-                <label for="sgb" class="block text-sm font-medium text-gray-700">SGB</label>
-                <select name="sgb" id="sgb" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in sgb %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="sgb_error">Por favor, selecione um SGB.</div>
-            </div>
-            <div>
-                <label for="posto_secao" class="block text-sm font-medium text-gray-700">Posto ou Seção</label>
-                <select name="posto_secao" id="posto_secao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in posto_secao %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="posto_secao_error">Por favor, selecione um posto ou seção.</div>
-            </div>
-            <div>
-                <label for="esta_adido" class="block text-sm font-medium text-gray-700">Está Adido a outro Posto ou Seção?</label>
-                <select name="esta_adido" id="esta_adido" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in esta_adido %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="esta_adido_error">Por favor, selecione se está adido a outro posto ou seção.</div>
-            </div>
-            <div>
-                <label for="funcao" class="block text-sm font-medium text-gray-700">Função que exerce</label>
-                <select name="funcao" id="funcao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in funcao %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="funcao_error">Por favor, selecione uma função.</div>
-            </div>
-            <div>
-                <label for="op_adm" class="block text-sm font-medium text-gray-700">É Operacional ou Administrativo</label>
-                <select name="op_adm" id="op_adm" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in op_adm %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione se é operacional ou administrativo.</div>
-            </div>
-            <div>
-                <label for="prontidao" class="block text-sm font-medium text-gray-700">Qual Prontidão</label>
-                <select name="prontidao" id="prontidao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in prontidao %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-                <div class="text-red-500 text-sm mt-1 hidden" id="op_adm_error">Por favor, selecione sua prontidão.</div>
-            </div>
-            <div>
-                <label for="apresentacao_na_unidade" class="block text-sm font-medium text-gray-700">Data da Apresentação na Unidade</label>
-                <input type="date" name="apresentacao_na_unidade" id="apresentacao_na_unidade" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="apresentacao_na_unidade_error">Por favor, insira a data da apresentação na unidade.</div>
-            </div>
-        </div>
-    </fieldset>
-
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Datas</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-                <label for="nasc" class="block text-sm font-medium text-gray-700">Data de Nascimento</label>
-                <input type="date" name="nasc" id="nasc" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="nasc_error">Por favor, insira a data de nascimento.</div>
-            </div>
-            <div>
-                <label for="matricula" class="block text-sm font-medium text-gray-700">Data de Matrícula</label>
-                <input type="date" name="matricula" id="matricula" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="matricula_error">Por favor, insira a data de matrícula.</div>
-            </div>
-            <div>
-                <label for="admissao" class="block text-sm font-medium text-gray-700">Data de Admissão</label>
-                <input type="date" name="admissao" id="admissao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="admissao_error">Por favor, insira a data de admissão.</div>
-            </div>
-            <div>
-                <label for="previsao_de_inatividade" class="block text-sm font-medium text-gray-700">Data de Previsão de Inatividade</label>
-                <input type="date" name="previsao_de_inatividade" id="previsao_de_inatividade" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="previsao_de_inatividade_error">Por favor, insira a data de previsão de inatividade.</div>
-            </div>
-            <div>
-                <label for="ultima_promocao" class="block text-sm font-medium text-gray-700">Data da Última Promoção</label>
-                <input type="date" name="ultima_promocao" id="ultima_promocao" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="ultima_promocao_error">Por favor, insira a data da última promoção.</div>
-            </div>
-        </div>
-    </fieldset>
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Documentos e Contatos</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="cpf" class="block text-sm font-medium text-gray-700">CPF</label>
-                <input type="text" name="cpf" id="cpf" placeholder="xxx.xxx.xxx-xx" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="cpf_error">Por favor, insira o CPF.</div>
-            </div>
-            <div>
-                <label for="rg" class="block text-sm font-medium text-gray-700">RG</label>
-                <input type="text" name="rg" id="rg" placeholder="xx.xxxx.xxx-x" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="rg_error">Por favor, insira o RG.</div>
-            </div>
-            <div>
-                <label for="email_funcional" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email_funcional" id="email_funcional" placeholder=".......@policiamilitar.sp.gov.br" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="email_funcional_error">Por favor, insira um email válido.</div>
-            </div>
-            <div>
-                <label for="telefone" class="block text-sm font-medium text-gray-700">Telefone</label>
-                <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="telefone_error">Por favor, insira um telefone válido.</div>
-            </div>
-        </div>
-    </fieldset>
-
- 
-
-
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Averbação</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="tempo_para_averbar_inss" class="block text-sm font-medium text-gray-700">INSS</label>
-                <input type="text" name="tempo_para_averbar_inss" id="tempo_para_averbar_inss" placeholder="Se não possuir lançar 0 ..." value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="tempo_para_averbar_inss_error">Por favor, insira o tempo para averbar INSS.</div>
-              </div>
-              <div>
-                <label for="tempo_para_averbar_militar" class="block text-sm font-medium text-gray-700">Militar</label>
-                <input type="text" name="tempo_para_averbar_militar" id="tempo_para_averbar_militar" placeholder="Se não possuir lançar 0 ..." value="0" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                <div class="text-red-500 text-sm mt-1 hidden" id="tempo_para_averbar_militar_error">Por favor, insira o tempo para averbar militar.</div>
-              </div>
-        </div>
-    </fieldset>
-
-
-
-
-
-
-
-
-
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Imagem de Perfil</p>
-        </div>
-        <div class="mb-3">
-            <label for="image" class="block text-sm font-medium text-gray-700">Envie a foto para o perfil</label>
-            <br><br>
-            <img id="preview" src="#" alt="Pré-visualização da imagem" style="display: none; max-width: 200px;">
-            <br><br>
-            <input class="mt-1 block w-full text-base border-gray-300 border-blue-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" name="image" type="file" id="image" accept="image/*" onchange="previewImage(event)" required>
-            <div class="text-red-500 text-sm mt-1 hidden" id="image_error">Por favor, envie uma imagem de perfil.</div>
-        </div>
-    </fieldset>
-    <fieldset class="border bg-gray-200 border-gray-300 p-4 mb-8 rounded-md">
-        <div class="mb-4">
-            <p class="text-lg font-bold">Motivo do Cadastro</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="alteracao" class="block text-sm font-medium text-gray-700">Escolha abaixo o motivo do cadastro</label>
-                <select name="alteracao" id="alteracao" class="mt-1 mb-3 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
-                    {% for i in alteracao %}
-                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
-           </div>
-       
-        </div>
-    </fieldset>
-
-    <fieldset class="bg-gray-800  p-4 mb-4 rounded-md">
-        <div >
-            <div class="flex items-center justify-between py-3">
-                <div class="w-full md:w-auto">
-                   <input type="submit" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" value="Cadastrar">
+        
+        <form id="militarForm" class="needs-validation" novalidate action="{% url 'efetivo:cadastrar_militar' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Seção 1: Dados de Posto e Graduação -->
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados de Posto e Graduação</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Posto/Grad -->
+                        <div class="space-y-2">
+                            <label for="posto_grad" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Grad *</label>
+                            <div class="relative">
+                                <select name="posto_grad" id="posto_grad" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in posto_grad %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quadro -->
+                        <div class="space-y-2">
+                            <label for="quadro" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Quadro *</label>
+                            <div class="relative">
+                                <select name="quadro" id="quadro" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in quadro %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Grupo -->
+                        <div class="space-y-2">
+                            <label for="grupo" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Grupo *</label>
+                            <div class="relative">
+                                <select name="grupo" id="grupo" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in grupo %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- RE -->
+                        <div class="space-y-2">
+                            <label for="re" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">RE *</label>
+                            <input type="text" name="re" id="re" placeholder="Digite o RE" required
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+                        
+                        <!-- Dígito -->
+                        <div class="space-y-2">
+                            <label for="dig" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Dig *</label>
+                            <input type="text" name="dig" id="dig" placeholder="Digite o Dígito" required
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+                        
+                        <!-- Gênero -->
+                        <div class="space-y-2">
+                            <label for="genero" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Gênero *</label>
+                            <div class="relative">
+                                <select name="genero" id="genero" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in genero %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nome Completo -->
+                        <div class="space-y-2 md:col-span-2">
+                            <label for="nome" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nome Completo *</label>
+                            <input type="text" name="nome" id="nome" placeholder="Digite o nome completo" required
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+                        
+                        <!-- Nome de Guerra -->
+                        <div class="space-y-2">
+                            <label for="nome_de_guerra" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nome de Guerra *</label>
+                            <input type="text" name="nome_de_guerra" id="nome_de_guerra" placeholder="Digite o nome de guerra" required
+                                   class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 placeholder-gray-400
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+                    </div>
                 </div>
-                <div class="flex space-x-2">
-                    <a type="reset" class="text-white bg-gradient-to-r from-red-400 via-red-500 to-red-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 shadow-lg shadow-red-500/50 dark:shadow-lg dark:shadow-red-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Limpar</a>
+            </fieldset>
+            
+            <!-- Seção 2: Situação Funcional -->
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Situação Funcional</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Situação -->
+                        <div class="space-y-2">
+                            <label for="situacao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Situação *</label>
+                            <div class="relative">
+                                <select name="situacao" id="situacao" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in situacao %}
+                                    <option value="{{ i.0 }}" {% if i.1 == "Efetivo" %}selected{% endif %}>{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalhamento -->
+                        <div class="space-y-2">
+                            <label for="cad_efetivo" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Detalhamento *</label>
+                            <div class="relative">
+                                <select name="cad_efetivo" id="cad_efetivo" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in cad_efetivo %}
+                                    <option value="{{ i.0 }}" {% if i.1 == "Ativo" %}selected{% endif %}>{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SGB -->
+                        <div class="space-y-2">
+                            <label for="sgb" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">SGB *</label>
+                            <div class="relative">
+                                <select name="sgb" id="sgb" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in sgb %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Posto/Seção -->
+                        <div class="space-y-2">
+                            <label for="posto_secao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Posto/Seção *</label>
+                            <div class="relative">
+                                <select name="posto_secao" id="posto_secao" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in posto_secao %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Está Adido -->
+                        <div class="space-y-2">
+                            <label for="esta_adido" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Está Adido? *</label>
+                            <div class="relative">
+                                <select name="esta_adido" id="esta_adido" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in esta_adido %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Função -->
+                        <div class="space-y-2">
+                            <label for="funcao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Função *</label>
+                            <div class="relative">
+                                <select name="funcao" id="funcao" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in funcao %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Operacional/Administrativo -->
+                        <div class="space-y-2">
+                            <label for="op_adm" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Operacional/Adm *</label>
+                            <div class="relative">
+                                <select name="op_adm" id="op_adm" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in op_adm %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prontidão -->
+                        <div class="space-y-2">
+                            <label for="prontidao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Prontidão *</label>
+                            <div class="relative">
+                                <select name="prontidao" id="prontidao" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    {% for i in prontidao %}
+                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Data de Apresentação -->
+                        <div class="space-y-2">
+                            <label for="apresentacao_na_unidade" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data Apresentação *</label>
+                            <div class="relative">
+                                <input type="date" name="apresentacao_na_unidade" id="apresentacao_na_unidade" required
+                                       class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                              transition-all duration-200
+                                              hover:border-gray-300 text-gray-700 font-medium
+                                              [&::-webkit-calendar-picker-indicator]:opacity-0
+                                              bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                              bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            
+          <!-- Seção 3: Datas Importantes -->
+<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+    <div class="space-y-6">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Datas Importantes</h2>
+        <hr class="border-t border-gray-100">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Data de Nascimento -->
+            <div class="space-y-2">
+                <label for="nasc" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nascimento *</label>
+                <div class="relative">
+                    <input type="date" name="nasc" id="nasc" required
+                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                  transition-all duration-200
+                                  hover:border-gray-300 text-gray-700 font-medium
+                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                </div>
+            </div>
+            
+            <!-- Data de Matrícula -->
+            <div class="space-y-2">
+                <label for="matricula" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Matrícula *</label>
+                <div class="relative">
+                    <input type="date" name="matricula" id="matricula" required
+                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                  transition-all duration-200
+                                  hover:border-gray-300 text-gray-700 font-medium
+                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                </div>
+            </div>
+            
+            <!-- Data de Admissão -->
+            <div class="space-y-2">
+                <label for="admissao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Admissão *</label>
+                <div class="relative">
+                    <input type="date" name="admissao" id="admissao" required
+                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                  transition-all duration-200
+                                  hover:border-gray-300 text-gray-700 font-medium
+                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                </div>
+            </div>
+            
+            <!-- Previsão de Inatividade -->
+            <div class="space-y-2">
+                <label for="previsao_de_inatividade" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Previsão Inatividade *</label>
+                <div class="relative">
+                    <input type="date" name="previsao_de_inatividade" id="previsao_de_inatividade" required
+                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                  transition-all duration-200
+                                  hover:border-gray-300 text-gray-700 font-medium
+                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA7VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                </div>
+            </div>
+            
+            <!-- Última Promoção -->
+            <div class="space-y-2">
+                <label for="ultima_promocao" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Última Promoção *</label>
+                <div class="relative">
+                    <input type="date" name="ultima_promocao" id="ultima_promocao" required
+                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                  shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                  transition-all duration-200
+                                  hover:border-gray-300 text-gray-700 font-medium
+                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                  bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                </div>
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+<!-- Seção 4: Documentos e Contatos -->
+<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+    <div class="space-y-6">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Documentos e Contatos</h2>
+        <hr class="border-t border-gray-100">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- CPF -->
+            <div class="space-y-2">
+                <label for="cpf" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">CPF *</label>
+                <input type="text" name="cpf" id="cpf" placeholder="xxx.xxx.xxx-xx" required
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium"
+                       oninput="formatCPF(this)" onblur="validateCPF(this)" maxlength="14">
+                <div class="text-red-500 text-sm mt-1 hidden" id="cpf_error">Por favor, insira um CPF válido.</div>
+            </div>
+            
+            <!-- RG -->
+            <div class="space-y-2">
+                <label for="rg" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">RG *</label>
+                <input type="text" name="rg" id="rg" placeholder="xx.xxxx.xxx-x" required
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium">
+            </div>
+            
+            <!-- Email -->
+            <div class="space-y-2">
+                <label for="email" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Email *</label>
+                <input type="email" name="email" id="email" placeholder="seu_usuario" required 
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium"
+                              onblur="formatEmailOnBlur(this)" oninput="formatEmail(this)">
+            </div>
+            
+            <!-- Telefone -->
+            <div class="space-y-2">
+                <label for="telefone" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Telefone *</label>
+                <input type="tel" name="telefone" id="telefone" placeholder="(xx) xxxxx-xxxx" required
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium"
+                       oninput="formatTelefone(this)" maxlength="15">
+            </div>
+            
+        </div>
+    </div>
+</fieldset>
+
+<!-- Seção 5: Averbação -->
+<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+    <div class="space-y-6">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Averbação</h2>
+        <hr class="border-t border-gray-100">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- INSS -->
+            <div class="space-y-2">
+                <label for="tempo_para_averbar_inss" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Tempo INSS *</label>
+                <input type="text" name="tempo_para_averbar_inss" id="tempo_para_averbar_inss" placeholder="Se não possuir lançar 0" value="0" required
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium">
+            </div>
+            
+            <!-- Militar -->
+            <div class="space-y-2">
+                <label for="tempo_para_averbar_militar" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Tempo Militar *</label>
+                <input type="text" name="tempo_para_averbar_militar" id="tempo_para_averbar_militar" placeholder="Se não possuir lançar 0" value="0" required
+                       class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                              shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                              transition-all duration-200 placeholder-gray-400
+                              hover:border-gray-300 text-gray-700 font-medium">
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+
+
+
+
+<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+    <div class="space-y-6">
+        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Imagem de Perfil e Motivo</h2>
+        <hr class="border-t border-gray-100">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div class="space-y-4">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Imagem de Perfil</h2>
+                    <hr class="border-t border-gray-100">
+                    
+                    <div class="flex flex-col items-center">
+                        <!-- Container da pré-visualização -->
+                        <div class="relative group w-48 h-48 mb-4">
+                            <div id="image-preview-container" class="w-full h-full bg-gray-50 rounded-full border-2 border-gray-200 overflow-hidden flex items-center justify-center">
+                                <img id="image-preview" src="{% static 'images/default-avatar.png' %}" 
+                                     class="w-full h-full object-cover rounded-full hidden">
+                                <span id="upload-label" class="text-gray-400 text-sm text-center p-4">Sem imagem selecionada</span>
+                            </div>
                             
-                    <a href="{% url 'efetivo:listar_militar' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
+                            <!-- Ícone de edição (aparece no hover) -->
+                            <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-opacity duration-200 cursor-pointer">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <!-- Input file escondido e botão personalizado -->
+                        <div class="w-full max-w-xs">
+                            <label class="w-full flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white
+                                          font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Selecionar Imagem
+                                <input type="file" name="image" id="image-upload"
+                                       class="hidden"
+                                       accept="image/*"
+                                       required>
+                            </label>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="image-error">Por favor, selecione uma imagem de perfil.</div>
+                        </div>
+                        
+                        <!-- Informações adicionais -->
+                        <p class="text-xs text-gray-500 mt-2 text-center">
+                            Formatos aceitos: JPG, PNG (Máx. 2MB)<br>
+                            Dimensões recomendadas: 300x300 pixels
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4 ms-8">
+                <h3 class="ms-4 text-xs font-semibold text-gray-500 uppercase tracking-widest">Motivo da Alteração</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="space-y-2">
+                        <label class="ms-4 block text-xs font-medium text-gray-500 uppercase tracking-wide mb-8"></label>
+                        <div class="relative w-1/2">
+                            <select name="alteracao" id="alteracao"
+                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                           transition-all duration-200 appearance-none
+                                           hover:border-gray-300 text-gray-700 font-medium
+                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgOWwtNyA3LTctNyIvPjwvc3ZnPg==')]
+                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]"
+                                    required>
+                                <option value="" disabled selected>Selecione uma opção</option>
+                                {% for i in alteracao %}
+                                <option value="{{ i.0 }}">{{ i.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </fieldset>
-   </form>
-  </div>
-</body>
+    </div>
+</fieldset>
+
+<!-- Rodapé do Formulário -->
+<fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex-1 space-y-2">
+            <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                * Campos obrigatórios
+            </p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <button type="submit" 
+                    class="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+                           font-semibold rounded-xl shadow-sm hover:shadow-md
+                           transition-all duration-200 hover:scale-[1.02]
+                           flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Cadastrar
+            </button>
+            
+            <div class="flex gap-3">
+                <button type="reset" 
+                        class="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 text-white 
+                               font-semibold rounded-xl shadow-sm hover:shadow-md
+                               transition-all duration-200 hover:scale-[1.02]
+                               flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Limpar
+                </button>
+                
+                <a href="{% url 'efetivo:listar_militar' %}" 
+                   class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
+                          font-semibold rounded-xl shadow-sm hover:shadow-md
+                          transition-all duration-200 hover:scale-[1.02]
+                          flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</fieldset>
+
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Previne o submit do formulário ao pressionar Enter em qualquer campo de entrada
-    document.querySelectorAll('input, select').forEach(function(element) {
-        element.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
+  // validação  de campos telefone 
+    function formatTelefone(input) {
+        let value = input.value.replace(/\D/g, '');
+        let formattedValue = '';
+    
+        if (value.length > 0) {
+          formattedValue += '(' + value.substring(0, 2);
+          if (value.length > 2) {
+            formattedValue += ') ' + value.substring(2, 7);
+            if (value.length > 7) {
+              formattedValue += '-' + value.substring(7, 11);
             }
-        });
-    });
+          }
+        }
+        input.value = formattedValue;
+      }
 
-    // Validação do formulário e submit apenas com o botão "Cadastrar"
-    document.querySelector('form').addEventListener('submit', function(event) {
-        let isValid = true;
-
-        const fields = [
-            { id: 'posto_grad', errorId: 'posto_grad_error' },
-            { id: 'quadro', errorId: 'quadro_error' },
-            { id: 'grupo', errorId: 'grupo_error' },
-            { id: 're', errorId: 're_error' },
-            { id: 'dig', errorId: 'dig_error' },
-            { id: 'genero', errorId: 'genero_error' },
-            { id: 'nome', errorId: 'nome_error' },
-            { id: 'nome_de_guerra', errorId: 'nome_de_guerra_error' },
-            { id: 'situacao', errorId: 'situacao_error' },
-            { id: 'cad_efetivo', errorId: 'cad_efetivo_error' },
-            { id: 'sgb', errorId: 'sgb_error' },
-            { id: 'posto_secao', errorId: 'posto_secao_error' },
-            { id: 'esta_adido', errorId: 'esta_adido_error' },
-            { id: 'funcao', errorId: 'funcao_error' },
-            { id: 'op_adm', errorId: 'op_adm_error' },
-            { id: 'apresentacao_na_unidade', errorId: 'apresentacao_na_unidade_error' },
-            { id: 'nasc', errorId: 'nasc_error' },
-            { id: 'matricula', errorId: 'matricula_error' },
-            { id: 'admissao', errorId: 'admissao_error' },
-            { id: 'previsao_de_inatividade', errorId: 'previsao_de_inatividade_error' },
-            { id: 'ultima_promocao', errorId: 'ultima_promocao_error' },
-            { id: 'cpf', errorId: 'cpf_error' },
-            { id: 'rg', errorId: 'rg_error' },
-            { id: 'email_funcional', errorId: 'email_funcional_error' },
-            { id: 'telefone', errorId: 'telefone_error' },
-            { id: 'tempo_para_averbar_inss', errorId: 'tempo_para_averbar_inss_error' },
-            { id: 'tempo_para_averbar_militar', errorId: 'tempo_para_averbar_militar_error' },
-            { id: 'image', errorId: 'image_error' }
-        ];
-
-        fields.forEach(field => {
-            const input = document.getElementById(field.id);
-            if (!input.value) {
-                document.getElementById(field.errorId).classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById(field.errorId).classList.add('hidden');
+      // validação  de campos  email
+      function formatEmailOnBlur(input) {
+        const allowedDomain = "@policiamilitar.sp.gov.br";
+        const value = input.value;
+        if (!value.endsWith(allowedDomain) && value.includes('@')) {
+          const parts = value.split('@');
+          input.value = parts[0] + allowedDomain;
+        } else if (!value.includes('@') && value.trim() !== "") {
+          input.value = value + allowedDomain;
+        }
+      }
+</script>
+<script>
+    function formatCPF(input) {
+      let value = input.value.replace(/\D/g, '');
+      let formattedValue = '';
+  
+      if (value.length > 0) {
+        formattedValue += value.substring(0, 3);
+        if (value.length > 3) {
+          formattedValue += '.' + value.substring(3, 6);
+          if (value.length > 6) {
+            formattedValue += '.' + value.substring(6, 9);
+            if (value.length > 9) {
+              formattedValue += '-' + value.substring(9, 11);
             }
-        });
-
-        if (!isValid) {
-            event.preventDefault();
+          }
         }
-    });
-
-    // Função para pré-visualizar a imagem
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const preview = document.getElementById('preview');
-            preview.src = reader.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(event.target.files[0]);
+      }
+      input.value = formattedValue;
     }
-
-    document.getElementById('image').addEventListener('change', previewImage);
-});
-</script>
+  
+    function validateCPF(input) {
+      const cpf = input.value.replace(/\D/g, '');
+      const errorDiv = document.getElementById('cpf_error');
+  
+      if (!cpf || cpf.length !== 11 || isInvalidCPFPattern(cpf)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      if (!validateCPFDigits(cpf)) {
+        errorDiv.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+      }
+  
+      errorDiv.classList.add('hidden');
+      input.classList.remove('border-red-500');
+      return true;
+    }
+  
+    function isInvalidCPFPattern(cpf) {
+      return cpf === '00000000000' ||
+             cpf === '11111111111' ||
+             cpf === '22222222222' ||
+             cpf === '33333333333' ||
+             cpf === '44444444444' ||
+             cpf === '55555555555' ||
+             cpf === '66666666666' ||
+             cpf === '77777777777' ||
+             cpf === '88888888888' ||
+             cpf === '99999999999';
+    }
+  
+    function validateCPFDigits(cpf) {
+      let sum;
+      let remainder;
+  
+      sum = 0;
+      for (let i = 1; i <= 9; i++) {
+        sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if ((remainder === 10) || (remainder === 11)) {
+        remainder = 0;
+      }
+      if (remainder !== parseInt(cpf.substring(9, 10))) {
+        return false;
+      }
+  
+      sum = 0;
+      for (let i = 1; i <= 10; i++) {
+        sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+      }
+      remainder = (sum * 10) % 11;
+      if ((remainder === 10) || (remainder === 11)) {
+        remainder = 0;
+      }
+      if (remainder !== parseInt(cpf.substring(10, 11))) {
+        return false;
+      }
+  
+      return true;
+    }
+  </script>
 <script>
-document.getElementById('cadastroForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Impede o envio do formulário
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadLabel = document.getElementById('upload-label');
+        const imageError = document.getElementById('image-error');
+        const previewContainer = document.getElementById('image-preview-container');
 
-    // Limpa mensagens de erro anteriores
-    document.getElementById('formErrors').classList.add('hidden');
-    document.querySelectorAll('.text-red-500').forEach(function(el) {
-        el.classList.add('hidden');
-    });
+        // Função para carregar e pré-visualizar a imagem
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
 
-    // Coleta os dados do formulário
-    const formData = new FormData(this);
+            if (file) {
+                // Verifica o tipo do arquivo
+                if (!file.type.match('image.*')) {
+                    imageError.textContent = 'Por favor, selecione um arquivo de imagem válido';
+                    imageError.classList.remove('hidden');
+                    return;
+                }
 
-    // Envia os dados via AJAX
-    fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                // Verifica o tamanho do arquivo (2MB máximo)
+                if (file.size > 2 * 1024 * 1024) {
+                    imageError.textContent = 'A imagem não pode ultrapassar 2MB';
+                    imageError.classList.remove('hidden');
+                    return;
+                }
+
+                // Cria um objeto URL para a imagem selecionada
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    uploadLabel.classList.add('hidden');
+                    imageError.classList.add('hidden');
+
+                    // Adiciona efeito de zoom na pré-visualização
+                    previewContainer.classList.add('ring-2', 'ring-blue-500');
+                    setTimeout(() => {
+                        previewContainer.classList.remove('ring-2', 'ring-blue-500');
+                    }, 1000);
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                // Se nenhum arquivo for selecionado, restaura o estado inicial
+                imagePreview.src = "{% static 'images/default-avatar.png' %}";
+                imagePreview.classList.add('hidden');
+                uploadLabel.classList.remove('hidden');
+            }
+        });
+
+        // Permite clicar na pré-visualização para selecionar outra imagem
+        previewContainer.addEventListener('click', function() {
+            imageUpload.click();
+        });
+
+        // Validação do formulário (opcional, dependendo de como você está enviando os dados)
+        // Exemplo básico para garantir que um arquivo foi selecionado antes do envio
+        const form = document.querySelector('form'); // Substitua 'form' pelo ID ou seletor correto do seu formulário
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                if (!imageUpload.files || imageUpload.files.length === 0) {
+                    imageError.textContent = 'Por favor, selecione uma imagem de perfil';
+                    imageError.classList.remove('hidden');
+                    event.preventDefault();
+
+                    // Rola até o campo de imagem
+                    imageUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            });
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Redireciona ou exibe mensagem de sucesso
-            window.location.href = data.redirect_url;
-        } else {
-            // Exibe mensagens de erro
-            document.getElementById('formErrors').innerText = data.error_message;
-            document.getElementById('formErrors').classList.remove('hidden');
-            for (const [field, message] of Object.entries(data.field_errors)) {
-                document.getElementById(`${field}_error`).innerText = message;
-                document.getElementById(`${field}_error`).classList.remove('hidden');
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Previne o submit do formulário ao pressionar Enter
+        document.querySelectorAll('input, select').forEach(function(element) {
+            element.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                }
+            });
+        });
+    
+        // Validação do formulário
+        document.getElementById('militarForm').addEventListener('submit', function(event) {
+            let isValid = true;
+            const form = this;
+    
+            // Lista de campos obrigatórios
+            const requiredFields = [
+                'posto_grad', 'quadro', 'grupo', 're', 'dig', 'genero', 'nome', 'nome_de_guerra',
+                'situacao', 'cad_efetivo', 'sgb', 'posto_secao', 'esta_adido', 'funcao', 'op_adm',
+                'prontidao', 'apresentacao_na_unidade', 'nasc', 'matricula', 'admissao',
+                'previsao_de_inatividade', 'ultima_promocao', 'cpf', 'rg', 'email_funcional',
+                'telefone', 'tempo_para_averbar_inss', 'tempo_para_averbar_militar', 'image',
+                'alteracao'
+            ];
+    
+            // Verifica cada campo obrigatório
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const errorElement = document.getElementById(`${fieldId}_error`);
+                
+                if (!field || !field.value) {
+                    if (errorElement) {
+                        errorElement.classList.remove('hidden');
+                    } else {
+                        // Cria elemento de erro se não existir
+                        const newError = document.createElement('div');
+                        newError.id = `${fieldId}_error`;
+                        newError.className = 'text-red-500 text-sm mt-1';
+                        newError.textContent = 'Este campo é obrigatório';
+                        field.parentNode.appendChild(newError);
+                    }
+                    
+                    // Adiciona classe de erro ao campo
+                    field.classList.add('border-red-500', 'focus:border-red-500');
+                    isValid = false;
+                } else {
+                    if (errorElement) {
+                        errorElement.classList.add('hidden');
+                    }
+                    field.classList.remove('border-red-500', 'focus:border-red-500');
+                }
+            });
+    
+            // Validação adicional para campos específicos
+            const emailField = document.getElementById('email_funcional');
+            if (emailField && emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
+                document.getElementById('email_funcional_error').textContent = 'Por favor, insira um email válido';
+                document.getElementById('email_funcional_error').classList.remove('hidden');
+                emailField.classList.add('border-red-500', 'focus:border-red-500');
+                isValid = false;
+            }
+    
+            // Se não for válido, previne o envio e rola para o primeiro erro
+            if (!isValid) {
+                event.preventDefault();
+                const firstError = document.querySelector('.text-red-500:not(.hidden)');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+    
+        // Função para pré-visualizar a imagem
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                const preview = document.getElementById('preview');
+                const uploadLabel = document.getElementById('upload-label');
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if (uploadLabel) uploadLabel.classList.add('hidden');
+                };
+                
+                reader.readAsDataURL(file);
+                
+                // Remove mensagem de erro se existir
+                const errorElement = document.getElementById('image_error');
+                if (errorElement) {
+                    errorElement.classList.add('hidden');
+                }
             }
         }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
+    
+        // Adiciona máscaras para campos específicos
+        function applyMasks() {
+            // Máscara para CPF
+            const cpfField = document.getElementById('cpf');
+            if (cpfField) {
+                cpfField.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    e.target.value = value;
+                });
+            }
+    
+            // Máscara para RG
+            const rgField = document.getElementById('rg');
+            if (rgField) {
+                rgField.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1})$/, '$1-$2');
+                    e.target.value = value;
+                });
+            }
+    
+            // Máscara para telefone
+            const telefoneField = document.getElementById('telefone');
+            if (telefoneField) {
+                telefoneField.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                    value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+                    e.target.value = value;
+                });
+            }
+        }
+    
+        // Aplica as máscaras quando o DOM estiver carregado
+        applyMasks();
+    
+        // Adiciona animação de hover nos botões
+        document.querySelectorAll('button, a[href]').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-1px)';
+            });
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
     });
-});
-</script>
-
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Previne o submit do formulário ao pressionar Enter
+            document.querySelectorAll('input, select').forEach(function(element) {
+                element.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                    }
+                });
+            });
+        
+            // Validação do formulário
+            document.getElementById('militarForm').addEventListener('submit', function(event) {
+                event.preventDefault(); // Previne o envio padrão para podermos validar
+                
+                let isValid = true;
+                const form = this;
+                const firstErrorElement = null;
+        
+                // Lista de campos obrigatórios
+                const requiredFields = [
+                    'posto_grad', 'quadro', 'grupo', 're', 'dig', 'genero', 'nome', 'nome_de_guerra',
+                    'situacao', 'cad_efetivo', 'sgb', 'posto_secao', 'esta_adido', 'funcao', 'op_adm',
+                    'prontidao', 'apresentacao_na_unidade', 'nasc', 'matricula', 'admissao',
+                    'previsao_de_inatividade', 'ultima_promocao', 'cpf', 'rg', 'email',
+                    'telefone', 'tempo_para_averbar_inss', 'tempo_para_averbar_militar', 'image',
+                    'alteracao'
+                ];
+        
+                // Remove classes de erro de validações anteriores
+                document.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid', 'border-red-500');
+                });
+                document.querySelectorAll('.invalid-feedback').forEach(el => {
+                    el.remove();
+                });
+        
+                // Verifica cada campo obrigatório
+                requiredFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (!field) return;
+                    
+                    // Verifica se o campo está vazio ou não selecionado
+                    const isEmpty = field.value === '' || field.value === null || 
+                                  (field.tagName === 'SELECT' && field.selectedIndex <= 0);
+                    
+                    if (isEmpty) {
+                        // Adiciona classes de erro ao campo
+                        field.classList.add('is-invalid', 'border-red-500');
+                        
+                        // Cria elemento de erro se não existir
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback text-red-500 text-sm mt-1';
+                        errorDiv.textContent = 'Este campo é obrigatório';
+                        
+                        // Insere após o campo
+                        field.parentNode.appendChild(errorDiv);
+                        
+                        // Marca o formulário como inválido
+                        isValid = false;
+                        
+                        // Guarda o primeiro erro para scroll
+                        if (!firstErrorElement) {
+                            firstErrorElement = field;
+                        }
+                    }
+                });
+        
+                // Validações específicas
+                const cpfField = document.getElementById('cpf');
+                if (cpfField && !validateCPF(cpfField.value.replace(/\D/g, ''))) {
+                    addValidationError(cpfField, 'Por favor, insira um CPF válido');
+                    isValid = false;
+                }
+        
+                const emailField = document.getElementById('email');
+                if (emailField && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
+                    addValidationError(emailField, 'Por favor, insira um email válido');
+                    isValid = false;
+                }
+        
+                // Se for válido, envia o formulário
+                if (isValid) {
+                    form.submit();
+                } else {
+                    // Rola até o primeiro erro
+                    if (firstErrorElement) {
+                        firstErrorElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }
+                    
+                    // Exibe mensagem geral de erro
+                    showToast('Por favor, corrija os campos destacados em vermelho', 'error');
+                }
+            });
+        
+            // Função auxiliar para adicionar erros de validação
+            function addValidationError(field, message) {
+                field.classList.add('is-invalid', 'border-red-500');
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback text-red-500 text-sm mt-1';
+                errorDiv.textContent = message;
+                
+                field.parentNode.appendChild(errorDiv);
+            }
+        
+            // Função para exibir toasts de notificação
+            function showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white ${
+                    type === 'error' ? 'bg-red-500' : 'bg-green-500'
+                }`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            }
+        
+            // Função para validar CPF
+            function validateCPF(cpf) {
+                cpf = cpf.replace(/\D/g, '');
+                
+                // Verifica padrões inválidos
+                if (/^(\d)\1{10}$/.test(cpf)) return false;
+                
+                // Validação dos dígitos verificadores
+                let sum = 0;
+                for (let i = 1; i <= 9; i++) {
+                    sum += parseInt(cpf.substring(i-1, i)) * (11 - i);
+                }
+                let remainder = (sum * 10) % 11;
+                if (remainder === 10 || remainder === 11) remainder = 0;
+                if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+                
+                sum = 0;
+                for (let i = 1; i <= 10; i++) {
+                    sum += parseInt(cpf.substring(i-1, i)) * (12 - i);
+                }
+                remainder = (sum * 10) % 11;
+                if (remainder === 10 || remainder === 11) remainder = 0;
+                if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+                
+                return true;
+            }
+        });
+        </script>
+    <script>
+        // Dados de mapeamento SGB -> Posto/Seção
+        const postoSeccaoPorSGB = {
+            "EM": [
+                ["703150000 - CMT", "CMT"],
+                ["703159000 - SUB CMT", "SUB CMT"],
+                ["703159100 - SEC ADM", "SEC ADM"],
+                ["703159110 - B/1 E B/5", "B/1 E B/5"],
+                ["703159110-1 - B/5", "B/5"],
+                ["703159120 - AA", "AA"],
+                ["703159130 - B/3 E MOTOMEC", "B/3 E MOTOMEC"],
+                ["703159130-1 - MOTOMEC", "MOTOMEC"],
+                ["703159131 - COBOM", "COBOM"],
+                ["703159140 - B/4", "B/4"],
+                ["703159150 - ST UGE", "ST UGE"],
+                ["703159160 - ST PJMD", "ST PJMD"],
+                ["703159200 - SEC ATIV TEC", "SEC ATIV TEC"]
+            ],
+            "1ºSGB": [
+                ["703151000 - CMT 1º SGB", "CMT 1º SGB"],
+                ["703151100 - ADM PB CERRADO", "ADM PB CERRADO"],
+                ["703151101 - EB CERRADO", "EB CERRADO"],
+                ["703151102 - EB ZONA NORTE", "EB ZONA NORTE"],
+                ["703151200 - ADM PB SANTA ROSÁLIA", "ADM PB SANTA ROSÁLIA"],
+                ["703151201 - EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"],
+                ["703151202 - EB ÉDEM", "EB ÉDEM"],
+                ["703151300 - ADM PB VOTORANTIM", "ADM PB VOTORANTIM"],
+                ["703151301 - EB VOTORANTIM", "EB VOTORANTIM"],
+                ["703151302 - EB PIEDADE", "EB PIEDADE"],
+                ["703151800 - ADM 1º SGB", "ADM 1º SGB"]
+            ],
+            "2ºSGB": [
+                ["703152000 - CMT 2º SGB", "CMT 2º SGB"],
+                ["703152100 - ADM PB ITU", "ADM PB ITU"],
+                ["703152101 - EB ITU", "EB ITU"],
+                ["703152102 - EB PORTO FELIZ", "EB PORTO FELIZ"],
+                ["703152200 - ADM PB SALTO", "ADM PB SALTO"],
+                ["703152201 - EB SALTO", "EB SALTO"],
+                ["703152300 - ADM PB SÃO ROQUE", "ADM PB SÃO ROQUE"],
+                ["703152301 - EB SÃO ROQUE", "EB SÃO ROQUE"],
+                ["703152302 - EB IBIÚNA", "EB IBIÚNA"],
+                ["703152800 - ADM 2º SGB", "ADM 2º SGB"],
+                ["703152900 - NUCL ATIV TEC 2º SGB", "NUCL ATIV TEC 2º SGB"]
+            ],
+            "3ºSGB": [
+                ["703153000 - CMT 3º SGB", "CMT 3º SGB"],
+                ["703153100 - ADM PB ITAPEVA", "ADM PB ITAPEVA"],
+                ["703153101 - EB ITAPEVA", "EB ITAPEVA"],
+                ["703153102 - EB APIAÍ", "EB APIAÍ"],
+                ["703153103 - EB ITARARÉ", "EB ITARARÉ"],
+                ["703153104 - EB CAPÃO BONITO", "EB CAPÃO BONITO"],
+                ["703153800 - ADM 3º SGB", "ADM 3º SGB"],
+                ["703153900 - NUCL ATIV TEC 3º SGB", "NUCL ATIV TEC 3º SGB"]
+            ],
+            "4ºSGB": [
+                ["703154000 - CMT 4º SGB", "CMT 4º SGB"],
+                ["703154100 - ADM PB ITAPETININGA", "ADM PB ITAPETININGA"],
+                ["703154101 - EB ITAPETININGA", "EB ITAPETININGA"],
+                ["703154102 - EB BOITUVA", "EB BOITUVA"],
+                ["703154103 - EB ANGATUBA", "EB ANGATUBA"],
+                ["703154200 - ADM PB TATUÍ", "ADM PB TATUÍ"],
+                ["703154201 - EB TATUÍ", "EB TATUÍ"],
+                ["703154202 - EB TIETÊ", "EB TIETÊ"],
+                ["703154203 - EB LARANJAL PAULISTA", "EB LARANJAL PAULISTA"],
+                ["703154800 - ADM 4º SGB", "ADM 4º SGB"],
+                ["703154900 - NUCL ATIV TEC 4º SGB", "NUCL ATIV TEC 4º SGB"]
+            ],
+            "5ºSGB": [
+                ["703155000 - CMT 5º SGB", "CMT 5º SGB"],
+                ["703155100 - ADM PB BOTUCATU", "ADM PB BOTUCATU"],
+                ["703155101 - EB BOTUCATU", "EB BOTUCATU"],
+                ["703155102 - EB ITATINGA", "EB ITATINGA"],
+                ["703155200 - ADM PB AVARÉ", "ADM PB AVARÉ"],
+                ["703155201 - EB AVARÉ", "EB AVARÉ"],
+                ["703155202 - EB PIRAJU", "EB PIRAJU"],
+                ["703155203 - EB ITAÍ", "EB ITAÍ"],
+                ["703155800 - ADM 5º SGB", "ADM 5º SGB"],
+                ["703155900 - NUCL ATIV TEC 5º SGB", "NUCL ATIV TEC 5º SGB"]
+            ]
+        };
+        
+        // Função para atualizar as opções do Posto/Seção
+        function atualizarPostoSeccao() {
+            const sgbSelect = document.getElementById('sgb');
+            const postoSeccaoSelect = document.getElementById('posto_secao');
+            const sgbSelecionado = sgbSelect.value;
+            
+            // Limpar opções exceto a primeira
+            postoSeccaoSelect.innerHTML = '<option value="" disabled selected>Selecione o Posto/Seção</option>';
+            
+            // Habilitar/desabilitar select
+            postoSeccaoSelect.disabled = !sgbSelecionado;
+            
+            if (sgbSelecionado && postoSeccaoPorSGB[sgbSelecionado]) {
+                // Adicionar novas opções
+                postoSeccaoPorSGB[sgbSelecionado].forEach(([value, label]) => {
+                    const option = new Option(label, value);
+                    postoSeccaoSelect.add(option);
+                });
+            }
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar o select de Posto/Seção como desabilitado
+            document.getElementById('posto_secao').disabled = true;
+            
+            // Adicionar o event listener para o select de SGB
+            document.getElementById('sgb').addEventListener('change', atualizarPostoSeccao);
+            
+            // Se já houver um valor selecionado no SGB, atualizar as opções
+            if (document.getElementById('sgb').value) {
+                atualizarPostoSeccao();
+            }
+        });
+        </script>
 {% endblock 'body' %}
