@@ -115,6 +115,12 @@ class Cadastro(models.Model):
     def tempo_para_averbar_militar_inteiro(self):
         return self.tempo_para_averbar_militar
     
+    @property
+    def ultima_promocao(self):
+        try:
+            return self.promocoes.latest('data_alteracao')
+        except Promocao.DoesNotExist:
+            return None
 
     class Meta:
         ordering = ('re',)
@@ -538,8 +544,9 @@ class Promocao(models.Model):
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
 
-
-
+   
+   
+   
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from backend.efetivo.utils import add_cpf_to_image  # Importe a função
