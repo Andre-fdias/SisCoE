@@ -11,6 +11,8 @@ from backend.rpt.models import Cadastro_rpt
 from django.http import HttpResponseForbidden
 from django.db.models import F, Window
 from django.db.models.functions import RowNumber
+# backend/efetivo/views.py
+from backend.municipios.models import Posto  # Supondo que Posto está no app 'municipios'
 
 @login_required
 def cadastrar_militar(request):
@@ -528,3 +530,29 @@ def check_rpt(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
     exists = Cadastro_rpt.objects.filter(cadastro=cadastro).exists()
     return JsonResponse({'exists': exists})
+
+# backend/efetivo/views.py
+from django.shortcuts import render, get_object_or_404
+from .models import Cadastro
+from backend.municipios.models import Posto  # Caminho absoluto
+
+
+@login_required
+def detalhar_efetivo(request, posto_id):
+    posto = get_object_or_404(Posto, pk=posto_id)
+    
+    # Query corrigida usando prefetch_related
+    militares = Cadastro.objects.filter(
+        detalhes_situacao__posto_secao=posto.posto_secao
+    ).prefetch_related(
+        'imagens',
+        'promocoes',
+        'detalhes_situacao'
+    )
+    
+    context = {
+        'posto': posto,
+        'militares': militares,
+        'unidade_nome': posto.posto_secao
+    }
+    return render(request, 'detalhes_efetivo.html', context)

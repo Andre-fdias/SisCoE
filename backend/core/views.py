@@ -477,5 +477,3 @@ def calcular_variacao(valor_anterior, valor_atual):
     if valor_anterior == 0:
         return 100 if valor_atual > 0 else 0
     return round(((valor_atual - valor_anterior) / valor_anterior) * 100, 1)
-
-
