@@ -15,8 +15,8 @@ def cadastrar_lp(request):
         return render(request, 'cadastrar_lp.html')
 
     elif request.method == 'POST':
-        n_bloco_adicional = request.POST.get('n_bloco_adicional')
-        n_bloco_lp = request.POST.get('n_bloco_lp')
+        n_bloco_adicional = int(request.POST.get('n_bloco_adicional'))
+        n_bloco_lp = int(request.POST.get('n_bloco_lp'))
         cadastro_id = request.POST.get('cadastro_id')
         data_ultimo_adicional = request.POST.get('data_ultimo_adicional')
         data_ultimo_lp = request.POST.get('data_ultimo_lp')

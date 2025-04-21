@@ -13,10 +13,16 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from backend.agenda.models import Lembrete, Tarefa  # Importe os modelos Lembrete e Tarefa
 from django.views.generic import TemplateView, View
 from backend.documentos.models import Documento, Arquivo
+from django.db.models import Prefetch
+
 
 def capa(request):
     template_name = 'landing.html'
     return render(request, template_name)
+
+
+
+
 
 
 @login_required
@@ -24,75 +30,75 @@ def index(request):
     hoje = datetime.now()
     mes_atual = hoje.month
 
-    # Debug
     print("\n=== INÍCIO DA VIEW ===")
-    
-    # Mapeamento de cargos fixos
-    CARGO_CHOICES_MAP = {
-        'Comandante': '703150000 - CMT',
-        'Subcomandante': '703159000 - SUB CMT',
-        'Ch Seç Adm': '703159100 - SEC ADM',
-        'Cmt do 1º SGB': '703151000 - CMT 1º SGB',
-        'Cmt do 2º SGB': '703152000 - CMT 2º SGB',
-        'Cmt do 3º SGB': '703153000 - CMT 3º SGB',
-        'Cmt do 4º SGB': '703154000 - CMT 4º SGB',
-        'Cmt do 5º SGB': '703155000 - CMT 5º SGB',
+
+    FUNCAO_CHOICES_MAP = {
+        'Comandante': 'CMT_GB',
+        'Subcomandante': 'SUBCMT',
+        'Ch Seç Adm': 'CH SEC ADM',
+        'Ch SAT': 'CH SAT',
+        'Cmt do 1º SGB': 'CMT 1ºSGB',
+        'Cmt do 2º SGB': 'CMT 2ºSGB',
+        'Cmt do 3º SGB': 'CMT 3ºSGB',
+        'Cmt do 4º SGB': 'CMT 4ºSGB',
+        'Cmt do 5º SGB': 'CMT 5ºSGB',
     }
 
-    # Função otimizada para buscar ocupantes
-    def get_ocupante_cargo(cargo_nome):
+    def get_ocupante_por_funcao(funcao_nome):
         try:
-            return Cadastro.objects.filter(
-                detalhes_situacao__posto_secao=CARGO_CHOICES_MAP[cargo_nome],
+            print(f"Buscando função: {funcao_nome}")
+            funcao_valor = FUNCAO_CHOICES_MAP.get(funcao_nome)
+            print(f"Valor da função: {funcao_valor}")
+            queryset = Cadastro.objects.filter(
+                detalhes_situacao__funcao=funcao_valor,
                 detalhes_situacao__situacao='Efetivo',
-                detalhes_situacao__cat_efetivo='Ativo'
-            ).select_related('detalhes_situacao')\
-             .prefetch_related('imagens', 'promocoes')\
-             .first()
+                detalhes_situacao__cat_efetivo='ATIVO'
+            ).prefetch_related('imagens', 'promocoes', 'detalhes_situacao').order_by('-detalhes_situacao__apresentacao_na_unidade')
+            ocupante = queryset.first()
+            if ocupante:
+                ocupante.latest_promocao = ocupante.promocoes.order_by('-data_alteracao').first()
+                print(f"  {funcao_nome}: {ocupante.nome_de_guerra}, Última Promoção: {ocupante.latest_promocao}") # Debug
+                if ocupante.latest_promocao:
+                    print(f"    Posto/Graduação: {ocupante.latest_promocao.posto_grad}") # Debug
+            return ocupante
         except Exception as e:
-            print(f"Erro ao buscar {cargo_nome}: {str(e)}")
+            print(f"Erro ao buscar {funcao_nome}: {str(e)}")
             return None
 
-    # Busca dos ocupantes
-    comandante = get_ocupante_cargo('Comandante')
-    subcomandante = get_ocupante_cargo('Subcomandante')
-    
+    comandante = get_ocupante_por_funcao('Comandante')
+    subcomandante = get_ocupante_por_funcao('Subcomandante')
+
     chefes = {
-        cargo: get_ocupante_cargo(cargo) 
-        for cargo in ['Ch Seç Adm', 'Cmt do 1º SGB', 'Cmt do 2º SGB', 
+        cargo: get_ocupante_por_funcao(cargo)
+        for cargo in ['Ch Seç Adm', 'Ch SAT', 'Cmt do 1º SGB', 'Cmt do 2º SGB',
                      'Cmt do 3º SGB', 'Cmt do 4º SGB', 'Cmt do 5º SGB']
     }
-   # Buscar as 2 últimas publicações de imagens para o carrossel
+
     imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')[:2]
 
-  # Aniversariantes - agora sem paginação
     aniversariantes = Cadastro.objects.filter(
         nasc__month=mes_atual
     ).order_by('nasc__day').prefetch_related(
         'imagens', 'promocoes', 'detalhes_situacao'
-    )[:100]  # Limite para 100 registros para teste
+    )[:100]
 
-    # Adicionando posto_grad_recente
     for funcionario in aniversariantes:
         try:
-            funcionario.posto_grad_recente = funcionario.promocoes.latest('ultima_promocao').posto_grad
+           funcionario.posto_grad_recente = funcionario.promocoes.order_by('-data_alteracao').first().posto_grad if funcionario.promocoes.exists() else None
         except Promocao.DoesNotExist:
             funcionario.posto_grad_recente = None
 
-    # Documentos - limitando a 100 registros para teste
     documentos = Documento.objects.all().order_by('-data_criacao')[:100]
 
-
-    # Lembretes e tarefas
     lembretes = Lembrete.objects.filter(
-        user=request.user, 
-        data__year=hoje.year, 
+        user=request.user,
+        data__year=hoje.year,
         data__month=hoje.month
     ).order_by('data')
-    
+
     tarefas = Tarefa.objects.filter(
-        user=request.user, 
-        data_inicio__year=hoje.year, 
+        user=request.user,
+        data_inicio__year=hoje.year,
         data_inicio__month=hoje.month
     ).order_by('data_inicio')
 
@@ -103,7 +109,7 @@ def index(request):
         'meses': [
             (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'),
             (4, 'Abril'), (5, 'Maio'), (6, 'Junho'),
-            (7, 'Julho'), (8, 'Agosto'), (9, 'Setembro'),  # Corrigido o número do mês
+            (7, 'Julho'), (8, 'Agosto'), (9, 'Setembro'),
             (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
         ],
         'hoje': hoje,
@@ -112,105 +118,111 @@ def index(request):
         'comandante': comandante,
         'subcomandante': subcomandante,
         'chefes': chefes,
-         'imagens_carrossel': imagens_carrossel,
+        'imagens_carrossel': imagens_carrossel,
     }
+    print("=== FIM DA VIEW ===")
     return render(request, 'index.html', context)
 
 
+
+from django.shortcuts import render
 from django.views.generic import TemplateView
 from datetime import datetime
-from django.shortcuts import render
+from calendar import monthcalendar
 
 class CalendarioView(TemplateView):
-    template_name = 'calendario.html'
+    template_name = 'index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        current_year = datetime.now().year
+        year = datetime.now().year
+        month = datetime.now().month
 
-        eventos_gb = [
-            {"titulo": "Aniversário EB Itaí", "data": f"{current_year}-02-23", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário do CB/SP", "data": f"{current_year}-03-10", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário COBOM Scb", "data": f"{current_year}-03-31", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário - PB Botucatu", "data": f"{current_year}-04-14", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Anivers. PB Itapeva", "data": f"{current_year}-05-29", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário do CB/Bra", "data": f"{current_year}-07-02", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Salto", "data": f"{current_year}-07-16", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Tatuí", "data": f"{current_year}-08-08", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Boituva", "data": f"{current_year}-09-03", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Itu", "data": f"{current_year}-09-06", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário - PB Avaré", "data": f"{current_year}-09-15", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Porto Feliz", "data": f"{current_year}-10-26", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Tietê", "data": f"{current_year}-10-27", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Cerrado", "data": f"{current_year}-11-12", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Votorantim", "data": f"{current_year}-12-08", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Apiaí", "data": f"{current_year}-12-10", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário da PM", "data": f"{current_year}-12-15", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Eden", "data": f"{current_year}-12-16", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Cap.Bonito", "data": f"{current_year}-12-17", "color": "#3b82f6", "tipo": "Evento GB"}
+        cal = monthcalendar(year, month)
+        month_name = datetime(year, month, 1).strftime("%B")
+
+        def criar_evento_dict(day, titulo, cor, tipo):
+            return {"day": day, "title": titulo, "color": cor, "tipo": tipo}
+
+        # Eventos do 15º GB (only day is relevant here)
+        eventos_gb_simples = [
+            criar_evento_dict(23, "Aniversário EB Itaí", "#3b82f6", "Evento GB"),
+            criar_evento_dict(10, "Aniversário do CB/SP", "#3b82f6", "Evento GB"),
+            criar_evento_dict(31, "Aniversário COBOM Scb", "#3b82f6", "Evento GB"),
+            criar_evento_dict(14, "Aniversário - PB Botucatu", "#3b82f6", "Evento GB"),
+            criar_evento_dict(29, "Anivers. PB Itapeva", "#3b82f6", "Evento GB"),
+            criar_evento_dict(2, "Aniversário do CB/Bra", "#3b82f6", "Evento GB"),
+            criar_evento_dict(16, "Aniversário PB Salto", "#3b82f6", "Evento GB"),
+            criar_evento_dict(8, "Aniversário PB Tatuí", "#3b82f6", "Evento GB"),
+            criar_evento_dict(3, "Aniversário BB Boituva", "#3b82f6", "Evento GB"),
+            criar_evento_dict(6, "Aniversário PB Itu", "#3b82f6", "Evento GB"),
+            criar_evento_dict(15, "Aniversário - PB Avaré", "#3b82f6", "Evento GB"),
+            criar_evento_dict(26, "Aniversário BB Porto Feliz", "#3b82f6", "Evento GB"),
+            criar_evento_dict(27, "Aniversário BB Tietê", "#3b82f6", "Evento GB"),
+            criar_evento_dict(12, "Aniversário PB Cerrado", "#3b82f6", "Evento GB"),
+            criar_evento_dict(8, "Aniversário PB Votorantim", "#3b82f6", "Evento GB"),
+            criar_evento_dict(10, "Aniversário BB Apiaí", "#3b82f6", "Evento GB"),
+            criar_evento_dict(15, "Aniversário da PM", "#3b82f6", "Evento GB"),
+            criar_evento_dict(16, "Aniversário PB Eden", "#3b82f6", "Evento GB"),
+            criar_evento_dict(17, "Aniversário BB Cap.Bonito", "#3b82f6", "Evento GB")
         ]
 
-        feriados_nacionais = [
-            {"titulo": "Feriado Nacional - Ano Novo", "data": f"{current_year}-01-01", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-03", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-04", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-05", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Sexta-Feira Santa", "data": f"{current_year}-04-18", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia de Tiradentes", "data": f"{current_year}-04-21", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Trabalho", "data": f"{current_year}-05-01", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Corpus Christi", "data": f"{current_year}-06-19", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Independência do Brasil", "data": f"{current_year}-09-07", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Nossa Senhora Aparecida", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia das Crianças", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Professor", "data": f"{current_year}-10-15", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Servidor Público", "data": f"{current_year}-10-28", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia de Finados", "data": f"{current_year}-11-02", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Proclamação da República", "data": f"{current_year}-11-15", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Consciência Negra", "data": f"{current_year}-11-20", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Natal", "data": f"{current_year}-12-25", "color": "#ef4444", "tipo": "Nacional"}
+        # Feriados Nacionais
+        feriados_nacionais_simples = [
+            criar_evento_dict(1, "Ano Novo", "#ef4444", "Nacional"),
+            criar_evento_dict(18, "Sexta-Feira Santa", "#ef4444", "Nacional"),
+            criar_evento_dict(21, "Tiradentes", "#ef4444", "Nacional"),
+            criar_evento_dict(1, "Dia do Trabalho", "#ef4444", "Nacional"),
+            criar_evento_dict(7, "Independência", "#ef4444", "Nacional"),
+            criar_evento_dict(12, "N.S. Aparecida", "#ef4444", "Nacional"),
+            criar_evento_dict(2, "Finados", "#ef4444", "Nacional"),
+            criar_evento_dict(15, "Proclamação República", "#ef4444", "Nacional"),
+            criar_evento_dict(25, "Natal", "#ef4444", "Nacional")
         ]
 
-        feriados_estaduais = [
-            {"titulo": "Feriado Estadual - Revolução Constitucionalista", "data": f"{current_year}-07-09", "color": "#f59e0b", "tipo": "Estadual"}
+        # Feriados Estaduais
+        feriados_estaduais_simples = [
+            criar_evento_dict(9, "Revolução Constitucionalista", "#f59e0b", "Estadual")
         ]
 
-        feriados_municipais = [
-            {"titulo": "Feriado Municipal - Aniversário de Sorocaba", "data": f"{current_year}-06-15", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Dia do Padroeiro (São Pedro)", "data": f"{current_year}-06-29", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Votorantim", "data": f"{current_year}-08-25", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Piedade", "data": f"{current_year}-07-02", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itu", "data": f"{current_year}-02-02", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Porto Feliz", "data": f"{current_year}-09-10", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Salto", "data": f"{current_year}-08-10", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de São Roque", "data": f"{current_year}-08-16", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Ibiúna", "data": f"{current_year}-03-24", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itapeva", "data": f"{current_year}-09-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itararé", "data": f"{current_year}-05-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Apiaí", "data": f"{current_year}-03-18", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Capão Bonito", "data": f"{current_year}-04-19", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itapetininga", "data": f"{current_year}-11-05", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Angatuba", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Boituva", "data": f"{current_year}-12-23", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Tatuí", "data": f"{current_year}-08-11", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Tietê", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Laranjal Paulista", "data": f"{current_year}-10-27", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Botucatu", "data": f"{current_year}-04-14", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itaí", "data": f"{current_year}-08-26", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Avaré", "data": f"{current_year}-09-15", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itatinga", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Piraju", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"}
+        # Feriados Municipais
+        feriados_municipais_simples = [
+            criar_evento_dict(2, "Aniversário Itu", "#10b981", "Municipal"),
+            criar_evento_dict(18, "Aniversário Apiaí", "#10b981", "Municipal"),
+            criar_evento_dict(21, "Aniversário Tietê", "#10b981", "Municipal"),
+            criar_evento_dict(19, "Aniversário Capão Bonito", "#10b981", "Municipal"),
+            criar_evento_dict(15, "Aniversário Sorocaba", "#10b981", "Municipal"),
+            criar_evento_dict(29, "Dia do Padroeiro", "#10b981", "Municipal"),
+            criar_evento_dict(10, "Aniversário Salto", "#10b981", "Municipal"),
+            criar_evento_dict(11, "Aniversário Tatuí", "#10b981", "Municipal"),
+            criar_evento_dict(25, "Aniversário Votorantim", "#10b981", "Municipal"),
+            criar_evento_dict(10, "Aniversário Porto Feliz", "#10b981", "Municipal"),
+            criar_evento_dict(20, "Aniversário Itapeva", "#10b981", "Municipal"),
+            criar_evento_dict(27, "Aniversário Laranjal Paulista", "#10b981", "Municipal"),
+            criar_evento_dict(5, "Aniversário Itapetininga", "#10b981", "Municipal"),
+            criar_evento_dict(20, "Aniversário Angatuba", "#10b981", "Municipal"),
+            criar_evento_dict(23, "Aniversário Boituva", "#10b981", "Municipal")
         ]
 
-        # Combinar todos os eventos
-        todos_eventos = eventos_gb + feriados_nacionais + feriados_estaduais + feriados_municipais
-        todos_eventos.sort(key=lambda x: x['data'])
+        todos_eventos_simples = (
+            eventos_gb_simples +
+            feriados_nacionais_simples +
+            feriados_estaduais_simples +
+            feriados_municipais_simples
+        )
+
+        event_dict = {}
+        for event in todos_eventos_simples:
+            if event['day'] not in event_dict:
+                event_dict[event['day']] = []
+            event_dict[event['day']].append({'title': event['title'], 'color': event['color'], 'tipo': event['tipo']})
 
         context.update({
-            'eventos': todos_eventos,
-            'eventos_fixos': todos_eventos,  # Adicionado para DataTables
-            'current_year': current_year
+            'calendar': cal,
+            'month_name': month_name,
+            'year': year,
+            'event_dict': event_dict,
         })
-
         return context
 
 
@@ -298,110 +310,6 @@ def exibir_cadastros(request):
     return render(request, 'index.html', {'cadastros': cadastros})
 
 
-
-
-class CalendarioEventosView(View):
-    def get(self, request, *args, **kwargs):
-        # Obter parâmetros de data (FullCalendar envia start e end)
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-        
-        try:
-            start_date = datetime.strptime(start, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            return JsonResponse([], safe=False)
-        
-        # Lista para armazenar todos os eventos
-        eventos = []
-        
-        # 1. Feriados Municipais
-        feriados_municipais = self.get_feriados_municipais(start_date.year)
-        for cidade, feriados in feriados_municipais.items():
-            for feriado in feriados:
-                if start_date <= feriado['date'] <= end_date:
-                    eventos.append({
-                        'title': f"{feriado['name']} ({cidade})",
-                        'start': feriado['date'].isoformat(),
-                        'color': '#ef4444',  # Vermelho
-                        'allDay': True
-                    })
-        
-        # 2. Datas Comemorativas do 15º GB
-        datas_comemorativas = self.get_datas_comemorativas(start_date.year)
-        for data_com in datas_comemorativas:
-            if start_date <= data_com['date'] <= end_date:
-                eventos.append({
-                    'title': data_com['name'],
-                    'start': data_com['date'].isoformat(),
-                    'color': '#f59e0b',  # Amarelo
-                    'allDay': True
-                })
-        
-        # 3. Eventos Institucionais
-        eventos_institucionais = self.get_eventos_institucionais(start_date.year)
-        for evento in eventos_institucionais:
-            if start_date <= evento['date'] <= end_date:
-                eventos.append({
-                    'title': evento['name'],
-                    'start': evento['date'].isoformat(),
-                    'color': '#3b82f6',  # Azul
-                    'allDay': True
-                })
-        
-        # 4. Lembretes do usuário
-        lembretes = Lembrete.objects.filter(
-            user=request.user,
-            data__gte=start_date,
-            data__lte=end_date
-        )
-        for lembrete in lembretes:
-            eventos.append({
-                'title': lembrete.titulo,
-                'start': lembrete.data.isoformat(),
-                'color': '#8b5cf6',  # Violeta
-                'allDay': True
-            })
-        
-        # 5. Tarefas do usuário
-        tarefas = Tarefa.objects.filter(
-            user=request.user,
-            data_inicio__gte=start_date,
-            data_inicio__lte=end_date
-        )
-        for tarefa in tarefas:
-            eventos.append({
-                'title': tarefa.titulo,
-                'start': tarefa.data_inicio.isoformat(),
-                'color': '#10b981',  # Verde
-                'allDay': not tarefa.hora_inicio  # Se não tem hora, é o dia todo
-            })
-        
-        return JsonResponse(eventos, safe=False)
-    
-    def get_feriados_municipais(self, year):
-        return {
-            "Sorocaba": [
-                {"name": "Aniversário de Sorocaba", "date": date(year, 6, 15)},
-                {"name": "Dia do Padroeiro (São Pedro)", "date": date(year, 6, 29)}
-            ],
-            # ... (todos os outros municípios)
-        }
-    
-    def get_datas_comemorativas(self, year):
-        return [
-            {"name": "Dia do Bombeiro (15º GB)", "date": date(year, 7, 2)},
-            {"name": "Fundação do 15º GB", "date": date(year, 10, 10)}
-        ]
-    
-    def get_eventos_institucionais(self, year):
-        return [
-            {"name": "ANIVERSÁRIO DO CSM/MOpB", "date": date(year, 2, 14)},
-            {"name": "SOLENIDADE DE 62 ANOS DO 15º GB", "date": date(year, 3, 7)},
-            {"name": "ANIVERSÁRIO DO 1º GB", "date": date(year, 3, 27)},
-            {"name": "SOLENIDADE DE 23 ANOS DO 18ºGB", "date": date(year, 4, 9)},
-            {"name": "SOLENIDADE DE 13 ANOS DO 17º GB", "date": date(year, 4, 16)}
-        ]
 
 
 from django.db.models import Sum, Count, Q
@@ -569,3 +477,5 @@ def calcular_variacao(valor_anterior, valor_atual):
     if valor_anterior == 0:
         return 100 if valor_atual > 0 else 0
     return round(((valor_atual - valor_anterior) / valor_anterior) * 100, 1)
+
+
