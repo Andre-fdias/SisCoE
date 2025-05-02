@@ -196,7 +196,7 @@ class DetalhesSituacao(models.Model):
         ("CMT PRONTIDÃO" ,"CMT PRONTIDÃO" ),
         ("CMT_BASE" ,"CMT_BASE" ),
         ("CMT_GB" ,"CMT_GB" ),
-        ("CMT_SGB" ,"CMT_SGB" ),
+        ("CMT_PB" ,"CMT_PB" ),
         ("COBOM (ATENDENTE)" ,"COBOM (ATENDENTE)" ),
         ("COBOM (DESPACHADOR)" ,"COBOM (DESPACHADOR)" ),
         ("AUX (NAT)" ,"3 - AUX (NAT)" ),
@@ -397,7 +397,11 @@ class DetalhesSituacao(models.Model):
         delta = relativedelta(hoje, self.apresentacao_na_unidade)
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
-    
+    class Meta:
+        indexes = [
+            models.Index(fields=['situacao', 'posto_secao']),
+            models.Index(fields=['cadastro']),
+            ]
     
     @property
     def status(self):
@@ -544,7 +548,11 @@ class Promocao(models.Model):
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
 
-   
+    class Meta:
+        indexes = [
+            models.Index(fields=['grupo']),
+            models.Index(fields=['cadastro']),
+        ]
    
    
 from django.db.models.signals import post_save

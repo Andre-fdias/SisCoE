@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'backend.crm',
     'backend.efetivo',
     'backend.adicional',
-    'backend.faisca',
+   
     'backend.rpt',
     'backend.bm',
     'backend.municipios',
@@ -48,22 +48,6 @@ INSTALLED_APPS = [
 
 ]
 
-
-# Restrinja os apps que podem ser acessados
-FAISCA_ALLOWED_APPS = [
-    'backend.accounts',
-    'backend.core',
-    'backend.crm',
-    'backend.efetivo',
-    'backend.adicional',
-    'backend.faisca',
-    'backend.rpt',
-    'backend.bm',
-    'backend.municipios',
-    'backend.documentos',
-    'backend.agenda',
-    'backend.calculadora',
-]
 
 
 

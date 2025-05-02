@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Editar Adicional{% endblock %}
+
+{% block 'body' %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-blue-800 mb-6">Editar Adicional</h1>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Número do Bloco</label>
+                    <input type="number" name="numero_adicional" value="{{ adicional.numero_adicional }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Data do Último Adicional</label>
+                    <input type="date" name="data_ultimo_adicional" value="{{ adicional.data_ultimo_adicional|date:'Y-m-d' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Dias de Desconto</label>
+                    <input type="number" name="dias_desconto_adicional" value="{{ adicional.dias_desconto_adicional }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Situação</label>
+                    <select name="situacao_adicional" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for value, label in adicional.situacao_choices %}
+                            <option value="{{ value }}" {% if adicional.situacao_adicional == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                {% if adicional.numero_prox_adicional == 6 %}
+                <div class="md:col-span-2">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="sexta_parte" class="form-checkbox h-5 w-5 text-blue-600" {% if adicional.sexta_parte %}checked{% endif %}>
+                        <span class="ml-2 text-gray-700">6ª Parte Concluída</span>
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'adicional:ver_adicional' adicional.id %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
