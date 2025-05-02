@@ -15,21 +15,76 @@ def posto_list(request):
         'cidades': cidades  # Adicionar ao contexto
     })
 
+
+
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Subquery, OuterRef, Count
+from .models import Posto, Pessoal
+from backend.efetivo.models import DetalhesSituacao, Promocao
+
 @login_required
 def posto_detail(request, pk):
     posto = get_object_or_404(Posto, pk=pk)
+
+    # Definimos os grupos exatamente como estão no modelo
+    GRUPOS = {
+        'Tc': 'Ten Cel',
+        'Maj': 'Maj',
+        'Cap': 'Cap',
+        'Ten': 'Ten QO',
+        'Ten QAOPM': 'Ten QA',
+        'St/Sgt': 'St/Sgt',
+        'Cb/Sd': 'Cb/Sd'
+    }
+
+    # Primeiro: Obter todos os cadastros com situação "Efetivo" no posto
+    efetivos = DetalhesSituacao.objects.filter(
+        situacao='Efetivo',
+        posto_secao=posto.posto_secao
+    ).select_related('cadastro')
+
+    # Segundo: Para cada efetivo, pegar sua última promoção
+    contagem = {grupo: 0 for grupo in GRUPOS.keys()}
+    
+    for efetivo in efetivos:
+        ultima_promocao = Promocao.objects.filter(
+            cadastro=efetivo.cadastro
+        ).order_by('-ultima_promocao').first()
+        
+        if ultima_promocao and ultima_promocao.grupo.strip() in GRUPOS:
+            grupo = ultima_promocao.grupo.strip()
+            contagem[grupo] += 1
+
+    # Preparamos os dados para o template
+    efetivo_grupos = {
+        'Tc': contagem.get('Tc', 0),
+        'Maj': contagem.get('Maj', 0),
+        'Cap': contagem.get('Cap', 0),
+        'Ten': contagem.get('Ten', 0),
+        'Ten_QAOPM': contagem.get('Ten QAOPM', 0),  # Usamos underscore para o template
+        'St_Sgt': contagem.get('St/Sgt', 0),       # Usamos underscore para o template
+        'Cb_Sd': contagem.get('Cb/Sd', 0)         # Usamos underscore para o template
+    }
+
+    # Calcula o total
+    total_efetivo = sum(contagem.values())
+
     try:
         pessoal = Pessoal.objects.get(posto=posto)
     except Pessoal.DoesNotExist:
-        # Handle the case where no Pessoal object exists for this Posto
-        pessoal = None  # Or create an empty Pessoal object if needed
+        pessoal = None
 
     context = {
         'posto': posto,
+        'efetivo_grupos': efetivo_grupos,
+        'total_efetivo': total_efetivo,
         'pessoal': pessoal,
     }
+
     return render(request, 'posto_detail.html', context)
 
+    
 @login_required
 def municipio_detail(request, pk):
     cidade = get_object_or_404(Cidade, pk=pk)
@@ -62,8 +117,11 @@ def posto_create(request):
             'tipo_cidade': request.POST.get('tipo_cidade'),
             'op_adm': request.POST.get('op_adm'),
             'usuario': request.user,
-            'quartel': request.FILES.get('quartel')
-            }
+        }
+        
+        # Processa a imagem do quartel
+        if 'quartel' in request.FILES:
+            posto_data['quartel'] = request.FILES['quartel']
         
         # Cria o Posto
         posto = Posto.objects.create(**posto_data)
@@ -91,7 +149,7 @@ def posto_create(request):
             'ten_cel': int(request.POST.get('ten_cel', 0)),
             'maj': int(request.POST.get('maj', 0)),
             'cap': int(request.POST.get('cap', 0)),
-            'tenqo': int(request.POST.get('ten', 0)),  # Corrigido para match com o template
+            'tenqo': int(request.POST.get('ten', 0)),
             'tenqa': int(request.POST.get('tenqa', 0)),
             'asp': int(request.POST.get('asp', 0)),
             'st_sgt': int(request.POST.get('st_sgt', 0)),
@@ -107,14 +165,18 @@ def posto_create(request):
         descricoes = request.POST.getlist('descricoes[]')
        
         for i in range(len(municipios)):
-            Cidade.objects.create(
-                posto=posto,
-                municipio=municipios[i],
-                descricao=descricoes[i],  # Nova linha
-                latitude=latitudes[i],
-                longitude=longitudes[i],
-                bandeira=bandeiras[i] if i < len(bandeiras) else None
-            )
+            cidade_data = {
+                'posto': posto,
+                'municipio': municipios[i],
+                'descricao': descricoes[i],
+                'latitude': latitudes[i],
+                'longitude': longitudes[i],
+            }
+            
+            if i < len(bandeiras) and bandeiras[i]:
+                cidade_data['bandeira'] = bandeiras[i]
+            
+            Cidade.objects.create(**cidade_data)
 
         return redirect('municipios:posto_list')
 
@@ -127,6 +189,9 @@ def posto_create(request):
         'tipo_choices': tipo_choices,
         'op_adm_choices': op_adm_choices
     })
+
+
+
 
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Posto, Contato

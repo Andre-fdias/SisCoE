@@ -171,7 +171,7 @@ class Posto(models.Model):
     tipo_cidade = models.CharField(max_length=50, blank=False, null=False, choices=op_adm_choices)
     op_adm = models.CharField(max_length=50, blank=False, null=False, choices=tipo_choices)
     quartel = models.ImageField(
-        upload_to='img/quartel/%Y/%m/%d/', 
+        upload_to='img/quartel/', 
         blank=True,
         null=True,
         verbose_name="Quartel",

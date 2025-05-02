@@ -34,202 +34,467 @@
             <div class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300 animate-fade-in">
                 <div class="flex flex-col md:flex-row">
                     <div class="md:w-1/3 text-center mb-8 md:mb-0">
-                        {% if cadastro.ultima_imagem %}
-                        <img src="{{ cadastro.ultima_imagem.image.url }}" 
-                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-300 
-                                    object-cover shadow-lg hover:scale-105 transition-transform">
+                        {% if cadastro_adicional.cadastro.imagens.exists %}
+                        <img src="{{ cadastro_adicional.cadastro.imagens.last.image.url }}" 
+                             class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-400 
+                                    object-cover shadow-lg hover:scale-105 transition-transform"
+                             alt="Foto de {{ cadastro_adicional.cadastro.nome }}">
                         {% else %}
-                        <div class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-300 bg-gray-100 
-                                  flex items-center justify-center text-gray-400">
+                        <div class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-400 bg-blue-200 
+                                  flex items-center justify-center text-blue-500">
                             Sem imagem
                         </div>
                         {% endif %}
-                        <p class="text-gray-200 font-medium text-xl">
-                            {{ cadastro.cadastro.promocoes.last.grad|safe }}
+                        <p class="text-blue-300 font-medium text-md">
+                            {{ cadastro_adicional.cadastro.promocoes.last.grad|safe }}
                         </p>
                     </div>
-                    
-                    <div class="md:w-2/3 md:pl-8">
-                        <h1 class="text-3xl font-semibold text-white mb-4">{{ cadastro.cadastro.nome }}</h1>
-                        <div class="bg-indigo-900/30 inline-block px-4 py-2 rounded-md mb-6">
-                            <span class="text-indigo-100 font-mono text-xl">
-                                {{ cadastro.cadastro.re }}-{{ cadastro.cadastro.dig }}
-                            </span>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h2 class="text-xl font-semibold text-white mb-4">Informações de Contato</h2>
-                                <ul class="space-y-3 text-indigo-100">
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                                        </svg>
-                                        {{ cadastro.cadastro.email|default:"-" }}
-                                    </li>
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
-                                        </svg>
-                                        {{ cadastro.cadastro.telefone|default:"-" }}
-                                    </li>
-                                </ul>
-                            </div>
-                            
-                            <div>
-                                <h2 class="text-xl font-semibold text-white mb-4">Situação Atual</h2>
-                                <ul class="space-y-3 text-indigo-100">
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-300" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ cadastro.cadastro.detalhes_situacao.last.sgb|default:"-" }} - 
-                                        {{ cadastro.cadastro.detalhes_situacao.last.posto_secao|default:"-" }}
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </fieldset>
 
         <!-- Benefícios -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 mb-4 rounded-md w-full max-w-full">
-            <!-- Adicional de Tempo -->
-            <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Adicional de Tempo
-                </h2>
-                <hr class="my-4 border-gray-200">
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Bloco Atual:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.numero_adicional }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Última Concessão:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.data_ultimo_adicional|date:"d/m/Y" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Próximo Bloco:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.numero_prox_adicional }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Previsão:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.proximo_adicional|date:"d/m/Y" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Status:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.status_adicional|safe }}</span>
-                    </div>
+       <!-- Adicional de Tempo -->
+        <!-- Adicional de Tempo -->
+        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Adicional de Tempo
+            </h2>
+            <hr class="my-4 border-gray-200">
+            
+            <div class="space-y-3">
+                <!-- Informações básicas (sempre visíveis) -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Bloco Atual:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro_adicional.numero_adicional }}</span>
                 </div>
-            </fieldset>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Última Concessão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_ultimo_adicional|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Próximo Bloco:</span>
+                    <span class="text-gray-800 font-semibold">
+                        {{ cadastro.numero_prox_adicional }}
+                        {% if cadastro.numero_prox_adicional == 6 %}
+                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded ml-2">6ª Parte</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Previsão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.proximo_adicional|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Dias de Desconto:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.dias_desconto_adicional|default:"0" }}</span>
+                </div>
+                
+                <!-- Status seguindo as regras definidas -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Status:</span>
+                    {{ cadastro.status_adicional|safe }}
+                </div>
+                
+                <!-- Situação atual -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Situação:</span>
+                    <span class="font-semibold {% if cadastro.situacao_adicional == 'Aguardando' %}text-blue-600{% elif cadastro.situacao_adicional == 'Concedido' %}text-yellow-600{% else %}text-green-600{% endif %}">
+                        {{ cadastro.get_situacao_adicional_display }}
+                    </span>
+                </div>
+                
+                <!-- Campos que aparecem APENAS após conclusão -->
+                {% if cadastro.situacao_adicional == "Concluído" %}
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Data de Concessão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_concessao_adicional|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Data de Conclusão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_conclusao_adicional|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Concluído por:</span>
+                    <span class="text-gray-800 font-semibold">
+                        {% firstof cadastro.usuario_conclusao_adicional.get_full_name cadastro.usuario_conclusao_adicional.get_username %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Botão de ação - desaparece APÓS conclusão -->
+            {% if cadastro.situacao_adicional != "Concluído" %}
+            <div class="flex flex-col sm:flex-row gap-3 w-1/3 md:w-auto mt-8">
+                <button onclick="openConcluirAdicionalModal()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium">
+                    {% if cadastro.situacao_adicional == "Aguardando" %}
+                    Conceder Adicional
+                    {% else %}
+                    Confirmar Conclusão
+                    {% endif %}
+                </button>
+            </div>
+            {% endif %}
+        </fieldset>
 
-            <!-- Licença Prêmio -->
-            <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
-                    Licença Prêmio
-                </h2>
-                <hr class="my-4 border-gray-200">
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Bloco Atual:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.numero_lp }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Última Concessão:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.data_ultimo_lp|date:"d/m/Y" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Próximo Bloco:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.numero_prox_lp }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Previsão:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.proximo_lp|date:"d/m/Y" }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-4">
-                        <span class="text-gray-600 font-medium">Status:</span>
-                        <span class="text-gray-800 font-semibold">{{ cadastro.status_lp|safe }}</span>
-                    </div>
+        <!-- Licença Prêmio -->
+        <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
+            <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Licença Prêmio
+            </h2>
+            <hr class="my-4 border-gray-200">
+            
+            <div class="space-y-3">
+                <!-- Informações básicas (sempre visíveis) -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Bloco Atual:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro_lp.numero_lp }}</span>
                 </div>
-            </fieldset>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Última Concessão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_ultimo_lp|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Próximo Bloco:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.numero_prox_lp }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Previsão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.proximo_lp|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Dias de Desconto:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.dias_desconto_lp|default:"0" }}</span>
+                </div>
+                
+                <!-- Status seguindo as regras definidas -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Status:</span>
+                    {{ cadastro.status_lp|safe }}
+                </div>
+                
+                <!-- Situação atual -->
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Situação:</span>
+                    <span class="font-semibold {% if cadastro.situacao_lp == 'Aguardando' %}text-blue-600{% elif cadastro.situacao_lp == 'Concedido' %}text-yellow-600{% else %}text-green-600{% endif %}">
+                        {{ cadastro.get_situacao_lp_display }}
+                    </span>
+                </div>
+                
+                <!-- Campos que aparecem APENAS após conclusão -->
+                {% if cadastro.situacao_lp == "Concluído" %}
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Data de Concessão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_concessao_lp|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Data de Conclusão:</span>
+                    <span class="text-gray-800 font-semibold">{{ cadastro.data_conclusao_lp|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <span class="text-gray-600 font-medium">Concluído por:</span>
+                    <span class="text-gray-800 font-semibold">
+                        {% firstof cadastro.usuario_conclusao_lp.get_full_name cadastro.usuario_conclusao_lp.get_username %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Botão de ação - desaparece APÓS conclusão -->
+            {% if cadastro.situacao_lp != "Concluído" %}
+            <div class="flex flex-col sm:flex-row gap-3 w-1/3 md:w-auto mt-8">
+                <button onclick="openConcluirLPModal()" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200 font-medium">
+                    {% if cadastro.situacao_lp == "Aguardando" %}
+                    Conceder LP
+                    {% else %}
+                    Confirmar Conclusão
+                    {% endif %}
+                </button>
+            </div>
+            {% endif %}
+        </fieldset>
+        </div>
+        <!-- Modais de confirmação -->
+        <div id="concluirAdicionalModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="flex justify-between items-center p-4 bg-blue-600 rounded-t-lg">
+                    <h1 class="text-xl text-white font-medium">Confirmar Conclusão de Adicional</h1>
+                    <button type="button" onclick="closeConcluirAdicionalModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+                </div>
+                
+                <div class="p-6">
+                    <form method="POST" action="{% url 'adicional:concluir_adicional' cadastro_adicional.id %}">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Concessão:</label>
+                            <input type="date" name="data_concessao" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        {% if cadastro.numero_prox_adicional == 6 %}
+                        <div class="mb-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" name="sexta_parte" id="sexta_parte_checkbox"
+                                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                <label for="sexta_parte_checkbox" class="ml-2 text-sm font-medium text-gray-900">
+                                    Confirmo que a 6ª Parte foi concluída
+                                </label>
+                            </div>
+                            <div id="sexta_parte_error" class="text-red-500 text-sm mt-2 hidden">
+                                É obrigatório confirmar a conclusão da 6ª Parte
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <label for="adicionalPassword" class="block text-sm font-medium text-gray-700 mb-2">Digite sua senha:</label>
+                            <input type="password" name="password" id="adicionalPasswordInput" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <div id="adicionalPasswordError" class="text-red-500 text-sm mt-2 hidden"></div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" onclick="closeConcluirAdicionalModal()" 
+                                    class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">
+                                Cancelar
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+                                           transition-colors duration-200 font-medium">
+                                Confirmar Conclusão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal para concluir LP (similar, mas com action para concluir_lp) -->
+        <div id="concluirLPModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="flex justify-between items-center p-4 bg-green-600 rounded-t-lg">
+                    <h1 class="text-xl text-white font-medium">Confirmar Conclusão de Licença Prêmio</h1>
+                    <button type="button" onclick="closeConcluirLPModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+                </div>
+                
+                <div class="p-6">
+                    <form method="POST" action="{% url 'adicional:concluir_lp' cadastro_lp.id %}">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data de Concessão:</label>
+                            <input type="date" name="data_concessao" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="lpPassword" class="block text-sm font-medium text-gray-700 mb-2">Digite sua senha:</label>
+                            <input type="password" name="password" id="lpPasswordInput" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <div id="lpPasswordError" class="text-red-500 text-sm mt-2 hidden"></div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" onclick="closeConcluirLPModal()" 
+                                    class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">
+                                Cancelar
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
+                                           transition-colors duration-200 font-medium">
+                                Confirmar Conclusão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
-        <!-- Históricos -->
-        <div class="grid grid-cols-1 gap-6 p-4 mb-4">
-            <!-- Histórico de Alterações -->
-            <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-semibold text-indigo-900 mb-4">Histórico de Alterações</h2>
-                <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Adicional</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status LP</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuário</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Próximo Adicional</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Próximo LP</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {% for historico in historicos %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.data_alteracao|date:"d/m/Y H:i" }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.situacao_adicional }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.situacao_lp }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.usuario_alteracao }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.proximo_adicional|date:"d/m/Y" }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ historico.proximo_lp|date:"d/m/Y" }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </fieldset>
+        <script>
+            document.getElementById('formConcluirAdicional').addEventListener('submit', function(e) {
+                // Verificar se é o 6º bloco e se o checkbox está marcado
+                const isSextaParte = {% if cadastro.numero_prox_adicional == 6 %}true{% else %}false{% endif %};
+                const sextaParteCheckbox = document.getElementById('sexta_parte_checkbox');
+                const sextaParteError = document.getElementById('sexta_parte_error');
+                
+                if (isSextaParte && !sextaParteCheckbox.checked) {
+                    e.preventDefault();
+                    sextaParteError.classList.remove('hidden');
+                    sextaParteCheckbox.focus();
+                } else {
+                    sextaParteError.classList.add('hidden');
+                }
+            });
+            </script>
+            
+<!-- Adicione estas funções JavaScript no final do template -->
+<script>
+    // Funções para controle dos modais de conclusão
+    function openConcluirAdicionalModal() {
+        document.getElementById('concluirAdicionalModal').classList.remove('hidden');
+        document.getElementById('adicionalPasswordInput').focus();
+    }
 
-            <!-- Histórico de Movimentações -->
-            <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-semibold text-indigo-900 mb-4">Histórico de Movimentações</h2>
-                <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Situação</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SGB</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Posto/Seção</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Apresentação</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alterado em</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Por</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {% for detalhe in cadastro.detalhes_situacao.all %}
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.situacao }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.sgb }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.posto_secao }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.data_alteracao|date:"d/m/Y H:i" }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ detalhe.usuario_alteracao }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </fieldset>
+    function closeConcluirAdicionalModal() {
+        document.getElementById('concluirAdicionalModal').classList.add('hidden');
+        document.getElementById('adicionalPasswordError').classList.add('hidden');
+    }
+
+    function openConcluirLPModal() {
+        document.getElementById('concluirLPModal').classList.remove('hidden');
+        document.getElementById('lpPasswordInput').focus();
+    }
+
+    function closeConcluirLPModal() {
+        document.getElementById('concluirLPModal').classList.add('hidden');
+        document.getElementById('lpPasswordError').classList.add('hidden');
+    }
+
+    // Tratar mensagens de erro específicas para cada modal
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'adicional' in message.tags %}
+                document.getElementById('adicionalPasswordError').innerText = '{{ message|escapejs }}';
+                document.getElementById('adicionalPasswordError').classList.remove('hidden');
+                openConcluirAdicionalModal();
+            {% elif 'lp' in message.tags %}
+                document.getElementById('lpPasswordError').innerText = '{{ message|escapejs }}';
+                document.getElementById('lpPasswordError').classList.remove('hidden');
+                openConcluirLPModal();
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</script>
+<!-- Histórico Completo de Adicionais -->
+<div class="grid grid-cols-1 gap-6 p-4 mb-4">
+    <!-- Tabela de Adicionais -->
+    <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h2 class="text-xl font-semibold text-indigo-900 mb-4">Histórico Completo de Adicionais</h2>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bloco</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Última Concessão</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Concessão</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dias Desconto</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Situação</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Concluído por</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Conclusão</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for registro in historico_completo %}
+                    <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-700">Bloco {{ registro.numero_adicional }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ registro.data_ultimo_adicional|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.data_concessao_adicional %}
+                                {{ registro.data_concessao_adicional|date:"d/m/Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ registro.dias_desconto_adicional|default:"0" }}</td>
+                        <td class="px-4 py-3 text-sm font-medium 
+                            {% if registro.situacao_adicional == 'Concluído' %}text-green-600
+                            {% elif registro.situacao_adicional == 'Concedido' %}text-yellow-600
+                            {% else %}text-blue-600{% endif %}">
+                            {{ registro.get_situacao_adicional_display }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.usuario_conclusao_adicional %}
+                                {% firstof registro.usuario_conclusao_adicional.get_full_name registro.usuario_conclusao_adicional.username %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.data_conclusao_adicional %}
+                                {{ registro.data_conclusao_adicional|date:"d/m/Y H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-3 text-sm text-center text-gray-500">Nenhum registro de adicional encontrado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </fieldset>
+
+    <!-- Tabela de Licenças Prêmio -->
+    <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h2 class="text-xl font-semibold text-indigo-900 mb-4">Histórico Completo de Licenças Prêmio</h2>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bloco</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Última Concessão</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Concessão</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dias Desconto</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Situação</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Concluído por</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Conclusão</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for registro in historico_completo %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-700">Bloco {{ registro.numero_lp }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ registro.data_ultimo_lp|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.data_concessao_lp %}
+                                {{ registro.data_concessao_lp|date:"d/m/Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ registro.dias_desconto_lp|default:"0" }}</td>
+                        <td class="px-4 py-3 text-sm font-medium 
+                            {% if registro.situacao_lp == 'Concluído' %}text-green-600
+                            {% elif registro.situacao_lp == 'Concedido' %}text-yellow-600
+                            {% else %}text-blue-600{% endif %}">
+                            {{ registro.get_situacao_lp_display }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.usuario_conclusao_lp %}
+                                {% firstof registro.usuario_conclusao_lp.get_full_name registro.usuario_conclusao_lp.username %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                            {% if registro.data_conclusao_lp %}
+                                {{ registro.data_conclusao_lp|date:"d/m/Y H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-3 text-sm text-center text-gray-500">Nenhum registro de licença prêmio encontrado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </fieldset>
+</div>
 
         <!-- Rodapé com Botões -->
         <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">

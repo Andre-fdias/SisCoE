@@ -125,107 +125,6 @@ def index(request):
 
 
 
-from django.shortcuts import render
-from django.views.generic import TemplateView
-from datetime import datetime
-from calendar import monthcalendar
-
-class CalendarioView(TemplateView):
-    template_name = 'index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        year = datetime.now().year
-        month = datetime.now().month
-
-        cal = monthcalendar(year, month)
-        month_name = datetime(year, month, 1).strftime("%B")
-
-        def criar_evento_dict(day, titulo, cor, tipo):
-            return {"day": day, "title": titulo, "color": cor, "tipo": tipo}
-
-        # Eventos do 15º GB (only day is relevant here)
-        eventos_gb_simples = [
-            criar_evento_dict(23, "Aniversário EB Itaí", "#3b82f6", "Evento GB"),
-            criar_evento_dict(10, "Aniversário do CB/SP", "#3b82f6", "Evento GB"),
-            criar_evento_dict(31, "Aniversário COBOM Scb", "#3b82f6", "Evento GB"),
-            criar_evento_dict(14, "Aniversário - PB Botucatu", "#3b82f6", "Evento GB"),
-            criar_evento_dict(29, "Anivers. PB Itapeva", "#3b82f6", "Evento GB"),
-            criar_evento_dict(2, "Aniversário do CB/Bra", "#3b82f6", "Evento GB"),
-            criar_evento_dict(16, "Aniversário PB Salto", "#3b82f6", "Evento GB"),
-            criar_evento_dict(8, "Aniversário PB Tatuí", "#3b82f6", "Evento GB"),
-            criar_evento_dict(3, "Aniversário BB Boituva", "#3b82f6", "Evento GB"),
-            criar_evento_dict(6, "Aniversário PB Itu", "#3b82f6", "Evento GB"),
-            criar_evento_dict(15, "Aniversário - PB Avaré", "#3b82f6", "Evento GB"),
-            criar_evento_dict(26, "Aniversário BB Porto Feliz", "#3b82f6", "Evento GB"),
-            criar_evento_dict(27, "Aniversário BB Tietê", "#3b82f6", "Evento GB"),
-            criar_evento_dict(12, "Aniversário PB Cerrado", "#3b82f6", "Evento GB"),
-            criar_evento_dict(8, "Aniversário PB Votorantim", "#3b82f6", "Evento GB"),
-            criar_evento_dict(10, "Aniversário BB Apiaí", "#3b82f6", "Evento GB"),
-            criar_evento_dict(15, "Aniversário da PM", "#3b82f6", "Evento GB"),
-            criar_evento_dict(16, "Aniversário PB Eden", "#3b82f6", "Evento GB"),
-            criar_evento_dict(17, "Aniversário BB Cap.Bonito", "#3b82f6", "Evento GB")
-        ]
-
-        # Feriados Nacionais
-        feriados_nacionais_simples = [
-            criar_evento_dict(1, "Ano Novo", "#ef4444", "Nacional"),
-            criar_evento_dict(18, "Sexta-Feira Santa", "#ef4444", "Nacional"),
-            criar_evento_dict(21, "Tiradentes", "#ef4444", "Nacional"),
-            criar_evento_dict(1, "Dia do Trabalho", "#ef4444", "Nacional"),
-            criar_evento_dict(7, "Independência", "#ef4444", "Nacional"),
-            criar_evento_dict(12, "N.S. Aparecida", "#ef4444", "Nacional"),
-            criar_evento_dict(2, "Finados", "#ef4444", "Nacional"),
-            criar_evento_dict(15, "Proclamação República", "#ef4444", "Nacional"),
-            criar_evento_dict(25, "Natal", "#ef4444", "Nacional")
-        ]
-
-        # Feriados Estaduais
-        feriados_estaduais_simples = [
-            criar_evento_dict(9, "Revolução Constitucionalista", "#f59e0b", "Estadual")
-        ]
-
-        # Feriados Municipais
-        feriados_municipais_simples = [
-            criar_evento_dict(2, "Aniversário Itu", "#10b981", "Municipal"),
-            criar_evento_dict(18, "Aniversário Apiaí", "#10b981", "Municipal"),
-            criar_evento_dict(21, "Aniversário Tietê", "#10b981", "Municipal"),
-            criar_evento_dict(19, "Aniversário Capão Bonito", "#10b981", "Municipal"),
-            criar_evento_dict(15, "Aniversário Sorocaba", "#10b981", "Municipal"),
-            criar_evento_dict(29, "Dia do Padroeiro", "#10b981", "Municipal"),
-            criar_evento_dict(10, "Aniversário Salto", "#10b981", "Municipal"),
-            criar_evento_dict(11, "Aniversário Tatuí", "#10b981", "Municipal"),
-            criar_evento_dict(25, "Aniversário Votorantim", "#10b981", "Municipal"),
-            criar_evento_dict(10, "Aniversário Porto Feliz", "#10b981", "Municipal"),
-            criar_evento_dict(20, "Aniversário Itapeva", "#10b981", "Municipal"),
-            criar_evento_dict(27, "Aniversário Laranjal Paulista", "#10b981", "Municipal"),
-            criar_evento_dict(5, "Aniversário Itapetininga", "#10b981", "Municipal"),
-            criar_evento_dict(20, "Aniversário Angatuba", "#10b981", "Municipal"),
-            criar_evento_dict(23, "Aniversário Boituva", "#10b981", "Municipal")
-        ]
-
-        todos_eventos_simples = (
-            eventos_gb_simples +
-            feriados_nacionais_simples +
-            feriados_estaduais_simples +
-            feriados_municipais_simples
-        )
-
-        event_dict = {}
-        for event in todos_eventos_simples:
-            if event['day'] not in event_dict:
-                event_dict[event['day']] = []
-            event_dict[event['day']].append({'title': event['title'], 'color': event['color'], 'tipo': event['tipo']})
-
-        context.update({
-            'calendar': cal,
-            'month_name': month_name,
-            'year': year,
-            'event_dict': event_dict,
-        })
-        return context
-
-
 
 @login_required
 def dashboard(request):
@@ -354,7 +253,7 @@ def dashboard_view(request):
         ).count()
         
         # Cálculo do percentual Claro CB + BCM
-        percentual_claro_cb_bcm = round(((claro + bombeiros_municipais) / efetivo_fixado * 100), 1) if efetivo_fixado > 0 else 0
+        percentual_claro_cb_bcm = round(((  efetivo_fixado - (efetivo_existente  + bombeiros_municipais)) / efetivo_fixado * 100), 1) if efetivo_fixado > 0 else 0
 
         # Cálculo das variações em relação ao mês anterior
         hoje = timezone.now().date()
@@ -477,3 +376,101 @@ def calcular_variacao(valor_anterior, valor_atual):
     if valor_anterior == 0:
         return 100 if valor_atual > 0 else 0
     return round(((valor_atual - valor_anterior) / valor_anterior) * 100, 1)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.views.generic import TemplateView
+from datetime import datetime
+
+class CalendarioView(TemplateView):
+    template_name = 'calendario.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        current_year = datetime.now().year
+        
+        # Eventos GB
+        eventos_gb = [
+            {"titulo": "Aniversário EB Itaí", "data": f"{current_year}-02-23", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário do CB/SP", "data": f"{current_year}-03-10", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário COBOM Scb", "data": f"{current_year}-03-31", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário - PB Botucatu", "data": f"{current_year}-04-14", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Anivers. PB Itapeva", "data": f"{current_year}-05-29", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário do CB/Bra", "data": f"{current_year}-07-02", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Salto", "data": f"{current_year}-07-16", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Tatuí", "data": f"{current_year}-08-08", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário BB Boituva", "data": f"{current_year}-09-03", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Itu", "data": f"{current_year}-09-06", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário - PB Avaré", "data": f"{current_year}-09-15", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário BB Porto Feliz", "data": f"{current_year}-10-26", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário BB Tietê", "data": f"{current_year}-10-27", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Cerrado", "data": f"{current_year}-11-12", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Votorantim", "data": f"{current_year}-12-08", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário BB Apiaí", "data": f"{current_year}-12-10", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário da PM", "data": f"{current_year}-12-15", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário PB Eden", "data": f"{current_year}-12-16", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"titulo": "Aniversário BB Cap.Bonito", "data": f"{current_year}-12-17", "color": "#3b82f6", "tipo": "Evento GB"}
+        ]
+
+        # Feriados Nacionais
+        feriados_nacionais = [
+            {"titulo": "Feriado Nacional - Ano Novo", "data": f"{current_year}-01-01", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-03", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-04", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-05", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Sexta-Feira Santa", "data": f"{current_year}-04-18", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia de Tiradentes", "data": f"{current_year}-04-21", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia do Trabalho", "data": f"{current_year}-05-01", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Corpus Christi", "data": f"{current_year}-06-19", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Independência do Brasil", "data": f"{current_year}-09-07", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Nossa Senhora Aparecida", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia das Crianças", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia do Professor", "data": f"{current_year}-10-15", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia do Servidor Público", "data": f"{current_year}-10-28", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Dia de Finados", "data": f"{current_year}-11-02", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Proclamação da República", "data": f"{current_year}-11-15", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Consciência Negra", "data": f"{current_year}-11-20", "color": "#ef4444", "tipo": "Nacional"},
+            {"titulo": "Feriado Nacional - Natal", "data": f"{current_year}-12-25", "color": "#ef4444", "tipo": "Nacional"}
+        ]
+
+        # Feriados Estaduais
+        feriados_estaduais = [
+            {"titulo": "Feriado Estadual - Revolução Constitucionalista", "data": f"{current_year}-07-09", "color": "#f59e0b", "tipo": "Estadual"}
+        ]
+
+        # Feriados Municipais
+        feriados_municipais = [
+            {"titulo": "Feriado Municipal - Aniversário de Sorocaba", "data": f"{current_year}-06-15", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Dia do Padroeiro (São Pedro)", "data": f"{current_year}-06-29", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Votorantim", "data": f"{current_year}-08-25", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Piedade", "data": f"{current_year}-07-02", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itu", "data": f"{current_year}-02-02", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Porto Feliz", "data": f"{current_year}-09-10", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Salto", "data": f"{current_year}-08-10", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de São Roque", "data": f"{current_year}-08-16", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Ibiúna", "data": f"{current_year}-03-24", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itapeva", "data": f"{current_year}-09-20", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itararé", "data": f"{current_year}-05-20", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Apiaí", "data": f"{current_year}-03-18", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Capão Bonito", "data": f"{current_year}-04-19", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itapetininga", "data": f"{current_year}-11-05", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Angatuba", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Boituva", "data": f"{current_year}-12-23", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Tatuí", "data": f"{current_year}-08-11", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Tietê", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Laranjal Paulista", "data": f"{current_year}-10-27", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Botucatu", "data": f"{current_year}-04-14", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itaí", "data": f"{current_year}-08-26", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Avaré", "data": f"{current_year}-09-15", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Itatinga", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
+            {"titulo": "Feriado Municipal - Aniversário de Piraju", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"}
+        ]
+
+        # Combinar todos os eventos
+        todos_eventos = eventos_gb + feriados_nacionais + feriados_estaduais + feriados_municipais
+        
+        context['eventos'] = todos_eventos
+        context['eventos_fixos'] = todos_eventos  # Para a tabela
+        
+        return context

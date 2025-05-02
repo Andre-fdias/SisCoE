@@ -69,7 +69,7 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <form class="grid grid-cols-1 md:grid-cols-2 gap-4" method="POST" action="{% url 'adicional:buscar_militar_adicional' %}">
+                    <form class="grid grid-cols-1 md:grid-cols-2 gap-4" method="POST" action="{% url 'adicional:buscar_militar' %}">
                         {% csrf_token %}
                         <div class="col-md-4 relative">
                             <input type="text" name="re" 
@@ -172,8 +172,8 @@
                 <div class="space-y-6">
                     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados Adicional</h2>
                     <hr class="border-t border-gray-100">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="space-y-2">
                             <label for="n_bloco_adicional" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº Bloco Adicional *</label>
                             <div class="relative">
@@ -194,7 +194,7 @@
                                 </div>
                             </div>
                         </div>
-
+    
                         <div class="space-y-2">
                             <label for="data_ultimo_adicional" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data Último Adicional *</label>
                             <input type="date" name="data_ultimo_adicional" id="data_ultimo_adicional" required
@@ -206,17 +206,241 @@
                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
                         </div>
+    
+                        <div class="space-y-2">
+                            <label for="numero_prox_adicional_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Próximo Nº Adicional *</label>
+                            <input type="text" name="numero_prox_adicional_output" id="numero_prox_adicional_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="proximo_adicional_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Próximo Adicional</label>
+                            <input type="text" name="proximo_adicional_output" id="proximo_adicional_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="mes_proximo_adicional_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Mês Próximo Adicional</label>
+                            <input type="number" name="mes_proximo_adicional_output" id="mes_proximo_adicional_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="ano_proximo_adicional_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Ano Próximo Adicional</label>
+                            <input type="number" name="ano_proximo_adicional_output" id="ano_proximo_adicional_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+    
+                        <div class="space-y-2">
+                            <label for="situacao_adicional" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Situação do Adicional *</label>
+                            <div class="relative">
+                                <select name="situacao_adicional" id="situacao_adicional" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    <option value="Aguardando" selected>Aguardando</option>
+                                    <option value="Concedido">Concedido</option>
+                                    <option value="Concluído">Concluído</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 hidden" id="sexta_parte_container">
+                            <label for="sexta_parte" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">6ª Parte Concluída</label>
+                            <div class="relative">
+                                <select name="sexta_parte" id="sexta_parte"
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    <option value="False">Não</option>
+                                    <option value="True">Sim</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input hidden para garantir o valor padrão -->
+                        <input type="hidden" name="sexta_parte_hidden" id="sexta_parte_hidden" value="False">
                     </div>
                 </div>
             </fieldset>
-
+    
+            <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Elementos do Adicional
+                        const nBlocoAdicional = document.getElementById('n_bloco_adicional');
+                        const dataUltimoAdicional = document.getElementById('data_ultimo_adicional');
+                        const numeroProxAdicionalOutput = document.getElementById('numero_prox_adicional_output');
+                        const proximoAdicionalOutput = document.getElementById('proximo_adicional_output');
+                        const mesProximoAdicionalOutput = document.getElementById('mes_proximo_adicional_output');
+                        const anoProximoAdicionalOutput = document.getElementById('ano_proximo_adicional_output');
+                        const sextaParteHidden = document.getElementById('sexta_parte_hidden');
+                    
+                        // Elementos da LP
+                        const nBlocoLp = document.getElementById('n_bloco_lp');
+                        const dataUltimoLp = document.getElementById('data_ultimo_lp');
+                        const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
+                        const proximoLpOutput = document.getElementById('proximo_lp_output');
+                        const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
+                        const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
+                    
+                        // Função para calcular datas futuras (5 anos - dias de desconto)
+                        function calcularDataFutura(data, diasDesconto = 0) {
+                            const dataObj = new Date(data);
+                            const diasTotais = (365 * 5) - diasDesconto;
+                            dataObj.setDate(dataObj.getDate() + diasTotais);
+                            return dataObj;
+                        }
+                    
+                        // Função principal de cálculo
+                        function calcularCampos() {
+                            try {
+                                // Cálculos para Adicional
+                                if (nBlocoAdicional.value && dataUltimoAdicional.value) {
+                                    const numeroAdicional = parseInt(nBlocoAdicional.value);
+                                    numeroProxAdicionalOutput.value = numeroAdicional + 1;
+                                    
+                                    const dataAdicional = calcularDataFutura(dataUltimoAdicional.value);
+                                    proximoAdicionalOutput.value = formatarData(dataAdicional);
+                                    mesProximoAdicionalOutput.value = dataAdicional.getMonth() + 1;
+                                    anoProximoAdicionalOutput.value = dataAdicional.getFullYear();
+                                    
+                                    // Lógica da 6ª Parte (automática)
+                                    sextaParteHidden.value = (numeroAdicional + 1 === 4) ? 'True' : 'False';
+                                }
+                    
+                                // Cálculos para LP
+                                if (nBlocoLp.value && dataUltimoLp.value) {
+                                    const numeroLp = parseInt(nBlocoLp.value);
+                                    numeroProxLpOutput.value = numeroLp + 1;
+                                    
+                                    const dataLp = calcularDataFutura(dataUltimoLp.value);
+                                    proximoLpOutput.value = formatarData(dataLp);
+                                    mesProximoLpOutput.value = dataLp.getMonth() + 1;
+                                    anoProximoLpOutput.value = dataLp.getFullYear();
+                                }
+                            } catch (e) {
+                                console.error("Erro nos cálculos:", e);
+                            }
+                        }
+                    
+                        // Função auxiliar para formatar data como DD-MM-AAAA
+                        function formatarData(data) {
+                            const dia = String(data.getDate()).padStart(2, '0');
+                            const mes = String(data.getMonth() + 1).padStart(2, '0');
+                            const ano = data.getFullYear();
+                            return `${dia}-${mes}-${ano}`;
+                        }
+                    
+                        // Event listeners para todos os campos relevantes
+                        [nBlocoAdicional, dataUltimoAdicional, nBlocoLp, dataUltimoLp].forEach(element => {
+                            element.addEventListener('change', calcularCampos);
+                        });
+                    
+                        // Calcular ao carregar a página (caso já tenha valores)
+                        calcularCampos();
+                    });
+                </script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Elementos do Adicional
+                        const nBlocoAdicional = document.getElementById('n_bloco_adicional');
+                        const dataUltimoAdicional = document.getElementById('data_ultimo_adicional');
+                        const numeroProxAdicionalOutput = document.getElementById('numero_prox_adicional_output');
+                        const sextaParteContainer = document.getElementById('sexta_parte_container');
+                        const sextaParteSelect = document.getElementById('sexta_parte');
+                        const sextaParteHidden = document.getElementById('sexta_parte_hidden');
+                    
+                        // Função para controlar a exibição do campo "6ª Parte"
+                        function controlarSextaParte() {
+                            const proximoNumero = parseInt(numeroProxAdicionalOutput.value);
+                            
+                            if (proximoNumero === 4) {
+                                // Mostra o campo e define como "Sim"
+                                sextaParteContainer.classList.remove('hidden');
+                                sextaParteSelect.value = 'True';
+                                sextaParteHidden.value = 'True';
+                            } else {
+                                // Esconde o campo e garante valor "Não"
+                                sextaParteContainer.classList.add('hidden');
+                                sextaParteSelect.value = 'False';
+                                sextaParteHidden.value = 'False';
+                            }
+                        }
+                    
+                        // Função para calcular datas futuras
+                        function calcularDataFutura(data, diasDesconto = 0) {
+                            const dataObj = new Date(data);
+                            const diasTotais = (365 * 5) - diasDesconto;
+                            dataObj.setDate(dataObj.getDate() + diasTotais);
+                            return dataObj;
+                        }
+                    
+                        // Função principal de cálculo
+                        function calcularCampos() {
+                            try {
+                                // Cálculos para Adicional
+                                if (nBlocoAdicional.value && dataUltimoAdicional.value) {
+                                    const numeroAdicional = parseInt(nBlocoAdicional.value);
+                                    numeroProxAdicionalOutput.value = numeroAdicional + 1;
+                                    
+                                    const dataAdicional = calcularDataFutura(dataUltimoAdicional.value);
+                                    // ... outros cálculos ...
+                                    
+                                    // Atualiza o campo "6ª Parte"
+                                    controlarSextaParte();
+                                }
+                            } catch (e) {
+                                console.error("Erro nos cálculos:", e);
+                            }
+                        }
+                    
+                        // Event listeners
+                        nBlocoAdicional.addEventListener('change', function() {
+                            const blocoSelecionado = parseInt(this.value);
+                            if (!isNaN(blocoSelecionado)) {
+                                numeroProxAdicionalOutput.value = blocoSelecionado + 1;
+                                controlarSextaParte();
+                            }
+                        });
+                    
+                        // Verificar mudanças no campo de data
+                        dataUltimoAdicional.addEventListener('change', calcularCampos);
+                        
+                        // Verificar ao carregar a página
+                        calcularCampos();
+                        controlarSextaParte();
+                    });
+                    </script>
             <!-- Seção LP -->
             <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
                 <div class="space-y-6">
                     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados LP</h2>
                     <hr class="border-t border-gray-100">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="space-y-2">
                             <label for="n_bloco_lp" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº Bloco LP *</label>
                             <div class="relative">
@@ -237,7 +461,7 @@
                                 </div>
                             </div>
                         </div>
-
+    
                         <div class="space-y-2">
                             <label for="data_ultimo_lp" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data Último LP *</label>
                             <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
@@ -246,12 +470,114 @@
                                           transition-all duration-200
                                           hover:border-gray-300 text-gray-700 font-medium
                                           [&::-webkit-calendar-picker-indicator]:opacity-0
-                                          bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                          bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA5LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="numero_prox_lp_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Próximo Nº LP *</label>
+                            <input type="text" name="numero_prox_lp_output" id="numero_prox_lp_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="proximo_lp_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Próximo LP</label>
+                            <input type="text" name="proximo_lp_output" id="proximo_lp_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium
+                                          [&::-webkit-calendar-picker-indicator]:opacity-0
+                                          bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA5LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                          bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="mes_proximo_lp_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Mês Próximo LP</label>
+                            <input type="number" name="mes_proximo_lp_output" id="mes_proximo_lp_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                        <div class="space-y-2">
+                            <label for="ano_proximo_lp_output" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Ano Próximo LP</label>
+                            <input type="number" name="ano_proximo_lp_output" id="ano_proximo_lp_output" readonly
+                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                          shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                          transition-all duration-200
+                                          hover:border-gray-300 text-gray-700 font-medium">
+                        </div>
+    
+                     
+    
+                        <div class="space-y-2">
+                            <label for="situacao_lp" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Situação da LP *</label>
+                            <div class="relative">
+                                <select name="situacao_lp" id="situacao_lp" required
+                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                               shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                               transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
+                                               appearance-none">
+                                    <option value="Aguardando" selected>Aguardando</option>
+                                    <option value="Concedido">Concedido</option>
+                                    <option value="Concluído">Concluído</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </fieldset>
+    
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const nBlocoLp = document.getElementById('n_bloco_lp');
+                    const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
+                    const dataUltimoLp = document.getElementById('data_ultimo_lp');
+                    const proximoLpOutput = document.getElementById('proximo_lp_output');
+                    const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
+                    const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
+    
+                    nBlocoLp.addEventListener('change', function() {
+                        const blocoSelecionado = parseInt(this.value);
+                        if (!isNaN(blocoSelecionado)) {
+                            numeroProxLpOutput.value = blocoSelecionado + 1;
+                        } else {
+                            numeroProxLpOutput.value = '';
+                        }
+                    });
+    
+                    dataUltimoLp.addEventListener('change', function() {
+                        const dataUltimo = this.value;
+                        if (dataUltimo) {
+                            const data = new Date(dataUltimo);
+                            const proximaData = new Date(data);
+                            proximaData.setDate(data.getDate() + 1825); // Adiciona 1825 dias (5 anos)
+    
+                            const ano = proximaData.getFullYear();
+                            const mes = (proximaData.getMonth() + 1).toString().padStart(2, '0');
+                            const dia = proximaData.getDate().toString().padStart(2, '0');
+    
+                            proximoLpOutput.value = `${dia}-${mes}-${ano}`;
+                            mesProximoLpOutput.value = parseInt(mes);
+                            anoProximoLpOutput.value = ano;
+                        } else {
+                            proximoLpOutput.value = '';
+                            mesProximoLpOutput.value = '';
+                            anoProximoLpOutput.value = '';
+                        }
+                    });
+                });
+            </script>
+
 
             <!-- Botões de Ação -->
             <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">

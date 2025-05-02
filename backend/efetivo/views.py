@@ -531,28 +531,66 @@ def check_rpt(request, id):
     exists = Cadastro_rpt.objects.filter(cadastro=cadastro).exists()
     return JsonResponse({'exists': exists})
 
+
+
 # backend/efetivo/views.py
 from django.shortcuts import render, get_object_or_404
-from .models import Cadastro
-from backend.municipios.models import Posto  # Caminho absoluto
-
+from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch, Q
+from .models import Cadastro, Imagem, Promocao, DetalhesSituacao
+from backend.municipios.models import Posto
 
 @login_required
 def detalhar_efetivo(request, posto_id):
     posto = get_object_or_404(Posto, pk=posto_id)
     
-    # Query corrigida usando prefetch_related
+    # Ordem dos postos/grads
+    POSTO_GRAD_ORDEM = [
+        ("Cel PM", "Cel PM"),
+        ("Ten Cel PM", "Ten Cel PM"),
+        ("Maj PM", "Maj PM"),
+        ("CAP PM", "Cap PM"),
+        ("1º Ten PM", "1º Ten PM"),
+        ("1º Ten QAPM", "1º Ten QAOPM"),
+        ("2º Ten PM", "2º Ten PM"),
+        ("2º Ten QAPM", "2º Ten QAOPM"),
+        ("Asp OF PM", "Asp OF PM"),
+        ("Subten PM", "Subten PM"),
+        ("1º Sgt PM", "1º Sgt PM"),
+        ("2º Sgt PM", "2º Sgt PM"),
+        ("3º Sgt PM", "3º Sgt PM"),
+        ("Cb PM", "Cb PM"),
+        ("Sd PM", "Sd PM"),
+        ("Sd PM 2ºCL", "Sd PM 2ºCL"),
+    ]
+    
+    # Obtém o prefixo do posto_secao (7 primeiros dígitos)
+    posto_secao_prefixo = posto.posto_secao[:7]
+    
+    # Otimizando as consultas
     militares = Cadastro.objects.filter(
-        detalhes_situacao__posto_secao=posto.posto_secao
+        Q(detalhes_situacao__posto_secao=posto.posto_secao) |
+        Q(detalhes_situacao__funcao="CMT_PB", detalhes_situacao__posto_secao__startswith=posto_secao_prefixo)
+    ).select_related(
+        'user'
     ).prefetch_related(
-        'imagens',
-        'promocoes',
-        'detalhes_situacao'
-    )
+        Prefetch('imagens', queryset=Imagem.objects.all().order_by('-create_at')),
+        Prefetch('promocoes', queryset=Promocao.objects.all().order_by('-ultima_promocao')),
+        Prefetch('detalhes_situacao', queryset=DetalhesSituacao.objects.all().order_by('-data_alteracao'))
+    ).distinct()
+    
+    # Obtém o comandante separadamente para facilitar no template
+    comandante = Cadastro.objects.filter(
+        detalhes_situacao__funcao="CMT_PB",
+        detalhes_situacao__posto_secao__startswith=posto_secao_prefixo
+    ).first()
     
     context = {
         'posto': posto,
         'militares': militares,
-        'unidade_nome': posto.posto_secao
+        'comandante': comandante,  # Adiciona o comandante separadamente ao contexto
+        'unidade_nome': posto.posto_secao,
+        'posto_grad_ordenado': POSTO_GRAD_ORDEM,
+        'posto_secao_prefixo': posto_secao_prefixo
     }
     return render(request, 'detalhes_efetivo.html', context)
