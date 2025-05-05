@@ -1,48 +1,113 @@
 {% extends "base.html" %}
-{% block title %}Editar Licença Prêmio{% endblock %}
+{% block title %}Editar Cadastro Adicional{% endblock %}
 
 {% block 'body' %}
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold text-green-800 mb-6">Editar Licença Prêmio</h1>
-        
+        <h1 class="text-2xl font-bold text-blue-800 mb-6">Editar Cadastro Adicional</h1>
+
         <form method="POST">
             {% csrf_token %}
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Número do Bloco</label>
-                    <input type="number" name="numero_lp" value="{{ lp.numero_lp }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <label class="block text-gray-700 font-medium mb-2">Cadastro</label>
+                    <input type="text" value="{{ adicional.cadastro }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
                 </div>
-                
+
                 <div>
-                    <label class="block text-gray-700 font-medium mb-2">Data da Última LP</label>
-                    <input type="date" name="data_ultimo_lp" value="{{ lp.data_ultimo_lp|date:'Y-m-d' }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">Dias de Desconto</label>
-                    <input type="number" name="dias_desconto_lp" value="{{ lp.dias_desconto_lp }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                </div>
-                
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">Situação</label>
-                    <select name="situacao_lp" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                        {% for value, label in situacao_choices %}
-                            <option value="{{ value }}" {% if lp.situacao_lp == value %}selected{% endif %}>{{ label }}</option>
+                    <label class="block text-gray-700 font-medium mb-2">Número do Adicional</label>
+                    <select name="numero_adicional" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for value, label in n_choices %}
+                            <option value="{{ value }}" {% if adicional.numero_adicional == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Data do Último Adicional</label>
+                    <input type="date" name="data_ultimo_adicional" value="{{ adicional.data_ultimo_adicional|date:'Y-m-d' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Próximo Número do Adicional</label>
+                    <select name="numero_prox_adicional" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for value, label in n_choices %}
+                            <option value="{{ value }}" {% if adicional.numero_prox_adicional == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Próximo Adicional</label>
+                    <input type="date" name="proximo_adicional" value="{{ adicional.proximo_adicional|date:'Y-m-d'|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Mês do Próximo Adicional</label>
+                    <input type="number" name="mes_proximo_adicional" value="{{ adicional.mes_proximo_adicional|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Ano do Próximo Adicional</label>
+                    <input type="number" name="ano_proximo_adicional" value="{{ adicional.ano_proximo_adicional|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Dias de Desconto Adicional</label>
+                    <input type="number" name="dias_desconto_adicional" value="{{ adicional.dias_desconto_adicional }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Situação do Adicional</label>
+                    <select name="situacao_adicional" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for value, label in situacao_choices %}
+                            <option value="{{ value }}" {% if adicional.situacao_adicional == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">6ª Parte Concluída</label>
+                    <input type="checkbox" name="sexta_parte" {% if adicional.sexta_parte %}checked{% endif %}
+                           class="form-checkbox h-5 w-5 text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">6ª Parte Confirmada</label>
+                    <input type="checkbox" name="confirmacao_6parte" {% if adicional.confirmacao_6parte %}checked{% endif %}
+                           class="form-checkbox h-5 w-5 text-blue-600 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Data de Concessão do Adicional</label>
+                    <input type="date" name="data_concessao_adicional" value="{{ adicional.data_concessao_adicional|date:'Y-m-d'|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">BOL GPm Adicional</label>
+                    <input type="text" name="bol_g_pm_adicional" value="{{ adicional.bol_g_pm_adicional|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Data Publicação Adicional</label>
+                    <input type="date" name="data_publicacao_adicional" value="{{ adicional.data_publicacao_adicional|date:'Y-m-d'|default_if_none:'' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
             </div>
-            
+
             <div class="flex justify-end space-x-4">
-                <a href="{% url 'adicional:ver_lp' lp.id %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                <a href="{% url 'adicional:ver_adicional' adicional.id %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
                     Cancelar
                 </a>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                     Salvar Alterações
                 </button>
             </div>

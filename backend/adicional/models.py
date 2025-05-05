@@ -119,19 +119,20 @@ class Cadastro_adicional(models.Model):
         if self.numero_prox_adicional == 4 and not self.sexta_parte:
             self.sexta_parte = True
 
+    from dateutil.relativedelta import relativedelta  # Já está importado
+
     def save(self, *args, **kwargs):
-    # Atualiza status automaticamente antes de salvar
-        hoje = timezone.now().date()
-        
-        if self.proximo_adicional and self.proximo_adicional <= hoje and self.status_adicional == self.StatusAdicional.AGUARDANDO_REQUISITOS:
-            self.status_adicional = self.StatusAdicional.FAZ_JUS
+        # Cálculo do próximo adicional
+        if self.data_ultimo_adicional:
+            # 5 anos exatos usando dateutil
+            self.proximo_adicional = self.data_ultimo_adicional + relativedelta(years=5)
             
-        if self.status_adicional == self.StatusAdicional.LANCADO_SIPA:
-            if self.updated_at and (hoje - self.updated_at.date()).days >= 1:
-                self.status_adicional = self.StatusAdicional.AGUARDANDO_PUBLICACAO
+            # Aplica desconto de dias
+            if self.dias_desconto_adicional > 0:
+                self.proximo_adicional -= timedelta(days=self.dias_desconto_adicional)
         
         super().save(*args, **kwargs)
-
+                
 
     # Métodos de exibição de usuário
     def user_created_display(self):
@@ -251,6 +252,53 @@ class Cadastro_adicional(models.Model):
 
     def ultima_imagem(self):
         return self.imagens.order_by('-id').first()
+        
+    from dateutil.relativedelta import relativedelta
+
+    @property
+    def tempo_decorrido(self):
+        """Calcula o tempo desde o último adicional (crescente)"""
+        if not self.data_ultimo_adicional:
+            return "00 anos 00 meses e 00 dias"
+        
+        hoje = timezone.now().date()
+        delta = relativedelta(hoje, self.data_ultimo_adicional)
+        
+        anos = delta.years
+        meses = delta.months
+        dias = delta.days
+        
+        return f"{anos:02d} anos {meses:02d} meses e {dias:02d} dias"
+
+    @property
+    def tempo_restante(self):
+        """Calcula o tempo até o próximo adicional (decrescente)"""
+        if not self.proximo_adicional:
+            return "00 anos 00 meses e 00 dias"
+        
+        hoje = timezone.now().date()
+        
+        if hoje > self.proximo_adicional:
+            delta = relativedelta(hoje, self.proximo_adicional)
+            return f"Prazo atingido há: {delta.years:02d} anos {delta.months:02d} meses e {delta.days:02d} dias"
+        else:
+            delta = relativedelta(self.proximo_adicional, hoje)
+            return f"{delta.years:02d} anos {delta.months:02d} meses e {delta.days:02d} dias"
+        
+    @property
+    def tempo_decorrido_porcentagem(self):
+        """Calcula a porcentagem do tempo decorrido em relação aos 5 anos"""
+        if not self.data_ultimo_adicional:
+            return 0
+        
+        total_dias = 1825  # 5 anos * 365 dias
+        dias_decorridos = (timezone.now().date() - self.data_ultimo_adicional).days
+        return min(dias_decorridos / total_dias, 1.0)
+
+    @property
+    def prazo_vencido(self):
+        return timezone.now().date() > self.proximo_adicional if self.proximo_adicional else False
+
 
 class LP(models.Model):
     """
@@ -406,11 +454,15 @@ class HistoricoCadastro(models.Model):
     )
 
     # Réplica exata dos campos do Cadastro_adicional
+
     cadastro = models.ForeignKey(
         'efetivo.Cadastro',
         on_delete=models.CASCADE,
-        verbose_name="Cadastro"
+        verbose_name="Cadastro",
+        null=False,  # DEVE SER PREENCHIDO (NÃO PERMITE VALORES NULOS)
+        blank=False   # OBRIGATÓRIO NO FORMULÁRIO
     )
+    # ... (outros campos)
     user_created = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -435,8 +487,8 @@ class HistoricoCadastro(models.Model):
         related_name='historicos_concluidos',
         verbose_name="Concluído por"
     )
-    created_at = models.DateTimeField(verbose_name="Criado em")
-    updated_at = models.DateTimeField(verbose_name="Atualizado em")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
     data_conclusao = models.DateTimeField(
         null=True,
         blank=True,
@@ -444,10 +496,13 @@ class HistoricoCadastro(models.Model):
     )
     numero_adicional = models.PositiveSmallIntegerField(
         choices=n_choices,
-        verbose_name="Número do Adicional"
+        verbose_name="Número do Adicional",
+        default=1  # Valor padrão como fallback
     )
-    data_ultimo_adicional = models.DateField(
-        verbose_name="Data do Último Adicional"
+    
+    data_ultimo_adicional = models.DateField(  # Adicione se ainda não existir
+        verbose_name="Data do Último Adicional",
+        default=timezone.now  # Valor padrão
     )
     numero_prox_adicional = models.PositiveSmallIntegerField(
         choices=n_choices,

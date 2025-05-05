@@ -1,3 +1,4 @@
+# adicional/urls.py
 from django.urls import path
 from . import views
 
@@ -6,10 +7,10 @@ app_name = 'adicional'
 urlpatterns = [
     path('cadastrar/', views.cadastrar_lp, name='cadastrar_lp'),
     path('listar/', views.listar_lp, name='listar_lp'),
-    
+
     # URLs para Adicional
     path('ver-adicional/<int:id>/', views.ver_adicional, name='ver_adicional'),
-    path('editar-adicional/<int:id>/', views.editar_adicional, name='editar_adicional'),
+    path('editar-geral/<int:id>/', views.editar_cadastro_adicional, name='editar_geral'),  # Nova URL para editar geral
     path('excluir-adicional/<int:id>/', views.excluir_adicional, name='excluir_adicional'),
     path('historico-adicional/<int:id>/', views.historico_adicional, name='historico_adicional'),
     path('concluir-adicional/<int:id>/', views.concluir_adicional, name='concluir_adicional'),
@@ -27,6 +28,6 @@ urlpatterns = [
     path('excluir-lp/<int:id>/', views.excluir_lp, name='excluir_lp'),
     path('historico-lp/<int:id>/', views.historico_lp, name='historico_lp'),
     path('concluir-lp/<int:id>/', views.concluir_lp, name='concluir_lp'),
-    
+
     path('buscar-militar/', views.buscar_militar_adicional, name='buscar_militar'),
 ]
