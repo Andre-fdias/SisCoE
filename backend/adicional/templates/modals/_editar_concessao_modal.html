@@ -1,72 +1,50 @@
-<div id="concluirAdicionalModal"
-    class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-[100]"
-    aria-modal="true"
-    role="dialog"
-    aria-labelledby="modalTitle">
+<div id="editarConcessaoModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all">
-        <div class="flex items-center justify-between p-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded-t-xl">
-            <div class="flex items-center space-x-3">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <h2 id="modalTitle" class="text-xl font-semibold text-white">Concluir Processo de ATS</h2>
-            </div>
-            <button
-                onclick="closeConcluirAdicionalModal()"
-                class="p-2 hover:bg-white/10 rounded-full transition-colors"
-                aria-label="Fechar">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <form method="POST"
-            action="{% url 'adicional:concluir_processo_ats' cadastro_adicional.id %}"
-            class="p-6 space-y-6">
-            {% csrf_token %}
-
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">
-                    Senha de Confirmação
-                    <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="Digite sua senha"
-                        id="passwordInput">
-                    <div id="passwordError" class="mt-2 text-sm text-red-600 hidden"></div>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form method="post" action="{% url 'adicional:editar_concessao' pk=cadastro_adicional.id %}">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Inserir Dados da Concessão
+                            </h3>
+                            <div class="mt-2">
+                                <div class="mb-4">
+                                    <label for="data_concessao" class="block text-gray-700 text-sm font-bold mb-2">
+                                        Data de Concessão
+                                    </label>
+                                    <input type="date" name="data_concessao" id="data_concessao" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="bol_g_pm" class="block text-gray-700 text-sm font-bold mb-2">
+                                        BOL G PM
+                                    </label>
+                                    <input type="text" name="bol_g_pm" id="bol_g_pm" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="data_publicacao" class="block text-gray-700 text-sm font-bold mb-2">
+                                        Data de Publicação
+                                    </label>
+                                    <input type="date" name="data_publicacao" id="data_publicacao" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="flex justify-end space-x-4">
-                <button
-                    type="button"
-                    onclick="closeConcluirAdicionalModal()"
-                    class="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium rounded-lg transition-colors">
-                    Cancelar
-                </button>
-
-                <button
-                    type="submit"
-                    class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all
-                        transform hover:scale-[1.02] active:scale-95 flex items-center justify-center min-w-[120px]"
-                    id="submitButton">
-                    <span class="normal-state">Confirmar</span>
-                    <span class="loading-state hidden">
-                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
-                </button>
-            </div>
-        </form>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto">
+                        Salvar
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto" onclick="closeEditarConcessaoModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

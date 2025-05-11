@@ -218,65 +218,117 @@
     </div>
 
      <!-- Posição na Fila -->
-    <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
-        <div class="bg-gray-100  rounded-2xl shadow-2xl w-full p-8 transition-all duration-300 animate-fade-in">
-            <h2 class="text-xl font-semibold text-indigo-900 mb-3">Posição na Fila de Espera</h2>
-            <hr class="my-3 border-gray-200">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                    <p class="text-sm text-indigo-900">Destino</p>
-                    <p class="text-lg font-bold text-gray-600 mt-1">{{ cadastro_rpt.posto_secao_destino }}</p>
-                </div>
-
-                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
-                    <p class="text-sm text-indigo-900">Sua Posição</p>
-                    <p class="text-lg font-bold text-gray-600 mt-1">{{ posicao }}º</p>
-                </div>
-
-                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                    <p class="text-sm text-indigo-900">Total na Fila</p>
-                    <p class="text-lg font-bold text-gray-600 mt-1">{{ total_secao }} militares</p>
+   <!-- Posição na Fila -->
+<fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
+    <div class="bg-white rounded-2xl shadow-xl w-full p-8 transition-all duration-300 animate-fade-in border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Posição na Fila de Espera
+            </h2>
+            <span class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full">
+                Atualizado em {% now "d/m/Y" %}
+            </span>
+        </div>
+        
+        <hr class="my-4 border-gray-200">
+        
+        <!-- Cards de Destaque -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- Card Destino -->
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-xl border border-indigo-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-indigo-100 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Destino</p>
+                        <p class="text-sm  text-gray-800 mt-1">{{ cadastro_rpt.posto_secao_destino }}</p>
+                    </div>
                 </div>
             </div>
-            <h3 class="text-md font-semibold text-gray-700 mt-6">Lista Completa por Ordem de Inscrição</h3>
+
+            <!-- Card Posição -->
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-green-600 uppercase tracking-wider">Sua Posição</p>
+                        <p class="text-lg  text-gray-800 mt-1">{{ posicao }}º</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Total -->
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Total na Fila</p>
+                        <p class="text-lg  text-gray-800 mt-1">{{ total_secao }} militares</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Inscritos -->
+        <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Lista Completa por Ordem de Inscrição
+            </h3>
 
             <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posição</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Graduação</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RE</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SGB</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Seção</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inscrição</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Posição</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Graduação</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">RE</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nome</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">SGB</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Posto/Seção</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Inscrição</th>
                         </tr>
                     </thead>
 
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for inscrito in inscritos_secao %}
-                        <tr class="{% if inscrito.id == cadastro_rpt.id %}bg-indigo-50{% endif %} hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ inscrito.posicao }}
+                        <tr class="{% if inscrito.id == cadastro_rpt.id %}bg-indigo-50 font-medium{% else %}hover:bg-gray-50{% endif %} transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-800 font-bold{% else %}text-gray-900{% endif %}">
+                                {{ inscrito.posicao }}º
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700{% else %}text-gray-600{% endif %}">
                                 <span class="font-mono">{{ inscrito.cadastro.promocoes.last.posto_grad }}</span>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700{% else %}text-gray-600{% endif %}">
                                 <span class="font-mono">{{ inscrito.cadastro.re }}-{{ inscrito.cadastro.dig }}</span>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700 font-semibold{% else %}text-gray-600{% endif %}">
                                 {{ inscrito.cadastro.nome_de_guerra }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700{% else %}text-gray-600{% endif %}">
                                 {{ inscrito.cadastro.detalhes_situacao.last.sgb|default:"-" }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700{% else %}text-gray-600{% endif %}">
                                 {{ inscrito.cadastro.detalhes_situacao.last.posto_secao|default:"-" }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm {% if inscrito.id == cadastro_rpt.id %}text-indigo-700{% else %}text-gray-600{% endif %}">
                                 {{ inscrito.data_pedido|date:"d/m/Y" }}
                             </td>
                         </tr>
@@ -285,7 +337,8 @@
                 </table>
             </div>
         </div>
-    </fieldset>
+    </div>
+</fieldset>
   
 
 

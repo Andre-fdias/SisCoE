@@ -13,7 +13,7 @@ from datetime import datetime, date, timedelta
 from django.contrib.messages import constants
 from .models import Cadastro_adicional, HistoricoCadastro, LP, HistoricoLP
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
-
+from datetime import timedelta
 @login_required
 def cadastrar_lp(request):
     """
@@ -148,34 +148,56 @@ def cadastrar_lp(request):
 @login_required
 def buscar_militar_adicional(request):
     """
-    View para buscar um militar pelo RE e exibir seus dados para cadastro de adicional e LP.
+    Busca um militar pelo RE (via POST) para pré-preencher o formulário de cadastro de Adicional/LP,
+    ou exibe o formulário de busca (via GET).
     """
+    # Template principal que contém tanto a busca quanto o formulário
+    template_name = 'cadastrar_lp.html'
+
     if request.method == "POST":
-        re = request.POST.get('re')
+        re = request.POST.get('re', '').strip()
+        if not re:
+            messages.warning(request, 'Por favor, informe o RE para buscar.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+            return render(request, template_name)
+
         try:
+            # Busca o cadastro principal
             cadastro = Cadastro.objects.get(re=re)
+
+            # Busca os dados relacionados
             detalhes = DetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-id').first()
             imagem = Imagem.objects.filter(cadastro=cadastro).order_by('-id').first()
             promocao = Promocao.objects.filter(cadastro=cadastro).order_by('-id').first()
 
+            # Verifica dados obrigatórios
             if not detalhes:
-                messages.add_message(request, constants.ERROR, 'Detalhamento não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('adicional:cadastrar_lp')
+                messages.error(request, 'Detalhamento não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
+                return render(request, template_name)
             if not promocao:
-                messages.add_message(request, constants.ERROR, 'Dados de Posto e graduação não localizados', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('adicional:cadastrar_lp')
+                messages.error(request, 'Dados de Posto e graduação não localizados', extra_tags='bg-red-500 text-white p-4 rounded')
+                return render(request, template_name)
 
+            # Prepara o contexto
             context = {
                 'cadastro': cadastro,
                 'detalhes': detalhes,
                 'imagem': imagem,
                 'promocao': promocao,
+                'found_re': re  # Indica que a busca foi feita
             }
-        except Cadastro.DoesNotExist:
-             messages.add_message(request, constants.ERROR, 'Militar não cadastrado no sistema', extra_tags='bg-red-500 text-white p-4 rounded')
-             return redirect('adicional:cadastrar_lp')
+            return render(request, template_name, context)
 
-    return render(request, 'buscar_adicional.html')
+        except Cadastro.DoesNotExist:
+            messages.error(request, f'Militar com RE "{re}" não cadastrado no sistema', extra_tags='bg-red-500 text-white p-4 rounded')
+            return render(request, template_name, {'searched_re': re})
+        
+        except Exception as e:
+            messages.error(request, f'Ocorreu um erro ao buscar o militar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            return render(request, template_name)
+
+    # Se for GET, mostra o formulário vazio
+    return render(request, template_name)
+
 
 @login_required
 def listar_lp(request):
@@ -349,7 +371,7 @@ def historico_adicional(request, id):
 
     context = {
         'adicional': adicional,
-        'historicos': historicos,
+        'historicos_encerrados': historicos,
         'campos_historicos': [
             ('data_alteracao', 'Data Alteração'),
             ('usuario_alteracao', 'Responsável'),
@@ -515,7 +537,7 @@ def concluir_adicional(request, id):
 
             # Atualiza o próximo adicional com base no último salvo
             novo_adicional.numero_prox_adicional = novo_adicional.numero_adicional + 1
-            novo_adicional.proximo_adicional = novo_adicional.data_ultimo_adicional + timedelta(days=1825)
+            novo_adicional.proximo_adicional = novo_adicional.data_ultimo_adicional + timedelta(days=1825)  # 5 anos em dias
             novo_adicional.save()
 
         messages.success(request, 'Adicional concluído com sucesso! Foi criado um novo registro para o próximo período.')
@@ -527,7 +549,6 @@ def concluir_adicional(request, id):
         messages.error(request, f'Erro inesperado: {str(e)}', extra_tags='concluir_adicional')
 
     return redirect(reverse('adicional:ver_adicional', args=[id]))
-
 
 # Exibe os detalhes de um registro específico ADICIONAL
 from datetime import datetime
@@ -616,9 +637,9 @@ def excluir_adicional(request, id):
     if request.method == 'POST':
         try:
             password = request.POST.get('password')
-            user = authenticate(request, username=request.user.username, password=password)
-
-            if not user or user != request.user:
+            
+            # Verifica a senha diretamente (sem usar authenticate)
+            if not request.user.check_password(password):
                 messages.error(request, 'Autenticação falhou - senha incorreta')
                 return redirect(reverse('adicional:ver_adicional', args=[id]))
 
@@ -631,7 +652,6 @@ def excluir_adicional(request, id):
             return redirect(reverse('adicional:ver_adicional', args=[id]))
 
     return redirect(reverse('adicional:ver_adicional', args=[id]))
-
 
 # Views para LP
 @login_required
@@ -835,22 +855,59 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from .models import Cadastro_adicional
 
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.utils import timezone
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+@require_http_methods(["POST"])
 @login_required
-def concluir_processo_ats(request, pk):
-    adicional = get_object_or_404(Cadastro_adicional, pk=pk)
+def concluir_adicional(request, pk):
+    logger.info(f"Iniciando conclusão para adicional {pk}")
     
-    if request.method == 'POST':
-        password = request.POST.get('password')
-        response_data = {'success': False, 'message': ''}
+    try:
+        # Verifica o tipo de conteúdo
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+                password = data.get('password')
+            except json.JSONDecodeError as e:
+                logger.error(f"Erro ao decodificar JSON: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Dados JSON inválidos'
+                }, status=400)
+        else:
+            password = request.POST.get('password')
+        
+        # Validações
+        if not password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Senha não fornecida'
+            }, status=400)
 
-        try:
-            # Verifica senha e permissão
-            if not request.user.check_password(password):
-                raise ValueError("Senha incorreta")
-                
-            if not request.user.has_perm('adicional.can_concluir_adicional'):
-                raise PermissionError("Permissão insuficiente")
+        if not request.user.check_password(password):
+            return JsonResponse({
+                'success': False,
+                'message': 'Senha incorreta'
+            }, status=403)
 
+        if not request.user.has_perm('adicional.can_concluir_adicional'):
+            return JsonResponse({
+                'success': False,
+                'message': 'Permissão negada'
+            }, status=403)
+
+        adicional = get_object_or_404(Cadastro_adicional, pk=pk)
+        
+        with transaction.atomic():
             # Atualiza o adicional
             adicional.status_adicional = Cadastro_adicional.StatusAdicional.ENCERRADO
             adicional.situacao_adicional = "Concluído"
@@ -858,91 +915,221 @@ def concluir_processo_ats(request, pk):
             adicional.usuario_conclusao = request.user
             adicional.save()
 
-            response_data['success'] = True
-            return JsonResponse(response_data)
+            # Cria histórico com TODOS os campos obrigatórios
+            HistoricoCadastro.objects.create(
+                cadastro_adicional=adicional,
+                cadastro=adicional.cadastro,
+                user_created=adicional.user_created,
+                user_updated=request.user,
+                usuario_alteracao=request.user,
+                numero_adicional=adicional.numero_adicional,
+                numero_prox_adicional=adicional.numero_prox_adicional,
+                data_ultimo_adicional=adicional.data_ultimo_adicional,
+                situacao_adicional="Concluído",
+                status_adicional=Cadastro_adicional.StatusAdicional.ENCERRADO,
+                data_conclusao=timezone.now(),
+                # Outros campos conforme necessário
+                proximo_adicional=adicional.proximo_adicional,
+                mes_proximo_adicional=adicional.mes_proximo_adicional,
+                ano_proximo_adicional=adicional.ano_proximo_adicional,
+                dias_desconto_adicional=adicional.dias_desconto_adicional
+            )
 
-        except Exception as e:
-            response_data['message'] = str(e)
-            return JsonResponse(response_data, status=400)
+            return JsonResponse({
+                'success': True,
+                'message': 'Processo concluído com sucesso',
+               
+            })
+        
 
-    return redirect('adicional:detalhar_adicional', pk=pk)
+    except Exception as e:
+        logger.error(f"Erro ao concluir adicional: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'Erro interno do servidor',
+            'error': str(e)
+        }, status=500)
 
-# backend/adicional/views.py
-from django.contrib import messages
-from django.shortcuts import redirect, render, get_object_or_404
-from django.utils import timezone
-from django.views.decorators.http import require_http_methods
-# Supondo que o modelo Cadastro está neste local
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse
+from django.http import JsonResponse
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from .models import Cadastro_adicional
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
-@require_http_methods(["POST"])
 def novo_adicional(request):
     if request.method == 'POST':
-        cadastro_id = request.POST.get('cadastro_id')
-        n_bloco_adicional = request.POST.get('n_bloco_adicional')
-        data_ultimo_adicional = request.POST.get('data_ultimo_adicional')
-        numero_prox_adicional = int(request.POST.get('numero_prox_adicional'))
-        proximo_adicional = request.POST.get('proximo_adicional')
-        situacao_adicional = request.POST.get('situacao_adicional')
-        sexta_parte = request.POST.get('sexta_parte') == 'True'
-
         try:
-            cadastro = get_object_or_404(Cadastro, id=cadastro_id)
-            novo_adicional = Cadastro_adicional.objects.create(
-                cadastro=cadastro,
-                n_bloco_adicional=n_bloco_adicional,
-                data_concessao_adicional=data_ultimo_adicional,
-                numero_prox_adicional=numero_prox_adicional,
-                proximo_adicional=proximo_adicional,
-                situacao_adicional=situacao_adicional,
-                sexta_parte=sexta_parte
-            )
-            return JsonResponse({'success': True})
-            # Instead of redirecting to 'detalhes_militar',
-            # redirect to the view for viewing the adicional details
-            # or the associated cadastro details.
-            # Example:
-            # return redirect(reverse('adicional:ver_adicional', args=[novo_adicional.id]))
-            # Or, if you want to go to the cadastro details:
-            # return redirect(reverse('backend:detalhes_cadastro', args=[cadastro.id]))
+            with transaction.atomic():
+                # Validação dos campos obrigatórios
+                required_fields = ['cadastro_id', 'n_bloco_adicional', 'data_ultimo_adicional']
+                for field in required_fields:
+                    if not request.POST.get(field):
+                        raise ValidationError(f"Campo obrigatório faltando: {field}")
+
+                # Coleta de dados
+                cadastro_id = int(request.POST['cadastro_id'])
+                bloco_atual = int(request.POST['n_bloco_adicional'])
+                data_ultimo = request.POST['data_ultimo_adicional']
+                situacao = request.POST.get('situacao_adicional', 'Aguardando')
+
+                # Validações
+                if not (1 <= bloco_atual <= 8):
+                    raise ValidationError("Número do bloco deve estar entre 1 e 8")
+
+                data_ultima = timezone.datetime.strptime(data_ultimo, '%Y-%m-%d').date()
+                if data_ultima > timezone.now().date():
+                    raise ValidationError("Data do último adicional não pode ser futura")
+
+                # Criação do objeto
+                novo_adicional = Cadastro_adicional(
+                    cadastro_id=cadastro_id,
+                    numero_adicional=bloco_atual,
+                    numero_prox_adicional=bloco_atual + 1,
+                    data_ultimo_adicional=data_ultima,
+                    situacao_adicional=situacao,
+                    sexta_parte=request.POST.get('sexta_parte', 'False') == 'True',
+                    user_created=request.user
+                )
+
+                novo_adicional.full_clean()
+                novo_adicional.save()
+
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse('adicional:listar_lp'),
+                    'message': 'Adicional criado com sucesso!'
+                })
+
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'message': '; '.join(e.messages)
+            }, status=400)
 
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    else:
-        return JsonResponse({'success': False, 'error': 'Método inválido'})
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro interno: {str(e)}'
+            }, status=500)
 
+    return JsonResponse({'success': False, 'message': 'Método não permitido'}, status=405)
 # You would then need a URL pattern named 'ver_adicional' or 'detalhes_cadastro'
 # in your backend/adicional/urls.py (or wherever your URLs are defined).
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Cadastro_adicional
-from .forms import CadastroAdicionalForm  # Importe ou crie um formulário para Cadastro_adicional
+import logging
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import datetime
 from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import login_required
+
+# Configura o logger
+logger = logging.getLogger(__name__)
 
 @login_required
 def editar_cadastro_adicional(request, id):
     """
-    View para editar todos os dados de um Cadastro_adicional existente.
+    View robusta para edição de Cadastro_adicional com:
+    - Tratamento completo de erros
+    - Logging adequado
+    - Validação de campos
+    - Suporte a histórico (opcional)
     """
     adicional = get_object_or_404(Cadastro_adicional, id=id)
+    
+    # Obter choices para os selects
+    try:
+        n_choices = Cadastro_adicional._meta.get_field('numero_adicional').choices
+        situacao_choices = Cadastro_adicional._meta.get_field('situacao_adicional').choices
+        status_choices = Cadastro_adicional._meta.get_field('status_adicional').choices
+    except Exception as e:
+        logger.error(f"Erro ao obter choices: {str(e)}")
+        messages.error(request, "Erro ao carregar opções do formulário")
+        return redirect('adicional:ver_adicional', id=id)
 
     if request.method == 'POST':
-        # Assumindo que você tem um form chamado CadastroAdicionalForm
-        form = CadastroAdicionalForm(request.POST, instance=adicional)
-        if form.is_valid():
-            adicional = form.save(commit=False)
-            adicional.user_updated = request.user
-            adicional.save()
-            messages.success(request, 'Cadastro adicional atualizado com sucesso.')
-            return redirect('adicional:ver_adicional', id=adicional.id)
-        else:
-            messages.error(request, 'Houve um erro ao atualizar o cadastro adicional. Verifique os campos.')
-    else:
-        # Se o formulário não existir, crie um com a instância do adicional
-        form = CadastroAdicionalForm(instance=adicional)
+        try:
+            with transaction.atomic():
+                # 1. Processar campos básicos
+                fields_to_update = [
+                    'numero_adicional', 'numero_prox_adicional',
+                    'situacao_adicional', 'status_adicional',
+                    'dias_desconto_adicional', 'bol_g_pm_adicional'
+                ]
+                
+                for field in fields_to_update:
+                    if field in request.POST:
+                        setattr(adicional, field, request.POST.get(field))
+
+                # 2. Processar campos numéricos especiais
+                numeric_fields = {
+                    'mes_proximo_adicional': int,
+                    'ano_proximo_adicional': int
+                }
+                
+                for field, type_func in numeric_fields.items():
+                    if request.POST.get(field):
+                        setattr(adicional, field, type_func(request.POST.get(field)))
+
+                # 3. Processar datas
+                date_fields = [
+                    'data_ultimo_adicional',
+                    'proximo_adicional',
+                    'data_concessao_adicional',
+                    'data_publicacao_adicional'
+                ]
+                
+                for field in date_fields:
+                    if request.POST.get(field):
+                        setattr(adicional, field, datetime.strptime(request.POST.get(field), '%Y-%m-%d').date())
+
+                # 4. Processar booleanos
+                adicional.sexta_parte = 'sexta_parte' in request.POST
+                adicional.confirmacao_6parte = 'confirmacao_6parte' in request.POST
+
+                # 5. Atualizar metadados
+                adicional.user_updated = request.user
+                adicional.updated_at = timezone.now()
+
+                # 6. Validar e salvar
+                adicional.full_clean()
+                adicional.save()
+
+                # 7. Tentar criar histórico (se existir)
+                try:
+                    if hasattr(adicional, 'historicos'):
+                        HistoricoCadastro.objects.create(
+                            cadastro_adicional=adicional,
+                            usuario=request.user,
+                            acao="EDIÇÃO",
+                            detalhes=f"Editado por {request.user.username}"
+                        )
+                except Exception as hist_error:
+                    logger.warning(f"Erro ao criar histórico (pode ser normal): {str(hist_error)}")
+
+                messages.success(request, 'Cadastro atualizado com sucesso!')
+                return redirect('adicional:ver_adicional', id=adicional.id)
+
+        except ValueError as e:
+            logger.error(f"Erro de valor ao editar adicional {id}: {str(e)}")
+            messages.error(request, f'Erro nos valores informados: {str(e)}')
+        except ValidationError as e:
+            logger.error(f"Erro de validação ao editar adicional {id}: {str(e)}")
+            messages.error(request, f'Erro de validação: {", ".join(e.messages)}')
+        except Exception as e:
+            logger.critical(f"Erro inesperado ao editar adicional {id}: {str(e)}", exc_info=True)
+            messages.error(request, 'Ocorreu um erro inesperado. Administrador foi notificado.')
 
     context = {
-        'form': form,
         'adicional': adicional,
+        'n_choices': n_choices,
+        'situacao_choices': situacao_choices,
+        'status_choices': status_choices,
     }
+    
     return render(request, 'editar_geral.html', context)
