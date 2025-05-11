@@ -13,6 +13,7 @@ from django.db.models import F, Window
 from django.db.models.functions import RowNumber
 # backend/efetivo/views.py
 from backend.municipios.models import Posto  # Supondo que Posto está no app 'municipios'
+from django.forms.models import model_to_dict
 
 @login_required
 def cadastrar_militar(request):
@@ -294,128 +295,120 @@ def editar_posto_graduacao(request, id):
 
 from django.http import JsonResponse
 
+# views.py
 @login_required
 def editar_situacao_atual(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
     if request.method == 'POST':
-        cadastro = get_object_or_404(Cadastro, id=id)
-        
         try:
-            # Log dos dados recebidos
-            print("Dados recebidos no POST:", request.POST)
-            
-            # Atualizar apenas os campos necessários
             detalhes = cadastro.detalhes_situacao.last()
-            if detalhes:
-                detalhes.situacao = request.POST['situacao_atual']
-                detalhes.cat_efetivo = request.POST['cat_efetivo']
-                detalhes.prontidao = request.POST['prontidao']
-                detalhes.saida_da_unidade = request.POST.get('saida_da_unidade', None)
-                detalhes.save()
-            
-            return JsonResponse({'success': True})
+            if not detalhes:
+                messages.error(request, 'Nenhuma situação encontrada para editar')
+                return redirect('efetivo:ver_militar', id=id)
+
+            # Atualiza os campos editáveis
+            detalhes.situacao = request.POST.get('situacao_atual', detalhes.situacao)
+            detalhes.cat_efetivo = request.POST.get('cat_efetivo', detalhes.cat_efetivo)
+            detalhes.prontidao = request.POST.get('prontidao', detalhes.prontidao)
+            detalhes.saida_da_unidade = request.POST.get('saida_da_unidade') or None
+            detalhes.save()
+
+            messages.success(request, 'Situação atual atualizada com sucesso')
+            return redirect('efetivo:ver_militar', id=id)
 
         except Exception as e:
-            print(f"Erro ao salvar a situação atual: {e}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Método de requisição inválido.'})
+            messages.error(request, f'Erro ao atualizar situação: {str(e)}')
+            return redirect('efetivo:ver_militar', id=id)
 
+    messages.error(request, 'Método de requisição inválido')
+    return redirect('efetivo:ver_militar', id=id)
 
 @login_required
 def cadastrar_nova_situacao(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
     if request.method == 'POST':
-        cadastro = get_object_or_404(Cadastro, id=id)
-        
         try:
-            # Log dos dados recebidos
-            print("Dados recebidos no POST:", request.POST)
-            
-            # Criar Nova Situação
+            # Arquivar situação anterior
+            situacao_anterior = cadastro.detalhes_situacao.last()
+            if situacao_anterior:
+                HistoricoDetalhesSituacao.objects.create(
+                    cadastro=cadastro,
+                    **model_to_dict(situacao_anterior, exclude=['id', 'cadastro'])
+                )
+                situacao_anterior.delete()
+
+            # Criar nova situação
             nova_situacao = DetalhesSituacao(
                 cadastro=cadastro,
                 situacao=request.POST['situacao'],
                 sgb=request.POST['sgb'],
                 posto_secao=request.POST['posto_secao'],
-                esta_adido=request.POST['esta_adido'],
+                esta_adido=request.POST.get('esta_adido'),
                 funcao=request.POST['funcao'],
-                op_adm=request.POST['op_adm'],
-                prontidao= request.POST.get('prontidao'),
+                op_adm=request.POST.get('op_adm'),
+                prontidao=request.POST.get('prontidao', ''),
                 apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
-                saida_da_unidade=request.POST.get('saida_da_unidade', None),
+                saida_da_unidade=request.POST.get('saida_da_unidade'),
                 usuario_alteracao=request.user,
-                cat_efetivo=request.POST['cat_efetivo'],
+                cat_efetivo=request.POST.get('cat_efetivo', 'Ativo')
             )
             nova_situacao.save()
-            
-            # Atualizar o Histórico de Detalhes da Situação
-            HistoricoDetalhesSituacao.objects.create(
-                cadastro=cadastro,
-                situacao=nova_situacao.situacao,
-                sgb=nova_situacao.sgb,
-                posto_secao=nova_situacao.posto_secao,
-                esta_adido=nova_situacao.esta_adido,
-                funcao=nova_situacao.funcao,
-                op_adm=nova_situacao.op_adm,
-                prontidao= nova_situacao.prontidao,
-                apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
-                saida_da_unidade=nova_situacao.saida_da_unidade,
-                data_alteracao=nova_situacao.data_alteracao,
-                usuario_alteracao=request.user,
-                cat_efetivo=nova_situacao.cat_efetivo,
-            )
-         
-            messages.add_message(request, constants.SUCCESS, 'Criada Nova Situação Funcional com sucesso.', 
-            extra_tags='bg-green-500 text-white p-4 rounded')
+
+            messages.success(request, 'Nova situação cadastrada com sucesso')
             return redirect('efetivo:ver_militar', id=cadastro.id)
 
         except Exception as e:
-            print(f"Erro ao cadastrar a nova situação: {e}")
-            messages.add_message(request, constants.ERROR, 'Erro ao cadastrar nova situação.', 
-                              extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
+            messages.error(request, f'Erro ao criar nova situação: {str(e)}')
             return redirect('efetivo:ver_militar', id=cadastro.id)
-    
-    messages.add_message(request, constants.ERROR, 'Método de Requisição errado.', 
-                      extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
+
+    messages.error(request, 'Método de requisição inválido')
     return redirect('efetivo:ver_militar', id=id)
 
 
 
-# responsável pela edição da model cadastro
+# views.py
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import Cadastro
+from .forms import CadastroForm  # Assumindo que criaremos este form
+
 @login_required
 def editar_dados_pessoais_contatos(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
-    historico_promocoes = HistoricoPromocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
-    historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
-
-    if request.method == "GET":
+    
+    if request.method == "POST":
+        form = CadastroForm(request.POST, instance=cadastro)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Dados atualizados com sucesso!')
+                return redirect('efetivo:ver_militar', id=cadastro.id)
+            
+            except Exception as e:
+                messages.error(request, f'Erro ao salvar: {str(e)}')
+                return redirect('efetivo:editar_dados_pessoais_contatos', id=id)
+        
+        else:
+            # Mostra erros de validação do formulário
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            return redirect('efetivo:editar_dados_pessoais_contatos', id=id)
+    
+    else:
+        form = CadastroForm(instance=cadastro)
+        historico_promocoes = cadastro.promocoes.all().order_by('-data_alteracao')
+        historico_detalhes_situacao = cadastro.detalhes_situacao.all().order_by('-data_alteracao')
+        
         return render(request, 'editar_dados_pessoais_contatos.html', {
+            'form': form,
             'cadastro': cadastro,
-            'genero': Cadastro.genero_choices,
             'historico_promocoes': historico_promocoes,
             'historico_detalhes_situacao': historico_detalhes_situacao,
         })
-
-    elif request.method == "POST":
-        cadastro.re = request.POST.get('re')
-        cadastro.dig = request.POST.get('dig')
-        cadastro.nome = request.POST.get('nome')
-        cadastro.nome_de_guerra = request.POST.get('nome_de_guerra')
-        cadastro.genero = request.POST.get('genero')
-        cadastro.nasc = request.POST.get('nasc')
-        cadastro.matricula = request.POST.get('matricula')
-        cadastro.admissao = request.POST.get('admissao')
-        cadastro.previsao_de_inatividade = request.POST.get('previsao_de_inatividade')
-        cadastro.cpf = request.POST.get('cpf')
-        cadastro.rg = request.POST.get('rg')
-        cadastro.tempo_para_averbar_inss = request.POST.get('tempo_para_averbar_inss')
-        cadastro.tempo_para_averbar_militar = request.POST.get('tempo_para_averbar_militar')
-        cadastro.email = request.POST.get('email')
-        cadastro.telefone = request.POST.get('telefone')
-      
-        cadastro.save()
-        messages.add_message(request, constants.SUCCESS, 'Dados Pessoais e Contatos atualizados com sucesso', extra_tags='bg-green-500 text-white p-4 rounded')
-        return redirect('efetivo:ver_militar', id=cadastro.id)
-
 
 @login_required
 def editar_imagem(request, id):

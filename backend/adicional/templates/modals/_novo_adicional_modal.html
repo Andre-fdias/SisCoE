@@ -18,6 +18,7 @@
                         <div class="space-y-2">
                             <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Nº Bloco Adicional *</label>
                             <div class="relative">
+                                <input type="hidden" name="cadastro_id" value="{{ cadastro_adicional.cadastro.id }}">
                                 <select name="n_bloco_adicional" id="n_bloco_adicional" required
                                         class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                             shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
@@ -41,13 +42,12 @@
                         <div class="space-y-2">
                             <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Data Último Adicional *</label>
                             <input type="date" name="data_ultimo_adicional" id="data_ultimo_adicional" required
-                                value="{% if cadastro_adicional.data_concessao_adicional %}{{ cadastro_adicional.data_concessao_adicional|date:'Y-m-d' }}{% endif %}"
+                                value="{% if cadastro_adicional.data_concessao_adicional %}{{ cadastro_adicional.data_concessao_adicional|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}"
                                 class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                         shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                         transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
                                         [&::-webkit-calendar-picker-indicator]:opacity-0
-                                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NzQ3NDciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjgtLjU4NiAzLjQxNEMyMS42NTcgMjIgMjAuNzcxIDIyIDE5IDIySDVjLTEuODg2IDAtMi44MjggMC0zLjQxNC0uNTg2QzEgMjAuODI4IDEgMTkuODg2IDEgMThWOEMxIDYuMTQgMSA1LjE3MiAxLjU4NiA0LjU4NiAyLjE3MiA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
-                                        bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                        bg-[url('data:image/svg+xml;base64,...')]">
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Próximo Nº Adicional *</label>
@@ -140,3 +140,101 @@
         </form>
     </div>
 </div>
+
+<div id="errorContainer" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formNovoAdicional');
+    const modal = document.getElementById('novoAdicionalModal');
+    const errorContainer = document.createElement('div');
+    errorContainer.id = 'errorContainer';
+    errorContainer.className = 'hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+    form.parentNode.insertBefore(errorContainer, form);
+
+    if(form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorContainer.classList.add('hidden');
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            try {
+                // Estado de carregamento
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <span class="flex items-center">
+                        <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        Salvando...
+                    </span>
+                `;
+
+                // Enviar requisição
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+
+                const data = await response.json();
+
+                if(!response.ok) {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+
+                if(data.success && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                }
+
+            } catch (error) {
+                errorContainer.textContent = error.message;
+                errorContainer.classList.remove('hidden');
+                modal.scrollTo({ top: 0, behavior: 'smooth' });
+                console.error('Erro:', error);
+
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+    }
+
+    // Atualização automática dos campos
+    function updateCalculatedFields() {
+        const blocoAtual = parseInt(document.getElementById('n_bloco_adicional').value) || 0;
+        const dataInput = document.getElementById('data_ultimo_adicional').value;
+
+        document.getElementById('numero_prox_adicional_output').value = blocoAtual + 1;
+
+        if(dataInput) {
+            const data = new Date(dataInput);
+            data.setFullYear(data.getFullYear() + 5);
+            
+            document.getElementById('proximo_adicional_output').value = data.toISOString().split('T')[0];
+            document.getElementById('mes_proximo_adicional_output').value = data.getMonth() + 1;
+            document.getElementById('ano_proximo_adicional_output').value = data.getFullYear();
+        }
+
+        // Controle da 6ª parte
+        const sextaParteDiv = document.getElementById('sexta_parte_container');
+        if((blocoAtual + 1) === 4) {
+            sextaParteDiv.classList.remove('hidden');
+            document.getElementById('sexta_parte').value = 'True';
+        } else {
+            sextaParteDiv.classList.add('hidden');
+            document.getElementById('sexta_parte').value = 'False';
+        }
+    }
+
+    // Event listeners
+    document.getElementById('n_bloco_adicional').addEventListener('change', updateCalculatedFields);
+    document.getElementById('data_ultimo_adicional').addEventListener('change', updateCalculatedFields);
+    updateCalculatedFields();
+});
+</script>

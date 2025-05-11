@@ -32,15 +32,17 @@
     <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">   
         <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">   
         
-            <fieldset class=" p-2 mb-8 rounded-md w-full" id="first-fieldset">
-                <div class="flex flex-col h-auto rounded-[10px]">
-                    <div class=" bg-gradient-to-r from-gray-600 to-gray-900 rounded-xl shadow-2xl  w-full p-8 transition-all duration-300 animate-fade-in">
-                        <div class="flex flex-col md:flex-row">
-                            <div class="md:w-1/3 text-center mb-8 md:mb-0 relative">
+            <fieldset class="p-4 mb-2 rounded-md w-full max-w-full" id="first-fieldset">
+                <div class="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300 animate-fade-in">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <!-- Seção da Foto -->
+                        <div class="flex-shrink-0 flex flex-col items-center md:block">
+                            <div class="relative group overflow-hidden rounded-xl border-4 border-blue-400/30 shadow-xl hover:shadow-2xl transition-all duration-300 w-60 h-72">
                                 {% if cadastro.imagens.exists %}
                                     {% with cadastro.promocoes.last as promocao %}
-                                    <div class="relative group">
-                                        <div class="absolute inset-0 overflow-hidden rounded-full w-60 h-60 mx-auto mb-4 ">
+                                    <div class="relative">
+                                        <!-- Padrão de fundo -->
+                                        <div class="absolute inset-0 overflow-hidden">
                                             <div class="absolute inset-0 grid grid-cols-6 grid-rows-5 -rotate-45 gap-4 opacity-20 pointer-events-none">
                                                 {% for _ in "x"|ljust:20 %}
                                                 <span class="text-gray-200 text-xs font-mono tracking-wider transform rotate-45">
@@ -50,294 +52,189 @@
                                             </div>
                                         </div>
                                         
+                                        <!-- Imagem com borda condicional -->
                                         {% if promocao.posto_grad == "Cel PM" or promocao.posto_grad == "Ten Cel PM" or promocao.posto_grad == "Maj PM" or promocao.posto_grad == "CAP PM" or promocao.posto_grad == "1º Ten PM" or promocao.posto_grad == "1º Ten QAPM" or promocao.posto_grad == "2º Ten PM" or promocao.posto_grad == "2º Ten QAPM" or promocao.posto_grad == "Asp OF PM" %}
-                                            <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                                class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-blue-500 transition-transform duration-300 hover:scale-105 object-cover">
-                                                {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
-                                            <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                                class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-red-500 transition-transform duration-300 hover:scale-105 object-cover">
+                                            <img src="{{ cadastro.imagens.last.image.url }}" 
+                                                 class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                                                 alt="Foto de {{ cadastro.nome }}">
+                                        {% elif promocao.posto_grad == "Subten PM" or promocao.posto_grad == "1º Sgt PM" or promocao.posto_grad == "2º Sgt PM" or promocao.posto_grad == "3º Sgt PM" %}
+                                            <img src="{{ cadastro.imagens.last.image.url }}"
+                                                 class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                                                 alt="Foto de {{ cadastro.nome }}">
                                         {% elif promocao.posto_grad == "Cb PM" or promocao.posto_grad == "Sd PM" or promocao.posto_grad == "Sd PM 2ºCL" %}
-                                            <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                                class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-black transition-transform duration-300 hover:scale-105 object-cover">
+                                            <img src="{{ cadastro.imagens.last.image.url }}"
+                                                 class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                                                 alt="Foto de {{ cadastro.nome }}">
                                         {% else %}
-                                            <img src="{{ cadastro.imagens.last.image.url }}" alt="Profile Picture" 
-                                                class="rounded-full w-60 h-60 mx-auto mb-4 border-4 border-indigo-800 transition-transform duration-300 hover:scale-105 object-cover">
+                                            <img src="{{ cadastro.imagens.last.image.url }}"
+                                                 class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                                                 alt="Foto de {{ cadastro.nome }}">
                                         {% endif %}
                                     </div>
                                     {% endwith %}
                                 {% else %}
-                                    <div class="text-gray-500">Sem imagem</div>
+                                    <div class="w-full h-full bg-blue-200/20 flex flex-col items-center justify-center text-blue-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span class="text-lg font-medium">Sem imagem</span>
+                                    </div>
                                 {% endif %}
-                        
-                                <p class="text-gray-300 "> {{ cadastro.promocoes.last.grad|safe }}</p><br>
-                                <p class="text-gray-300 font-bold "> {{ cadastro.nome_de_guerra }}</p><br>
-                                
-                                <!-- Container dos Botões -->
-                            <div class="flex flex-col md:flex-row md:flex-wrap gap-3 justify-center w-full mt-4">
-                                <!-- Botão Trocar Foto -->
-                                <button type="button"   data-modal-open="trocaFotoModal"
-                                        class="w-full md:w-auto bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white 
-                                            font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
-                                            flex items-center justify-center gap-2">
+                            </div>
+            
+
+            
+                            <!-- Botões -->
+                            <div class="flex flex-col gap-3 mt-6">
+                                <button type="button" data-modal-open="trocaFotoModal"
+                                        class="bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white 
+                                               font-medium rounded-lg py-2.5 transition-all duration-300 hover:shadow-lg
+                                               flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                     Trocar Foto
                                 </button>
-                                <!-- Botão Editar Posto/Grad -->
-                                <button type="button" 
-                                data-modal-open="editarPostoGrad"
-                                class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white 
-                                        font-medium rounded-lg text-sm px-5 py-2.5 transition-all duration-300 hover:shadow-lg
-                                        flex items-center justify-center gap-2">
+                                
+                                <button type="button" data-modal-open="editarPostoGrad"
+                                        class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white 
+                                               font-medium rounded-lg py-2.5 transition-all duration-300 hover:shadow-lg
+                                               flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
                                     </svg>
                                     Editar Posto/Grad
                                 </button>
                             </div>
-        
-
-                            <!-- Modal de Troca de Foto -->
-                            <div id="trocaFotoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                            <div class="bg-gray-100 rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                            <!-- Header -->
-                            <div class="flex items-center justify-between p-6 border-b border-gray-100">
-                                <h3 class="text-2xl font-bold text-gray-800">Alterar Foto do Perfil</h3>
-                                <button type="button" 
-                                        class="text-gray-400 hover:text-gray-600 transition-colors"
-                                        data-modal-close="#trocaFotoModal">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                        </div>
+            
+                        <!-- Seção de Informações -->
+                        <div class="flex-1 space-y-6">
+                            <div class="space-y-2">
+                                <h1 class="text-4xl font-bold text-white text-center md:text-left">{{ cadastro.nome }}</h1>
+                                <p class="text-xl text-blue-200 text-center md:text-left">{{ cadastro.promocoes.last.grad|safe }}  {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome_de_guerra }}</p>
                             </div>
-
-                            <!-- Corpo do Modal -->
-                            <form method="POST" action="{% url 'efetivo:editar_imagem' cadastro.id %}" enctype="multipart/form-data" class="p-6">
-                                {% csrf_token %}
-                                <div class="space-y-6">
-                                    <!-- Área de Upload -->
-                                    <div class="group relative">
-                                        <input type="file" 
-                                            name="image" 
-                                            id="image" 
-                                            accept="image/*"
-                                            onchange="previewImage(event)"
-                                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                                        
-                                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center transition-all
-                                                group-hover:border-cyan-500 group-hover:bg-gray-50">
-                                            <div class="max-w-xs mx-auto">
-                                                <div class="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full overflow-hidden
-                                                        flex items-center justify-center">
-                                                    <img id="preview" src="#" alt="Pré-visualização" class="hidden w-full h-full object-cover">
-                                                    <svg class="w-12 h-12 text-gray-400 group-hover:text-cyan-500 transition-colors" 
-                                                        fill="none" 
-                                                        stroke="currentColor" 
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                    </svg>
-                                                </div>
-                                                <p class="text-sm text-gray-500 mb-2">
-                                                    Arraste ou clique para enviar
-                                                </p>
-                                                <p class="text-xs text-gray-400">
-                                                    Formatos suportados: JPG, PNG (máx. 5MB)
+            
+                            <!-- Grid de Informações -->
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <!-- Informações de Contato -->
+                                <div class="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                                    <h2 class="text-xl font-semibold text-white mb-2 pb-2 border-b border-gray-600/50">
+                                        <span class="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                                            Informações de Contato
+                                        </span>
+                                    </h2>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <svg class="flex-shrink-0 w-6 h-6 text-blue-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="font-medium text-blue-200">E-mail Institucional</p>
+                                                <p class="text-white break-all">{{ cadastro.email|default:"-" }}</p>
+                                            </div>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <svg class="flex-shrink-0 w-6 h-6 text-blue-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="font-medium text-blue-200">Contato Telefônico</p>
+                                                <p class="text-white">{{ cadastro.telefone|default:"-" }}</p>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+            
+                                <!-- Situação Atual -->
+                                <div class="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                                    <h2 class="text-xl font-semibold text-white mb-2 pb-2 border-b border-gray-600/50">
+                                        <span class="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                                            Situação Atual
+                                        </span>
+                                    </h2>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-3">
+                                            <svg class="flex-shrink-0 w-6 h-6 text-blue-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="font-medium text-blue-200">Localização/Posto</p>
+                                                <p class="text-white">
+                                                    {{ cadastro.detalhes_situacao.last.sgb|default:"-" }} -
+                                                    {{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}
                                                 </p>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Ações -->
-                                    <div class="flex justify-end gap-3">
-                                        <button type="button" 
-                                                data-modal-close="#trocaFotoModal"
-                                                class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" 
-                                                class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-700 text-white 
-                                                    font-medium rounded-lg hover:shadow-md transition-all">
-                                            Salvar Alterações
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                            </div>
-                            </div>
-
-                            <!-- Modal Principal -->
-                            <div id="editarPostoGrad" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300">
-                                    <!-- Cabeçalho -->
-                                    <div class="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-t-2xl p-6">
-                                        <div class="flex items-center justify-between">
-                                            <h3 class="text-2xl font-bold text-white">Editar Posto/Grad</h3>
-                                            <button type="button" class="text-white hover:text-indigo-100 transition-colors" data-modal-close>
-                                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                            <!-- Corpo do Formulário -->
-                            <form id="editForm" method="POST" action="{% url 'efetivo:editar_posto_graduacao' cadastro.id %}" 
-                                class="p-6 space-y-6 bg-gray-100" novalidate>
-                                {% csrf_token %}
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-100">
-                                    <!-- Posto/Grad -->
-                                    <div class="space-y-2 >
-                                        <label class="block text-sm font-medium text-gray-700">Posto/Graduação</label>
-                                        <select name="posto_grad" 
-                                                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                                    focus:ring-indigo-500 focus:border-transparent transition-all"
-                                                required>
-                                            {% for i in posto_grad %}
-                                            <option value="{{ i.0 }}" {% if promocao and promocao.posto_grad == i.0 %}selected{% endif %}>
-                                                {{ i.1 }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Quadro -->
-                                    <div class="space-y-2">
-                                        <label class="block text-sm font-medium text-gray-700">Quadro</label>
-                                        <select name="quadro" 
-                                                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                                    focus:ring-indigo-500 focus:border-transparent transition-all"
-                                                required>
-                                            {% for i in quadro %}
-                                            <option value="{{ i.0 }}" {% if promocao and promocao.quadro == i.0 %}selected{% endif %}>
-                                                {{ i.1 }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Grupo -->
-                                    <div class="space-y-2">
-                                        <label class="block text-sm font-medium text-gray-700">Grupo</label>
-                                        <select name="grupo" 
-                                                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                                    focus:ring-indigo-500 focus:border-transparent transition-all"
-                                                required>
-                                            {% for i in grupo %}
-                                            <option value="{{ i.0 }}" {% if promocao and promocao.grupo == i.0 %}selected{% endif %}>
-                                                {{ i.1 }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <!-- Data Promoção -->
-                                    <div class="space-y-2">
-                                        <label class="block text-sm font-medium text-gray-700">Última Promoção</label>
-                                        <input type="date" 
-                                            name="ultima_promocao" 
-                                            value="{% if promocao %}{{ promocao.ultima_promocao|date:'Y-m-d' }}{% endif %}"
-                                            class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 
-                                                    focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            required>
-                                    </div>
-                                </div>
-
-                                <!-- Ações -->
-                                <div class="flex justify-end gap-3 pt-4">
-                                    <button type="button" 
-                                            data-modal-close="#editModal"
-                                                hover:bg-indigo-700 transition-colors"
-                                                class="px-5 py-2.5 bg-gray-700 text-white font-medium rounded-lg 
-                                                hover:bg-indigo-700 transition-colors">
-                                        Cancelar
-                                    </button>
-                                    <button type="button" 
-                                            onclick="showConfirmation()"
-                                            class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
-                                                hover:bg-indigo-700 transition-colors">
-                                        Salvar Alterações
-                                    </button>
-                                </div>
-                            </form>
-                            </div>
-                            </div>
-
-                            <!-- Modal de Confirmação -->
-                            <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
-                            <div class="p-6 flex items-center gap-4 border-b border-gray-100">
-                                <div class="p-2 bg-yellow-100 rounded-full">
-                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">Confirmar Alterações</h3>
-                            </div>
-
-                            <div class="p-6 space-y-6">
-                                <p class="text-gray-600">Tem certeza que deseja atualizar as informações de posto/graduação?</p>
-                                
-                                <div class="flex justify-end gap-3">
-                                    <button type="button" 
-                                            onclick="closeConfirmation()"
-                                            class="px-5 py-2.5 text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                                        Cancelar
-                                    </button>
-                                    <button type="button" 
-                                            onclick="submitForm()"
-                                            class="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg 
-                                                hover:bg-indigo-700 transition-colors">
-                                        Confirmar
-                                    </button>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <svg class="flex-shrink-0 w-6 h-6 text-blue-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                            <div>
+                                                <p class="font-medium text-blue-200">Última Atualização</p>
+                                                <p class="text-white">
+                                                    {{ cadastro.detalhes_situacao.last.modified|date:"d/m/Y"|default:"-" }}
+                                                </p>
+                                            </div>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
-                            </div>
-                            </div>
-
-                    
-                            </div>
-                            <div class="md:w-2/3 md:pl-8">
-                                <h1 class="text-3xl font-semibold text-gray-300 mb-4">{{ cadastro.nome}}</h1>
-                                <h4 class="text-1xl text-gray-500 mb-4" ><b>RE:</b> <span>{{ cadastro.re }}-{{ cadastro.dig }}</span></h4>
-                                <br>
-                                <h2 class="text-xl font-semibold text-gray-300 mb-4">Principais Cursos</h2>
-                                <div class="flex flex-wrap gap-2 mb-6">
-                                    <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">CSalt</span>
-                                    <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Terrestre</span>
-                                    <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Mergulho</span>
-                                    <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">OVB</span>
-                                    <span class="bg-indigo-700 text-purple-200 px-3 py-1 rounded-full text-sm">Incêndio</span>
+            
+                            <!-- Cursos -->
+                            <div class="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                                <h2 class="text-xl font-semibold text-white mb-4">
+                                    <span class="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                                        Principais Cursos
+                                    </span>
+                                </h2>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-blue-800/40 text-blue-200 px-3 py-1 rounded-full text-sm">CSalt</span>
+                                    <span class="bg-blue-800/40 text-blue-200 px-3 py-1 rounded-full text-sm">Terrestre</span>
+                                    <span class="bg-blue-800/40 text-blue-200 px-3 py-1 rounded-full text-sm">Mergulho</span>
+                                    <span class="bg-blue-800/40 text-blue-200 px-3 py-1 rounded-full text-sm">OVB</span>
+                                    <span class="bg-blue-800/40 text-blue-200 px-3 py-1 rounded-full text-sm">Incêndio</span>
                                 </div>
-                                <h2 class="text-xl font-semibold text-gray-300 mb-4">Informações de Contato</h2>
-                                <ul class="space-y-2 text-gray-500 ">
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 " viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                        </svg>
-                                        {{ cadastro.email }}    </li>
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                                        </svg>
-                                        {{ cadastro.telefone }}
-                                    </li>
-                                    <li class="flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-800 dark:text-blue-900" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                        </svg>
-                                        {{ cadastro.detalhes_situacao.last.sgb }}-     {{ cadastro.detalhes_situacao.last.posto_secao }}
-
-                                    </li>
-                                </ul>
                             </div>
                         </div>
+                    </div>
                 </div>
-            </fieldset> 
+            
+                <!-- Modals (manter mesma estrutura com ajustes de estilo) -->
+                {% include 'modals/troca_foto.html' %}
+                {% include 'modals/editar_posto.html' %}
+                
+            </fieldset>
+            <!-- Adicione este script antes do fechamento do body -->
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Função para abrir modais
+                document.querySelectorAll('[data-modal-open]').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const modalId = button.getAttribute('data-modal-open');
+                        const modal = document.getElementById(modalId);
+                        if(modal) modal.classList.remove('hidden');
+                    });
+                });
 
+                // Função para fechar modais
+                document.querySelectorAll('[data-modal-close]').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const modalId = button.getAttribute('data-modal-close');
+                        const modal = document.getElementById(modalId);
+                        if(modal) modal.classList.add('hidden');
+                    });
+                });
+
+                // Fechar modal ao clicar fora
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if(e.target === modal) modal.classList.add('hidden');
+                    });
+                });
+            });
+            </script>
             <fieldset class="    rounded-md">
         
                 {% if messages %}
@@ -417,242 +314,7 @@
                     <i class="fas fa-edit mr-2"></i>Editar Situação Funcional
                     </button>
 
-                    <!-- Modal de Edição -->
-                    <div id="editSituacaoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-                        <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all duration-300 ease-out">
-                            <!-- Cabeçalho -->
-                            <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                                <h3 class="text-2xl font-bold text-gray-800">
-                                    <i class="fas fa-user-cog mr-2 text-indigo-600"></i>
-                                    Editar Situação Funcional
-                                </h3>
-                                <button type="button" 
-                                        class="text-gray-500 hover:text-gray-700 transition-colors"
-                                        data-modal-close="#editSituacaoModal">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                        
-                            <!-- Corpo do Modal -->
-                            <div class="p-6 space-y-6">
-                                <form id="editSituacaoForm" method="POST" action="{% url 'efetivo:editar_situacao_atual' cadastro.id %}">
-                                    {% csrf_token %}
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <!-- Grupo de Campos -->
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                    <i class="fas fa-clipboard-list mr-2 text-indigo-600"></i>
-                                                    Situação Atual
-                                                </label>
-                                                <select name="situacao_atual" 
-                                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                    {% for value, label in situacao %}
-                                                    <option value="{{ value }}" {% if detalhes and detalhes.situacao == value %}selected{% endif %}>{{ label }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                        
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                    <i class="fas fa-info-circle mr-2 text-indigo-600"></i>
-                                                    Detalhamento
-                                                </label>
-                                                <select name="cat_efetivo" 
-                                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                    {% for value, label in cat_efetivo %}
-                                                    <option value="{{ value }}" {% if detalhes and detalhes.cat_efetivo == value %}selected{% endif %}>{{ label }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                        
-                                        <!-- Segundo Grupo de Campos -->
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                    <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
-                                                    Prontidão
-                                                </label>
-                                                <select name="prontidao" 
-                                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                    {% for i in prontidao %}
-                                                    <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                        
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                    <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
-                                                    Data de Saída
-                                                </label>
-                                                <input type="date" 
-                                                    name="saida_da_unidade" 
-                                                    value="{% if detalhes %}{{ detalhes.saida_da_unidade|date:'Y-m-d' }}{% endif %}"
-                                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                            </div>
-                                        </div>
-                                    </div>
-                        
-                                    <!-- Rodapé do Modal -->
-                                    <div class="mt-8 flex justify-end space-x-4">
-                                        <button type="button" 
-                                                class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                                data-modal-close="#editSituacaoModal">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" 
-                                                class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                            Salvar Alterações
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                        
-                        <!-- Modal de Confirmação -->
-                    <div id="choiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-                    <div class="bg-gray-100 rounded-xl shadow-2xl max-w-md w-full mx-4">
-                        <div class="p-6 text-center">
-                            <div class="text-3xl mb-4 text-indigo-600">
-                                <i class="fas fa-question-circle"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                                Nova Situação Funcional
-                            </h3>
-                            <p class="text-gray-600 mb-8">
-                                Deseja cadastrar uma nova situação funcional?
-                            </p>
-                            <div class="flex justify-center space-x-4">
-                                <button type="button" 
-                                        class="px-6 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow-md"
-                                        data-modal-target="#newSituacaoModal">
-                                    <i class="fas fa-check mr-2"></i>Sim
-                                </button>
-                                <button type="button" 
-                                        class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                        data-modal-close="#choiceModal">
-                                    <i class="fas fa-times mr-2"></i>Não
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                    
-                    <!-- Modal de Nova Situação -->
-                    <div id="newSituacaoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-                    <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all duration-300 ease-out">
-                        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h3 class="text-2xl font-bold text-gray-800">
-                                <i class="fas fa-plus-circle mr-2 text-indigo-600"></i>
-                                Nova Situação
-                            </h3>
-                            <button type="button" 
-                                    class="text-gray-500 hover:text-gray-700 transition-colors"
-                                    data-modal-close="#newSituacaoModal">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
-                    
-                        <div class="p-6">
-                            <form id="newSituacaoForm" method="POST" action="{% url 'efetivo:cadastrar_nova_situacao' cadastro.id %}">
-                                {% csrf_token %}
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- Coluna 1 -->
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-list-alt mr-2 text-indigo-600"></i>
-                                                Situação
-                                            </label>
-                                            <select name="situacao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                {% for i in situacao %}
-                                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                    
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-building mr-2 text-indigo-600"></i>
-                                                SGB
-                                            </label>
-                                            <select name="sgb" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                {% for i in sgb %}
-                                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                    
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-briefcase mr-2 text-indigo-600"></i>
-                                                Função
-                                            </label>
-                                            <select name="funcao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                {% for i in funcao %}
-                                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                    
-                                    <!-- Coluna 2 -->
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-map-marker-alt mr-2 text-indigo-600"></i>
-                                                Posto/Seção
-                                            </label>
-                                            <select name="posto_secao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                {% for i in posto_secao %}
-                                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                    
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-exchange-alt mr-2 text-indigo-600"></i>
-                                                Status de Adido
-                                            </label>
-                                            <select name="esta_adido" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                                {% for i in esta_adido %}
-                                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                    
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                <i class="fas fa-calendar-day mr-2 text-indigo-600"></i>
-                                                Data de Apresentação
-                                            </label>
-                                            <input type="date" 
-                                                name="apresentacao_na_unidade" 
-                                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                        </div>
-                                    </div>
-                                </div>
-                    
-                                <!-- Rodapé -->
-                                <div class="mt-8 flex justify-end space-x-4">
-                                    <button type="button" 
-                                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                            data-modal-close="#newSituacaoModal">
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" 
-                                            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                        <i class="fas fa-save mr-2"></i>Salvar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    </div>
+                    {% include 'modals/editar_situacao_funcional.html' %}
                         
                     </div>
                 </fieldset>
@@ -709,247 +371,7 @@
                  <i class="fas fa-user-edit mr-2"></i>Editar Dados Pessoais
                  </button>
                  
-                 <!-- Modal -->
-                 <div id="editarDadosPessoaisModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-                 <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-                 <!-- Cabeçalho -->
-                 <div class="sticky top-0 bg-white border-b border-gray-200 p-6">
-                     <div class="flex justify-between items-center">
-                         <h3 class="text-2xl font-bold text-gray-800">
-                             <i class="fas fa-id-card mr-2 text-indigo-600"></i>
-                             Editar Dados Pessoais
-                         </h3>
-                         <button type="button" 
-                                 class="text-gray-500 hover:text-gray-700 transition-colors"
-                                 data-modal-close="#editarDadosPessoaisModal">
-                             <i class="fas fa-times text-xl"></i>
-                         </button>
-                     </div>
-                 </div>
-                 
-                 <!-- Corpo do Formulário -->
-                 <form method="POST" action="{% url 'efetivo:editar_dados_pessoais_contatos' cadastro.id %}" 
-                       enctype="multipart/form-data" 
-                       class="p-6 space-y-8 bg-gray-100">
-                     {% csrf_token %}
-                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-user mr-2 text-indigo-600"></i>
-                            Nome Completo
-                        </label>
-                        <input type="text" name="nome" 
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.nome }}" required>
-                    </div>
-                     <!-- Grid Principal de 3 Colunas -->
-                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        
-                         <!-- Coluna 1 -->
-                         <div class="space-y-4">
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-id-badge mr-2 text-indigo-600"></i>
-                                     RE
-                                 </label>
-                                 <input type="text" name="re" 
-                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                        value="{{ cadastro.re }}" required>
-                             </div>
-                 
-                        
-                 
-                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-hashtag mr-2 text-indigo-600"></i>
-                                    Dig
-                                </label>
-                                <input type="text" name="dig" 
-                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                       value="{{ cadastro.dig }}" required>
-                            </div
-                         </div>
-                 
-                         <!-- Coluna 2 -->
-                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-hashtag mr-2 text-indigo-600"></i>
-                                    Dig
-                                </label>
-                                <input type="text" name="dig" 
-                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                       value="{{ cadastro.dig }}" required>
-                            </div>
-                 
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-venus-mars mr-2 text-indigo-600"></i>
-                                     Gênero
-                                 </label>
-                                 <select name="genero" 
-                                         class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                                     {% for i in genero %}
-                                     <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                                     {% endfor %}
-                                 </select>
-                             </div>
-                 
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-birthday-cake mr-2 text-indigo-600"></i>
-                                     Data de Nascimento
-                                 </label>
-                                 <input type="date" name="nasc" 
-                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                        value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
-                             </div>
-                         </div>
-                 
-                         <!-- Coluna 3 -->
-                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    <i class="fas fa-hashtag mr-2 text-indigo-600"></i>
-                                    Dig
-                                </label>
-                                <input type="text" name="dig" 
-                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                       value="{{ cadastro.dig }}" required>
-                            </div>
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
-                                     Data de Matrícula
-                                 </label>
-                                 <input type="date" name="matricula" 
-                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                        value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
-                             </div>
-                 
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-calendar-check mr-2 text-indigo-600"></i>
-                                     Data de Admissão
-                                 </label>
-                                 <input type="date" name="admissao" 
-                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                        value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
-                             </div>
-                 
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                     <i class="fas fa-clock mr-2 text-indigo-600"></i>
-                                     Previsão de Inatividade
-                                 </label>
-                                 <input type="date" name="previsao_de_inatividade" 
-                                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                        value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
-                             </div>
-                         </div>
-                     </div>
-                 
-                     <!-- Seção de Documentos em 3 Colunas -->
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-id-card mr-2 text-indigo-600"></i>
-                                 CPF
-                             </label>
-                             <input type="text" name="cpf" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.cpf }}" required>
-                         </div>
-                 
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-address-card mr-2 text-indigo-600"></i>
-                                 RG
-                             </label>
-                             <input type="text" name="rg" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.rg }}" required>
-                         </div>
-                     </div>
-                 
-                     <!-- Seção de Tempos em 3 Colunas -->
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-university mr-2 text-indigo-600"></i>
-                                 Tempo para Averbar INSS
-                             </label>
-                             <input type="text" name="tempo_para_averbar_inss" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}"
-                                    placeholder="0">
-                         </div>
-                 
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
-                                 Tempo para Averbar Militar
-                             </label>
-                             <input type="text" name="tempo_para_averbar_militar" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.tempo_para_averbar_militar }}">
-                         </div>
-                     </div>
-                 
-                     <!-- Seção de Contato em 3 Colunas -->
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-envelope mr-2 text-indigo-600"></i>
-                                 E-mail
-                             </label>
-                             <input type="email" name="email" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.email }}" required>
-                         </div>
-                 
-                         <div>
-                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                 <i class="fas fa-phone mr-2 text-indigo-600"></i>
-                                 Telefone
-                             </label>
-                             <input type="tel" name="telefone" 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                                    value="{{ cadastro.telefone }}" required>
-                         </div>
-                     </div>
-                 
-                     <!-- Motivo da Alteração -->
-                     <div>
-                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                             <i class="fas fa-edit mr-2 text-indigo-600"></i>
-                             Motivo da Alteração
-                         </label>
-                         <select name="alteracao" 
-                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                             {% for i in alteracao %}
-                             <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                             {% endfor %}
-                         </select>
-                     </div>
-                 
-                     <!-- Rodapé do Modal -->
-                     <div class="sticky bottom-0 bg-white pt-6 border-t border-gray-200">
-                         <div class="flex justify-end space-x-4">
-                             <button type="button" 
-                                     class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                     data-modal-close="#editarDadosPessoaisModal">
-                                 Cancelar
-                             </button>
-                             <button type="submit" 
-                                     class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                                 <i class="fas fa-save mr-2"></i>Salvar Alterações
-                             </button>
-                         </div>
-                     </div>
-                 </form>
-                 </div>
-                 </div>
-
+                 {% include 'modals/editar_dados_pessoais.html' %}
                 </fieldset>
             </div>
 
@@ -1068,28 +490,34 @@
                             </h3>
                             <hr class="my-4 border-gray-200">
                             
+                            {% with adicional=cadastro.cadastro_adicional_set.last %}
+                            {% if adicional %}
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between gap-4">
                                     <span class="text-gray-600 font-medium">Bloco Atual:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro.cadastro_adicional.numero_adicional }}</span>
+                                    <span class="text-gray-800 font-semibold">{{ adicional.numero_adicional }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4">
                                     <span class="text-gray-600 font-medium">Concessão:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro.cadastro_adicional.data_ultimo_adicional }}</span>
+                                    <span class="text-gray-800 font-semibold">{{ adicional.data_ultimo_adicional }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4">
                                     <span class="text-gray-600 font-medium">Próximo Bloco:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro.cadastro_adicional.numero_prox_adicional }}</span>
+                                    <span class="text-gray-800 font-semibold">{{ adicional.numero_prox_adicional }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4">
                                     <span class="text-gray-600 font-medium">Previsão:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro.cadastro_adicional.proximo_adicional }}</span>
+                                    <span class="text-gray-800 font-semibold">{{ adicional.proximo_adicional }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4">
                                     <span class="text-gray-600 font-medium">Status:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro.cadastro_adicional.status_adicional }}</span>
+                                    <span class="text-gray-800 font-semibold">{{ adicional.get_status_adicional_display }}</span>
                                 </div>
                             </div>
+                            {% else %}
+                            <p class="text-gray-600">Nenhum adicional registrado.</p>
+                            {% endif %}
+                        {% endwith %}
                         </div>
             
                         <!-- Licença-Prêmio -->

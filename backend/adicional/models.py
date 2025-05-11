@@ -10,7 +10,7 @@ from django.db.models.signals import post_save
 from django.utils import timezone
 
 # Definições de escolhas compartilhadas
-n_choices = [(i, f'{i:02d}') for i in range(1, 9)]
+N_CHOICES = [(i, f'{i:02d}') for i in range(1, 9)]
 situacao_choices = (
     ("Aguardando", "Aguardando"),
     ("Concedido", "Concedido"),
@@ -54,9 +54,9 @@ class Cadastro_adicional(models.Model):
     data_conclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Conclusão")
 
     # Campos do adicional
-    numero_adicional = models.PositiveSmallIntegerField(choices=n_choices, verbose_name="Número do Adicional")
+    numero_adicional = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Número do Adicional")
     data_ultimo_adicional = models.DateField(verbose_name="Data do Último Adicional")
-    numero_prox_adicional = models.PositiveSmallIntegerField(choices=n_choices, default=1, verbose_name="Próximo Número do Adicional")
+    numero_prox_adicional = models.PositiveSmallIntegerField(choices=N_CHOICES, default=1, verbose_name="Próximo Número do Adicional")
     proximo_adicional = models.DateField(null=True, blank=True, verbose_name="Próximo Adicional")
     mes_proximo_adicional = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Mês do Próximo Adicional")
     ano_proximo_adicional = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Ano do Próximo Adicional")
@@ -119,20 +119,37 @@ class Cadastro_adicional(models.Model):
         if self.numero_prox_adicional == 4 and not self.sexta_parte:
             self.sexta_parte = True
 
-    from dateutil.relativedelta import relativedelta  # Já está importado
+    def clean(self):
+        if self.numero_prox_adicional > 8:
+            raise ValidationError({'numero_prox_adicional': 'O próximo número do adicional não pode ser maior que 8'})
+        
+        if self.numero_prox_adicional < 1:
+            raise ValidationError({'numero_prox_adicional': 'O próximo número do adicional não pode ser menor que 1'})
+        
+        from dateutil.relativedelta import relativedelta  # Já está importado
 
     def save(self, *args, **kwargs):
         # Cálculo do próximo adicional
         if self.data_ultimo_adicional:
             # 5 anos exatos usando dateutil
             self.proximo_adicional = self.data_ultimo_adicional + relativedelta(years=5)
-            
-            # Aplica desconto de dias
-            if self.dias_desconto_adicional > 0:
-                self.proximo_adicional -= timedelta(days=self.dias_desconto_adicional)
+        
+        # Aplica desconto de dias
+        if self.dias_desconto_adicional > 0:
+            self.proximo_adicional -= timedelta(days=self.dias_desconto_adicional)
+    
+        # Verifica se hoje é a data do próximo adicional para atualizar status
+        hoje = timezone.now().date()
+        if (self.proximo_adicional and 
+            hoje >= self.proximo_adicional and 
+            self.status_adicional == self.StatusAdicional.AGUARDANDO_REQUISITOS):
+            self.status_adicional = self.StatusAdicional.FAZ_JUS
+        
+        # Atualiza automaticamente o status conforme o workflow
+        self.atualizar_status_automatico()
         
         super().save(*args, **kwargs)
-                
+                        
 
     # Métodos de exibição de usuário
     def user_created_display(self):
@@ -203,8 +220,7 @@ class Cadastro_adicional(models.Model):
 
     @classmethod
     def get_n_choices(cls):
-        return cls.n_choices
-
+        return cls.N_CHOICES
 
     @property
     def status_adicional_ordenacao(self):
@@ -224,82 +240,28 @@ class Cadastro_adicional(models.Model):
 
 
 
+    # Adicione este método DENTRO da classe
     def atualizar_status_automatico(self):
         """Atualiza o status automaticamente baseado em condições"""
         hoje = timezone.now().date()
         
-        # Se ainda não foi lançado no SIPA
-        if self.status_adicional == self.StatusAdicional.AGUARDANDO_REQUISITOS:
-            if self.proximo_adicional and self.proximo_adicional <= hoje:
-                self.status_adicional = self.StatusAdicional.FAZ_JUS
-                
+        # Se a data do próximo adicional foi atingida e ainda está aguardando requisitos
+        if (self.proximo_adicional and 
+            hoje >= self.proximo_adicional and 
+            self.status_adicional == self.StatusAdicional.AGUARDANDO_REQUISITOS):
+            self.status_adicional = self.StatusAdicional.FAZ_JUS
+        
         # Se foi lançado no SIPA, aguardar 1 dia para mudar para aguardando publicação
         elif self.status_adicional == self.StatusAdicional.LANCADO_SIPA:
             if self.updated_at and (hoje - self.updated_at.date()) >= timedelta(days=1):
                 self.status_adicional = self.StatusAdicional.AGUARDANDO_PUBLICACAO
+        
+        # Se foi publicado, aguardar 1 dia para mudar para encerrado
+        elif self.status_adicional == self.StatusAdicional.PUBLICADO:
+            if self.updated_at and (hoje - self.updated_at.date()) >= timedelta(days=1):
+                self.status_adicional = self.StatusAdicional.ENCERRADO
+
                 
-        # Salva apenas se houve mudança
-        if self.has_changed('status_adicional'):
-            self.save()
-
-    def has_changed(self, field):
-        """Verifica se um campo foi alterado"""
-        if not self.pk:
-            return False
-        old_value = self.__class__._default_manager.filter(pk=self.pk).values(field).get()[field]
-        return getattr(self, field) != old_value
-
-
-    def ultima_imagem(self):
-        return self.imagens.order_by('-id').first()
-        
-    from dateutil.relativedelta import relativedelta
-
-    @property
-    def tempo_decorrido(self):
-        """Calcula o tempo desde o último adicional (crescente)"""
-        if not self.data_ultimo_adicional:
-            return "00 anos 00 meses e 00 dias"
-        
-        hoje = timezone.now().date()
-        delta = relativedelta(hoje, self.data_ultimo_adicional)
-        
-        anos = delta.years
-        meses = delta.months
-        dias = delta.days
-        
-        return f"{anos:02d} anos {meses:02d} meses e {dias:02d} dias"
-
-    @property
-    def tempo_restante(self):
-        """Calcula o tempo até o próximo adicional (decrescente)"""
-        if not self.proximo_adicional:
-            return "00 anos 00 meses e 00 dias"
-        
-        hoje = timezone.now().date()
-        
-        if hoje > self.proximo_adicional:
-            delta = relativedelta(hoje, self.proximo_adicional)
-            return f"Prazo atingido há: {delta.years:02d} anos {delta.months:02d} meses e {delta.days:02d} dias"
-        else:
-            delta = relativedelta(self.proximo_adicional, hoje)
-            return f"{delta.years:02d} anos {delta.months:02d} meses e {delta.days:02d} dias"
-        
-    @property
-    def tempo_decorrido_porcentagem(self):
-        """Calcula a porcentagem do tempo decorrido em relação aos 5 anos"""
-        if not self.data_ultimo_adicional:
-            return 0
-        
-        total_dias = 1825  # 5 anos * 365 dias
-        dias_decorridos = (timezone.now().date() - self.data_ultimo_adicional).days
-        return min(dias_decorridos / total_dias, 1.0)
-
-    @property
-    def prazo_vencido(self):
-        return timezone.now().date() > self.proximo_adicional if self.proximo_adicional else False
-
-
 class LP(models.Model):
     """
     Modelo para representar a Licença Prêmio (LP) de um servidor.
@@ -326,9 +288,9 @@ class LP(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
     # Campos específicos da LP
-    numero_lp = models.PositiveSmallIntegerField(choices=n_choices, verbose_name="Número da LP")
+    numero_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Número da LP")
     data_ultimo_lp = models.DateField(verbose_name="Data do Último LP")
-    numero_prox_lp = models.PositiveSmallIntegerField(choices=n_choices, default=1, verbose_name="Próximo Número da LP")
+    numero_prox_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, default=1, verbose_name="Próximo Número da LP")
     proximo_lp = models.DateField(null=True, blank=True, verbose_name="Próximo LP")
     mes_proximo_lp = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Mês do Próximo LP")
     ano_proximo_lp = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Ano do Próximo LP")
@@ -495,7 +457,7 @@ class HistoricoCadastro(models.Model):
         verbose_name="Data de Conclusão"
     )
     numero_adicional = models.PositiveSmallIntegerField(
-        choices=n_choices,
+        choices=N_CHOICES,
         verbose_name="Número do Adicional",
         default=1  # Valor padrão como fallback
     )
@@ -505,7 +467,7 @@ class HistoricoCadastro(models.Model):
         default=timezone.now  # Valor padrão
     )
     numero_prox_adicional = models.PositiveSmallIntegerField(
-        choices=n_choices,
+        choices=N_CHOICES,
         verbose_name="Próximo Número do Adicional"
     )
     proximo_adicional = models.DateField(
@@ -573,7 +535,7 @@ class HistoricoCadastro(models.Model):
         return (f"Histórico #{self.id} - "
                 f"Adicional {self.numero_adicional} "
                 f"({self.data_alteracao.strftime('%d/%m/%Y %H:%M')})")
-    
+
 
 class HistoricoLP(models.Model):
     """
@@ -693,3 +655,6 @@ def calcular_proximo_periodo_lp(sender, instance, created, **kwargs):
         ])
 
     del instance._calculando_proximo_periodo_lp
+
+
+default_app_config = 'backend.adicional.apps.adicional'

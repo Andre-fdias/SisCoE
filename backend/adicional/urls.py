@@ -19,7 +19,7 @@ urlpatterns = [
     path('confirmar-6parte/<int:pk>/', views.confirmar_6parte, name='confirmar_6parte'),
     path('confirmar-sipa/<int:pk>/', views.confirmar_sipa, name='confirmar_sipa'),
     path('carregar-dados-sipa/<int:pk>/', views.carregar_dados_sipa, name='carregar_dados_sipa'),
-    path('concluir-processo-ats/<int:pk>/', views.concluir_processo_ats, name='concluir_processo_ats'),
+    path('concluir/<int:pk>/', views.concluir_adicional, name='concluir_adicional'),
     path('novo-adicional/', views.novo_adicional, name='novo_adicional'),
 
     # URLs para LP
