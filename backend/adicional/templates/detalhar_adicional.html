@@ -1311,32 +1311,27 @@
                     </div>
                 </div>
                 {% endif %}
-
-               
-                <!-- Seção de Conclusão (Via botao concluir processo) -->
-                <div class="flex justify-end mt-8" id="conclusaoContainer">
-                    {% if cadastro_adicional.situacao_adicional == 'Concluído' %}
-                        <button onclick="openNovoAdicionalModal()"
-                                class="px-6 py-3 bg-green-100 text-green-600 border-2 border-green-500
-                                        rounded-lg transition-all duration-200 font-medium shadow-md
-                                        flex items-center gap-2 hover:bg-green-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            Novo Adicional
-                        </button>
-                    {% else %}
-                        <button onclick="openConcluirAdicionalModal()"
-                                class="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800
-                                        transition-all duration-200 font-medium shadow-md
-                                        flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            Confirmar Processo
-                        </button>
-                    {% endif %}
-                </div>
+         <!-- Seção de Conclusão (Via botao concluir processo) -->
+         <div class="flex justify-end mt-8">
+            <button onclick="openConcluirAdicionalModal()"
+                    class="px-6 py-3 {% if cadastro_adicional.situacao_adicional == 'Concluído' %}bg-gray-100 text-green-600 border-2 border-green-500 cursor-default{% else %}bg-blue-700 text-white hover:bg-blue-800{% endif %}
+                            rounded-lg transition-all duration-200 font-medium shadow-md
+                            flex items-center gap-2">
+                {% if cadastro_adicional.situacao_adicional == 'Concluído' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Processo Concluído
+                {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Confirmar Processo
+                {% endif %}
+            </button>
+        </div>
+                
+                
                 
                 {% include 'modals/_concluir_adicional_modal.html' %}
 
