@@ -104,23 +104,3 @@ class FuncionarioFilterForm(forms.Form):
         required=False,
         label='posto_secao'
     )
-
-    # forms.py
-from django import forms
-from .models import Cadastro
-
-class CadastroForm(forms.ModelForm):
-    class Meta:
-        model = Cadastro
-        fields = [
-            're', 'dig', 'nome', 'nome_de_guerra', 'genero', 'nasc',
-            'matricula', 'admissao', 'previsao_de_inatividade', 'cpf', 'rg',
-            'tempo_para_averbar_inss', 'tempo_para_averbar_militar', 'email',
-            'telefone', 'alteracao'
-        ]
-        widgets = {
-            'nasc': forms.DateInput(attrs={'type': 'date'}),
-            'matricula': forms.DateInput(attrs={'type': 'date'}),
-            'admissao': forms.DateInput(attrs={'type': 'date'}),
-            'previsao_de_inatividade': forms.DateInput(attrs={'type': 'date'}),
-        }

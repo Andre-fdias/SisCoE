@@ -14,4 +14,7 @@ urlpatterns = [
     path('<int:pk>/deletar/', v.excluir_municipio, name='excluir_municipio'),
     path('calcular_rota/', v.calcular_rota, name='calcular_rota'),   # Nova URL
     path('posto/<int:pk>/print/', v.posto_print, name='posto_print'),
+    path('modal-rota/', v.modal_rota, name='modal_rota'),
+    path('calcular-rota/', v.calcular_rota, name='calcular_rota'),
+    path('importar/', v.importar_municipios, name='importar_municipios'),  # Adicione esta linha
 ]

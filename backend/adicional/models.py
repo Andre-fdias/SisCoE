@@ -87,6 +87,11 @@ class Cadastro_adicional(models.Model):
         default=StatusAdicional.AGUARDANDO_REQUISITOS,
         verbose_name="Status do Adicional"
     )
+    
+    def proximo_adicional_calculado(self):
+        if self.data_concessao_adicional:
+            return self.data_concessao_adicional + relativedelta(years=5)
+        return None
 
     class Meta:
         verbose_name = "Cadastro de Adicional"
@@ -238,7 +243,9 @@ class Cadastro_adicional(models.Model):
     def total_etapas(self):
         return len(self.StatusAdicional.choices)
 
-
+    # No seu models.py (classe Cadastro)
+    def ultimo_adicional(self):
+        return self.cadastro_adicional_set.order_by('-created_at').first()
 
     # Adicione este método DENTRO da classe
     def atualizar_status_automatico(self):

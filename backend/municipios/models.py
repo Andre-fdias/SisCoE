@@ -348,6 +348,11 @@ class Cidade(models.Model):
         verbose_name_plural = "Cidades"
 
 
+    def get_nome_municipio(self):
+        """Retorna o nome de exibição do município"""
+        return dict(self.municipio_choices).get(self.municipio, self.municipio)
+
+
     class HistoricoPessoal(models.Model):
             data_referencia = models.DateField()
             total_cel = models.IntegerField()

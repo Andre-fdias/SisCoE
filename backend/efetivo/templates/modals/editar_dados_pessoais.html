@@ -1,5 +1,3 @@
-
-
 <div id="editarDadosPessoaisModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
     <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out">
         <div class="sticky top-0 bg-blue-50 border-b border-gray-200 p-6 rounded-t-xl">
@@ -20,7 +18,9 @@
               enctype="multipart/form-data"
               class="p-6 space-y-6 bg-white">
             {% csrf_token %}
-            <div>
+            
+            <!-- Nome Completo (100% width) -->
+            <div class="col-span-full">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-user mr-2 text-indigo-600"></i>
                     Nome Completo
@@ -29,99 +29,100 @@
                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                        value="{{ cadastro.nome }}" required>
             </div>
-            <!-- Adicione este bloco no formulário, por exemplo após o campo Nome Completo -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    <i class="fas fa-user-secret mr-2 text-indigo-600"></i>
-                    Nome de Guerra
-                </label>
-                <input type="text" name="nome_de_guerra"
-                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                    value="{{ cadastro.nome_de_guerra }}" required>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-id-badge mr-2 text-indigo-600"></i>
-                            RE
-                        </label>
-                        <input type="text" name="re"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.re }}" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-hashtag mr-2 text-indigo-600"></i>
-                            Dig
-                        </label>
-                        <input type="text" name="dig"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.dig }}" required>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Nome de Guerra -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-secret mr-2 text-indigo-600"></i>
+                        Nome de Guerra
+                    </label>
+                    <input type="text" name="nome_de_guerra"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                        value="{{ cadastro.nome_de_guerra }}" required>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-venus-mars mr-2 text-indigo-600"></i>
-                            Gênero
-                        </label>
-                        <select name="genero"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                            {% for i in genero %}
-                            <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-birthday-cake mr-2 text-indigo-600"></i>
-                            Data de Nascimento
-                        </label>
-                        <input type="date" name="nasc"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
-                    </div>
+                <!-- RE -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-id-badge mr-2 text-indigo-600"></i>
+                        RE
+                    </label>
+                    <input type="text" name="re"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.re }}" required>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
-                            Data de Matrícula
-                        </label>
-                        <input type="date" name="matricula"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-calendar-check mr-2 text-indigo-600"></i>
-                            Data de Admissão
-                        </label>
-                        <input type="date" name="admissao"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-clock mr-2 text-indigo-600"></i>
-                            Previsão de Inatividade
-                        </label>
-                        <input type="date" name="previsao_de_inatividade"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
-                    </div>
+                <!-- Dig -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-hashtag mr-2 text-indigo-600"></i>
+                        Dig
+                    </label>
+                    <input type="text" name="dig"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.dig }}" required>
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Gênero -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-venus-mars mr-2 text-indigo-600"></i>
+                        Gênero
+                    </label>
+                    <select name="genero"
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
+                        {% for i in genero %}
+                        <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Data de Nascimento -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-birthday-cake mr-2 text-indigo-600"></i>
+                        Data de Nascimento
+                    </label>
+                    <input type="date" name="nasc"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
+                </div>
+
+                <!-- Data de Matrícula -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
+                        Data de Matrícula
+                    </label>
+                    <input type="date" name="matricula"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
+                </div>
+
+                <!-- Data de Admissão -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-check mr-2 text-indigo-600"></i>
+                        Data de Admissão
+                    </label>
+                    <input type="date" name="admissao"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
+                </div>
+
+                <!-- Previsão de Inatividade -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-clock mr-2 text-indigo-600"></i>
+                        Previsão de Inatividade
+                    </label>
+                    <input type="date" name="previsao_de_inatividade"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
+                </div>
+
+                <!-- CPF -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-id-card mr-2 text-indigo-600"></i>
@@ -132,6 +133,7 @@
                            value="{{ cadastro.cpf }}" required>
                 </div>
 
+                <!-- RG -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-address-card mr-2 text-indigo-600"></i>
@@ -141,9 +143,8 @@
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.rg }}" required>
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Tempo para Averbar INSS -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-university mr-2 text-indigo-600"></i>
@@ -155,6 +156,7 @@
                            placeholder="0">
                 </div>
 
+                <!-- Tempo para Averbar Militar -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
@@ -164,10 +166,9 @@
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.tempo_para_averbar_militar }}">
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
+                <!-- E-mail (2 colunas) -->
+                <div class="lg:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-envelope mr-2 text-indigo-600"></i>
                         E-mail
@@ -177,6 +178,7 @@
                            value="{{ cadastro.email }}" required>
                 </div>
 
+                <!-- Telefone -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-phone mr-2 text-indigo-600"></i>
@@ -186,19 +188,20 @@
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.telefone }}" required>
                 </div>
-            </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    <i class="fas fa-edit mr-2 text-indigo-600"></i>
-                    Motivo da Alteração
-                </label>
-                <select name="alteracao"
-                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                    {% for i in alteracao %}
-                    <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
-                    {% endfor %}
-                </select>
+                <!-- Motivo da Alteração -->
+                <div class="lg:col-span-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-edit mr-2 text-indigo-600"></i>
+                        Motivo da Alteração
+                    </label>
+                    <select name="alteracao"
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
+                        {% for i in alteracao %}
+                        <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <div class="sticky bottom-0 bg-blue-50 pt-6 border-t border-gray-200 rounded-b-xl">
@@ -217,6 +220,8 @@
         </form>
     </div>
 </div>
+
+<!-- Mantido o mesmo script -->
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
