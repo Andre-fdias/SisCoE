@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block title %} Consultar Efetivo{% endblock %}
 {% block 'head' %}
 
@@ -208,32 +209,32 @@
             </fieldset>
             <!-- Adicione este script antes do fechamento do body -->
             <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Função para abrir modais
-                document.querySelectorAll('[data-modal-open]').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modalId = button.getAttribute('data-modal-open');
-                        const modal = document.getElementById(modalId);
-                        if(modal) modal.classList.remove('hidden');
-                    });
-                });
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Função para abrir modais
+                        document.querySelectorAll('[data-modal-open]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                const modalId = button.getAttribute('data-modal-open');
+                                const modal = document.getElementById(modalId);
+                                if(modal) modal.classList.remove('hidden');
+                            });
+                        });
 
-                // Função para fechar modais
-                document.querySelectorAll('[data-modal-close]').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modalId = button.getAttribute('data-modal-close');
-                        const modal = document.getElementById(modalId);
-                        if(modal) modal.classList.add('hidden');
-                    });
-                });
+                        // Função para fechar modais
+                        document.querySelectorAll('[data-modal-close]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                const modalId = button.getAttribute('data-modal-close');
+                                const modal = document.getElementById(modalId);
+                                if(modal) modal.classList.add('hidden');
+                            });
+                        });
 
-                // Fechar modal ao clicar fora
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.addEventListener('click', (e) => {
-                        if(e.target === modal) modal.classList.add('hidden');
+                        // Fechar modal ao clicar fora
+                        document.querySelectorAll('.modal').forEach(modal => {
+                            modal.addEventListener('click', (e) => {
+                                if(e.target === modal) modal.classList.add('hidden');
+                            });
+                        });
                     });
-                });
-            });
             </script>
             <fieldset class="    rounded-md">
         
@@ -375,95 +376,174 @@
                 </fieldset>
             </div>
 
-
-            <!-- Datas e Tempos -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
-                <!-- Datas Importantes -->
-                <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-                    <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        Datas Importantes
-                    </h2>
-                    <hr class="my-4 border-gray-200">
-                    
-                    <div class="space-y-3 flex-grow">
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Nascimento:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.nasc|date:"d/m/Y" }}</span>
+            <fieldset class="w-full mb-8 rounded-2xl bg-gray-100 p-2 border border-gray-200">
+                <div class="flex flex-col h-full">
+                    <!-- Cabeçalho -->
+                    <div class="mb-6">
+                        <h2 class="text-xl font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Histórico Temporal Completo
+                        </h2>
+                    </div>
+            
+                    <!-- Conteúdo Principal -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
+                        <!-- Cartão 1: Dados Pessoais e Temporais -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-indigo-900">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full mr-2">DP</span>
+                                    Dados Pessoais
+                                </h3>
+                                <span class="text-xs font-medium px-2 py-1 rounded 
+                                    {% if cadastro.ativo %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {% if cadastro.ativo %}Ativo{% else %}Inativo{% endif %}
+                                </span>
+                            </div>
+                            <hr class="my-4 border-gray-200">
+                            
+                            <!-- Linha 1: Nascimento -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Nascimento</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.nasc|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-blue-600">{{ cadastro.idade_detalhada }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 2: Matrícula -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span>Matrícula</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.matricula|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-blue-600">{{ cadastro.matricula_detalhada }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 3: Admissão -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                    <span>Admissão</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.admissao|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-blue-600">{{ cadastro.admissao_detalhada }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 4: Previsão Inatividade -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Previsão Inatividade</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.previsao_de_inatividade|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-blue-600">{{ cadastro.previsao_de_inatividade_detalhada }}</p>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Matrícula:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.matricula|date:"d/m/Y" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Admissão:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.admissao|date:"d/m/Y" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Apresentação na Unidade:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.apresentacao_na_unidade|date:"d/m/Y" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Saída da Unidade:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.saida_da_unidade|date:"d/m/Y" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Previsão de Inatividade:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.previsao_de_inatividade|date:"d/m/Y" }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Última Promoção:</span>
-                            <span class="text-gray-800 font-semibold">{{ promocao.ultima_promocao|date:"d/m/Y" }}</span>
+            
+                        <!-- Cartão 2: Progressão e Unidade -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-indigo-900">
+                                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full mr-2">PU</span>
+                                    Progressão e Unidade
+                                </h3>
+                                <span class="text-xs font-medium px-2 py-1 rounded bg-indigo-100 text-indigo-800">
+                                    {{ cadastro.posto_graduacao }}
+                                </span>
+                            </div>
+                            <hr class="my-4 border-gray-200">
+                            
+                            <!-- Linha 1: Última Promoção -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                    <span>Última Promoção</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ promocao.ultima_promocao|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-indigo-600">{{ promocao.ultima_promocao_detalhada }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 2: Unidade -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                    <span>Unidade</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.unidade }}</p>
+                                    <p class="text-sm text-indigo-600">{{ cadastro.funcao }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 3: Apresentação na Unidade -->
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Apresentação</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">{{ cadastro.detalhes_situacao.last.apresentacao_na_unidade|date:"d/m/Y" }}</p>
+                                    <p class="text-sm text-indigo-600">
+                                        {% if cadastro.detalhes_situacao.last.saida_da_unidade %}
+                                            {{ cadastro.tempo_na_unidade_detalhada }}
+                                        {% else %}
+                                            Ativo na unidade
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Linha 4: Saída da Unidade -->
+                            <div class="flex items-center justify-between py-2">
+                                <div class="flex items-center gap-3 text-gray-600">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    <span>Saída da Unidade</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-medium text-gray-800">
+                                        {% if cadastro.detalhes_situacao.last.saida_da_unidade %}
+                                            {{ cadastro.detalhes_situacao.last.saida_da_unidade|date:"d/m/Y" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </fieldset>
-
-                <!-- Tempos Totais -->
-                <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-                    <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Tempo Total
-                    </h2>
-                    <hr class="my-4 border-gray-200">
-                    
-                    <div class="space-y-3 flex-grow">
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Idade Detalhada:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.idade_detalhada }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Tempo de Matrícula:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.matricula_detalhada }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Tempo de Admissão:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.admissao_detalhada }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Inativa em:</span>
-                            <span class="text-gray-800 font-semibold">{{ cadastro.previsao_de_inatividade_detalhada }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-gray-600 font-medium">Tempo no Cargo Atual:</span>
-                            <span class="text-gray-800 font-semibold">{{ promocao.ultima_promocao_detalhada }}</span>
-                        </div>
-                    </div>
-                </fieldset>
-            </div>
+                </div>
+            </fieldset>
         
             <fieldset class="w-full mb-8 rounded-2xl bg-gray-100 p-2 border border-gray-200">
                 <div class="flex flex-col h-full">
@@ -484,42 +564,167 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
                         <!-- Adicional de Tempo de Serviço -->
                         <div class="bg-white rounded-xl shadow-md p-6">
-                            <h3 class="text-lg font-semibold text-indigo-900 mb-4">
-                                <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full mr-2">ATS</span>
-                                Adicional de Tempo de Serviço
-                            </h3>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-indigo-900">
+                                    <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full mr-2">ATS</span>
+                                    Adicional de Tempo de Serviço
+                                </h3>
+                                {% if adicional %}
+                                <span class="text-xs font-medium px-2 py-1 rounded 
+                                    {% if adicional.situacao_adicional == 'Concluído' %}bg-green-100 text-green-800
+                                    {% elif adicional.situacao_adicional == 'Concedido' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ adicional.get_situacao_adicional_display }}
+                                </span>
+                                {% endif %}
+                            </div>
                             <hr class="my-4 border-gray-200">
                             
                             {% with adicional=cadastro.cadastro_adicional_set.last %}
                             {% if adicional %}
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Bloco Atual:</span>
-                                    <span class="text-gray-800 font-semibold">{{ adicional.numero_adicional }}</span>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Coluna 1 - Informações Básicas -->
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Bloco Atual</p>
+                                            <p class="font-medium text-gray-800">{{ adicional.numero_adicional }}º Bloco</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Data da Concessão</p>
+                                            <p class="font-medium text-gray-800">
+                                                {% if adicional.data_concessao_adicional %}
+                                                    {{ adicional.data_concessao_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Bol G PM</p>
+                                            <p class="font-medium text-gray-800">
+                                                {% if adicional.bol_g_pm_adicional %}
+                                                    {{ adicional.bol_g_pm_adicional }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Concessão:</span>
-                                    <span class="text-gray-800 font-semibold">{{ adicional.data_ultimo_adicional }}</span>
+                                
+                                <!-- Coluna 2 - Status e Detalhes -->
+                                <div class="space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Status</p>
+                                            <p class="font-medium text-gray-800">
+                                                {{ adicional.get_status_adicional_display }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Data de Publicação</p>
+                                            <p class="font-medium text-gray-800">
+                                                {% if adicional.data_publicacao_adicional %}
+                                                    {{ adicional.data_publicacao_adicional|date:"d/m/Y" }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">6ª Parte </p>
+                                            <p class="font-medium text-gray-800">
+                                                {% if adicional.sexta_parte %}
+                                                    <span class="text-green-600">Sim</span>
+                                                {% else %}
+                                                    <span class="text-gray-500">Não</span>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Próximo Bloco:</span>
-                                    <span class="text-gray-800 font-semibold">{{ adicional.numero_prox_adicional }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Previsão:</span>
-                                    <span class="text-gray-800 font-semibold">{{ adicional.proximo_adicional }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Status:</span>
-                                    <span class="text-gray-800 font-semibold">{{ adicional.get_status_adicional_display }}</span>
+                            </div>
+                            
+                            <!-- Seção de Detalhes Adicionais -->
+                            <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Detalhes do Processo</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-500">Data do Último Adicional</p>
+                                        <p class="font-medium">{{ adicional.data_ultimo_adicional|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Próximo Bloco</p>
+                                        <p class="font-medium">{{ adicional.numero_prox_adicional }}º Bloco</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Previsão Próximo</p>
+                                        <p class="font-medium text-gray-800">
+                                            {% if adicional.proximo_adicional_calculado %}
+                                                {{ adicional.proximo_adicional_calculado|date:"d/m/Y" }}
+                                                {% if adicional.dias_desconto_adicional > 0 %}
+                                                    <span class="text-xs text-red-500 ml-1">
+                                                        ({{ adicional.dias_desconto_adicional }} dia{{ adicional.dias_desconto_adicional|pluralize }} de desconto)
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </p>
+                                        {% if adicional.data_concessao_adicional %}
+                                        <p class="mt-1 text-xs text-gray-400">
+                                            Base: {{ adicional.data_concessao_adicional|date:"d/m/Y" }} + 5 anos
+                                            {% if adicional.dias_desconto_adicional > 0 %}
+                                                - {{ adicional.dias_desconto_adicional }} dia{{ adicional.dias_desconto_adicional|pluralize }}
+                                            {% endif %}
+                                        </p>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% else %}
-                            <p class="text-gray-600">Nenhum adicional registrado.</p>
+                            <div class="text-center py-6">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h4 class="mt-2 text-sm font-medium text-gray-700">Nenhum adicional registrado</h4>
+                                <p class="mt-1 text-sm text-gray-500">Este militar ainda não possui adicionais cadastrados no sistema.</p>
+                            </div>
                             {% endif %}
-                        {% endwith %}
+                            {% endwith %}
                         </div>
-            
+                                    
                         <!-- Licença-Prêmio -->
                         <div class="bg-white rounded-xl shadow-md p-6">
                             <h3 class="text-lg font-semibold text-indigo-900 mb-4">
@@ -599,64 +804,128 @@
                         </div>
                     </div>
             
-                    <!-- Seção RPT-Interno -->
-                    <div class="bg-white rounded-xl shadow-md p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            <!-- Seção RPT-Interno -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        RPT-Interno
+                    </h2>
+                    {% if cadastro_rpt %}
+                    <span class="text-xs font-medium px-2 py-1 rounded 
+                        {% if cadastro_rpt.pedido_status == 'Deferido' %}bg-green-100 text-green-800
+                        {% elif cadastro_rpt.pedido_status == 'Indeferido' %}bg-red-100 text-red-800
+                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ cadastro_rpt.pedido_status }}
+                    </span>
+                    {% endif %}
+                </div>
+                <hr class="my-4 border-gray-200">
+                
+                {% if cadastro_rpt %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Coluna 1 -->
+                    <div class="space-y-4">  <!-- Aumentei o espaçamento vertical aqui -->
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">  <!-- Adicionei mb-1 para espaçamento -->
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                                 </svg>
-                                RPT-Interno
-                            </h2>
-                        
+                                Status
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">{{ cadastro_rpt.pedido_status }}</p>  <!-- Reduzi o texto e adicionei ml-6 -->
                         </div>
-                        <hr class="my-4 border-gray-200">
                         
-                        <div class="space-y-3">
-                            {% if cadastro_rpt %}
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Status:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.pedido_status }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Posição na Fila Geral:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.global_rank|default:"N/A" }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Inscritos para {{ cadastro_rpt.posto_secao_destino }}:</span>
-                                    <span class="text-gray-800 font-semibold">{{ count_in_section|default:"0" }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Data do Pedido:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.data_pedido|date:"d/m/Y" }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Espera:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.status_badge|safe }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">SGB Destino:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.sgb_destino }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Posto/Seção:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.posto_secao_destino }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Tempo de Espera:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.tempo_pedido_detalhada }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-4">
-                                    <span class="text-gray-600 font-medium">Documento:</span>
-                                    <span class="text-gray-800 font-semibold">{{ cadastro_rpt.doc_solicitacao }}</span>
-                                </div>
-                            {% else %}
-                                <div class="bg-yellow-50 p-4 rounded-lg text-yellow-700">
-                                    Nenhum registro RPT encontrado para este militar
-                                </div>
-                            {% endif %}
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Posição na Fila
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">
+                                {{ cadastro_rpt.global_rank|default:"N/A" }}
+                                <span class="text-xs text-gray-500">({{ count_in_section|default:"0" }} inscritos)</span>
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Data do Pedido
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">{{ cadastro_rpt.data_pedido|date:"d/m/Y" }}</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Tempo de Espera
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">{{ cadastro_rpt.tempo_pedido_detalhada }}</p>
                         </div>
                     </div>
+                    
+                    <!-- Coluna 2 -->
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Destino
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">
+                                {{ cadastro_rpt.sgb_destino }} - {{ cadastro_rpt.posto_secao_destino }}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Documento
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">
+                                {% if cadastro_rpt.doc_solicitacao %}
+                                    {{ cadastro_rpt.doc_solicitacao }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">
+                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Situação Atual
+                            </p>
+                            <p class="text-sm font-medium text-gray-800 ml-6">
+                                {{ cadastro_rpt.status_badge|safe }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-6">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h4 class="mt-2 text-sm font-medium text-gray-700">Nenhum RPT registrado</h4>
+                    <p class="mt-1 text-sm text-gray-500">Este militar não possui pedidos de RPT-Interno cadastrados</p>
+                </div>
+                {% endif %}
+            </div>
                 </div>
             </fieldset>
         

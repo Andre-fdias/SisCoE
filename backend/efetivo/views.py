@@ -13,7 +13,6 @@ from django.db.models import F, Window
 from django.db.models.functions import RowNumber
 # backend/efetivo/views.py
 from backend.municipios.models import Posto  # Supondo que Posto está no app 'municipios'
-from django.forms.models import model_to_dict
 
 @login_required
 def cadastrar_militar(request):
@@ -162,6 +161,7 @@ def ver_militar(request, id):
         messages.add_message(request, constants.ERROR, 'ID inválido', extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('/efetivo/listar_militar')
 
+
     try:
         cadastro = Cadastro.objects.get(id=id)
     except Cadastro.DoesNotExist:
@@ -295,120 +295,128 @@ def editar_posto_graduacao(request, id):
 
 from django.http import JsonResponse
 
-# views.py
 @login_required
 def editar_situacao_atual(request, id):
-    cadastro = get_object_or_404(Cadastro, id=id)
-    
     if request.method == 'POST':
+        cadastro = get_object_or_404(Cadastro, id=id)
+        
         try:
+            # Log dos dados recebidos
+            print("Dados recebidos no POST:", request.POST)
+            
+            # Atualizar apenas os campos necessários
             detalhes = cadastro.detalhes_situacao.last()
-            if not detalhes:
-                messages.error(request, 'Nenhuma situação encontrada para editar')
-                return redirect('efetivo:ver_militar', id=id)
-
-            # Atualiza os campos editáveis
-            detalhes.situacao = request.POST.get('situacao_atual', detalhes.situacao)
-            detalhes.cat_efetivo = request.POST.get('cat_efetivo', detalhes.cat_efetivo)
-            detalhes.prontidao = request.POST.get('prontidao', detalhes.prontidao)
-            detalhes.saida_da_unidade = request.POST.get('saida_da_unidade') or None
-            detalhes.save()
-
-            messages.success(request, 'Situação atual atualizada com sucesso')
-            return redirect('efetivo:ver_militar', id=id)
+            if detalhes:
+                detalhes.situacao = request.POST['situacao_atual']
+                detalhes.cat_efetivo = request.POST['cat_efetivo']
+                detalhes.prontidao = request.POST['prontidao']
+                detalhes.saida_da_unidade = request.POST.get('saida_da_unidade', None)
+                detalhes.save()
+            
+            return JsonResponse({'success': True})
 
         except Exception as e:
-            messages.error(request, f'Erro ao atualizar situação: {str(e)}')
-            return redirect('efetivo:ver_militar', id=id)
+            print(f"Erro ao salvar a situação atual: {e}")
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Método de requisição inválido.'})
 
-    messages.error(request, 'Método de requisição inválido')
-    return redirect('efetivo:ver_militar', id=id)
 
 @login_required
 def cadastrar_nova_situacao(request, id):
-    cadastro = get_object_or_404(Cadastro, id=id)
-    
     if request.method == 'POST':
+        cadastro = get_object_or_404(Cadastro, id=id)
+        
         try:
-            # Arquivar situação anterior
-            situacao_anterior = cadastro.detalhes_situacao.last()
-            if situacao_anterior:
-                HistoricoDetalhesSituacao.objects.create(
-                    cadastro=cadastro,
-                    **model_to_dict(situacao_anterior, exclude=['id', 'cadastro'])
-                )
-                situacao_anterior.delete()
-
-            # Criar nova situação
+            # Log dos dados recebidos
+            print("Dados recebidos no POST:", request.POST)
+            
+            # Criar Nova Situação
             nova_situacao = DetalhesSituacao(
                 cadastro=cadastro,
                 situacao=request.POST['situacao'],
                 sgb=request.POST['sgb'],
                 posto_secao=request.POST['posto_secao'],
-                esta_adido=request.POST.get('esta_adido'),
+                esta_adido=request.POST['esta_adido'],
                 funcao=request.POST['funcao'],
-                op_adm=request.POST.get('op_adm'),
-                prontidao=request.POST.get('prontidao', ''),
+                op_adm=request.POST['op_adm'],
+                prontidao= request.POST.get('prontidao'),
                 apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
-                saida_da_unidade=request.POST.get('saida_da_unidade'),
+                saida_da_unidade=request.POST.get('saida_da_unidade', None),
                 usuario_alteracao=request.user,
-                cat_efetivo=request.POST.get('cat_efetivo', 'Ativo')
+                cat_efetivo=request.POST['cat_efetivo'],
             )
             nova_situacao.save()
-
-            messages.success(request, 'Nova situação cadastrada com sucesso')
+            
+            # Atualizar o Histórico de Detalhes da Situação
+            HistoricoDetalhesSituacao.objects.create(
+                cadastro=cadastro,
+                situacao=nova_situacao.situacao,
+                sgb=nova_situacao.sgb,
+                posto_secao=nova_situacao.posto_secao,
+                esta_adido=nova_situacao.esta_adido,
+                funcao=nova_situacao.funcao,
+                op_adm=nova_situacao.op_adm,
+                prontidao= nova_situacao.prontidao,
+                apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
+                saida_da_unidade=nova_situacao.saida_da_unidade,
+                data_alteracao=nova_situacao.data_alteracao,
+                usuario_alteracao=request.user,
+                cat_efetivo=nova_situacao.cat_efetivo,
+            )
+         
+            messages.add_message(request, constants.SUCCESS, 'Criada Nova Situação Funcional com sucesso.', 
+            extra_tags='bg-green-500 text-white p-4 rounded')
             return redirect('efetivo:ver_militar', id=cadastro.id)
 
         except Exception as e:
-            messages.error(request, f'Erro ao criar nova situação: {str(e)}')
+            print(f"Erro ao cadastrar a nova situação: {e}")
+            messages.add_message(request, constants.ERROR, 'Erro ao cadastrar nova situação.', 
+                              extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
             return redirect('efetivo:ver_militar', id=cadastro.id)
-
-    messages.error(request, 'Método de requisição inválido')
+    
+    messages.add_message(request, constants.ERROR, 'Método de Requisição errado.', 
+                      extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
     return redirect('efetivo:ver_militar', id=id)
 
 
 
-# views.py
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import Cadastro
-from .forms import CadastroForm  # Assumindo que criaremos este form
-
+# responsável pela edição da model cadastro
 @login_required
 def editar_dados_pessoais_contatos(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
-    
-    if request.method == "POST":
-        form = CadastroForm(request.POST, instance=cadastro)
-        if form.is_valid():
-            try:
-                form.save()
-                messages.success(request, 'Dados atualizados com sucesso!')
-                return redirect('efetivo:ver_militar', id=cadastro.id)
-            
-            except Exception as e:
-                messages.error(request, f'Erro ao salvar: {str(e)}')
-                return redirect('efetivo:editar_dados_pessoais_contatos', id=id)
-        
-        else:
-            # Mostra erros de validação do formulário
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
-            return redirect('efetivo:editar_dados_pessoais_contatos', id=id)
-    
-    else:
-        form = CadastroForm(instance=cadastro)
-        historico_promocoes = cadastro.promocoes.all().order_by('-data_alteracao')
-        historico_detalhes_situacao = cadastro.detalhes_situacao.all().order_by('-data_alteracao')
-        
+    historico_promocoes = HistoricoPromocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
+    historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
+
+    if request.method == "GET":
         return render(request, 'editar_dados_pessoais_contatos.html', {
-            'form': form,
             'cadastro': cadastro,
+            'genero': Cadastro.genero_choices,
             'historico_promocoes': historico_promocoes,
             'historico_detalhes_situacao': historico_detalhes_situacao,
         })
+
+    elif request.method == "POST":
+        cadastro.re = request.POST.get('re')
+        cadastro.dig = request.POST.get('dig')
+        cadastro.nome = request.POST.get('nome')
+        cadastro.nome_de_guerra = request.POST.get('nome_de_guerra')
+        cadastro.genero = request.POST.get('genero')
+        cadastro.nasc = request.POST.get('nasc')
+        cadastro.matricula = request.POST.get('matricula')
+        cadastro.admissao = request.POST.get('admissao')
+        cadastro.previsao_de_inatividade = request.POST.get('previsao_de_inatividade')
+        cadastro.cpf = request.POST.get('cpf')
+        cadastro.rg = request.POST.get('rg')
+        cadastro.tempo_para_averbar_inss = request.POST.get('tempo_para_averbar_inss')
+        cadastro.tempo_para_averbar_militar = request.POST.get('tempo_para_averbar_militar')
+        cadastro.email = request.POST.get('email')
+        cadastro.telefone = request.POST.get('telefone')
+      
+        cadastro.save()
+        messages.add_message(request, constants.SUCCESS, 'Dados Pessoais e Contatos atualizados com sucesso', extra_tags='bg-green-500 text-white p-4 rounded')
+        return redirect('efetivo:ver_militar', id=cadastro.id)
+
 
 @login_required
 def editar_imagem(request, id):
@@ -524,44 +532,32 @@ def check_rpt(request, id):
     exists = Cadastro_rpt.objects.filter(cadastro=cadastro).exists()
     return JsonResponse({'exists': exists})
 
-
-
+# backend/efetivo/views.py
 # backend/efetivo/views.py
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, Q
 from .models import Cadastro, Imagem, Promocao, DetalhesSituacao
 from backend.municipios.models import Posto
+from datetime import datetime
 
 @login_required
 def detalhar_efetivo(request, posto_id):
     posto = get_object_or_404(Posto, pk=posto_id)
     
-    # Ordem dos postos/grads
-    POSTO_GRAD_ORDEM = [
-        ("Cel PM", "Cel PM"),
-        ("Ten Cel PM", "Ten Cel PM"),
-        ("Maj PM", "Maj PM"),
-        ("CAP PM", "Cap PM"),
-        ("1º Ten PM", "1º Ten PM"),
-        ("1º Ten QAPM", "1º Ten QAOPM"),
-        ("2º Ten PM", "2º Ten PM"),
-        ("2º Ten QAPM", "2º Ten QAOPM"),
-        ("Asp OF PM", "Asp OF PM"),
-        ("Subten PM", "Subten PM"),
-        ("1º Sgt PM", "1º Sgt PM"),
-        ("2º Sgt PM", "2º Sgt PM"),
-        ("3º Sgt PM", "3º Sgt PM"),
-        ("Cb PM", "Cb PM"),
-        ("Sd PM", "Sd PM"),
-        ("Sd PM 2ºCL", "Sd PM 2ºCL"),
+    # Ordem hierárquica dos postos/grads
+    ORDEM_POSTOS = [
+        "Cel PM", "Ten Cel PM", "Maj PM", "CAP PM",
+        "1º Ten PM", "1º Ten QAPM", "2º Ten PM", "2º Ten QAPM", "Asp OF PM",
+        "Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM",
+        "Cb PM", "Sd PM", "Sd PM 2ºCL"
     ]
     
     # Obtém o prefixo do posto_secao (7 primeiros dígitos)
     posto_secao_prefixo = posto.posto_secao[:7]
     
     # Otimizando as consultas
-    militares = Cadastro.objects.filter(
+    militares_queryset = Cadastro.objects.filter(
         Q(detalhes_situacao__posto_secao=posto.posto_secao) |
         Q(detalhes_situacao__funcao="CMT_PB", detalhes_situacao__posto_secao__startswith=posto_secao_prefixo)
     ).select_related(
@@ -572,18 +568,114 @@ def detalhar_efetivo(request, posto_id):
         Prefetch('detalhes_situacao', queryset=DetalhesSituacao.objects.all().order_by('-data_alteracao'))
     ).distinct()
     
+    # Converter QuerySet para lista para poder ordenar
+    militares = list(militares_queryset)
+    
+    # Função para ordenação
+    def get_ordenacao(militar):
+        ultima_promocao = militar.promocoes.first()  # Já está ordenado por '-ultima_promocao' no prefetch
+        if ultima_promocao:
+            posto_grad = ultima_promocao.posto_grad
+            try:
+                ordem_posto = ORDEM_POSTOS.index(posto_grad)
+            except ValueError:
+                ordem_posto = len(ORDEM_POSTOS)  # Coloca no final se não estiver na lista
+            data_promocao = ultima_promocao.ultima_promocao or datetime.min.date()
+        else:
+            ordem_posto = len(ORDEM_POSTOS)
+            data_promocao = datetime.min.date()
+        
+        return (ordem_posto, -data_promocao.toordinal())  # Negativo para ordenar decrescente
+    
+    # Ordenar os militares
+    militares.sort(key=get_ordenacao)
+    
     # Obtém o comandante separadamente para facilitar no template
-    comandante = Cadastro.objects.filter(
-        detalhes_situacao__funcao="CMT_PB",
-        detalhes_situacao__posto_secao__startswith=posto_secao_prefixo
-    ).first()
+    comandante = next(
+        (m for m in militares if any(
+            d.funcao == "CMT_PB" and d.posto_secao.startswith(posto_secao_prefixo)
+            for d in m.detalhes_situacao.all()
+        )),
+        None
+    )
+    
+    # Remover o comandante da lista de militares (se existir)
+    if comandante:
+        militares = [m for m in militares if m.id != comandante.id]
     
     context = {
         'posto': posto,
         'militares': militares,
-        'comandante': comandante,  # Adiciona o comandante separadamente ao contexto
+        'comandante': comandante,
         'unidade_nome': posto.posto_secao,
-        'posto_grad_ordenado': POSTO_GRAD_ORDEM,
+        'posto_secao_prefixo': posto_secao_prefixo
+    }
+    return render(request, 'detalhes_efetivo.html', context)
+    posto = get_object_or_404(Posto, pk=posto_id)
+    
+    # Ordem hierárquica dos postos/grads
+    ORDEM_POSTOS = [
+        "Cel PM", "Ten Cel PM", "Maj PM", "CAP PM",
+        "1º Ten PM", "1º Ten QAPM", "2º Ten PM", "2º Ten QAPM", "Asp OF PM",
+        "Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM",
+        "Cb PM", "Sd PM", "Sd PM 2ºCL"
+    ]
+    
+    # Obtém o prefixo do posto_secao (7 primeiros dígitos)
+    posto_secao_prefixo = posto.posto_secao[:7]
+    
+    # Otimizando as consultas
+    militares_queryset = Cadastro.objects.filter(
+        Q(detalhes_situacao__posto_secao=posto.posto_secao) |
+        Q(detalhes_situacao__funcao="CMT_PB", detalhes_situacao__posto_secao__startswith=posto_secao_prefixo)
+    ).select_related(
+        'user'
+    ).prefetch_related(
+        Prefetch('imagens', queryset=Imagem.objects.all().order_by('-create_at')),
+        Prefetch('promocoes', queryset=Promocao.objects.all().order_by('-data_')),
+        Prefetch('detalhes_situacao', queryset=DetalhesSituacao.objects.all().order_by('-data_alteracao'))
+    ).distinct()
+    
+    # Converter QuerySet para lista para poder ordenar
+    militares = list(militares_queryset)
+    
+    # Função para ordenação
+    def get_ordenacao(militar):
+        ultima_promocao = militar.promocoes.first()  # Já está ordenado por '-data' no prefetch
+        if ultima_promocao:
+            posto_grad = ultima_promocao.posto_grad
+            try:
+                ordem_posto = ORDEM_POSTOS.index(posto_grad)
+            except ValueError:
+                ordem_posto = len(ORDEM_POSTOS)  # Coloca no final se não estiver na lista
+            data_promocao = ultima_promocao.data or datetime.min.date()
+        else:
+            ordem_posto = len(ORDEM_POSTOS)
+            data_promocao = datetime.min.date()
+        
+        return (ordem_posto, -data_promocao.toordinal())  # Negativo para ordenar decrescente
+    
+    # Ordenar os militares
+    militares.sort(key=get_ordenacao)
+    
+    # Obtém o comandante separadamente para facilitar no template
+    comandante = next(
+        (m for m in militares if any(
+            d.funcao == "CMT_PB" and d.posto_secao.startswith(posto_secao_prefixo)
+            for d in m.detalhes_situacao.all()
+        )),
+        None
+    )
+    
+    # Remover o comandante da lista de militares (se existir)
+    if comandante:
+        militares = [m for m in militares if m.id != comandante.id]
+    
+    context = {
+        'posto': posto,
+        'militares': militares,
+        'comandante': comandante,
+        'unidade_nome': posto.posto_secao,
         'posto_secao_prefixo': posto_secao_prefixo
     }
     return render(request, 'detalhes_efetivo.html', context)

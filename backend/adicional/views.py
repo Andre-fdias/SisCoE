@@ -725,31 +725,32 @@ def editar_concessao(request, pk):
             adicional.user_updated = request.user
             adicional.save()
             
-            # Registrar no histórico
+            # Registrar no histórico - CORREÇÃO AQUI
             HistoricoCadastro.objects.create(
-                cadastro_adicional=adicional,
+                cadastro_adicional=adicional,  # Isso deve resolver o erro
                 situacao_adicional=adicional.situacao_adicional,
                 usuario_alteracao=request.user,
                 numero_prox_adicional=adicional.numero_prox_adicional,
                 proximo_adicional=adicional.proximo_adicional,
                 mes_proximo_adicional=adicional.mes_proximo_adicional,
                 ano_proximo_adicional=adicional.ano_proximo_adicional,
-                dias_desconto_adicional=adicional.dias_desconto_adicional
+                dias_desconto_adicional=adicional.dias_desconto_adicional,
+                # Certifique-se de incluir todos os campos obrigatórios do HistoricoCadastro
+                cadastro=adicional.cadastro  # Se o histórico também precisa do cadastro principal
             )
             
             messages.success(request, "Detalhes atualizados!")
-            return redirect('adicional:ver_adicional', id=adicional.id)  # Corrigido
+            return redirect('adicional:ver_adicional', id=adicional.id)
             
         except ValueError as e:
             messages.error(request, f"Erro: {str(e)}")
-            return redirect('adicional:ver_adicional', id=adicional.id)  # Corrigido
+            return redirect('adicional:ver_adicional', id=adicional.id)
             
         except Exception as e:
             messages.error(request, f"Erro: {str(e)}")
-            return redirect('adicional:ver_adicional', id=adicional.id)  # Corrigido
+            return redirect('adicional:ver_adicional', id=adicional.id)
 
-    return redirect('adicional:ver_adicional', id=adicional.id)  # Corrigido
-
+    return redirect('adicional:ver_adicional', id=adicional.id)
 
 @require_POST
 @csrf_exempt  # Temporário para testes, remova em produção
@@ -950,15 +951,18 @@ def concluir_adicional(request, pk):
             'error': str(e)
         }, status=500)
 
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import JsonResponse
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from .models import Cadastro_adicional
-from datetime import datetime, timedelta
+from .models import Cadastro_adicional, HistoricoCadastro
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def novo_adicional(request):
     if request.method == 'POST':
         try:
@@ -974,32 +978,67 @@ def novo_adicional(request):
                 bloco_atual = int(request.POST['n_bloco_adicional'])
                 data_ultimo = request.POST['data_ultimo_adicional']
                 situacao = request.POST.get('situacao_adicional', 'Aguardando')
+                sexta_parte = request.POST.get('sexta_parte', 'False') == 'True'
+                dias_desconto = int(request.POST.get('dias_desconto_adicional', 0) or 0)
 
                 # Validações
                 if not (1 <= bloco_atual <= 8):
                     raise ValidationError("Número do bloco deve estar entre 1 e 8")
 
-                data_ultima = timezone.datetime.strptime(data_ultimo, '%Y-%m-%d').date()
+                try:
+                    data_ultima = timezone.datetime.strptime(data_ultimo, '%Y-%m-%d').date()
+                except ValueError:
+                    raise ValidationError("Formato de data inválido. Use AAAA-MM-DD.")
+
                 if data_ultima > timezone.now().date():
                     raise ValidationError("Data do último adicional não pode ser futura")
 
-                # Criação do objeto
-                novo_adicional = Cadastro_adicional(
-                    cadastro_id=cadastro_id,
+                # Cálculo do próximo adicional
+                proximo_adicional = data_ultima + relativedelta(years=5) - timedelta(days=dias_desconto)
+                mes_proximo = proximo_adicional.month
+                ano_proximo = proximo_adicional.year
+                prox_bloco = bloco_atual + 1
+
+                # Busca o Cadastro relacionado
+                cadastro = get_object_or_404(Cadastro, id=cadastro_id)
+
+                # Criação do objeto Adicional (APENAS ADICIONAL, SEM LP)
+                novo_adicional_obj = Cadastro_adicional(
+                    cadastro=cadastro,
                     numero_adicional=bloco_atual,
-                    numero_prox_adicional=bloco_atual + 1,
                     data_ultimo_adicional=data_ultima,
+                    numero_prox_adicional=prox_bloco,
+                    proximo_adicional=proximo_adicional,
+                    mes_proximo_adicional=mes_proximo,
+                    ano_proximo_adicional=ano_proximo,
+                    dias_desconto_adicional=dias_desconto,
                     situacao_adicional=situacao,
-                    sexta_parte=request.POST.get('sexta_parte', 'False') == 'True',
+                    sexta_parte=sexta_parte,
                     user_created=request.user
                 )
 
-                novo_adicional.full_clean()
-                novo_adicional.save()
+                novo_adicional_obj.full_clean()
+                novo_adicional_obj.save()
+
+                # Registrar no histórico
+                HistoricoCadastro.objects.create(
+                    cadastro_adicional=novo_adicional_obj,
+                    cadastro=novo_adicional_obj.cadastro,
+                    usuario_alteracao=request.user,
+                    numero_adicional=novo_adicional_obj.numero_adicional,
+                    data_ultimo_adicional=novo_adicional_obj.data_ultimo_adicional,
+                    numero_prox_adicional=novo_adicional_obj.numero_prox_adicional,
+                    proximo_adicional=novo_adicional_obj.proximo_adicional,
+                    mes_proximo_adicional=novo_adicional_obj.mes_proximo_adicional,
+                    ano_proximo_adicional=novo_adicional_obj.ano_proximo_adicional,
+                    dias_desconto_adicional=novo_adicional_obj.dias_desconto_adicional,
+                    situacao_adicional=novo_adicional_obj.situacao_adicional,
+                    status_adicional=novo_adicional_obj.status_adicional
+                )
 
                 return JsonResponse({
                     'success': True,
-                    'redirect_url': reverse('adicional:listar_lp'),
+                    'redirect_url': reverse('adicional:ver_adicional', kwargs={'id': novo_adicional_obj.id}),
                     'message': 'Adicional criado com sucesso!'
                 })
 
@@ -1012,12 +1051,13 @@ def novo_adicional(request):
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'message': f'Erro interno: {str(e)}'
+                'message': f'Erro interno ao criar adicional: {str(e)}'
             }, status=500)
 
-    return JsonResponse({'success': False, 'message': 'Método não permitido'}, status=405)
-# You would then need a URL pattern named 'ver_adicional' or 'detalhes_cadastro'
-# in your backend/adicional/urls.py (or wherever your URLs are defined).
+    else:
+        # Renderizar um formulário para cadastrar um novo adicional
+        return render(request, 'cadastrar_adicional.html')
+        
 
 import logging
 from django.db import transaction

@@ -9,10 +9,15 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def posto_list(request):
     postos = Posto.objects.all().prefetch_related('pessoal', 'cidades')
-    cidades = Cidade.objects.all().select_related('posto')  # Novo queryset
+    cidades = Cidade.objects.all().select_related('posto')
+    
+    # Obter as choices diretamente do modelo
+    municipio_choices = Cidade._meta.get_field('municipio').choices
+    
     return render(request, 'posto_list.html', {
         'postos': postos,
-        'cidades': cidades  # Adicionar ao contexto
+        'cidades': cidades,
+        'municipio_choices': municipio_choices  # Adicionar ao contexto principal
     })
 
 
@@ -192,15 +197,124 @@ def posto_create(request):
 
 
 
-
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Posto, Contato
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Posto, Contato, Pessoal, Cidade
 
+@login_required
 def posto_update(request, pk):
     posto = get_object_or_404(Posto, pk=pk)
     contato = get_object_or_404(Contato, posto=posto)
+    
+    # Verifica se é uma requisição AJAX para atualizar cidade
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        cidade_id = request.POST.get('cidade_id')
+        
+        if cidade_id:
+            try:
+                cidade = get_object_or_404(Cidade, id=cidade_id, posto=posto)
+                
+                # Atualiza os dados da cidade
+                cidade.municipio = request.POST.get('municipio', cidade.municipio)
+                
+                # Valida e converte coordenadas
+                try:
+                    cidade.latitude = float(request.POST.get('latitude', cidade.latitude))
+                    cidade.longitude = float(request.POST.get('longitude', cidade.longitude))
+                except (TypeError, ValueError):
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Coordenadas inválidas. Use números decimais.'
+                    })
+                
+                cidade.descricao = request.POST.get('descricao', cidade.descricao)
+                
+                # Trata o upload da bandeira
+                if 'bandeira' in request.FILES:
+                    # Remove a imagem antiga se existir
+                    if cidade.bandeira:
+                        cidade.bandeira.delete(save=False)
+                    cidade.bandeira = request.FILES['bandeira']
+                elif request.POST.get('bandeira-clear') == 'on':
+                    if cidade.bandeira:
+                        cidade.bandeira.delete(save=False)
+                    cidade.bandeira = None
+                
+                cidade.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Município atualizado com sucesso!',
+                    'data': {
+                        'municipio': cidade.municipio,
+                        'latitude': cidade.latitude,
+                        'longitude': cidade.longitude,
+                        'bandeira_url': cidade.bandeira.url if cidade.bandeira else ''
+                    }
+                })
+            
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Erro ao atualizar município: {str(e)}'
+                })
+    
+    # Processamento normal do POST (não-AJAX)
+    elif request.method == 'POST':
+        # Atualizando os dados do Posto
+        posto.sgb = request.POST.get('sgb', posto.sgb)
+        posto.posto_secao = request.POST.get('posto_secao', posto.posto_secao)
+        posto.posto_atendimento = request.POST.get('posto_atendimento', posto.posto_atendimento)
+        posto.cidade_posto = request.POST.get('cidade_posto', posto.cidade_posto)
+        posto.tipo_cidade = request.POST.get('tipo_cidade', posto.tipo_cidade)
+        posto.op_adm = request.POST.get('op_adm', posto.op_adm)
 
-    # Obtendo todos os choices diretamente do modelo
+        if 'quartel' in request.FILES:
+            # Remove a imagem antiga se existir
+            if posto.quartel:
+                posto.quartel.delete(save=False)
+            posto.quartel = request.FILES['quartel']
+
+        posto.save()
+
+        # Atualizando Contato
+        contato.telefone = request.POST.get('telefone', contato.telefone)
+        contato.rua = request.POST.get('rua', contato.rua)
+        contato.numero = request.POST.get('numero', contato.numero)
+        contato.complemento = request.POST.get('complemento', contato.complemento)
+        contato.bairro = request.POST.get('bairro', contato.bairro)
+        contato.cidade = request.POST.get('cidade', contato.cidade)
+        contato.cep = request.POST.get('cep', contato.cep)
+        contato.email = request.POST.get('email', contato.email)
+
+        # Validação das coordenadas
+        try:
+            contato.latitude = float(request.POST.get('latitude', contato.latitude or 0))
+            contato.longitude = float(request.POST.get('longitude', contato.longitude or 0))
+        except ValueError:
+            # Pode adicionar uma mensagem de erro se necessário
+            pass
+
+        contato.save()
+
+        # Redireciona para a página de detalhes do posto
+        return redirect('municipios:posto_detail', pk=posto.pk)
+
+    # Se for GET e AJAX (para pré-carregar dados no modal)
+    elif request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        cidade_id = request.GET.get('cidade_id')
+        if cidade_id:
+            cidade = get_object_or_404(Cidade, id=cidade_id, posto=posto)
+            return JsonResponse({
+                'municipio': cidade.municipio,
+                'latitude': cidade.latitude,
+                'longitude': cidade.longitude,
+                'descricao': cidade.descricao,
+                'bandeira_url': cidade.bandeira.url if cidade.bandeira else ''
+            })
+
+    # Contexto para renderização normal (não-AJAX)
     context = {
         'posto': posto,
         'contato': contato,
@@ -212,49 +326,7 @@ def posto_update(request, pk):
         'op_adm_choices': Posto._meta.get_field('tipo_cidade').choices,
     }
 
-    if request.method == 'POST':
-        # Atualizando os dados do Posto
-        posto.sgb = request.POST.get('sgb', posto.sgb)
-        posto.posto_secao = request.POST.get('posto_secao', posto.posto_secao)
-        posto.posto_atendimento = request.POST.get('posto_atendimento', posto.posto_atendimento)
-        posto.cidade_posto = request.POST.get('cidade_posto', posto.cidade_posto)
-        posto.tipo_cidade = request.POST.get('tipo_cidade', posto.tipo_cidade)
-        posto.op_adm = request.POST.get('op_adm', posto.op_adm)
-
-        if 'quartel' in request.FILES:
-            posto.quartel = request.FILES['quartel']
-
-        posto.save()
-
-        # Atualizando ou criando Contato
-        contato.telefone = request.POST.get('telefone', contato.telefone)
-        contato.rua = request.POST.get('rua', contato.rua)
-        contato.numero = request.POST.get('numero', contato.numero)
-        contato.complemento = request.POST.get('complemento', contato.complemento)
-        contato.bairro = request.POST.get('bairro', contato.bairro)
-        contato.cidade = request.POST.get('cidade', contato.cidade)
-        contato.cep = request.POST.get('cep', contato.cep)
-        contato.email = request.POST.get('email', contato.email)
-
-        # **Correção para latitude e longitude**
-        try:
-            contato.latitude = float(request.POST.get('latitude', 0)) # Usar 0 como padrão se não for fornecido
-            contato.longitude = float(request.POST.get('longitude', 0))
-        except ValueError:
-            # Log the error or handle it appropriately (e.g., show an error message to the user)
-            print("Erro: Latitude ou longitude inválida.")
-            # Optionally, you could set default values or skip saving these fields
-            # contato.latitude = 0
-            # contato.longitude = 0
-            # or
-            # pass  # Skip saving contato if lat/long are invalid
-        
-        contato.save()
-
-        # Redireciona para a página de detalhes do posto
-        return redirect('municipios:posto_detail', pk=posto.pk)
-
-    return render(request, 'posto_detail.html', {'posto': posto, 'contato': contato})
+    return render(request, 'posto_detail.html', context)
 
 
 # views.py do app municipio
@@ -391,3 +463,178 @@ def posto_print(request, pk):
     return render(request, 'posto_print.html', {
         'posto': posto,
     })
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from geopy.distance import geodesic
+import json
+from .models import Cidade
+from django.shortcuts import render
+
+@require_POST
+def calcular_rota(request):
+    try:
+        data = json.loads(request.body)
+        origem_nome = data.get('origem')
+        destino_nome = data.get('destino')
+        origem_lat = data.get('origem_lat')
+        origem_lng = data.get('origem_lng')
+        destino_lat = data.get('destino_lat')
+        destino_lng = data.get('destino_lng')
+
+        if not origem_nome or not destino_nome:
+            return JsonResponse({
+                'success': False,
+                'error': 'Origem e destino são obrigatórios'
+            }, status=400)
+
+        if not origem_lat or not origem_lng or not destino_lat or not destino_lng:
+             return JsonResponse({
+                'success': False,
+                'error': 'Latitudes e Longitudes são obrigatórias'
+            }, status=400)
+
+
+        # Cálculo da distância usando geopy
+        distancia = geodesic(
+            (origem_lat, origem_lng),
+            (destino_lat, destino_lng)
+        ).km
+
+        # Cálculo do tempo estimado (70km/h)
+        tempo = round((distancia / 70) * 60)  # Em minutos
+
+        return JsonResponse({
+            'success': True,
+            'distancia': round(distancia, 1),
+            'tempo': tempo,
+            'origem': origem_nome,
+            'destino': destino_nome,
+            'origem_lat': origem_lat,
+            'origem_lng': origem_lng,
+            'destino_lat': destino_lat,
+            'destino_lng': destino_lng
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+def modal_rota(request):
+    """
+    View para renderizar o modal de cálculo de rota
+    """
+    # Obter todas as cidades do banco de dados com suas coordenadas
+    cidades_db = Cidade.objects.all()
+    
+    # Preparar as choices com os dados necessários (valor, label, lat, lng)
+    cidades_choices = []
+    for cidade in cidades_db:
+        cidades_choices.append((
+            cidade.municipio,  # valor
+            cidade.get_nome_municipio(),  # label
+            cidade.latitude,  # lat
+            cidade.longitude  # lng
+        ))
+    
+    # Adicionar também as choices do modelo (para garantir todas as opções)
+    municipio_choices = Cidade.municipio_choices
+    for choice in municipio_choices:
+        if choice[0] and not any(c[0] == choice[0] for c in cidades_choices):
+            # Se não estiver no banco de dados, adicionar com coordenadas padrão
+            cidades_choices.append((
+                choice[0],  # valor
+                choice[1],  # label
+                -23.5505,  # lat padrão (São Paulo)
+                -46.6333   # lng padrão (São Paulo)
+            ))
+    
+    return render(request, 'modals/modal_rota.html', {'cidades': cidades_choices})
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from .import_utils import importar_dados  # Importe a função de importação
+from django.urls import reverse
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import pandas as pd
+
+@login_required
+@permission_required('municipios.add_posto')  # Ajuste a permissão conforme necessário
+def importar_municipios(request):
+    """
+    View para importar dados de municípios a partir de um arquivo CSV ou Excel.
+    """
+    template_name = 'importar_municipios.html'
+    redirect_url = 'municipios:posto_list'  # Use o nome correto da sua URL
+
+    if request.method == 'POST':
+        arquivo = request.FILES.get('arquivo')
+
+        # Validações iniciais
+        if not arquivo:
+            messages.error(request, 'Nenhum arquivo selecionado para importação.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(reverse(redirect_url))
+
+        extensao = arquivo.name.split('.')[-1].lower()
+        if extensao not in ['csv', 'xls', 'xlsx']:
+            messages.error(request, f'Formato de arquivo "{extensao}" não suportado. Use CSV ou Excel.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(reverse(redirect_url))
+
+        if arquivo.size > 10 * 1024 * 1024:  # Limite de 10MB
+            messages.error(request, 'Arquivo excede o limite de tamanho (máximo 10MB).', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect(reverse(redirect_url))
+
+        try:
+            # Ler o arquivo com Pandas
+            df = None
+            if extensao == 'csv':
+                try:
+                    df = pd.read_csv(arquivo, sep=';', encoding='utf-8-sig', dtype=str, keep_default_na=False, na_filter=False)
+                except UnicodeDecodeError:
+                    arquivo.seek(0)
+                    df = pd.read_csv(arquivo, sep=';', encoding='latin-1', dtype=str, keep_default_na=False, na_filter=False)
+            elif extensao in ['xls', 'xlsx']:
+                df = pd.read_excel(arquivo, dtype=str, keep_default_na=False, na_values=[])
+
+            # Converter o DataFrame para um arquivo CSV virtual
+            csv_data = df.to_csv(sep=';', index=False, encoding='utf-8')
+            # Criar um arquivo na memória
+            csv_file = ContentFile(csv_data.encode('utf-8'))
+
+            # Salvar o arquivo temporário
+            file_path = default_storage.save('temp_import.csv', csv_file)
+            # Obter o caminho completo do arquivo
+            full_file_path = default_storage.path(file_path)
+            # Chamar a função de importação
+            registros_processados, erros_processamento = importar_dados(full_file_path, request.user) # Passar o usuário
+            # Excluir o arquivo temporário
+            default_storage.delete(file_path)
+
+            # Feedback da importação
+            if registros_processados > 0:
+                messages.success(request, f'✅ {registros_processados} registro(s) importado(s) com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+
+            if erros_processamento:
+                total_erros = len(erros_processamento)
+                erros_preview = "; ".join(erros_processamento[:5])
+                erros_msg = f'⚠️ {total_erros} erro(s) ocorreram durante a importação. '
+                if total_erros <= 5:
+                    erros_msg += f'Erros: {erros_preview}'
+                else:
+                    erros_msg += f'Primeiros {5} erros: {erros_preview} (...e mais {total_erros - 5})'
+                messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
+
+        except Exception as e:
+            messages.error(request, f'Erro ao processar o arquivo: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
+        
+        return redirect(reverse(redirect_url))
+
+    return render(request, template_name)
