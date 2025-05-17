@@ -144,53 +144,55 @@
                            value="{{ cadastro.rg }}" required>
                 </div>
 
-                <!-- Tempo para Averbar INSS -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-university mr-2 text-indigo-600"></i>
-                        Tempo para Averbar INSS
-                    </label>
-                    <input type="text" name="tempo_para_averbar_inss"
-                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                           value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}"
-                           placeholder="0">
-                </div>
+                    <!-- Telefone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-phone mr-2 text-indigo-600"></i>
+                            Telefone
+                        </label>
+                        <input type="tel" name="telefone"
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                            value="{{ cadastro.telefone }}" required>
+                    </div>
+                     <!-- E-mail (2 colunas) -->
+                     <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2 text-indigo-600"></i>
+                            E-mail
+                        </label>
+                        <input type="email" name="email"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                               value="{{ cadastro.email }}" required>
+                    </div>
 
                 <!-- Tempo para Averbar Militar -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
-                        Tempo para Averbar Militar
+                         Averbação Militar
                     </label>
                     <input type="text" name="tempo_para_averbar_militar"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.tempo_para_averbar_militar }}">
                 </div>
+                       <!-- Tempo para Averbar INSS -->
+                       <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-university mr-2 text-indigo-600"></i>
+                            Averbação INSS
+                        </label>
+                        <input type="text" name="tempo_para_averbar_inss"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                               value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}"
+                               placeholder="0">
+                    </div>
 
-                <!-- E-mail (2 colunas) -->
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-envelope mr-2 text-indigo-600"></i>
-                        E-mail
-                    </label>
-                    <input type="email" name="email"
-                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                           value="{{ cadastro.email }}" required>
-                </div>
+         
 
-                <!-- Telefone -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-phone mr-2 text-indigo-600"></i>
-                        Telefone
-                    </label>
-                    <input type="tel" name="telefone"
-                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                           value="{{ cadastro.telefone }}" required>
-                </div>
+            
 
                 <!-- Motivo da Alteração -->
-                <div class="lg:col-span-4">
+                <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-edit mr-2 text-indigo-600"></i>
                         Motivo da Alteração

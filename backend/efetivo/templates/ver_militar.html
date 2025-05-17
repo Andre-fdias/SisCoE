@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% load custom_filters %}
+{% load cat_efetivo_tags %}
+
 {% block title %} Consultar Efetivo{% endblock %}
 {% block 'head' %}
 
@@ -247,7 +249,96 @@
                 {% endif %}
         
             </fieldset>
-
+            <style>
+                .alert {
+                    border-width: 1px;
+                    border-style: solid;
+                }
+                
+                .alert.info {
+                    background-color: #f0f9ff;
+                    border-color: #bae6fd;
+                    color: #0369a1;
+                }
+                
+                .alert.success {
+                    background-color: #f0fdf4;
+                    border-color: #bbf7d0;
+                    color: #15803d;
+                }
+                
+                .alert.warning {
+                    background-color: #fefce8;
+                    border-color: #fef08a;
+                    color: #a16207;
+                }
+                
+                .alert.error {
+                    background-color: #fef2f2;
+                    border-color: #fecaca;
+                    color: #b91c1c;
+                }
+                
+                /* Estilos para os badges das regras */
+                .badge-rule {
+                    display: inline-block;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 0.25rem;
+                    font-size: 0.75rem;
+                    line-height: 1rem;
+                    font-weight: 500;
+                    margin-right: 0.25rem;
+                    margin-bottom: 0.25rem;
+                }
+            </style>
+            
+           
+        <!-- Seção de Restrições -->
+        {% if categoria_atual and categoria_atual.tipo == 'RESTRICAO' %}
+            <fieldset class="w-full mb-8 rounded-2xl bg-red-300 p-1 border border-red-200">
+                <section class="bg-white p-4 rounded-lg shadow-md border border-red-600">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                        Restrições Aplicáveis - Bol G PM 166, de 30 de agosto de 2006
+                    </h3>
+                    
+                    {% if restricoes_aplicaveis %}
+                        <div class="space-y-4">
+                            {% for restricao in restricoes_aplicaveis %}
+                                <div class="border rounded-lg overflow-hidden">
+                                    <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                                        <div>
+                                            <span class="font-bold">{{ restricao.sigla }}</span> - 
+                                            <span>{{ restricao.nome }}</span>
+                                        </div>
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                            {{ restricao.regra }}
+                                        </span>
+                                    </div>
+                                    <div class="p-4 bg-white">
+                                        <p class="text-gray-700">{{ restricao.mensagem }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-blue-50 p-4 rounded-md border border-blue-200 text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Nenhuma restrição específica aplicada atualmente.
+                        </div>
+                    {% endif %}
+                    
+                    {% if 'UA' in restricoes_siglas %}
+                        <div class="mt-4 bg-red-50 p-4 rounded-md border-l-4 border-red-500">
+                            <h4 class="font-bold text-red-800 mb-2">Atenção Especial (5.2.5.1):</h4>
+                            <p class="text-gray-700">
+                                A critério do respectivo Cmt, Dir ou Ch da Unidade, baseado no parecer que impôs a restrição, na observação continuada do PM, que inclusive pode ser feita por investigação sigilosa, no que se refere a seu comprometimento para desempenhar suas atividades profissionais, deverá ser instaurado processo administrativo com o fim de verificar, dentre outras questões, as condições de permanência desse policial militar no serviço ativo.
+                            </p>
+                        </div>
+                    {% endif %}
+                </section>
+            </fieldset>
+        {% endif %}
 
             <!-- Dados da Situação Funcional e Documentos -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
@@ -271,10 +362,8 @@
                                 <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</span>
                             </div>
                             
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Status:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status_cat|default:"- " }}</span>
-                            </div>
+                           
+                           
                             
                             <div class="flex items-center justify-between gap-4">
                                 <span class="text-gray-600 font-medium">SGB:</span>
@@ -297,7 +386,7 @@
                             </div>
                             
                             <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Operacional/Adm:</span>
+                                <span class="text-gray-600 font-medium">Prontidão:</span>
                                 <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</span>
                             </div>
                         </div>
@@ -307,17 +396,192 @@
                     <div class="mt-auto pt-4">
                     
 
+                    <!-- Situação Funcional - Seção de Status e Categoria -->
+                    <div class="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-100">
+                        <div class="flex flex-col space-y-3">
+                            <!-- Status -->
+<!-- Status -->
+<div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg shadow-sm">
+    <span class="text-indigo-700 font-medium flex items-center">
+        <i class="fas fa-info-circle mr-2"></i> Status:
+    </span>
+    <span class="text-gray-800 font-semibold">
+        {% if categoria_atual %}
+            <span class="px-3 py-1.5 rounded-full text-sm font-semibold {{ categoria_atual.status_display.classe }} flex items-center">
+                <i class="fas {{ categoria_atual.status_display.icone }} mr-2"></i>
+                {{ categoria_atual.status_display.texto }}
+            </span>
+        {% else %}
+            <!-- Exibir ATIVO como padrão -->
+            <span class="bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-semibold flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                ATIVO
+            </span>
+        {% endif %}
+    </span>
+</div>
+                            
+                            <!-- Categorias Ativas -->
+                            {% for categoria in cadastro.categorias_efetivo.all %}
+                                {% if categoria.ativo and categoria.tipo != 'ATIVO' %}
+                                <div class="flex flex-col p-3 bg-white rounded-lg shadow-sm">
+                                    <div class="flex items-center justify-between gap-4 mb-1">
+                                        <span class="text-indigo-700 font-medium flex items-center">
+                                            <i class="fas fa-tag mr-2"></i> Categoria:
+                                        </span>
+                                        <span class="text-gray-800 font-semibold">
+                                            {{ categoria.get_tipo_display }}
+                                            {% if categoria.data_termino %}
+                                                <span class="text-xs text-gray-500 ml-1">
+                                                    (até {{ categoria.data_termino|date:"d/m/Y" }})
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Mostra detalhes específicos para cada tipo de categoria -->
+                                    <div class="mt-2 bg-gray-50 p-2 rounded">
+                                        {% if categoria.tipo == 'RESTRICAO' and categoria.restricoes_selecionadas %}
+                                            <span class="text-xs font-medium text-gray-600">Restrições ativas:</span>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                {% for restricao in categoria.restricoes_selecionadas %}
+                                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                                    {{ restricao }}
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                        {% elif categoria.tipo == 'LSV' %}
+                                            <div class="text-xs space-y-1">
+                                                <div class="flex items-center">
+                                                    <span class="font-medium text-gray-600 mr-2">Boletim:</span>
+                                                    <span>{{ categoria.boletim_concessao_lsv|default:"-" }}</span>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <span class="font-medium text-gray-600 mr-2">Data Boletim:</span>
+                                                    <span>{{ categoria.data_boletim_lsv|date:"d/m/Y"|default:"-" }}</span>
+                                                </div>
+                                            </div>
+                                        {% elif categoria.tipo == 'FERIAS' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Período de férias</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'LP' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Licença Prêmio</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'ELEIÇÃO' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Período Eleitoral</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'CONVAL' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Convalescença</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'LTS' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Licença para Tratamento de Saúde</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'LTS FAMILIA' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Licença para Tratar de Assuntos Familiares</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'DS' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Dispensa de Serviço</span>
+                                            </div>
+                                        {% elif categoria.tipo == 'DR' %}
+                                            <div class="text-xs">
+                                                <span class="font-medium text-gray-600">Dispensa Recompensa</span>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if categoria.observacao %}
+                                            <div class="mt-2 text-xs">
+                                                <span class="font-medium text-gray-600">Observação:</span>
+                                                <p class="text-gray-700">{{ categoria.observacao }}</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Botão de edição para cada categoria -->
+                                    <div class="flex justify-end mt-2">
+                                        <button class="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
+                                                data-modal-target="#editCatEfetivoModal{{ categoria.id }}"
+                                                title="Editar categoria">
+                                            <i class="fas fa-pencil-alt text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                    
+                            <!-- Link para Histórico -->
+                            <div class="flex justify-end">
+                                <a href="{% url 'efetivo:historico_categorias' cadastro.id %}" 
+                                class="text-indigo-600 hover:text-indigo-800 transition duration-300 text-sm font-medium flex items-center">
+                                    <span>Ver histórico completo</span>
+                                    <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
 
-                    <!-- Botão de Abertura -->
-                    <button type="button" 
-                    class="mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    data-modal-open="editSituacaoModal">
-                    <i class="fas fa-edit mr-2"></i>Editar Situação Funcional
-                    </button>
+                        <!-- Inclui o modal de edição para cada categoria -->
+                        {% for categoria in cadastro.categorias_efetivo.all %}
+                            {% if categoria.ativo and categoria.tipo != 'ATIVO' %}
+                                {% with categoria_atual=categoria %}
+                                    {% include 'modals/editar_categoria_atual.html' %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+
+                    <!-- Botões lado a lado -->
+                    <div class="mt-auto pt-4 flex flex-wrap gap-3">
+                        <!-- Botão de Edição de Situação Funcional -->
+                        <button type="button" 
+                            class="flex-1 min-w-[200px] px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center"
+                            data-modal-open="editSituacaoModal">             <a href="#" 
+                                onclick="openEditModal({{ historico.cat_efetivo.id }})" 
+                                class="text-indigo-600 hover:text-indigo-800"
+                                title="Editar">
+                                  <i class="fas fa-edit mr-2"></i>
+                          </a>
+                      
+                        
+                        <!-- Botão de Alterar Categoria -->
+                        <button type="button" 
+                            class="flex-1 min-w-[200px] px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center"
+                            data-modal-open="editCatEfetivoModal">
+                            <i class="fas fa-exchange-alt mr-2"></i>Alterar Categoria
+                        </button>
+                    </div>
+                    <script>
+    function openEditModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+    
+    function closeEditModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+    </script>
+<script>
+function openEditModal(categoriaId) {
+    fetch(`/efetivo/categoria/editar/${categoriaId}/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        document.body.appendChild(div);
+    });
+}
+</script>
+
 
                     {% include 'modals/editar_situacao_funcional.html' %}
-                        
-                    </div>
+                    {% include 'modals/editar_categoria_efetivo.html' %}
                 </fieldset>
 
                 <!-- Documentos e Contatos -->
@@ -1282,44 +1546,7 @@
             closeConfirmation();
         };
     </script>
-    
-    // Funções para controle do modal
-    function openDeleteModal() {
-        document.getElementById('exampleModal').classList.remove('hidden');
-        document.getElementById('passwordInput').focus();
-    }
-    
-    function closeDeleteModal() {
-        document.getElementById('exampleModal').classList.add('hidden');
-        document.getElementById('passwordError').classList.add('hidden');
-    }
-    
-    // Tratar mensagens de erro do Django - SOMENTE para erros de exclusão
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.extra_tags == 'delete_error' %}  {# Adicione esta tag específica #}
-                document.getElementById('passwordError').innerText = '{{ message }}';
-                document.getElementById('passwordError').classList.remove('hidden');
-                openDeleteModal();
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-    </script>
-                                </div>
-                            </div>
-                            <div class="w-full md:w-1/2 text-right">
-                                <div class="container1">
-                                    <div class="flex justify-end">
-                                        <a href="{% url 'efetivo:listar_militar' %}"  class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                                    </div>
-                                
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-         </fieldset>
+
     
             <script>
                 function validatePassword() {
@@ -1379,36 +1606,36 @@
                 });
             </script>
             <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const openModalButtons = document.querySelectorAll('[data-modal-target]');
-                const closeModalButtons = document.querySelectorAll('[data-modal-close]');
-        
-                openModalButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modal = document.querySelector(button.dataset.modalTarget);
-                        openModal(modal);
+                document.addEventListener('DOMContentLoaded', () => {
+                    const openModalButtons = document.querySelectorAll('[data-modal-target]');
+                    const closeModalButtons = document.querySelectorAll('[data-modal-close]');
+            
+                    openModalButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            const modal = document.querySelector(button.dataset.modalTarget);
+                            openModal(modal);
+                        });
                     });
-                });
-        
-                closeModalButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const modal = button.closest('.fixed');
-                        closeModal(modal);
+            
+                    closeModalButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            const modal = button.closest('.fixed');
+                            closeModal(modal);
+                        });
                     });
+            
+                    function openModal(modal) {
+                        if (modal == null) return;
+                        modal.classList.remove('hidden');
+                    }
+            
+                    function closeModal(modal) {
+                        if (modal == null) return;
+                        modal.classList.add('hidden');
+                    }
                 });
-        
-                function openModal(modal) {
-                    if (modal == null) return;
-                    modal.classList.remove('hidden');
-                }
-        
-                function closeModal(modal) {
-                    if (modal == null) return;
-                    modal.classList.add('hidden');
-                }
-            });
             </script>
-        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const openModalButtons = document.querySelectorAll('[data-modal-target]');
@@ -1467,7 +1694,7 @@
                     newSituacaoForm.submit();
                 });
             });
-            </script>
+        </script>
             
     <script src="{% static 'efetivo/js/ver_militar.js' %}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

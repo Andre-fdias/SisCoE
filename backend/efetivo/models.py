@@ -55,7 +55,7 @@ class Cadastro(models.Model):
     tempo_para_averbar_inss = models.IntegerField(blank=False, null=False, default=1)
     tempo_para_averbar_militar = models.IntegerField(blank=False, null=False, default=1)
     email = models.EmailField(max_length=100, unique=True, blank=False, null=False)
-    telefone = models.CharField(max_length=1, blank=False, null=False)
+    telefone = models.CharField(max_length=14, blank=False, null=False)
     alteracao = models.CharField(max_length=20, blank=False, null=False, choices=alteracao_choices)
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cadastros', default=1)  # 
@@ -121,9 +121,13 @@ class Cadastro(models.Model):
             return self.promocoes.latest('data_alteracao')
         except Promocao.DoesNotExist:
             return None
+    def categoria_ativa(self):
+        return self.categorias_efetivo.filter(ativo=True).first()
+
 
     class Meta:
         ordering = ('re',)
+
 
 
 class CPF(models.Model):
@@ -364,6 +368,7 @@ class DetalhesSituacao(models.Model):
         ("ELEIÇÃO", "ELEIÇAO"),
         ("LP", "LP"),
         ("FERIAS", "FÉRIAS"),
+        ("RESTRICAO", "RESTRIÇÃO"),
     )
     prontidao_choices=( 
         ("", " "),                                                
@@ -376,7 +381,7 @@ class DetalhesSituacao(models.Model):
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE,
                                  related_name='detalhes_situacao')
     situacao = models.CharField(max_length=30, blank=False, null=False, choices=situacao_choices,    default="Efetivo")
-    cat_efetivo = models.CharField(max_length=30, blank=False, null=False, choices=cat_efetivo_choices,    default="Ativo")
+   
     sgb = models.CharField(max_length=9, blank=False, null=False, choices=sgb_choices)
     posto_secao = models.CharField(max_length=100, blank=False, null=False, choices=posto_secao_choices)
     esta_adido = models.CharField(max_length=100, blank=True, null=True, choices=esta_adido_choices)
@@ -604,3 +609,527 @@ class HistoricoDetalhesSituacao(models.Model):
     
     def __str__(self):
         return f' {self.situacao}'
+
+from django.db import models
+from django.utils.safestring import mark_safe
+from django.contrib.auth import get_user_model
+from datetime import date
+from backend.efetivo.models import Cadastro
+
+class CatEfetivo(models.Model):
+    # Choices para o tipo de situação
+    TIPO_CHOICES = (
+        ("ATIVO", "ATIVO"),
+        ("INATIVO", "INATIVO"),
+        ("LSV", "LSV"),
+        ("LTS", "LTS"),
+        ("LTS FAMILIA", "LTS FAMILIA"),
+        ("CONVAL", "CONVAL"),
+        ("ELEIÇÃO", "ELEIÇÃO"),
+        ("LP", "LP"),
+        ("FERIAS", "FÉRIAS"),
+        ("RESTRICAO", "RESTRIÇÃO"),
+        ("DS", "DS"),
+        ("DR", "DR"),
+    )
+
+    # Campos comuns a todos os tipos
+    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='categorias_efetivo')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default="ATIVO")
+    data_inicio = models.DateField(null=True, blank=True)
+    data_termino = models.DateField(null=True, blank=True)
+    data_cadastro = models.DateTimeField(auto_now_add=True)
+    usuario_cadastro = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    ativo = models.BooleanField(default=True)
+    observacao = models.TextField(blank=True, null=True)
+
+    # Campos específicos para LSV
+    boletim_concessao_lsv = models.CharField(max_length=50, blank=True, null=True)
+    data_boletim_lsv = models.DateField(blank=True, null=True)
+    # Campos booleanos para cada tipo de restrição
+    restricao_au = models.BooleanField("Audição seja primordial", default=False)
+    restricao_ou = models.BooleanField("Ordem unida", default=False)
+    restricao_bs = models.BooleanField("Busca e salvamento", default=False)
+    restricao_po = models.BooleanField("Policiamento", default=False)
+    restricao_cb = models.BooleanField("Corte de barba", default=False)
+    restricao_pq = models.BooleanField("Serviços com produtos químicos", default=False)
+    restricao_cc = models.BooleanField("Corte de cabelo", default=False)
+    restricao_pt = models.BooleanField("Prática de tiro", default=False)
+    restricao_ci = models.BooleanField("Correr para incêndio", default=False)
+    restricao_sa = models.BooleanField("Serviços aquáticos", default=False)
+    restricao_dg = models.BooleanField("Datilografia e Digitação", default=False)
+    restricao_sb = models.BooleanField("Serviços burocráticos", default=False)
+    restricao_dv = models.BooleanField("Dirigir veículo", default=False)
+    restricao_se = models.BooleanField("Serviços externos", default=False)
+    restricao_ef = models.BooleanField("Educação Física", default=False)
+    restricao_sg = models.BooleanField("Serviço de guarda", default=False)
+    restricao_em = models.BooleanField("Escrever a mão", default=False)
+    restricao_sh = models.BooleanField("Serviços em altura", default=False)
+    restricao_ep = models.BooleanField("Equilíbrio seja primordial", default=False)
+    restricao_si = models.BooleanField("Serviços internos", default=False)
+    restricao_es = models.BooleanField("Exposição ao sol", default=False)
+    restricao_sm = models.BooleanField("Serviços manuais", default=False)
+    restricao_fo = models.BooleanField("Formatura", default=False)
+    restricao_sn = models.BooleanField("Serviços noturnos", default=False)
+    restricao_is = models.BooleanField("Tocar instrumento de sopro", default=False)
+    restricao_sp = models.BooleanField("Serviços pesados", default=False)
+    restricao_lp = models.BooleanField("Longa permanência em pé", default=False)
+    restricao_st = models.BooleanField("Serviços de telefonia", default=False)
+    restricao_lr = models.BooleanField("Locais ruidosos", default=False)
+    restricao_ua = models.BooleanField("Uso de arma", default=False)
+    restricao_ls = models.BooleanField("Longa permanência sentado", default=False)
+    restricao_ub = models.BooleanField("Uso de botas", default=False)
+    restricao_uc = models.BooleanField("Uso de calçado esportivo", default=False)
+    restricao_ma = models.BooleanField("Manuseio com animais", default=False)
+    restricao_mc = models.BooleanField("Montar a cavalo", default=False)
+    restricao_mg = models.BooleanField("Mergulho", default=False)
+    restricao_mp = models.BooleanField("Manipulação de pó", default=False)
+    restricao_vp = models.BooleanField("Visão seja primordial", default=False)
+    restricao_uu = models.BooleanField("Uso de uniformes", default=False)
+
+    def __str__(self):
+        return f"{self.cadastro.nome_de_guerra} - {self.get_tipo_display()} ({self.data_inicio} a {self.data_termino or 'Presente'})"
+
+    @property
+    def status(self):
+        hoje = date.today()
+        if self.data_termino and self.data_termino < hoje:
+            return "ENCERRADO"
+        elif self.data_inicio > hoje:
+            return "AGUARDANDO INÍCIO"
+        else:
+            return "EM VIGOR"
+        
+        
+    @property
+    def restricoes_selecionadas(self):
+        """
+        Retorna os campos de restrição como uma lista de dicionários,
+        incluindo o nome do campo, verbose_name e o valor (True/False).
+        """
+        restricao_campos = [f for f in self._meta.get_fields() if f.name.startswith('restricao_')]
+        return [
+            {
+                'name': campo.name,
+                'verbose_name': campo.verbose_name,
+                'value': getattr(self, campo.name)
+            }
+            for campo in restricao_campos
+        ]
+    @property
+    def status_badge(self):
+        status = self.status
+        if status == "ENCERRADO":
+            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ENCERRADO</span>')
+        elif status == "AGUARDANDO INÍCIO":
+            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AGUARDANDO INÍCIO</span>')
+        else:
+            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">EM VIGOR</span>')
+
+    @property
+    def tipo_badge(self):
+        tipo = self.tipo
+        if tipo == "ATIVO":
+            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>')
+        elif tipo == "INATIVO":
+            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>')
+        elif tipo == "LSV":
+            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>')
+        elif tipo == "LTS":
+            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>')
+        elif tipo == "LTS FAMILIA":
+            return mark_safe('<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>')
+        elif tipo == "CONVAL":
+            return mark_safe('<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>')
+        elif tipo == "ELEIÇÃO":
+            return mark_safe('<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>')
+        elif tipo == "LP":
+            return mark_safe('<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>')
+        elif tipo == "FERIAS":
+            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>')
+        elif tipo == "RESTRICAO":
+            return mark_safe('<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>')
+        elif tipo == "DS":
+            return mark_safe('<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>')
+        elif tipo == "DR":
+            return mark_safe('<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>')
+        else:
+            return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
+
+
+    def save(self, *args, **kwargs):
+    # Validação básica - pode ser expandida conforme necessidades específicas
+        if not self.tipo:
+            raise ValueError("O campo 'tipo' é obrigatório")
+
+        super().save(*args, **kwargs)
+
+    @property
+    def restricoes_selecionadas(self):
+        """Retorna uma lista com as restrições selecionadas"""
+        restricoes = []
+        campos_restricao = [field.name for field in self._meta.get_fields()
+                                    if field.name.startswith('restricao_')]
+
+        for campo in campos_restricao:
+            if getattr(self, campo):
+                # Pega o verbose_name do campo
+                verbose_name = self._meta.get_field(campo).verbose_name
+                restricoes.append(verbose_name)
+
+        return restricoes
+
+    @property
+    def restricoes_selecionadas_siglas(self):
+        if self.tipo != 'RESTRICAO':
+            return ""
+
+        siglas = []
+        campos_restricao = [field.name for field in self._meta.get_fields()
+                                    if field.name.startswith('restricao_')]
+
+        for campo in campos_restricao:
+            if getattr(self, campo):
+                # Pega as duas últimas letras do nome do campo
+                sigla = campo.split('_')[-1].upper()
+                siglas.append(sigla)
+
+        return ", ".join(siglas)
+
+    @property
+    def restricoes_selecionadas_badges(self):
+        """Retorna badges HTML com as restrições selecionadas"""
+        badges = []
+        for restricao in self.restricoes_selecionadas:
+            badges.append(
+                f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs mr-1">{restricao}</span>'
+            )
+        return mark_safe(' '.join(badges))
+
+    def save(self, *args, **kwargs):
+        # Verifica se a data de término foi atingida e marca como inativo
+        if self.data_termino and self.data_termino < date.today():
+            self.ativo = False
+
+        # Se não for do tipo RESTRICAO, limpa todas as restrições
+        if self.tipo != "RESTRICAO":
+            campos_restricao = [field.name for field in self._meta.get_fields()
+                                        if field.name.startswith('restricao_')]
+            for campo in campos_restricao:
+                setattr(self, campo, False)
+
+        # Cria registro no histórico se não for novo ou se houver alterações
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if not is_new:
+            self.criar_registro_historico()
+
+    def criar_registro_historico(self):
+        """Cria um registro no histórico com o estado atual"""
+        HistoricoCatEfetivo.objects.create(
+            cat_efetivo=self,
+            tipo=self.tipo,
+            data_inicio=self.data_inicio,
+            data_termino=self.data_termino,
+            ativo=self.ativo,
+            observacao=self.observacao,
+            # Campos LSV
+            boletim_concessao_lsv=self.boletim_concessao_lsv,
+            data_boletim_lsv=self.data_boletim_lsv,
+            # Todos os campos de restrição
+            restricao_au=self.restricao_au,
+            restricao_ou=self.restricao_ou,
+            restricao_bs=self.restricao_bs,
+            restricao_po=self.restricao_po,
+            restricao_cb=self.restricao_cb,
+            restricao_pq=self.restricao_pq,
+            restricao_cc=self.restricao_cc,
+            restricao_pt=self.restricao_pt,
+            restricao_ci=self.restricao_ci,
+            restricao_sa=self.restricao_sa,
+            restricao_dg=self.restricao_dg,
+            restricao_sb=self.restricao_sb,
+            restricao_dv=self.restricao_dv,
+            restricao_se=self.restricao_se,
+            restricao_ef=self.restricao_ef,
+            restricao_sg=self.restricao_sg,
+            restricao_em=self.restricao_em,
+            restricao_sh=self.restricao_sh,
+            restricao_ep=self.restricao_ep,
+            restricao_si=self.restricao_si,
+            restricao_es=self.restricao_es,
+            restricao_sm=self.restricao_sm,
+            restricao_fo=self.restricao_fo,
+            restricao_sn=self.restricao_sn,
+            restricao_is=self.restricao_is,
+            restricao_sp=self.restricao_sp,
+            restricao_lp=self.restricao_lp,
+            restricao_st=self.restricao_st,
+            restricao_lr=self.restricao_lr,
+            restricao_ua=self.restricao_ua,
+            restricao_ls=self.restricao_ls,
+            restricao_ub=self.restricao_ub,
+            restricao_uc=self.restricao_uc,
+            restricao_ma=self.restricao_ma,
+            restricao_mc=self.restricao_mc,
+            restricao_mg=self.restricao_mg,
+            restricao_mp=self.restricao_mp,
+            restricao_vp=self.restricao_vp,
+            restricao_uu=self.restricao_uu,
+            usuario_alteracao=self.usuario_cadastro
+        )
+
+    class Meta:
+        verbose_name = "Categoria de Efetivo"
+        verbose_name_plural = "Categorias de Efetivo"
+        ordering = ['-data_inicio']
+        indexes = [
+            models.Index(fields=['tipo']),
+            models.Index(fields=['cadastro']),
+            models.Index(fields=['ativo']),
+            models.Index(fields=['data_inicio', 'data_termino']),
+        ]
+
+    @property
+    def regras_restricoes_badges(self):
+        if self.tipo != 'RESTRICAO':
+            return mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">N/A</span>')
+        
+        badges = []
+        
+        # Grupo 5.2.1
+        grupo_521 = {'BS', 'CI', 'DV', 'EF', 'FO', 'IS', 'LP', 'MA', 'MC', 'MG', 'OU', 'PO', 'PQ', 'SA', 'SE', 'SH', 'SM', 'SP'}
+        if any(sigla in grupo_521 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1" title="Atividades operacionais com condições ou administrativas/apoio">5.2.1</span>'
+            )
+        
+        # Grupo 5.2.1.1 (subgrupo de EF)
+        if 'EF' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs mr-1" title="Plano de exercícios físicos específicos">5.2.1.1</span>'
+            )
+        
+        # Grupo 5.2.2
+        grupo_522 = {'AU', 'EP', 'ES', 'LR', 'PT', 'VP'}
+        if any(sigla in grupo_522 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-1" title="Somente atividades administrativas">5.2.2</span>'
+            )
+        
+        # Grupo 5.2.3
+        if 'SN' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mr-1" title="Trabalhar durante o dia em qualquer atividade">5.2.3</span>'
+            )
+        
+        # Grupo 5.2.4
+        if 'SG' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mr-1" title="Policiamento ostensivo ou administrativas/apoio">5.2.4</span>'
+            )
+        
+        # Grupo 5.2.5
+        if 'UA' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs mr-1" title="Desarmado e atividades administrativas">5.2.5</span>'
+            )
+        
+        # Grupo 5.2.5.1 (subgrupo de UA)
+        if 'UA' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-red-200 text-red-800 px-2 py-1 rounded text-xs mr-1" title="Pode requerer processo administrativo">5.2.5.1</span>'
+            )
+        
+        # Grupo 5.2.6
+        grupo_526 = {'UU', 'CC', 'CB'}
+        if any(sigla in grupo_526 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Atividades administrativas ou de apoio">5.2.6</span>'
+            )
+        
+        # Grupo 5.2.6.1 (subgrupo de UU, CC, CB)
+        if any(sigla in grupo_526 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-indigo-200 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Uniforme B-5.1, sem atendimento ao público">5.2.6.1</span>'
+            )
+        
+        # Grupo 5.2.6.2 (subgrupo de CC)
+        if 'CC' in self.restricoes_selecionadas_siglas:
+            badges.append(
+                '<span class="bg-indigo-300 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Cabelos penteados com gel/rede">5.2.6.2</span>'
+            )
+        
+        # Grupo 5.2.7
+        grupo_527 = {'UB', 'UC', 'US'}
+        if any(sigla in grupo_527 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs mr-1" title="Sandálias pretas, sem atendimento ao público">5.2.7</span>'
+            )
+        
+        # Grupo 5.2.8
+        grupo_528 = {'DG', 'EM', 'LS', 'MP', 'SB', 'SI', 'ST'}
+        if any(sigla in grupo_528 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+            badges.append(
+                '<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs mr-1" title="Policiamento ostensivo">5.2.8</span>'
+            )
+        
+        # Grupo 5.2.9 (para gestantes)
+        # Nota: Você precisaria ter um campo para identificar gestantes
+        # if self.gestante:
+        #     badges.append(
+        #         '<span class="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs mr-1" title="Atividades administrativas com uniforme de gestante">5.2.9</span>'
+        #     )
+        
+        # Grupo 5.2.9.1 (subgrupo de gestantes com US)
+        # if self.gestante and 'US' in self.restricoes_selecionadas_siglas:
+        #     badges.append(
+        #         '<span class="bg-pink-200 text-pink-800 px-2 py-1 rounded text-xs mr-1" title="Sem atendimento ao público">5.2.9.1</span>'
+        #     )
+        
+        return mark_safe(' '.join(badges)) if badges else mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">Sem regras específicas</span>')
+
+@property
+def regras_restricoes_badges(self):
+    if self.tipo != 'RESTRICAO':
+        return []
+    
+    regras = []
+    siglas = self.restricoes_selecionadas_siglas.split(', ') if self.restricoes_selecionadas_siglas else []
+    
+    # Mapeamento de regras para siglas
+    regras_map = {
+        '5.2.1': ['BS', 'CI', 'DV', 'EF', 'FO', 'IS', 'LP', 'MA', 'MC', 'MG', 'OU', 'PO', 'PQ', 'SA', 'SE', 'SH', 'SM', 'SP'],
+        '5.2.2': ['AU', 'EP', 'ES', 'LR', 'PT', 'VP'],
+        '5.2.3': ['SN'],
+        '5.2.4': ['SG'],
+        '5.2.5': ['UA'],
+        '5.2.6': ['UU', 'CC', 'CB'],
+        '5.2.7': ['UB', 'UC', 'US'],
+        '5.2.8': ['DG', 'EM', 'LS', 'MP', 'SB', 'SI', 'ST']
+    }
+    
+    # Verifica quais regras se aplicam
+    for regra, siglas_regra in regras_map.items():
+        if any(sigla in siglas for sigla in siglas_regra):
+            regras.append(regra)
+    
+    return regras
+
+
+class HistoricoCatEfetivo(models.Model):
+    cat_efetivo = models.ForeignKey(CatEfetivo, on_delete=models.CASCADE, related_name='historico')
+    data_registro = models.DateTimeField(auto_now_add=True)
+    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Campos espelho do CatEfetivo
+    tipo = models.CharField(max_length=20, choices=CatEfetivo.TIPO_CHOICES)
+    data_inicio = models.DateField()
+    data_termino = models.DateField(null=True, blank=True)
+    ativo = models.BooleanField(default=True)
+    observacao = models.TextField(blank=True, null=True)
+
+    # Campos LSV
+    boletim_concessao_lsv = models.CharField(max_length=50, blank=True, null=True)
+    data_boletim_lsv = models.DateField(blank=True, null=True)
+
+    # Campos de restrição (todos como booleanos)
+    restricao_au = models.BooleanField("Audição seja primordial", default=False)
+    restricao_ou = models.BooleanField("Ordem unida", default=False)
+    restricao_bs = models.BooleanField("Busca e salvamento", default=False)
+    restricao_po = models.BooleanField("Policiamento", default=False)
+    restricao_cb = models.BooleanField("Corte de barba", default=False)
+    restricao_pq = models.BooleanField("Serviços com produtos químicos", default=False)
+    restricao_cc = models.BooleanField("Corte de cabelo", default=False)
+    restricao_pt = models.BooleanField("Prática de tiro", default=False)
+    restricao_ci = models.BooleanField("Correr para incêndio", default=False)
+    restricao_sa = models.BooleanField("Serviços aquáticos", default=False)
+    restricao_dg = models.BooleanField("Datilografia e Digitação", default=False)
+    restricao_sb = models.BooleanField("Serviços burocráticos", default=False)
+    restricao_dv = models.BooleanField("Dirigir veículo", default=False)
+    restricao_se = models.BooleanField("Serviços externos", default=False)
+    restricao_ef = models.BooleanField("Educação Física", default=False)
+    restricao_sg = models.BooleanField("Serviço de guarda", default=False)
+    restricao_em = models.BooleanField("Escrever a mão", default=False)
+    restricao_sh = models.BooleanField("Serviços em altura", default=False)
+    restricao_ep = models.BooleanField("Equilíbrio seja primordial", default=False)
+    restricao_si = models.BooleanField("Serviços internos", default=False)
+    restricao_es = models.BooleanField("Exposição ao sol", default=False)
+    restricao_sm = models.BooleanField("Serviços manuais", default=False)
+    restricao_fo = models.BooleanField("Formatura", default=False)
+    restricao_sn = models.BooleanField("Serviços noturnos", default=False)
+    restricao_is = models.BooleanField("Tocar instrumento de sopro", default=False)
+    restricao_sp = models.BooleanField("Serviços pesados", default=False)
+    restricao_lp = models.BooleanField("Longa permanência em pé", default=False)
+    restricao_st = models.BooleanField("Serviços de telefonia", default=False)
+    restricao_lr = models.BooleanField("Locais ruidosos", default=False)
+    restricao_ua = models.BooleanField("Uso de arma", default=False)
+    restricao_ls = models.BooleanField("Longa permanência sentado", default=False)
+    restricao_ub = models.BooleanField("Uso de botas", default=False)
+    restricao_uc = models.BooleanField("Uso de calçado esportivo", default=False)
+    restricao_ma = models.BooleanField("Manuseio com animais", default=False)
+    restricao_mc = models.BooleanField("Montar a cavalo", default=False)
+    restricao_mg = models.BooleanField("Mergulho", default=False)
+    restricao_mp = models.BooleanField("Manipulação de pó", default=False)
+    restricao_vp = models.BooleanField("Visão seja primordial", default=False)
+    restricao_uu = models.BooleanField("Uso de uniformes", default=False)
+
+    def __str__(self):
+        return f"Histórico {self.cat_efetivo} - {self.data_registro.strftime('%d/%m/%Y %H:%M')}"
+
+    @property
+    def tipo_badge(self):
+        tipo = self.tipo
+        if tipo == "ATIVO":
+            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>')
+        elif tipo == "INATIVO":
+            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>')
+        elif tipo == "LSV":
+            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>')
+        elif tipo == "LTS":
+            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>')
+        elif tipo == "LTS FAMILIA":
+            return mark_safe('<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>')
+        elif tipo == "CONVAL":
+            return mark_safe('<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>')
+        elif tipo == "ELEIÇÃO":
+            return mark_safe('<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>')
+        elif tipo == "LP":
+            return mark_safe('<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>')
+        elif tipo == "FERIAS":
+            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>')
+        elif tipo == "RESTRICAO":
+            return mark_safe('<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>')
+        elif tipo == "DS":
+            return mark_safe('<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>')
+        elif tipo == "DR":
+            return mark_safe('<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>')
+        else:
+            return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
+
+    class Meta:
+        verbose_name = "Histórico de Categoria de Efetivo"
+        verbose_name_plural = "Históricos de Categorias de Efetivo"
+        ordering = ['-data_registro']
+        indexes = [
+            models.Index(fields=['cat_efetivo']),
+            models.Index(fields=['data_registro']),
+            models.Index(fields=['tipo']),
+        ]
+
+    @property
+    def restricoes_selecionadas_siglas(self):
+        if self.tipo != 'RESTRICAO':
+            return ""
+
+        siglas = []
+        campos_restricao = [field.name for field in self._meta.get_fields()
+                                    if field.name.startswith('restricao_')]
+
+        for campo in campos_restricao:
+            if getattr(self, campo):
+                # Pega as duas últimas letras do nome do campo
+                sigla = campo.split('_')[-1].upper()
+                siglas.append(sigla)
+
+        return ", ".join(siglas)

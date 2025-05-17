@@ -1,0 +1,315 @@
+{% load cat_efetivo_tags %}
+
+<div id="editCatEfetivoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-indigo-700 text-white p-6 rounded-t-xl flex justify-between items-center">
+            <h3 id="modalTitle" class="text-xl font-bold">
+                <i class="fas fa-exchange-alt mr-2"></i> Alterar Categoria de Efetivo
+            </h3>
+            <button type="button" onclick="closeCatEfetivoModal()" class="text-white hover:text-gray-200 text-2xl">
+                &times;
+            </button>
+        </div>
+
+        <div class="p-6">
+            <form id="catEfetivoForm" method="POST" action="{% url 'efetivo:adicionar_categoria_efetivo' cadastro.id %}">
+                {% csrf_token %}
+                <input type="hidden" id="tipo_categoria" name="tipo">
+
+                <div class="mb-6">
+                    <label for="tipo" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Categoria <span class="text-red-500">*</span>
+                    </label>
+                    <select id="tipo" name="tipo" required
+                            class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        <option value="">Selecione uma categoria</option>
+                        {% for value, label in categoria_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="dynamicFieldsContainer">
+                    <!-- Campos dinâmicos serão inseridos aqui -->
+                </div>
+
+                <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeCatEfetivoModal()"
+                            class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Templates para cada tipo de categoria -->
+<div id="template-ativo" class="hidden">
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+        <p class="text-sm text-blue-800">Categoria básica de status do militar. Não requer configurações adicionais.</p>
+    </div>
+</div>
+
+<div id="template-lsv" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Início <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="data_inicio" name="data_inicio" required
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Término
+            </label>
+            <input type="date" id="data_termino" name="data_termino"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="boletim_concessao_lsv" class="block text-sm font-medium text-gray-700 mb-2">
+                Boletim de Concessão
+            </label>
+            <input type="text" id="boletim_concessao_lsv" name="boletim_concessao_lsv"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_boletim_lsv" class="block text-sm font-medium text-gray-700 mb-2">
+                Data do Boletim
+            </label>
+            <input type="date" id="data_boletim_lsv" name="data_boletim_lsv"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+    </div>
+</div>
+
+<div id="template-restricao" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Início <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="data_inicio" name="data_inicio" required
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Término
+            </label>
+            <input type="date" id="data_termino" name="data_termino"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Restrições</h4>
+        <p class="text-sm text-gray-600 mb-4">Marque as restrições aplicáveis:</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {% get_restricao_fields as restricao_fields %}
+            {% for field in restricao_fields %}
+                <div class="flex items-center">
+                    <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}"
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="{{ field.name }}" class="ml-2 text-sm text-gray-700">
+                        {{ field.verbose_name }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="template-generic" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Início <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="data_inicio" name="data_inicio" required
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Término
+            </label>
+            <input type="date" id="data_termino" name="data_termino"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+    </div>
+
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
+        <p class="text-sm text-indigo-800">Configure as datas de início e término para esta categoria.</p>
+    </div>
+</div>
+<!-- Adicione esses novos templates após o template-generic -->
+<div id="template-ds" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Início <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="data_inicio" name="data_inicio" required
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Término
+            </label>
+            <input type="date" id="data_termino" name="data_termino"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+    </div>
+
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
+        <p class="text-sm text-indigo-800">Configure as datas de início e término para o período de Dispensa de Serviço.</p>
+    </div>
+</div>
+
+<div id="template-dr" class="hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Início <span class="text-red-500">*</span>
+            </label>
+            <input type="date" id="data_inicio" name="data_inicio" required
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+                Data de Término
+            </label>
+            <input type="date" id="data_termino" name="data_termino"
+                   class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        </div>
+    </div>
+
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
+        <p class="text-sm text-indigo-800">Configure as datas de início e término para o período de Dispensa de Rotina.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('tipo');
+    const dynamicContainer = document.getElementById('dynamicFieldsContainer');
+    const modalTitle = document.getElementById('modalTitle');
+    const tipoHidden = document.getElementById('tipo_categoria');
+
+    // Mapeamento de templates para cada tipo
+    const templates = {
+        'ativo': document.getElementById('template-ativo').innerHTML,
+        'inativo': document.getElementById('template-ativo').innerHTML,
+        'lsv': document.getElementById('template-lsv').innerHTML,
+        'restricao': document.getElementById('template-restricao').innerHTML,
+        'ds': document.getElementById('template-ds').innerHTML,
+        'dr': document.getElementById('template-dr').innerHTML,
+        'default': document.getElementById('template-generic').innerHTML
+    };
+
+    // Títulos personalizados para cada tipo
+    const titles = {
+        'ATIVO': 'Definir como ATIVO',
+        'INATIVO': 'Definir como INATIVO',
+        'LSV': 'Configurar Licença para Serviço Voluntário',
+        'LTS': 'Configurar Licença para Tratar de Interesses Particulares',
+        'LTS FAMILIA': 'Configurar Licença para Tratar de Assuntos Familiares',
+        'CONVAL': 'Configurar Convalescença',
+        'ELEIÇÃO': 'Configurar Período Eleitoral',
+        'LP': 'Configurar Licença Prêmio',
+        'FERIAS': 'Configurar Período de Férias',
+        'RESTRICAO': 'Configurar Restrições',
+        'DS': 'Configurar Dispensa de Serviço',
+        'DR': 'Configurar Dispensa de Rotina'
+    };
+
+    function updateModalContent() {
+        const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+        const tipoValue = selectedOption.value;
+        const tipoKey = tipoValue.toLowerCase();
+
+        // Atualiza o título do modal
+        modalTitle.innerHTML = `<i class="fas fa-exchange-alt mr-2"></i> ${titles[tipoValue] || 'Alterar Categoria de Efetivo'}`;
+
+        // Atualiza o campo hidden com o tipo selecionado
+        tipoHidden.value = tipoValue;
+
+        // Limpa o container dinâmico
+        dynamicContainer.innerHTML = '';
+
+        // Adiciona o template apropriado
+        if (templates[tipoKey]) {
+            dynamicContainer.innerHTML = templates[tipoKey];
+        } else {
+            dynamicContainer.innerHTML = templates['default'];
+        }
+
+        // Validação especial para datas
+        if (tipoKey !== 'ativo' && tipoKey !== 'inativo') {
+            const dataInicio = dynamicContainer.querySelector('#data_inicio');
+            const dataTermino = dynamicContainer.querySelector('#data_termino');
+
+            if (dataInicio && dataTermino) {
+                dataInicio.addEventListener('change', function() {
+                    if (dataTermino.value && new Date(dataTermino.value) < new Date(this.value)) {
+                        alert('A data de término não pode ser anterior à data de início');
+                        this.value = '';
+                    }
+                });
+
+                dataTermino.addEventListener('change', function() {
+                    if (dataInicio.value && new Date(this.value) < new Date(dataInicio.value)) {
+                        alert('A data de término não pode ser anterior à data de início');
+                        this.value = '';
+                    }
+                });
+            }
+        }
+    }
+
+    tipoSelect.addEventListener('change', updateModalContent);
+
+    // Inicializa o modal com o primeiro tipo selecionado (se houver)
+    if (tipoSelect.value) {
+        updateModalContent();
+    }
+});
+
+// Função para abrir o modal com um tipo específico
+function openCatEfetivoModal(tipo) {
+    const modal = document.getElementById('editCatEfetivoModal');
+    const select = document.getElementById('tipo');
+
+    // Define o tipo selecionado
+    select.value = tipo;
+
+    // Dispara o evento de change para atualizar o conteúdo
+    const event = new Event('change');
+    select.dispatchEvent(event);
+
+    // Mostra o modal
+    modal.classList.remove('hidden');
+}
+
+// Função para fechar o modal
+function closeCatEfetivoModal() {
+    document.getElementById('editCatEfetivoModal').classList.add('hidden');
+}
+
+// Configura os botões de fechar
+document.querySelectorAll('[data-modal-close="editCatEfetivoModal"]').forEach(button => {
+    button.addEventListener('click', closeCatEfetivoModal);
+});
+</script>

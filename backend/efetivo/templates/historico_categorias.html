@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block 'body' %}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                Histórico de Categorias - {{ militar.nome_de_guerra }}
+            </h1>
+            <a href="{% url 'efetivo:ver_militar' militar.id %}" 
+               class="text-indigo-600 hover:text-indigo-800 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar para o militar
+            </a>
+        </div>
+        
+        <!-- Mostra a categoria atual -->
+        {% if categoria_atual %}
+        <div id="categoria-atual-container" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div class="flex flex-col space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600 font-medium">Categoria Atual:</span>
+                    <span class="text-gray-800 font-semibold">
+                        {{ categoria_atual.get_tipo_display }}
+                        {% if categoria_atual.data_termino %}
+                            <span class="text-xs text-gray-500 ml-1">
+                                (até {{ categoria_atual.data_termino|date:"d/m/Y" }})
+                            </span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if categoria_atual.tipo == 'RESTRICAO' and categoria_atual.restricoes_selecionadas %}
+                <div class="mt-1">
+                    <span class="text-xs text-gray-500">Restrições:</span>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        {% for restricao in categoria_atual.restricoes_selecionadas %}
+                        <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
+                            {{ restricao }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="py-3 px-4 text-left">Data Registro</th>
+                        <th class="py-3 px-4 text-left">Tipo</th>
+                        <th class="py-3 px-4 text-left">Período</th>
+                        <th class="py-3 px-4 text-left">Restrições</th>
+                        <th class="py-3 px-4 text-left">Registrado Por</th>
+                        <th class="py-3 px-4 text-left">Status</th>
+                        <th class="py-3 px-4 text-left">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="historico-body">
+                    {% for historico in historicos %}
+                    <tr class="border-t border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            {{ historico.data_registro|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="{{ historico.tipo|lower }}-badge">
+                                {{ historico.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if historico.data_inicio %}
+                                {{ historico.data_inicio|date:"d/m/Y" }}
+                                {% if historico.data_termino %}
+                                    - {{ historico.data_termino|date:"d/m/Y" }}
+                                {% else %}
+                                    (em vigor)
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if historico.tipo == 'RESTRICAO' %}
+                                {{ historico.restricoes_selecionadas_siglas|default:"-" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if historico.usuario_alteracao and historico.usuario_alteracao.profile %}
+                                {{ historico.usuario_alteracao.profile.cpf|default:"-" }}
+                            {% else %}
+                                Sistema
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if historico.deletado %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Excluído</span>
+                            {% elif historico.ativo %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Ativo</span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Inativo</span>
+                            {% endif %}
+                        </td>
+<td class="py-3 px-4">
+                            <div class="flex items-center space-x-2">
+                                <!-- Botão Editar -->
+                          <a href="#" 
+                                onclick="openEditModal({{ historico.cat_efetivo.id }})" 
+                                class="text-indigo-600 hover:text-indigo-800"
+                                title="Editar">
+                                    <i class="fas fa-edit"></i>
+                          </a>
+                                <!-- Botão Excluir -->
+                                {% if not historico.deletado %}
+                                <form method="post" 
+                                     action="{% url 'efetivo:excluir_categoria_efetivo' categoria_id=historico.cat_efetivo.id %}"
+                                      class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-800"
+                                            title="Excluir"
+                                            onclick="return confirm('Tem certeza que deseja excluir esta categoria?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-4 px-4 text-center text-gray-500">Nenhum registro histórico encontrado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ativo-badge {
+        @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs;
+    }
+    .inativo-badge {
+        @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs;
+    }
+    .restricao-badge {
+        @apply bg-red-700 text-white px-2 py-1 rounded-full text-xs;
+    }
+    .lsv-badge {
+        @apply bg-blue-500 text-white px-2 py-1 rounded-full text-xs;
+    }
+    .ferias-badge {
+        @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs;
+    }
+    .lp-badge {
+        @apply bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs;
+    }
+    .eleicao-badge {
+        @apply bg-teal-100 text-teal-800 px-2 py-1 rounded-full text-xs;
+    }
+    .conval-badge {
+        @apply bg-pink-100 text-pink-800 px-2 py-1 rounded-full text-xs;
+    }
+    .lts-badge {
+        @apply bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs;
+    }
+    .ds-badge {
+        @apply bg-lime-100 text-lime-800 px-2 py-1 rounded-full text-xs;
+    }
+    .dr-badge {
+        @apply bg-cyan-100 text-cyan-800 px-2 py-1 rounded-full text-xs;
+    }
+</style>
+<script>
+    function openEditModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+    
+    function closeEditModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+    </script>
+<script>
+function openEditModal(categoriaId) {
+    fetch(`/efetivo/categoria/editar/${categoriaId}/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        document.body.appendChild(div);
+    });
+}
+</script>
+
+{% endblock %}

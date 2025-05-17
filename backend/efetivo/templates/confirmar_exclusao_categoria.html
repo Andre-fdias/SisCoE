@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-4">Confirmar Exclusão</h1>
+        
+        <p class="mb-6">Tem certeza que deseja excluir a categoria <strong>{{ categoria.get_tipo_display }}</strong> do militar <strong>{{ categoria.cadastro.nome_de_guerra }}</strong>?</p>
+        
+        <form method="post" action="{% url 'efetivo:excluir_categoria' categoria.id %}">
+            {% csrf_token %}
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'efetivo:ver_militar' categoria.cadastro.id %}" 
+                   class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                    Confirmar Exclusão
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
