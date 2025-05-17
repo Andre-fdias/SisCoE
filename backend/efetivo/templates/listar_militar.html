@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tz %}
+{% load custom_filters %}
+{% get_current_timezone as TIME_ZONE %}
+{% now "Y-m-d" as current_date %}
 {% block title %} Consultar Efetivo{% endblock %}
 
 {% block 'body' %}
@@ -127,15 +131,52 @@
                                     {% endif %}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class=" text-xs px-2 py-1 rounded">
-                                    {% if cadastro.detalhes_situacao.exists %}
-                                    {{ cadastro.detalhes_situacao.last.status_cat }}
-                                    {% else %}
-                                    -
-                                    {% endif %}
-                                </span>
-                            </td>
+<td class="px-4 py-3 text-center">
+    {% with categoria=cadastro.categorias_ativas.0 %}
+        <span class="text-xs px-2 py-1 rounded">
+            {% if categoria %}
+                <span class="px-2 py-1 rounded-full text-sm font-semibold 
+                    {% if categoria.data_termino and categoria.data_termino < current_date %}
+                        bg-red-100 text-red-800
+                    {% elif categoria.tipo != 'ATIVO' %}
+                        bg-yellow-100 text-yellow-800
+                    {% else %}
+                        bg-green-100 text-green-800
+                    {% endif %}">
+                    
+                    <i class="fas 
+                        {% if categoria.data_termino and categoria.data_termino < current_date %}
+                            fa-exclamation-triangle
+                        {% elif categoria.tipo != 'ATIVO' %}
+                            fa-info-circle
+                        {% else %}
+                            fa-check-circle
+                        {% endif %} 
+                        mr-1"></i>
+                    
+                    {% if categoria.tipo != 'ATIVO' and categoria.data_termino and categoria.data_termino < current_date %}
+                        {{ categoria.get_tipo_display }} (Expirado)
+                    {% elif categoria.tipo != 'ATIVO' %}
+                        {{ categoria.get_tipo_display }}
+                        {% if categoria.data_termino %}
+                            (Até {{ categoria.data_termino|date:"d/m/Y" }})
+                        {% else %}
+                            (Indefinido)
+                        {% endif %}
+                    {% else %}
+                        ATIVO
+                    {% endif %}
+                </span>
+            {% else %}
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    ATIVO
+                </span>
+            {% endif %}
+        </span>
+    {% endwith %}
+</td>
+            
                             <td class="px-4 py-3 text-center">
                                 <a href="{% url 'efetivo:ver_militar' cadastro.id %}" 
                                    class="text-gray-100 bg-gradient-to-r from-purple-700 to-purple-600 hover:bg-gradient-to-br

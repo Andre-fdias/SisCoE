@@ -18,4 +18,13 @@ urlpatterns = [
     path('cadastrar_nova_situacao/<int:id>/', views.cadastrar_nova_situacao, name='cadastrar_nova_situacao'),
     path('check_rpt/<int:id>/', views.check_rpt, name='check_rpt'),
     path('detalhes_efetivo/<int:posto_id>/', views.detalhar_efetivo, name='detalhar_efetivo'),
+    # Categorias de Efetivo
+    path('militar/<int:militar_id>/adicionar-categoria/', 
+         views.adicionar_categoria_efetivo, name='adicionar_categoria_efetivo'),
+    path('militar/<int:militar_id>/historico-categorias/', 
+         views.historico_categorias, name='historico_categorias'),
+    path('categoria/editar/<int:categoria_id>/', 
+         views.editar_categoria_efetivo, name='editar_categoria_efetivo'),
+    path('categoria/excluir/<int:categoria_id>/', 
+         views.excluir_categoria_efetivo, name='excluir_categoria_efetivo'),
 ]

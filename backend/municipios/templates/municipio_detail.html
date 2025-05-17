@@ -416,27 +416,24 @@
         
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Convertendo coordenadas de Sorocaba (formato DMS para decimal)
-                const sorocabaLat = -23 - (30/60) - (6.012/3600);  // -23.50167
-                const sorocabaLon = -47 - (27/60) - (29.016/3600); // -47.45806
+                // Coordenadas de Sorocaba (formato decimal)
+                const sorocabaLat = -23.50167;
+                const sorocabaLon = -47.45806;
                 
-                // Coordenadas da segunda cidade (substitua com os valores reais)
-                const outraCidadeLat = parseFloat("{{ cidade.latitude }}");
-                const outraCidadeLon = parseFloat("{{ cidade.longitude }}");
+                // Coordenadas da cidade atual
+                const cidadeLat = parseFloat("{{ cidade.latitude }}");
+                const cidadeLon = parseFloat("{{ cidade.longitude }}");
                 
-                if (!isNaN(outraCidadeLat) && !isNaN(outraCidadeLon)) {
-                    // Inicializa o mapa centralizado no ponto médio
-                    const map = L.map('map').setView(
-                        [(sorocabaLat + outraCidadeLat)/2, (sorocabaLon + outraCidadeLon)/2], 
-                        10
-                    );
+                if (!isNaN(cidadeLat) && !isNaN(cidadeLon)) {
+                    // Inicializa o mapa centralizado na cidade atual
+                    const map = L.map('map').setView([cidadeLat, cidadeLon], 12);
                     
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     }).addTo(map);
             
                     // Marcador Sorocaba
-                    L.marker([sorocabaLat, sorocabaLon], {
+                    const sorocabaMarker = L.marker([sorocabaLat, sorocabaLon], {
                         icon: L.divIcon({
                             className: 'pulsing-circle',
                             html: `<div style="background-color: #4f46e5; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>`,
@@ -444,11 +441,10 @@
                             iconAnchor: [10, 10]
                         })
                     }).addTo(map)
-                    .bindPopup("<b>Sorocaba</b><br>Origem")
-                    .openPopup();
+                    .bindPopup("<b>Sorocaba</b><br>Origem");
             
                     // Marcador Cidade Destino
-                    L.marker([outraCidadeLat, outraCidadeLon], {
+                    const cidadeMarker = L.marker([cidadeLat, cidadeLon], {
                         icon: L.divIcon({
                             className: 'pulsing-circle',
                             html: `<div style="background-color: #ef4444; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>`,
@@ -458,127 +454,30 @@
                     }).addTo(map)
                     .bindPopup(`<b>{{ cidade.municipio }}</b><br>Destino`);
             
-                    // Função para calcular rota
-                    function calcularRota() {
-                        const loadingControl = L.control({
-                            position: 'topright'
-                        });
-                        
-                        loadingControl.onAdd = function(map) {
-                            const div = L.DomUtil.create('div', 'route-loading');
-                            div.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando rota...';
-                            return div;
-                        };
-                        
-                        loadingControl.addTo(map);
-                        
-                        // Usando OpenRouteService API (requer chave - gratuita para pequenos volumes)
-                        fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62487d76d2f6c4734d47b29135cf5cbf435a&start=${sorocabaLon},${sorocabaLat}&end=${outraCidadeLon},${outraCidadeLat}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                map.removeControl(loadingControl);
-                                
-                                // Extrai geometria da rota
-                                const route = data.features[0];
-                                const distance = (route.properties.segments[0].distance / 1000).toFixed(1);
-                                const duration = (route.properties.segments[0].duration / 60).toFixed(0);
-                                
-                                // Adiciona linha da rota
-                                L.geoJSON(route, {
-                                    style: {
-                                        "color": "#4f46e5",
-                                        "weight": 5,
-                                        "opacity": 0.7
-                                    }
-                                }).addTo(map);
-                                
-                                // Adiciona informações da rota
-                                const routeInfo = L.control({position: 'bottomright'});
-                                
-                                routeInfo.onAdd = function(map) {
-                                    const div = L.DomUtil.create('div', 'route-info');
-                                    div.innerHTML = `
-                                        <div class="bg-white p-3 rounded-lg shadow-lg">
-                                            <h4 class="font-bold mb-2">Informações da Rota</h4>
-                                            <p><i class="fas fa-road mr-2"></i> Distância: ${distance} km</p>
-                                            <p><i class="fas fa-clock mr-2"></i> Tempo: ${duration} minutos</p>
-                                        </div>
-                                    `;
-                                    return div;
-                                };
-                                
-                                routeInfo.addTo(map);
-                                
-                                // Ajusta o zoom para mostrar toda a rota
-                                const bounds = L.geoJSON(route).getBounds();
-                                map.fitBounds(bounds, {padding: [50, 50]});
-                            })
-                            .catch(error => {
-                                map.removeControl(loadingControl);
-                                console.error('Erro ao calcular rota:', error);
-                                alert('Não foi possível calcular a rota. Mostrando linha reta como fallback.');
-                                
-                                // Fallback: linha reta entre os pontos
-                                const straightLine = {
-                                    "type": "Feature",
-                                    "geometry": {
-                                        "type": "LineString",
-                                        "coordinates": [
-                                            [sorocabaLon, sorocabaLat],
-                                            [outraCidadeLon, outraCidadeLat]
-                                        ]
-                                    }
-                                };
-                                
-                                L.geoJSON(straightLine, {
-                                    style: {
-                                        "color": "#4f46e5",
-                                        "weight": 3,
-                                        "opacity": 0.7,
-                                        "dashArray": "5, 5"
-                                    }
-                                }).addTo(map);
-                                
-                                // Cálculo aproximado (em linha reta)
-                                const distance = map.distance(
-                                    [sorocabaLat, sorocabaLon],
-                                    [outraCidadeLat, outraCidadeLon]
-                                ) / 1000;
-                                
-                                const routeInfo = L.control({position: 'bottomright'});
-                                routeInfo.onAdd = function(map) {
-                                    const div = L.DomUtil.create('div', 'route-info');
-                                    div.innerHTML = `
-                                        <div class="bg-white p-3 rounded-lg shadow-lg">
-                                            <h4 class="font-bold mb-2">Informações Aproximadas</h4>
-                                            <p><i class="fas fa-road mr-2"></i> Distância: ${distance.toFixed(1)} km (em linha reta)</p>
-                                            <p class="text-sm text-gray-600"><i class="fas fa-info-circle mr-1"></i> API de rotas indisponível</p>
-                                        </div>
-                                    `;
-                                    return div;
-                                };
-                                
-                                routeInfo.addTo(map);
-                            });
-                    }
-                    
-                    // Botão para calcular rota
+                    // Adiciona controle de rota
                     const routeControl = L.control({position: 'topright'});
                     
                     routeControl.onAdd = function(map) {
                         const div = L.DomUtil.create('div', 'route-control');
                         div.innerHTML = `
-                            <button onclick="this.parentElement.calcularRota()" 
+                            <button id="calculateRouteBtn" 
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow">
                                 <i class="fas fa-route mr-2"></i> Calcular Rota
                             </button>
                         `;
-                        div.calcularRota = calcularRota;
                         return div;
                     };
                     
                     routeControl.addTo(map);
                     
+                    // Evento para calcular rota
+                    document.getElementById('calculateRouteBtn').addEventListener('click', function() {
+                        calculateRoute(map, sorocabaLat, sorocabaLon, cidadeLat, cidadeLon);
+                    });
+                    
+                    // Ajusta o zoom para mostrar ambos os marcadores
+                    const group = new L.featureGroup([sorocabaMarker, cidadeMarker]);
+                    map.fitBounds(group.getBounds().pad(0.5));
                 } else {
                     document.getElementById('map').innerHTML = `
                         <div class="flex items-center justify-center h-full bg-gray-100 text-gray-500">
@@ -590,6 +489,114 @@
                     `;
                 }
             });
+            
+            // Função para calcular rota
+            function calculateRoute(map, startLat, startLon, endLat, endLon) {
+                // Remove rota anterior se existir
+                if (window.currentRoute) {
+                    map.removeLayer(window.currentRoute);
+                }
+                if (window.routeInfoControl) {
+                    map.removeControl(window.routeInfoControl);
+                }
+                
+                // Mostra loading
+                const loadingControl = L.control({position: 'topright'});
+                loadingControl.onAdd = function() {
+                    const div = L.DomUtil.create('div', 'route-loading');
+                    div.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando rota...';
+                    return div;
+                };
+                loadingControl.addTo(map);
+                
+                // Usa a API OSRM (Open Source Routing Machine) - não requer chave
+                fetch(`https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`)
+                    .then(response => response.json())
+                    .then(data => {
+                        map.removeControl(loadingControl);
+                        
+                        if (data.routes && data.routes.length > 0) {
+                            const route = data.routes[0];
+                            const distance = (route.distance / 1000).toFixed(1); // km
+                            const duration = (route.duration / 60).toFixed(0); // minutos
+                            
+                            // Adiciona linha da rota ao mapa
+                            window.currentRoute = L.geoJSON(route.geometry, {
+                                style: {
+                                    color: '#4f46e5',
+                                    weight: 5,
+                                    opacity: 0.7
+                                }
+                            }).addTo(map);
+                            
+                            // Adiciona informações da rota
+                            window.routeInfoControl = L.control({position: 'bottomright'});
+                            window.routeInfoControl.onAdd = function() {
+                                const div = L.DomUtil.create('div', 'route-info');
+                                div.innerHTML = `
+                                    <div class="bg-white p-3 rounded-lg shadow-lg">
+                                        <h4 class="font-bold mb-2">Informações da Rota</h4>
+                                        <p><i class="fas fa-road mr-2"></i> Distância: ${distance} km</p>
+                                        <p><i class="fas fa-clock mr-2"></i> Tempo: ${duration} minutos</p>
+                                    </div>
+                                `;
+                                return div;
+                            };
+                            window.routeInfoControl.addTo(map);
+                            
+                            // Ajusta o zoom para mostrar toda a rota
+                            const bounds = L.geoJSON(route.geometry).getBounds();
+                            map.fitBounds(bounds, {padding: [50, 50]});
+                        } else {
+                            throw new Error('Rota não encontrada');
+                        }
+                    })
+                    .catch(error => {
+                        map.removeControl(loadingControl);
+                        console.error('Erro ao calcular rota:', error);
+                        
+                        // Fallback: linha reta entre os pontos
+                        const straightLine = {
+                            "type": "Feature",
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": [
+                                    [startLon, startLat],
+                                    [endLon, endLat]
+                                ]
+                            }
+                        };
+                        
+                        window.currentRoute = L.geoJSON(straightLine, {
+                            style: {
+                                "color": "#4f46e5",
+                                "weight": 3,
+                                "opacity": 0.7,
+                                "dashArray": "5, 5"
+                            }
+                        }).addTo(map);
+                        
+                        // Cálculo aproximado (em linha reta)
+                        const distance = map.distance(
+                            [startLat, startLon],
+                            [endLat, endLon]
+                        ) / 1000;
+                        
+                        window.routeInfoControl = L.control({position: 'bottomright'});
+                        window.routeInfoControl.onAdd = function() {
+                            const div = L.DomUtil.create('div', 'route-info');
+                            div.innerHTML = `
+                                <div class="bg-white p-3 rounded-lg shadow-lg">
+                                    <h4 class="font-bold mb-2">Informações Aproximadas</h4>
+                                    <p><i class="fas fa-road mr-2"></i> Distância: ${distance.toFixed(1)} km (em linha reta)</p>
+                                    <p class="text-sm text-gray-600"><i class="fas fa-info-circle mr-1"></i> API de rotas indisponível</p>
+                                </div>
+                            `;
+                            return div;
+                        };
+                        window.routeInfoControl.addTo(map);
+                    });
+            }
         </script>
         
         <style>

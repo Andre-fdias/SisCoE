@@ -1,0 +1,159 @@
+<div id="editCatEfetivoModal{{ categoria.id }}" 
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+     x-data="{ show: true }"
+     x-show="show"
+     @keydown.escape.window="show = false">
+
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+        <!-- Cabeçalho -->
+        <div class="sticky top-0 bg-indigo-700 text-white p-4 flex justify-between items-center rounded-t-xl">
+            <h3 class="text-xl font-bold">
+                <i class="fas fa-edit mr-2"></i>Editar: {{ categoria.get_tipo_display }}
+            </h3>
+            <button @click="show = false" class="hover:text-indigo-200 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Corpo do formulário -->
+      
+        <form method="POST" 
+            id="editarCategoriaForm{{ categoria.id }}" 
+            action="{% url 'efetivo:editar_categoria_efetivo' categoria.id %}"
+            class="p-6">
+
+            {% csrf_token %}
+            
+            <!-- Grupo de Datas -->
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">
+                        Data de Início <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" 
+                           name="data_inicio"
+                           value="{{ categoria.data_inicio|date:'Y-m-d' }}"
+                           required
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-700">
+                        Data de Término
+                    </label>
+                    <input type="date" 
+                           name="data_termino"
+                           value="{{ categoria.data_termino|date:'Y-m-d' }}"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Seção de Restrições -->
+            {% if categoria.tipo == 'RESTRICAO' %}
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-4 border-b pb-2">Restrições</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {% for field in restricao_fields %}
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" 
+                               name="{{ field.name }}"
+                               {% if field.value %}checked{% endif %}
+                               class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <span class="text-sm text-gray-700">{{ field.verbose_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Observações -->
+            <div class="mb-6">
+                <label class="block mb-2 text-sm font-medium text-gray-700">
+                    Observações
+                </label>
+                <textarea name="observacao" 
+                          rows="3"
+                          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">{{ categoria.observacao }}</textarea>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button type="button" 
+                        @click="show = false"
+                        class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        id="submitBtn{{ categoria.id }}" 
+                        class="px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função genérica para tratamento de formulários
+    function handleFormSubmit(form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const formData = new FormData(form);
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Salvando...';
+
+                // Processar checkboxes manualmente se for RESTRICAO
+                if (form.dataset.tipo === 'RESTRICAO') {
+                    form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        formData.set(checkbox.name, checkbox.checked ? 'true' : 'false');
+                    });
+                }
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.reload(); // Recarrega a página após sucesso
+                } else {
+                    alert(data.error || 'Erro ao salvar alterações');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro na comunicação com o servidor');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Salvar Alterações';
+            }
+        });
+    }
+
+    // Observar cliques no documento para modais dinâmicos
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[onclick^="openEditModal"]')) {
+            // Quando o modal é carregado via AJAX, aguardar um breve momento antes de configurar
+            setTimeout(() => {
+                const form = document.querySelector('form[id^="editarCategoriaForm"]');
+                if (form) {
+                    // Adicionar tipo ao dataset se for RESTRICAO
+                    form.dataset.tipo = "{{ categoria.tipo }}"; 
+                    handleFormSubmit(form);
+                }
+            }, 100);
+        }
+    });
+});
+</script>
