@@ -8,13 +8,12 @@
             <h1 class="text-2xl font-bold text-gray-800">
                 Histórico de Categorias - {{ militar.nome_de_guerra }}
             </h1>
-            <a href="{% url 'efetivo:ver_militar' militar.id %}" 
+            <a href="{% url 'efetivo:ver_militar' militar.id %}"
                class="text-indigo-600 hover:text-indigo-800 flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i> Voltar para o militar
             </a>
         </div>
-        
-        <!-- Mostra a categoria atual -->
+
         {% if categoria_atual %}
         <div id="categoria-atual-container" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <div class="flex flex-col space-y-2">
@@ -44,7 +43,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-100">
@@ -104,29 +103,27 @@
                                 <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Inativo</span>
                             {% endif %}
                         </td>
-<td class="py-3 px-4">
+                        <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
-                                <!-- Botão Editar -->
-                          <a href="#" 
-                                onclick="openEditModal({{ historico.cat_efetivo.id }})" 
-                                class="text-indigo-600 hover:text-indigo-800"
-                                title="Editar">
-                                    <i class="fas fa-edit"></i>
-                          </a>
-                                <!-- Botão Excluir -->
-                                {% if not historico.deletado %}
-                                <form method="post" 
-                                     action="{% url 'efetivo:excluir_categoria_efetivo' categoria_id=historico.cat_efetivo.id %}"
-                                      class="inline">
+                                {% if not historico.cat_efetivo.data_termino or historico.cat_efetivo.data_termino > today %}
+                                    {% if historico.cat_efetivo %}
+                                        <a href="{% url 'efetivo:editar_categoria_efetivo' historico.cat_efetivo.id %}"
+                                           class="abrir-modal-edicao text-indigo-600 hover:text-indigo-800">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+
+                                <form method="post"
+                                    action="{% url 'efetivo:excluir_categoria_efetivo' historico.cat_efetivo.id %}"
+                                    class="inline">
                                     {% csrf_token %}
                                     <button type="submit"
-                                            class="text-red-600 hover:text-red-800"
-                                            title="Excluir"
-                                            onclick="return confirm('Tem certeza que deseja excluir esta categoria?');">
+                                            class="texto-vermelho-600 hover:texto-vermelho-800"
+                                            onclick="return confirm('Confirma exclusão?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -141,62 +138,145 @@
     </div>
 </div>
 
-<style>
-    .ativo-badge {
-        @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs;
-    }
-    .inativo-badge {
-        @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs;
-    }
-    .restricao-badge {
-        @apply bg-red-700 text-white px-2 py-1 rounded-full text-xs;
-    }
-    .lsv-badge {
-        @apply bg-blue-500 text-white px-2 py-1 rounded-full text-xs;
-    }
-    .ferias-badge {
-        @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs;
-    }
-    .lp-badge {
-        @apply bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs;
-    }
-    .eleicao-badge {
-        @apply bg-teal-100 text-teal-800 px-2 py-1 rounded-full text-xs;
-    }
-    .conval-badge {
-        @apply bg-pink-100 text-pink-800 px-2 py-1 rounded-full text-xs;
-    }
-    .lts-badge {
-        @apply bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs;
-    }
-    .ds-badge {
-        @apply bg-lime-100 text-lime-800 px-2 py-1 rounded-full text-xs;
-    }
-    .dr-badge {
-        @apply bg-cyan-100 text-cyan-800 px-2 py-1 rounded-full text-xs;
-    }
-</style>
-<script>
-    function openEditModal(modalId) {
-        document.getElementById(modalId).classList.remove('hidden');
-    }
-    
-    function closeEditModal(modalId) {
-        document.getElementById(modalId).classList.add('hidden');
-    }
-    </script>
-<script>
-function openEditModal(categoriaId) {
-    fetch(`/efetivo/categoria/editar/${categoriaId}/`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => response.text())
-    .then(html => {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        document.body.appendChild(div);
-    });
-}
-</script>
+{% include 'modals/editar_categoria_atual.html' %}
 
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Estilos personalizados */
+.btn-voltar { @apply text-indigo-600 hover:text-indigo-800 flex items-center; }
+.tabela-historico { @apply min-w-full bg-white; }
+.acoes-container { @apply flex items-center space-x-2; }
+.btn-editar { @apply text-indigo-600 hover:text-indigo-800; }
+.form-excluir button { @apply text-red-600 hover:text-red-800; }
+.modal-container {
+    /* As classes hidden e flex já estão inline no elemento div */
+}
+.modal-content {
+    @apply bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto;
+}
+.texto-vermelho-600 { color: #DC2626; }
+.hover:texto-vermelho-800:hover { color: #991B1B; }
+.abrir-modal-edicao { @apply text-indigo-600 hover:text-indigo-800; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modalEditar = document.getElementById('editCatEfetivoModal{{ categoria.id }}');
+
+    // Abrir Modal
+    document.querySelectorAll('.abrir-modal-edicao').forEach(botao => {
+        botao.addEventListener('click', async (evento) => {
+            evento.preventDefault();
+            const url = evento.target.closest('a').href;
+            const categoriaId = url.split('/').slice(-2)[0]; // Extrai o ID da categoria da URL
+
+            try {
+                const resposta = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(`Erro HTTP! status: ${resposta.status}`);
+                }
+
+                const html = await resposta.text();
+                const formularioEdicao = modalEditar.querySelector('form');
+                if (formularioEdicao) {
+                    formularioEdicao.innerHTML = html;
+                    formularioEdicao.action = `/efetivo/categoria/editar/${categoriaId}/`; // Define a action do formulário dinamicamente
+                }
+
+                // Exibir o modal usando Alpine.js
+                if (window.Alpine && modalEditar.__x) {
+                    modalEditar.__x.$data.show = true;
+                } else {
+                    modalEditar.classList.remove('hidden');
+                    modalEditar.style.display = 'flex';
+                }
+
+                // Configurar o envio do formulário
+                if (formularioEdicao) {
+                    formularioEdicao.addEventListener('submit', async (eventoSubmit) => {
+                        eventoSubmit.preventDefault();
+                        const formData = new FormData(formularioEdicao);
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        const botaoSalvar = formularioEdicao.querySelector('button[type="submit"]');
+
+                        try {
+                            if (botaoSalvar) {
+                                botaoSalvar.disabled = true;
+                                botaoSalvar.textContent = 'Salvando...';
+                            }
+
+                            const respostaSubmit = await fetch(formularioEdicao.action, { // Usa a action definida dinamicamente
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': csrfToken
+                                }
+                            });
+
+                            if (!respostaSubmit.ok) {
+                                const dadosErro = await respostaSubmit.json();
+                                alert(dadosErro.error || 'Erro ao salvar as alterações.');
+                            } else {
+                                const dados = await respostaSubmit.json();
+                                if (dados.success) {
+                                    window.location.reload();
+                                } else {
+                                    alert(dados.error || 'Erro ao salvar as alterações.');
+                                }
+                            }
+                        } catch (erro) {
+                            console.error('Erro ao enviar formulário:', erro);
+                            alert('Erro na comunicação com o servidor.');
+                        } finally {
+                            if (botaoSalvar) {
+                                botaoSalvar.disabled = false;
+                                botaoSalvar.textContent = 'Salvar Alterações';
+                            }
+                        }
+                    });
+                }
+
+            } catch (erro) {
+                console.error('Erro ao carregar dados do modal:', erro);
+                alert('Erro ao carregar o formulário de edição.');
+            }
+        });
+    });
+
+    // Fechar Modal
+    const botaoFecharModal = modalEditar ? modalEditar.querySelector('.fechar-modal') : null;
+    if (botaoFecharModal) {
+        botaoFecharModal.addEventListener('click', () => {
+            if (window.Alpine && modalEditar.__x) {
+                modalEditar.__x.$data.show = false;
+            } else {
+                modalEditar.classList.add('hidden');
+                modalEditar.style.display = 'none';
+            }
+        });
+    }
+
+    // Fechar Modal ao clicar fora
+    if (modalEditar) {
+        modalEditar.addEventListener('click', (evento) => {
+            if (evento.target === modalEditar) {
+                if (window.Alpine && modalEditar.__x) {
+                    modalEditar.__x.$data.show = false;
+                } else {
+                    modalEditar.classList.add('hidden');
+                    modalEditar.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

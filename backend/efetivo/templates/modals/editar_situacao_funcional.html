@@ -226,51 +226,67 @@
 </div>
 
 <script>
-   // Script atualizado
 document.addEventListener('DOMContentLoaded', () => {
+    // Seletores melhorados
     const modals = {
         edit: document.getElementById('editSituacaoModal'),
         choice: document.getElementById('choiceModal'),
         new: document.getElementById('newSituacaoModal')
     };
 
-    const forms = {
-        edit: document.getElementById('editSituacaoForm'),
-        new: document.getElementById('newSituacaoForm')
-    };
+    // Função universal para controle de modais
+    function handleModal(action, modalId) {
+        if(action === 'open') {
+            document.getElementById(modalId).classList.remove('hidden');
+        } else {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    }
 
-    // Funções de controle de modais
-    const modalControl = {
-        open: (id) => modals[id].classList.remove('hidden'),
-        close: (id) => modals[id].classList.add('hidden')
-    };
+    // Evento de abertura do modal de edição
+    document.querySelectorAll('[data-modal-open]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modalId = button.getAttribute('data-modal-open');
+            handleModal('open', modalId);
+        });
+    });
+
+    // Evento de fechamento para todos os modais
+    document.querySelectorAll('[data-modal-close]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modalId = button.getAttribute('data-modal-close');
+            handleModal('close', modalId);
+        });
+    });
 
     // Interceptar submit do formulário de edição
-    forms.edit.addEventListener('submit', (e) => {
+    document.getElementById('editSituacaoForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        modalControl.open('choice');
+        handleModal('open', 'choiceModal');
     });
 
     // Botão Não - Fechar modais e submeter edição
     document.querySelector('[data-modal-close="#choiceModal"]').addEventListener('click', () => {
-        modalControl.close('choice');
-        forms.edit.submit();
+        handleModal('close', 'choiceModal');
+        document.getElementById('editSituacaoForm').submit();
     });
 
     // Botão Sim - Abrir modal de nova situação
     document.querySelector('[data-modal-target="#newSituacaoModal"]').addEventListener('click', () => {
-        modalControl.close('choice');
-        modalControl.open('new');
+        handleModal('close', 'choiceModal');
+        handleModal('open', 'newSituacaoModal');
     });
 
     // Submissão do formulário de nova situação
-    forms.new.addEventListener('submit', async (e) => {
+    document.getElementById('newSituacaoForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
         try {
-            const response = await fetch(forms.new.action, {
+            const response = await fetch(e.target.action, {
                 method: 'POST',
-                body: new FormData(forms.new)
+                body: new FormData(e.target)
             });
 
             if (response.ok) {
