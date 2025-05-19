@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 from django.contrib.auth import get_user_model
 import locale
+from django.utils import timezone
 
 try:
     locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
@@ -757,12 +758,30 @@ class CatEfetivo(models.Model):
             return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
 
 
+
     def save(self, *args, **kwargs):
-    # Validação básica - pode ser expandida conforme necessidades específicas
-        if not self.tipo:
-            raise ValueError("O campo 'tipo' é obrigatório")
+        is_new = self._state.adding  # Verifica se é um novo registro
+
+        # Atualiza status ativo/inativo
+        hoje = timezone.now().date()
+        if self.data_termino:
+            self.ativo = self.data_termino > hoje
+        else:
+            self.ativo = True
+
+        # Limpa restrições se não for RESTRICAO
+        if self.tipo != "RESTRICAO":
+            campos_restricao = [f.name for f in self._meta.fields if f.name.startswith('restricao_')]
+            for campo in campos_restricao:
+                setattr(self, campo, False)
 
         super().save(*args, **kwargs)
+
+        # Cria histórico apenas se for novo
+        if is_new:
+            self.criar_registro_historico()
+
+
 
     @property
     def restricoes_selecionadas(self):
@@ -1028,7 +1047,7 @@ class HistoricoCatEfetivo(models.Model):
     data_termino = models.DateField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
     observacao = models.TextField(blank=True, null=True)
-
+    deletado = models.BooleanField(default=False)  # Adicione este campo
     # Campos LSV
     boletim_concessao_lsv = models.CharField(max_length=50, blank=True, null=True)
     data_boletim_lsv = models.DateField(blank=True, null=True)

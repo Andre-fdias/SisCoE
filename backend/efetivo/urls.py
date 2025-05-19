@@ -27,4 +27,10 @@ urlpatterns = [
          views.editar_categoria_efetivo, name='editar_categoria_efetivo'),
     path('categoria/excluir/<int:categoria_id>/', 
          views.excluir_categoria_efetivo, name='excluir_categoria_efetivo'),
-]
+     path(
+     'excluir-historico-categoria/<int:historico_id>/',
+     views.excluir_historico_categoria,  # Nome correto da view
+     name='excluir_historico_categoria'
+     ),
+     
+     ]

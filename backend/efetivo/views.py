@@ -154,7 +154,7 @@ def listar_militar(request):
         
         return render(request, 'listar_militar.html', context)
     
-    
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -530,41 +530,57 @@ def cadastrar_nova_situacao(request, id):
 
 
 
-# responsável pela edição da model cadastro
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from .models import Cadastro, HistoricoPromocao, HistoricoDetalhesSituacao
+
 @login_required
 def editar_dados_pessoais_contatos(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
-    historico_promocoes = HistoricoPromocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
-    historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
 
-    if request.method == "GET":
-        return render(request, 'editar_dados_pessoais_contatos.html', {
-            'cadastro': cadastro,
-            'genero': Cadastro.genero_choices,
-            'historico_promocoes': historico_promocoes,
-            'historico_detalhes_situacao': historico_detalhes_situacao,
-        })
+    # Carrega as choices diretamente do modelo
+    genero_choices = Cadastro.genero_choices
+    alteracao_choices = Cadastro.alteracao_choices
 
-    elif request.method == "POST":
-        cadastro.re = request.POST.get('re')
-        cadastro.dig = request.POST.get('dig')
-        cadastro.nome = request.POST.get('nome')
-        cadastro.nome_de_guerra = request.POST.get('nome_de_guerra')
-        cadastro.genero = request.POST.get('genero')
-        cadastro.nasc = request.POST.get('nasc')
-        cadastro.matricula = request.POST.get('matricula')
-        cadastro.admissao = request.POST.get('admissao')
-        cadastro.previsao_de_inatividade = request.POST.get('previsao_de_inatividade')
-        cadastro.cpf = request.POST.get('cpf')
-        cadastro.rg = request.POST.get('rg')
-        cadastro.tempo_para_averbar_inss = request.POST.get('tempo_para_averbar_inss')
-        cadastro.tempo_para_averbar_militar = request.POST.get('tempo_para_averbar_militar')
-        cadastro.email = request.POST.get('email')
-        cadastro.telefone = request.POST.get('telefone')
-      
-        cadastro.save()
-        messages.add_message(request, constants.SUCCESS, 'Dados Pessoais e Contatos atualizados com sucesso', extra_tags='bg-green-500 text-white p-4 rounded')
-        return redirect('efetivo:ver_militar', id=cadastro.id)
+    if request.method == "POST":
+        try:
+            # Atualiza campos básicos
+            campos = [
+                're', 'dig', 'nome', 'nome_de_guerra', 'genero', 'nasc',
+                'matricula', 'admissao', 'previsao_de_inatividade', 'cpf',
+                'rg', 'tempo_para_averbar_inss', 'tempo_para_averbar_militar',
+                'email', 'telefone', 'alteracao'
+            ]
+
+            for campo in campos:
+                setattr(cadastro, campo, request.POST.get(campo))
+
+            # Valida e salva
+            cadastro.full_clean()
+            cadastro.save()
+
+            messages.success(request, 'Dados atualizados com sucesso!')
+            return redirect('efetivo:ver_militar', id=cadastro.id)
+
+        except ValidationError as e:
+            messages.error(request, f'Erro de validação: {e}')
+        except Exception as e:
+            messages.error(request, f'Erro ao atualizar dados: {str(e)}')
+
+    # Carrega dados para o template
+    context = {
+        'cadastro': cadastro,
+        'genero': genero_choices,
+        'alteracao': alteracao_choices,
+        'historico_promocoes': HistoricoPromocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao'),
+        'historico_detalhes_situacao': HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao'),
+    }
+
+    print("Context being passed to the template:", context)  # Debugging line
+
+    return render(request, 'editar_dados_pessoais_contatos.html', context)
 
 
 @login_required
@@ -785,87 +801,42 @@ from django.db import transaction
 from datetime import date
 from .models import   Cadastro, DetalhesSituacao, Promocao,  CatEfetivo, HistoricoCatEfetivo
 
+from django.utils import timezone
+
 @login_required
 def historico_categorias(request, militar_id):
     militar = get_object_or_404(Cadastro, id=militar_id)
+    
+    # Filtra apenas históricos NÃO excluídos (se usar soft delete)
     historicos = HistoricoCatEfetivo.objects.filter(
         cat_efetivo__cadastro=militar
     ).select_related('cat_efetivo').order_by('-data_registro')
+
+    # Ou, para hard delete, não é necessário filtrar (os excluídos já foram removidos)
     
     categoria_atual = militar.categoria_ativa()
     
     return render(request, 'historico_categorias.html', {
         'militar': militar,
         'historicos': historicos,
-        'categoria_atual': categoria_atual
+        'categoria_atual': categoria_atual,
+        'today': timezone.now().date(),
     })
 
+# views.py
+from django.utils import timezone
+from django.contrib import messages
+from django.utils import timezone
+from django.http import JsonResponse
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db import transaction
+from datetime import datetime
 
-@login_required
-def editar_categoria_efetivo(request, categoria_id):
-    categoria = get_object_or_404(CatEfetivo, id=categoria_id)
-    militar = categoria.cadastro
-    today = timezone.now().date()
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-    if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                form_data = request.POST
-                
-                # Processamento das datas
-                data_inicio = form_data.get('data_inicio')
-                data_termino = form_data.get('data_termino')
-                
-                categoria.data_inicio = parse_date(data_inicio) if data_inicio else None
-                categoria.data_termino = parse_date(data_termino) if data_termino else None
-                categoria.ativo = categoria.data_termino >= today if categoria.data_termino else True
-                categoria.observacao = form_data.get('observacao', '')
-
-                # Campos específicos para LSV
-                if categoria.tipo == 'LSV':
-                    categoria.boletim_concessao_lsv = form_data.get('boletim_concessao_lsv', '')
-                    categoria.data_boletim_lsv = parse_date(form_data.get('data_boletim_lsv'))
-
-                # Processar restrições
-                if categoria.tipo == 'RESTRICAO':
-                    campos_restricao = [f.name for f in CatEfetivo._meta.fields if f.name.startswith('restricao_')]
-                    for campo in campos_restricao:
-                        setattr(categoria, campo, campo in form_data)
-
-                categoria.save()
-                criar_historico(categoria, request.user)
-
-                if is_ajax:
-                    return JsonResponse({'success': True, 'message': 'Categoria atualizada com sucesso!'})
-                
-                messages.success(request, 'Categoria atualizada com sucesso!')
-                return redirect('efetivo:ver_militar', id=militar.id)
-
-        except Exception as e:
-            error_msg = f'Erro ao atualizar categoria: {str(e)}'
-            if is_ajax:
-                return JsonResponse({'success': False, 'error': error_msg}, status=400)
-            messages.error(request, error_msg)
-            return redirect('efetivo:ver_militar', id=militar.id)
-
-    context = {
-        'militar': militar,
-        'categoria': categoria,
-        'restricao_fields': [
-            {'name': f.name, 'verbose_name': f.verbose_name, 'value': getattr(categoria, f.name)}
-            for f in CatEfetivo._meta.fields if f.name.startswith('restricao_')
-        ],
-        'is_modal': True
-    }
-    
-    if is_ajax:
-        return render(request, 'modals/editar_categoria_atual.html', context)
-    
-    return render(request, 'efetivo/editar_categoria.html', context)
 
 def parse_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else None
+
 
 def criar_historico(categoria, usuario):
     historico_data = {
@@ -885,40 +856,6 @@ def criar_historico(categoria, usuario):
         historico_data.update({campo: getattr(categoria, campo) for campo in campos_restricao})
     
     HistoricoCatEfetivo.objects.create(**historico_data)
-
-    
-@login_required
-def excluir_categoria_efetivo(request, categoria_id):
-    categoria = get_object_or_404(CatEfetivo, id=categoria_id)
-    militar_id = categoria.cadastro.id
-    
-    if request.method == 'POST':
-        with transaction.atomic():
-            # Criar registro no histórico antes de excluir
-            campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
-                              if field.name.startswith('restricao_')]
-            
-            HistoricoCatEfetivo.objects.create(
-                cat_efetivo=categoria,
-                tipo=categoria.tipo,
-                data_inicio=categoria.data_inicio,
-                data_termino=categoria.data_termino,
-                observacao=categoria.observacao,
-                boletim_concessao_lsv=categoria.boletim_concessao_lsv,
-                data_boletim_lsv=categoria.data_boletim_lsv,
-                usuario_alteracao=request.user,
-                **{campo: getattr(categoria, campo) for campo in campos_restricao},
-                deletado=True
-            )
-            
-            categoria.delete()
-            messages.success(request, 'Categoria removida com sucesso!')
-        
-        return redirect('efetivo:ver_militar', militar_id=militar_id)
-    
-    return render(request, 'efetivo/confirmar_exclusao_categoria.html', {
-        'categoria': categoria
-    })
 
 
 @login_required
@@ -1005,140 +942,161 @@ def adicionar_categoria_efetivo(request, militar_id):
 
     # Se não for POST, redireciona para a página do militar
     return redirect('efetivo:ver_militar',id=militar_id)
-    militar = get_object_or_404(Cadastro, id=militar_id)
+  
+  
+  # views.py
+
+
+# views.py (Atualização Final)
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponse, JsonResponse
+from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from django.db import transaction
+from django.contrib import messages
+from backend.efetivo.models import CatEfetivo, HistoricoCatEfetivo  # Certifique-se de que o caminho para seus modelos está correto
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def editar_categoria_efetivo(request, categoria_id):
+    """
+    View para editar uma categoria de efetivo existente.
+
+    Permite a edição via formulário HTML normal ou via requisição AJAX.
+    Se a requisição for AJAX (X-Requested-With: XMLHttpRequest), retorna um JsonResponse
+    indicando sucesso ou erro. Caso contrário, redireciona para a página de histórico
+    de categorias do militar.
+    """
+    # Obtém a categoria de efetivo com base no ID fornecido, incluindo informações do cadastro do militar.
+    try:
+        categoria = get_object_or_404(
+            CatEfetivo.objects.select_related('cadastro'),
+            id=categoria_id
+        )
+    except CatEfetivo.DoesNotExist:
+        mensagem_erro = f"Categoria de efetivo com ID {categoria_id} não encontrada."
+        messages.error(request, mensagem_erro)
+        return redirect('efetivo:historico_categorias', militar_id=None)  # Redireciona mesmo sem militar específico
+
+    # Verifica se a requisição é AJAX.
+    eh_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Bloqueia a edição de categorias que já expiraram.
+    if categoria.data_termino and categoria.data_termino < timezone.now().date():
+        mensagem = "A edição não é permitida para categorias expiradas."
+        if eh_ajax:
+            return HttpResponse(status=403, content=mensagem)
+        else:
+            messages.error(request, mensagem)
+            return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
+
+    # Se a requisição for do tipo POST, processa os dados do formulário.
+    if request.method == 'POST':
+        try:
+            # Garante que as operações de banco de dados sejam atômicas (tudo ou nada).
+            with transaction.atomic():
+                # Obtém os dados do formulário.
+                dados_formulario = request.POST
+                categoria.data_inicio = dados_formulario.get('data_inicio')
+                categoria.data_termino = dados_formulario.get('data_termino') or None  # Permite data de término nula
+                categoria.observacao = dados_formulario.get('observacao', '')
+
+                # Processa campos específicos dependendo do tipo da categoria.
+                if categoria.tipo == 'LSV':
+                    categoria.boletim_concessao_lsv = dados_formulario.get('boletim_concessao_lsv', '')
+                    categoria.data_boletim_lsv = dados_formulario.get('data_boletim_lsv') or None
+
+                # Atualiza as restrições se o tipo da categoria for 'RESTRICAO'.
+                if categoria.tipo == 'RESTRICAO':
+                    campos_restricao = [campo.name for campo in CatEfetivo._meta.fields if campo.name.startswith('restricao_')]
+                    for campo in campos_restricao:
+                        # Define o atributo da categoria como True se o campo estiver presente no formulário (marcado), False caso contrário.
+                        setattr(categoria, campo, campo in dados_formulario)
+
+                # Salva as alterações na categoria.
+                categoria.save()
+
+                # Atualiza o registro de histórico correspondente.
+                try:
+                    ultimo_historico = HistoricoCatEfetivo.objects.filter(
+                        cat_efetivo=categoria
+                    ).latest('data_registro')
+                    ultimo_historico.data_inicio = categoria.data_inicio
+                    ultimo_historico.data_termino = categoria.data_termino
+                    ultimo_historico.observacao = categoria.observacao
+                    ultimo_historico.save()
+                except HistoricoCatEfetivo.DoesNotExist:
+                    # Log de um erro, pois deveria haver um histórico para a categoria editada.
+                    print(f"Erro: Nenhum histórico encontrado para a categoria ID {categoria.id}")
+                    messages.warning(request, "Histórico da categoria não encontrado e não foi atualizado.")
+
+                # Se a requisição for AJAX, retorna uma resposta JSON de sucesso.
+                if eh_ajax:
+                    return JsonResponse({'success': True})
+                else:
+                    # Se não for AJAX, redireciona para a página de histórico do militar.
+                    messages.success(request, "Categoria atualizada com sucesso!")
+                    return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
+
+        except Exception as e:
+            mensagem_erro = f'Erro ao atualizar a categoria: {str(e)}'
+            # Se a requisição for AJAX, retorna uma resposta JSON de erro com status 400.
+            if eh_ajax:
+                return JsonResponse({'error': mensagem_erro}, status=400)
+            else:
+                # Se não for AJAX, adiciona uma mensagem de erro e redireciona.
+                messages.error(request, mensagem_erro)
+                return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
+
+    # Se a requisição for do tipo GET, renderiza o formulário de edição.
+    else:
+        contexto = {
+            'categoria': categoria,
+            'militar': categoria.cadastro,
+            'today': timezone.now().date(),
+            'restricao_fields': [
+                {'name': campo.name, 'verbose_name': campo.verbose_name, 'value': getattr(categoria, campo.name)}
+                for campo in CatEfetivo._meta.fields if campo.name.startswith('restricao_')
+            ]
+        }
+        # Se a requisição for AJAX, renderiza apenas o conteúdo do modal.
+        if eh_ajax:
+            return HttpResponse(render_to_string('modals/editar_categoria_atual.html', contexto))
+        else:
+            # Se não for AJAX (o que não deveria acontecer normalmente para esta view com o fluxo AJAX),
+            # você pode optar por redirecionar ou renderizar uma página completa.
+            return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
+
+
+@login_required
+def excluir_categoria_efetivo(request, categoria_id):
+    categoria = get_object_or_404(CatEfetivo, id=categoria_id)
+    militar_id = categoria.cadastro.id
     
     if request.method == 'POST':
-        form_data = request.POST.copy()
-        tipo = form_data.get('tipo')
-        
-        if not tipo:
-            messages.error(request, 'Tipo de categoria é obrigatório!')
-            return redirect('efetivo:ver_militar', id=militar_id)
-        
         try:
             with transaction.atomic():
-                # Criar nova categoria
-                nova_categoria = CatEfetivo(
-                    cadastro=militar,
-                    tipo=tipo,
-                    data_inicio=form_data.get('data_inicio') or date.today(),
-                    data_termino=form_data.get('data_termino'),
-                    usuario_cadastro=request.user,
-                    observacao=form_data.get('observacao', '')
-                )
-                
-                # Campos específicos para LSV
-                if tipo == 'LSV':
-                    nova_categoria.boletim_concessao_lsv = form_data.get('boletim_concessao_lsv', '')
-                    nova_categoria.data_boletim_lsv = form_data.get('data_boletim_lsv')
-                
-                # Campos de restrição
-                if tipo == 'RESTRICAO':
-                    campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
-                                      if field.name.startswith('restricao_')]
-                    for campo in campos_restricao:
-                        setattr(nova_categoria, campo, campo in form_data)
-                
-                nova_categoria.save()
-                
-                # Criar registro no histórico
-                historico_data = {
-                    'cat_efetivo': nova_categoria,
-                    'tipo': nova_categoria.tipo,
-                    'data_inicio': nova_categoria.data_inicio,
-                    'data_termino': nova_categoria.data_termino,
-                    'observacao': nova_categoria.observacao,
-                    'boletim_concessao_lsv': nova_categoria.boletim_concessao_lsv,
-                    'data_boletim_lsv': nova_categoria.data_boletim_lsv,
-                    'usuario_alteracao': request.user
-                }
-                
-                # Adicionar campos de restrição apenas se for do tipo RESTRICAO
-                if tipo == 'RESTRICAO':
-                    campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
-                                      if field.name.startswith('restricao_')]
-                    for campo in campos_restricao:
-                        historico_data[campo] = getattr(nova_categoria, campo)
-                
-                HistoricoCatEfetivo.objects.create(**historico_data)
-                
-                messages.success(request, 'Categoria adicionada com sucesso!')
-                return redirect('efetivo:ver_militar', id=militar_id)
-                
+                # Remove categoria e histórico relacionado
+                HistoricoCatEfetivo.objects.filter(cat_efetivo=categoria).delete()
+                categoria.delete()
+                messages.success(request, 'Registro e histórico excluídos permanentemente!')
         except Exception as e:
-            messages.error(request, f'Erro ao adicionar categoria: {str(e)}')
-            return redirect('efetivo:ver_militar', id=militar_id)
-    
-    # Preparar dados para o template
-    campos_restricao = [{
-        'name': field.name,
-        'verbose_name': field.verbose_name,
-        'value': False
-    } for field in CatEfetivo._meta.get_fields() 
-     if field.name.startswith('restricao_')]
-    
-    return render(request, 'efetivo/adicionar_categoria.html', {
-        'militar': militar,
-        'campos_restricao': campos_restricao,
-        'categoria_choices': CatEfetivo.TIPO_CHOICES,
-        'today': date.today()
-    })
-    militar = get_object_or_404(Cadastro, id=militar_id)
+            messages.error(request, f'Erro na exclusão: {str(e)}')
+            
+    return redirect('efetivo:historico_categorias', militar_id=militar_id)
+
+# views.py
+@login_required
+def excluir_historico_categoria(request, historico_id):
+    historico = get_object_or_404(HistoricoCatEfetivo, id=historico_id)
+    militar_id = historico.cat_efetivo.cadastro.id
     
     if request.method == 'POST':
-        tipo = request.POST.get('tipo')
-        
-        with transaction.atomic():
-            # Criar nova categoria
-            nova_categoria = CatEfetivo(
-                cadastro=militar,
-                tipo=tipo,
-                data_inicio=request.POST.get('data_inicio'),
-                data_termino=request.POST.get('data_termino') or None,
-                observacao=request.POST.get('observacao', ''),
-                usuario_cadastro=request.user
-            )
-            
-            # Campos específicos para LSV
-            if tipo == 'LSV':
-                nova_categoria.boletim_concessao_lsv = request.POST.get('boletim_concessao_lsv', '')
-                nova_categoria.data_boletim_lsv = request.POST.get('data_boletim_lsv') or None
-            
-            # Campos de restrição
-            if tipo == 'RESTRICAO':
-                campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
-                                  if field.name.startswith('restricao_')]
-                for campo in campos_restricao:
-                    setattr(nova_categoria, campo, campo in request.POST)
-            
-            nova_categoria.save()
-            
-            # Criar registro no histórico
-            HistoricoCatEfetivo.objects.create(
-                cat_efetivo=nova_categoria,
-                tipo=nova_categoria.tipo,
-                data_inicio=nova_categoria.data_inicio,
-                data_termino=nova_categoria.data_termino,
-                observacao=nova_categoria.observacao,
-                boletim_concessao_lsv=nova_categoria.boletim_concessao_lsv,
-                data_boletim_lsv=nova_categoria.data_boletim_lsv,
-                usuario_alteracao=request.user,
-                **{campo: getattr(nova_categoria, campo) for campo in campos_restricao}
-            )
-            
-            messages.success(request, 'Categoria adicionada com sucesso!')
-            return redirect('efetivo:ver_militar', id=militar_id)
+        historico.delete()
+        messages.success(request, 'Histórico excluído permanentemente.')
     
-    # Preparar dados para o template
-    campos_restricao = [{
-        'name': field.name,
-        'verbose_name': field.verbose_name,
-        'value': False
-    } for field in CatEfetivo._meta.get_fields() 
-     if field.name.startswith('restricao_')]
-    
-    return render(request, 'efetivo/adicionar_categoria.html', {
-        'militar': militar,
-        'campos_restricao': campos_restricao,
-        'categoria_choices': CatEfetivo.TIPO_CHOICES
-    })
+    return redirect('efetivo:historico_categorias', militar_id=militar_id)

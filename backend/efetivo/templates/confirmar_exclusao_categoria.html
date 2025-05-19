@@ -7,7 +7,10 @@
         
         <p class="mb-6">Tem certeza que deseja excluir a categoria <strong>{{ categoria.get_tipo_display }}</strong> do militar <strong>{{ categoria.cadastro.nome_de_guerra }}</strong>?</p>
         
-        <form method="post" action="{% url 'efetivo:excluir_categoria' categoria.id %}">
+        <!-- Altere esta linha no template -->
+<form method="post" 
+     action="{% url 'efetivo:excluir_historico_categoria' historico_id=historico.id %}" 
+      class="inline">
             {% csrf_token %}
             <div class="flex justify-end space-x-4">
                 <a href="{% url 'efetivo:ver_militar' categoria.cadastro.id %}" 
