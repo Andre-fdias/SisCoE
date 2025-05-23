@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'backend.documentos',
     'backend.agenda',
     'backend.calculadora',
-
+    'backend.cursos',
 ]
 
 

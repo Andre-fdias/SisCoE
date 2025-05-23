@@ -1,0 +1,152 @@
+<div id="editCourseModal" class="fixed inset-0 z-[999] overflow-y-auto bg-gray-900 bg-opacity-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 m-4 max-w-3xl w-full relative">
+        <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800" id="editCourseModalTitle">Editar Curso</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none" onclick="closeEditCourseModal()">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mt-4" id="editCourseModalBody">
+            <p class="text-gray-500 text-center py-4">Carregando formulário...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const editCourseModal = document.getElementById('editCourseModal');
+    const editCourseModalBody = document.getElementById('editCourseModalBody');
+    const editCourseModalTitle = document.getElementById('editCourseModalTitle');
+
+    function openEditCourseModal(url, title = 'Editar Curso', deleteUrl = null) {
+        editCourseModalTitle.textContent = title;
+        editCourseModalBody.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando formulário...</p>';
+        editCourseModal.classList.remove('hidden');
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Important for Django to detect AJAX
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(html => {
+            editCourseModalBody.innerHTML = html;
+            // Get the form loaded into the modal body
+            const form = editCourseModalBody.querySelector('#cursoEditForm');
+            if (form && deleteUrl) {
+                // Set the delete URL as a data attribute on the form for its internal script to use
+                form.dataset.deleteUrl = deleteUrl;
+            }
+            // Attach event listeners for the dynamically loaded form (edit and delete)
+            attachEditCourseModalFormListeners();
+        })
+        .catch(error => {
+            console.error('Error loading the edit form:', error);
+            editCourseModalBody.innerHTML = '<p class="text-red-500 text-center py-4">Erro ao carregar o formulário de edição.</p>';
+        });
+    }
+
+    function closeEditCourseModal() {
+        editCourseModal.classList.add('hidden');
+        editCourseModalBody.innerHTML = ''; // Clear content when closing
+    }
+
+    // Close modal if clicked outside
+    editCourseModal.addEventListener('click', function(event) {
+        if (event.target === editCourseModal) {
+            closeEditCourseModal();
+        }
+    });
+
+    // Function to attach event listeners to the form and buttons inside the modal
+    function attachEditCourseModalFormListeners() {
+        const form = document.getElementById('cursoEditForm');
+        if (form) {
+            // Edit form submission via AJAX
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                const formData = new FormData(form);
+                const actionUrl = form.action;
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Important for Django to detect AJAX
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Include CSRF token
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // If the response is not OK (e.g., 400 Bad Request from Django view for validation errors)
+                        // still try to parse as JSON if it's sent as such.
+                        return response.json().catch(() => {
+                            // If it's not JSON, throw an error or handle as plain text
+                            throw new Error(`Server responded with status ${response.status}`);
+                        });
+                    }
+                    return response.json(); // Expect JSON response from Django view
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        closeEditCourseModal();
+                        window.location.reload(); // Simple reload for now to update the list
+                    } else {
+                        // Handle validation errors or other errors
+                        alert(data.message || 'Erro ao atualizar o curso.');
+                        // Re-render the form with errors if provided by Django
+                        if (data.html_form) {
+                            editCourseModalBody.innerHTML = data.html_form;
+                            attachEditCourseModalFormListeners(); // Re-attach listeners to the new form
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na requisição AJAX:', error);
+                    alert('Erro de rede ou servidor ao atualizar o curso.');
+                });
+            });
+
+            // Delete button functionality
+            const deleteButton = document.getElementById('deleteCourseButton');
+            if (deleteButton) {
+                deleteButton.addEventListener('click', function() {
+                    if (confirm('Tem certeza que deseja excluir este curso?')) {
+                        const deleteUrl = form.dataset.deleteUrl; // Get delete URL from form's data attribute
+                        if (deleteUrl) {
+                            fetch(deleteUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    alert(data.message);
+                                    closeEditCourseModal();
+                                    window.location.reload(); // Reload to reflect deletion
+                                } else {
+                                    alert(data.message || 'Erro ao excluir o curso.');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erro na requisição AJAX de exclusão:', error);
+                                alert('Erro de rede ou servidor ao excluir o curso.');
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+</script>
