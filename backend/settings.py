@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # apps de terceiros
+    'import_export', # Adicione esta linha
     'django_extensions',
     'widget_tweaks',
     'compressor',

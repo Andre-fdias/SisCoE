@@ -6,18 +6,15 @@
 {% block 'body' %}
 <body class="bg-gray-50">
     <div class="md:items-center md:justify-between rounded-lg w-full mt-2" id="lista_medalhas">
-        <!-- Cabeçalho -->
         <fieldset class="p-4 rounded-md w-full">
             <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
                 <div class="p-4">
                     <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Título -->
                         <div class="flex-1 min-w-[200px]">
                             <h1 class="text-2xl font-bold text-white tracking-tight">Lista de Medalhas e Condecorações</h1>
                             <p class="text-gray-300 text-sm mt-1">Consulte abaixo todas as medalhas e condecorações concedidas.</p>
                         </div>
                         
-                        <!-- Botões -->
                         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <a href="{% url 'cursos:medalha_create' %}"
                                class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
@@ -31,18 +28,27 @@
             </fieldset>
         </fieldset>
 
-        <!-- Mensagens -->
         {% if messages %}
         <div class="mb-4">
             {% for message in messages %}
-            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
-                {{ message }}
-            </div>
+                <div class="p-4 mb-4 text-sm rounded-lg 
+                    {% if message.tags == 'success_message' %}
+                        bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-50
+                    {% elif message.tags == 'error_message' %}
+                        bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-50
+                    {% elif message.tags == 'warning_message' %}
+                        bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-50
+                    {% elif message.tags == 'info_message' %}
+                        bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-50
+                    {% else %}
+                        bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-50
+                    {% endif %}" role="alert">
+                    {{ message|safe }} {# Adicione |safe para exibir tags HTML se houver no erro #}
+                </div>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Tabela -->
         <fieldset class="p-4 mb-2 rounded-md w-full">
             <fieldset class="bg-gray-100 rounded-md shadow-lg mb-2 border-0">
                 <table id="medalhasTable" class="w-full text-sm text-left text-gray-700">
@@ -75,7 +81,8 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex justify-center">
-                                    {% if medalha.cadastro.imagens.exists %}  <img src="{{ medalha.cadastro.imagens.last.image.url }}" class="rounded-full w-10 h-10 object-cover" alt="Imagem">
+                                    {% if medalha.cadastro.imagens.exists %}
+                                    <img src="{{ medalha.cadastro.imagens.last.image.url }}" class="rounded-full w-10 h-10 object-cover" alt="Imagem">
                                     {% else %}
                                     <span class="text-gray-500">-</span>
                                     {% endif %}
@@ -127,18 +134,17 @@
                                     -
                                 {% endif %}
                             </td>
-                            <!-- Dentro da <td> de Ações, substitua o conteúdo por: -->
-                        <td class="px-4 py-3 text-center">
-                            <button onclick="openEditModal({{ medalha.id }})" 
-                                    class="text-gray-100 bg-gradient-to-r from-blue-600 to-blue-500 hover:bg-gradient-to-br
-                                        focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg 
-                                        text-xs px-3 py-1.5 text-center inline-flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                Editar
-                            </button>
-                        </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button onclick="openEditModal({{ medalha.id }})" 
+                                            class="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors duration-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr class="bg-white border-b">
@@ -157,9 +163,9 @@
 
                     <div class="flex flex-wrap gap-2">
                         {% if user.is_superuser or user.is_staff %}
-                        <a href="#" class="text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
+                        <a href="{% url 'cursos:importar_medalhas_view' %}" class="text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
                             <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                             </svg>
                             Importar Medalhas
                         </a>
@@ -174,12 +180,10 @@
                             </button>
 
                             <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10">
-                                <form method="GET" action="#" class="py-1">
-                                    {% csrf_token %}
-                                    <button type="button" onclick="exportTable('pdf')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</button>
-                                    <button type="button" onclick="exportTable('xlsx')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</button>
-                                    <button type="button" onclick="exportTable('csv')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</button>
-                                </form>
+                                <a href="{% url 'cursos:export_medalhas_csv' %}" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</a>
+                                {# Você pode adicionar PDF e Excel aqui se implementar as libs e views necessárias #}
+                                {# <a href="#" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</a> #}
+                                {# <a href="#" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</a> #}
                             </div>
                         </div>
                     </div>
@@ -188,48 +192,260 @@
         </fieldset>
     </div>
 
+    <div id="editModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-30 backdrop-blur-sm overflow-y-auto">
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all">
+                <div class="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-800">Editar Condecoração</h3>
+                        <button onclick="closeEditModal()" 
+                                class="p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="editForm" method="post" class="p-6 space-y-6">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Militar</label>
+                            <select id="modalCadastro" name="cadastro" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                {% for cadastro in cadastros %}
+                                <option value="{{ cadastro.id }}">{{ cadastro.id }} - {{ cadastro.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Honraria</label>
+                            <select id="modalHonraria" name="honraria" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                {% for choice in honraria_choices %}
+                                <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">BOL/Publicação</label>
+                            <input type="text" id="modalBol" name="bol_g_pm_lp"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Data</label>
+                            <input type="date" id="modalData" name="data_publicacao_lp"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
+
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Observações</label>
+                            <textarea id="modalObservacoes" name="observacoes" rows="4"
+                                      class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                        <button type="button" id="deleteButton"
+                                class="px-6 py-2.5 text-red-600 hover:text-white bg-red-50 hover:bg-red-700 rounded-lg shadow-sm transition-colors duration-200"
+                                onclick="confirmAndDelete()">
+                            Excluir Medalha
+                        </button>
+
+                        <div class="flex space-x-3">
+                            <button type="button" onclick="closeEditModal()"
+                                    class="px-6 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                    class="px-6 py-2.5 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors duration-200">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Modal de Importação #}
+    <div id="importModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+            <div class="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Importar Medalhas (CSV)</h3>
+                    <button onclick="closeImportModal()" 
+                            class="p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <form action="{% url 'cursos:import_medalhas_csv' %}" method="post" enctype="multipart/form-data" class="p-6 space-y-6">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <label for="csv_file" class="block text-sm font-medium text-gray-700">Selecione o arquivo CSV:</label>
+                    <input type="file" id="csv_file" name="csv_file" accept=".csv" required
+                           class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                    <p class="mt-1 text-xs text-gray-500">O arquivo CSV deve conter as colunas: RE_Militar, honraria, bol_g_pm_lp (opcional), data_publicacao_lp (AAAA-MM-DD, opcional), observacoes (opcional).</p>
+                    <p class="mt-1 text-xs text-gray-500">Para atualizar registros existentes, inclua a coluna 'id' com o ID da medalha.</p>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeImportModal()"
+                            class="px-6 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2.5 text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors duration-200">
+                        Importar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dataTable = new simpleDatatables.DataTable("#medalhasTable", {
-                perPage: 10,
-                perPageSelect: [5, 10, 15, 20, 25],
-                labels: {
-                    placeholder: "Pesquisar...",
-                    perPage: "{select} por página",
-                    noRows: "Nenhuma medalha encontrada",
-                    info: "Mostrando {start}-{end} de {rows}",
-                    noResults: "Nenhum resultado",
-                    loading: "Carregando...",
-                    infoFiltered: "(filtrado de {rowsTotal})",
-                    previous: "Anterior",
-                    next: "Próximo",
-                    first: "Primeiro",
-                    last: "Último"
-                }
-            });
-
-            // Export menu toggle
-            document.getElementById('exportButton').addEventListener('click', function(e) {
-                e.stopPropagation();
-                document.getElementById('exportMenu').classList.toggle('hidden');
-            });
-
-            document.addEventListener('click', function() {
-                document.getElementById('exportMenu').classList.add('hidden');
-            });
-
-            document.getElementById('exportMenu').addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicialização do DataTables
+        const dataTable = new simpleDatatables.DataTable("#medalhasTable", {
+            perPage: 10,
+            perPageSelect: [5, 10, 15, 20, 25],
+            labels: {
+                placeholder: "Pesquisar...",
+                perPage: "{select} por página",
+                noRows: "Nenhuma medalha encontrada",
+                info: "Mostrando {start}-{end} de {rows}",
+                noResults: "Nenhum resultado",
+                loading: "Carregando...",
+                infoFiltered: "(filtrado de {rowsTotal})",
+                previous: "Anterior",
+                next: "Próximo",
+                first: "Primeiro",
+                last: "Último"
+            }
         });
 
-        function exportTable(type) {
-            // Implementar lógica de exportação aqui (será necessário código backend para gerar os arquivos)
-            console.log('Exportando medalhas como:', type);
-        }
-    </script>
+        // Controle do menu de exportação
+        document.getElementById('exportButton').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('exportMenu').classList.toggle('hidden');
+        });
 
-    
+        document.addEventListener('click', function() {
+            document.getElementById('exportMenu').classList.add('hidden');
+        });
+
+        document.getElementById('exportMenu').addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Funções do Modal de Edição
+        window.openEditModal = function(medalhaId) {
+            fetch(`/cursos/medalhas/${medalhaId}/editar/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modalCadastro').value = data.cadastro_id;
+                    document.getElementById('modalHonraria').value = data.honraria;
+                    document.getElementById('modalBol').value = data.bol_g_pm_lp || '';
+                    document.getElementById('modalData').value = data.data_publicacao_lp || '';
+                    document.getElementById('modalObservacoes').value = data.observacoes || '';
+                    
+                    document.getElementById('editForm').dataset.medalhaId = medalhaId;
+                    document.getElementById('editModal').classList.remove('hidden');
+                })
+                .catch(error => console.error('Error:', error));
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('editModal').classList.add('hidden');
+        };
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            const importModal = document.getElementById('importModal'); // Obtenha o modal de importação
+            if (event.target === modal) {
+                closeEditModal();
+            }
+            if (event.target === importModal) { // Adicione a lógica para o modal de importação
+                closeImportModal();
+            }
+        }
+
+        // Envio do formulário de EDIÇÃO via AJAX
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const medalhaId = this.dataset.medalhaId;
+
+            fetch(`/cursos/medalhas/${medalhaId}/editar/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload(); // Recarrega a página após o sucesso
+                } else {
+                    alert('Erro ao atualizar: ' + (data.error || 'Tente novamente'));
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Função para CONFIRMAR E EXCLUIR (Chamada pelo botão no modal)
+        window.confirmAndDelete = function() {
+            const medalhaId = document.getElementById('editForm').dataset.medalhaId;
+            if (confirm('Tem certeza que deseja excluir esta medalha? Esta ação não pode ser desfeita.')) {
+                // Cria um formulário temporário para a requisição POST de exclusão
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/cursos/medalhas/${medalhaId}/excluir/`; // Certifique-se de que esta URL está configurada no seu urls.py
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}';
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit(); // Envia o formulário
+            }
+        };
+
+        // Funções do Modal de Importação
+        document.getElementById('importButton').addEventListener('click', function(e) {
+            e.preventDefault(); // Previne o comportamento padrão do link
+            openImportModal();
+        });
+
+        window.openImportModal = function() {
+            document.getElementById('importModal').classList.remove('hidden');
+        };
+
+        window.closeImportModal = function() {
+            document.getElementById('importModal').classList.add('hidden');
+        };
+    });
+
+    // Esta função exportTable não é mais usada, pois o link de exportação vai direto para a view
+    // function exportTable(type) {
+    //     console.log('Exportando como:', type);
+    // }
+    </script>
 </body>
 {% endblock %}
