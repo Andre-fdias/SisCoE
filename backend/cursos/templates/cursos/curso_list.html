@@ -12,7 +12,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <div class="flex-1 min-w-[200px]">
                             <h1 class="text-2xl font-bold text-white tracking-tight">Lista de Cursos</h1>
-                          
+                            <p class="text-gray-300 text-sm mt-1">Consulte abaixo todos os cursos registrados.</p>
                         </div>
                         
                         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -31,9 +31,20 @@
         {% if messages %}
         <div class="mb-4">
             {% for message in messages %}
-            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
-                {{ message }}
-            </div>
+                <div class="p-4 mb-4 text-sm rounded-lg 
+                    {% if message.tags == 'success_message' %}
+                        bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-50
+                    {% elif message.tags == 'error_message' %}
+                        bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-50
+                    {% elif message.tags == 'warning_message' %}
+                        bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-50
+                    {% elif message.tags == 'info_message' %}
+                        bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-50
+                    {% else %}
+                        bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-50
+                    {% endif %}" role="alert">
+                    {{ message|safe }}
+                </div>
             {% endfor %}
         </div>
         {% endif %}
@@ -54,14 +65,14 @@
                             <th class="px-4 py-3 text-center">Nome</th>
                             <th class="px-4 py-3 text-center">SGB</th>
                             <th class="px-4 py-3 text-center">Curso</th>
-                            <th class="px-4 py-3 text-center">Bol G PM</th>
+                            <th class="px-4 py-3 text-center">BOL</th>
                             <th class="px-4 py-3 text-center">Data</th>
                             <th class="px-4 py-3 text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for curso in cursos %}
-                        <tr class="bg-white border-b hover:bg-gray-50" data-id="{{ cadastro.id }}">
+                        <tr class="bg-white border-b hover:bg-gray-50">
                             <td class="w-4 p-3">
                                 <div class="flex items-center">
                                     <input id="checkbox-table-search-{{ forloop.counter }}" type="checkbox" onclick="event.stopPropagation()" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
@@ -69,11 +80,13 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                {% if curso.cadastro.imagens.exists %}
-                                    <img src="{{ curso.cadastro.imagens.last.image.url }}" class="foto-perfil rounded-full w-12 h-12 object-cover object-center" alt="Imagem">
-                                {% else %}
-                                    Sem imagem
-                                {% endif %}
+                                <div class="flex justify-center">
+                                    {% if curso.cadastro.imagens.exists %}
+                                    <img src="{{ curso.cadastro.imagens.last.image.url }}" class="rounded-full w-10 h-10 object-cover" alt="Imagem">
+                                    {% else %}
+                                    <span class="text-gray-500">-</span>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 {% if curso.cadastro.promocoes.last %}
@@ -116,20 +129,12 @@
                                         {% endif %}
                                     </div>
                                     <div class="text-gray-500 text-xs mt-1">
-                                        {% if curso.observacoes %}
-                                            {{ curso.observacoes|truncatechars:50 }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
+                                        {{ curso.observacoes|truncatechars:50|default:"-" }}
                                     </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                {% if curso.bol_publicacao %}
-                                    {{ curso.bol_publicacao }}
-                                {% else %}
-                                    -
-                                {% endif %}
+                                {{ curso.bol_publicacao|default:"-" }}
                             </td>
                             <td class="px-4 py-3 text-center">
                                 {% if curso.data_publicacao %}
@@ -138,18 +143,16 @@
                                     -
                                 {% endif %}
                             </td>
-                            <td class="py-2 px-4 border-b text-center">
-                                {% if curso.pk %}
-                                <button onclick="openEditCourseModal(
-                                    '{% url 'cursos:curso_update' pk=curso.pk %}',
-                                    'Editar Curso'
-                                )"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors duration-200">
-                                    Editar
-                                </button>
-                                {% else %}
-                                <span class="text-red-500 text-sm">Item inválido (sem PK)</span>
-                                {% endif %}
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <button onclick="openEditModal({{ curso.id }})" 
+                                            class="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors duration-200">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
@@ -160,8 +163,6 @@
                     </tbody>
                 </table>
 
-                {# Removi a inclusão do modal de edição pois não será mais necessário #}
-
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-gray-100 rounded-lg">
                     <div class="flex-1">
                         <p class="text-xs text-gray-600">
@@ -171,9 +172,9 @@
 
                     <div class="flex flex-wrap gap-2">
                         {% if user.is_superuser or user.is_staff %}
-                        <a href="#" class="text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
+                        <a href="{% url 'cursos:importar_cursos_view' %}" class="text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
                             <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                             </svg>
                             Importar Cursos
                         </a>
@@ -188,12 +189,7 @@
                             </button>
 
                             <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10">
-                                <form method="GET" action="#" class="py-1">
-                                    {% csrf_token %}
-                                    <button type="button" onclick="exportTable('pdf')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</button>
-                                    <button type="button" onclick="exportTable('xlsx')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</button>
-                                    <button type="button" onclick="exportTable('csv')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</button>
-                                </form>
+                                <a href="{% url 'cursos:export_cursos_csv' %}" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</a>
                             </div>
                         </div>
                     </div>
@@ -202,51 +198,273 @@
         </fieldset>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dataTable = new simpleDatatables.DataTable("#cursosTable", {
-                perPage: 10,
-                perPageSelect: [5, 10, 15, 20, 25],
-                labels: {
-                    placeholder: "Pesquisar...",
-                    perPage: "{select} por página",
-                    noRows: "Nenhum curso encontrado",
-                    info: "Mostrando {start}-{end} de {rows}",
-                    noResults: "Nenhum resultado",
-                    loading: "Carregando...",
-                    infoFiltered: "(filtrado de {rowsTotal})",
-                    previous: "Anterior",
-                    next: "Próximo",
-                    first: "Primeiro",
-                    last: "Último"
+    <!-- Modal de Edição -->
+<div id="editModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-30 backdrop-blur-sm overflow-y-auto">
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <div class="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800">Editar Curso</h3>
+                    <button id="closeEditModal"
+                            class="p-1 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <form id="editForm" method="post" class="p-6 space-y-6">
+                {% csrf_token %}
+                <input type="hidden" id="edit-id" name="id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label for="edit-cadastro" class="block text-sm font-medium text-gray-700">Militar</label>
+                        <select id="edit-cadastro" name="cadastro_id" required 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            {% for cadastro in cadastros %}
+                                <option value="{{ cadastro.id }}">{{ cadastro.posto_graduacao }} {{ cadastro.nome_guerra }} ({{ cadastro.re }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-curso" class="block text-sm font-medium text-gray-700">Tipo de Curso</label>
+                        <select id="edit-curso" name="curso" required 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            {% for value, label in curso_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-data-publicacao" class="block text-sm font-medium text-gray-700">Data de Publicação</label>
+                        <input type="date" id="edit-data-publicacao" name="data_publicacao" required 
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-bol-publicacao" class="block text-sm font-medium text-gray-700">BOL Publicação</label>
+                        <input type="text" id="edit-bol-publicacao" name="bol_publicacao" required 
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <div class="md:col-span-2 space-y-2">
+                        <label for="edit-observacoes" class="block text-sm font-medium text-gray-700">Observações</label>
+                        <textarea id="edit-observacoes" name="observacoes" rows="4"
+                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                    <button type="button" id="deleteButton"
+                            class="px-6 py-2.5 text-red-600 hover:text-white bg-red-50 hover:bg-red-700 rounded-lg shadow-sm transition-colors duration-200"
+                            onclick="confirmDelete(document.getElementById('edit-id').value)">
+                        Excluir Curso
+                    </button>
+
+                    <div class="flex space-x-3">
+                        <button type="button" id="cancelEdit" 
+                                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-6 py-2.5 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors duration-200">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicialização do DataTable para a tabela de cursos
+    const dataTable = new simpleDatatables.DataTable("#cursosTable", {
+        perPage: 10, // Número de itens por página
+        perPageSelect: [5, 10, 15, 20, 25], // Opções de seleção de itens por página
+        labels: {
+            placeholder: "Pesquisar...", // Texto do placeholder para pesquisa
+            perPage: "{select} por página", // Texto para seleção de itens por página
+            noRows: "Nenhum curso encontrado", // Mensagem quando não há linhas
+            info: "Mostrando {start}-{end} de {rows}", // Informações sobre as linhas exibidas
+            noResults: "Nenhum resultado", // Mensagem quando não há resultados de pesquisa
+            loading: "Carregando...", // Mensagem de carregamento
+            infoFiltered: "(filtrado de {rowsTotal})", // Informações de filtro
+            previous: "Anterior", // Texto para botão "Anterior"
+            next: "Próximo", // Texto para botão "Próximo"
+            first: "Primeiro", // Texto para botão "Primeiro"
+            last: "Último" // Texto para botão "Último"
+        }
+    });
+
+    // Controle do menu de exportação
+    const exportButton = document.getElementById('exportButton');
+    const exportMenu = document.getElementById('exportMenu');
+
+    // Abre/fecha o menu de exportação ao clicar no botão
+    exportButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Impede que o clique se propague para o documento
+        exportMenu.classList.toggle('hidden'); // Alterna a visibilidade do menu
+    });
+
+    // Fecha o menu de exportação ao clicar em qualquer lugar do documento
+    document.addEventListener('click', () => {
+        exportMenu.classList.add('hidden'); // Esconde o menu
+    });
+
+    // Funções do Modal de Edição
+    // Abre o modal de edição e carrega os dados do curso via AJAX
+    window.openEditModal = function(pk) {
+        console.log('Tentando abrir modal para pk:', pk);
+        const modal = document.getElementById('editModal');
+        if (!modal) {
+            console.error('Elemento do modal não encontrado!');
+            return;
+        }
+
+        // Faz a requisição AJAX para obter os dados do curso
+        fetch(`/cursos/cursos/${pk}/edit/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Indica que é uma requisição AJAX
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error(`Recurso não encontrado (404). Verifique a URL: /cursos/cursos/${pk}/edit/`);
                 }
-            });
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Converte a resposta para JSON
+        })
+        .then(data => {
+            console.log('Dados recebidos do servidor:', data);
+            if (data.success) {
+                const cursoData = data.curso; // Dados do curso vindos da resposta JSON
 
-            // Export menu toggle
-            document.getElementById('exportButton').addEventListener('click', function(e) {
-                e.stopPropagation();
-                document.getElementById('exportMenu').classList.toggle('hidden');
-            });
+                // Preenche os campos do formulário com os dados do curso
+                document.getElementById('edit-id').value = cursoData.id;
+                document.getElementById('edit-cadastro').value = cursoData.cadastro_id;
+                document.getElementById('edit-curso').value = cursoData.curso;
+                document.getElementById('edit-data-publicacao').value = cursoData.data_publicacao;
+                document.getElementById('edit-bol-publicacao').value = cursoData.bol_publicacao;
+                document.getElementById('edit-observacoes').value = cursoData.observacoes;
 
-            document.addEventListener('click', function() {
-                document.getElementById('exportMenu').classList.add('hidden');
-            });
+                // Esconde a lógica de 'outro-curso' se o modelo de Curso não a suporta
+                const outroCursoGroup = document.getElementById('edit-outro-curso-group');
+                if (outroCursoGroup) {
+                    outroCursoGroup.classList.add('hidden');
+                }
+                const outroCursoInput = document.getElementById('edit-outro-curso');
+                if (outroCursoInput) {
+                    outroCursoInput.removeAttribute('required');
+                    outroCursoInput.value = '';
+                }
 
-            document.getElementById('exportMenu').addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
+                modal.style.display = 'block'; // Exibe o modal
+                console.log('Display do modal definido para block.');
+            } else {
+                alert('Erro ao carregar dados: ' + (data.error || 'Erro desconhecido'));
+                console.error('Servidor retornou success: false', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erro no fetch:', error);
+            alert('Erro ao carregar dados do curso: ' + error.message);
         });
+    };
 
-        function exportTable(type) {
-            console.log('Exportando cursos como:', type);
-            alert(`Funcionalidade de exportação para ${type} ainda não implementada no backend.`);
-        }
+    // Fecha o modal de edição
+    window.closeEditModal = function() {
+        document.getElementById('editModal').classList.add('hidden');
+    };
 
-        // Função simplificada para abrir modal de edição
-        function openEditCourseModal(url, title) {
-            window.location.href = url; // Redireciona diretamente para a página de edição
+    // Controle do campo "Outro Curso" (se aplicável, com base no seu modelo)
+    // Este listener parece estar relacionado ao modal de criação, não ao de edição
+    // Se 'modalCurso' e 'modalOutroCurso' são para o modal de edição, seus IDs devem ser ajustados
+    // Exemplo: document.getElementById('edit-curso').addEventListener(...)
+    document.getElementById('edit-curso').addEventListener('change', function() {
+        const outroCursoDiv = document.getElementById('edit-outro-curso-group'); // Ajustar ID se necessário
+        if(this.value === 'OUTRO') {
+            outroCursoDiv.classList.remove('hidden');
+        } else {
+            outroCursoDiv.classList.add('hidden');
         }
-    </script>
+    });
+
+    // Envio do formulário de edição
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Impede o envio padrão do formulário
+        const formData = new FormData(this); // Cria um objeto FormData com os dados do formulário
+        const cursoId = document.getElementById('edit-id').value; // Obtém o ID do curso do campo oculto
+
+        // Faz a requisição AJAX para atualizar o curso
+        fetch(`/cursos/cursos/${cursoId}/edit/`, { // Usando a mesma URL da requisição GET, mas com método POST
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}', // Token CSRF para segurança
+                'X-Requested-With': 'XMLHttpRequest' // Indica que é uma requisição AJAX
+            }
+        })
+        .then(response => response.json()) // Converte a resposta para JSON
+        .then(data => {
+            if(data.success) {
+                window.location.reload(); // Recarrega a página se a atualização for bem-sucedida
+            } else {
+                alert('Erro ao atualizar: ' + (data.error || 'Tente novamente')); // Exibe mensagem de erro
+            }
+        })
+        .catch(error => console.error('Erro:', error)); // Loga erros no console
+    });
+
+    // Função de exclusão de curso
+    window.confirmDelete = function(cursoId) {
+        if(confirm('Tem certeza que deseja excluir este curso?')) { // Confirmação do usuário
+            fetch(`/cursos/cursos/${cursoId}/excluir/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    window.location.reload(); // Recarrega a página se a exclusão for bem-sucedida
+                } else {
+                    alert('Erro ao excluir: ' + (data.error || 'Tente novamente')); // Exibe mensagem de erro
+                }
+            })
+            .catch(error => console.error('Erro:', error)); // Loga erros no console
+        }
+    };
+
+    // Fecha o modal ao clicar fora dele
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if(event.target === modal) {
+            closeEditModal();
+        }
+    };
+
+    // Listener para o botão de cancelar dentro do modal de edição
+    const cancelEditButton = document.getElementById('cancelEdit');
+    if (cancelEditButton) {
+        cancelEditButton.addEventListener('click', closeEditModal);
+    }
+
+    // Listener para o botão de fechar (X) dentro do modal de edição
+    const closeEditModalButton = document.getElementById('closeEditModal');
+    if (closeEditModalButton) {
+        closeEditModalButton.addEventListener('click', closeEditModal);
+    }
+});
+</script>
 </body>
 {% endblock %}

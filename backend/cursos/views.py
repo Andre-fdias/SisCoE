@@ -6,30 +6,98 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import ProtectedError
 from datetime import datetime as dt
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from .models import Medalha, Cadastro
+from datetime import datetime
+import json
 
 
-# If you use these models in 'buscar_militar_medalha', uncomment and ensure they exist
-# from .models import DetalhesSituacao, Imagem, Promocao, MilitarMedalha 
 
-
-# --- List View ---
 @login_required
 def medalha_list(request):
-    """
-    Exibe a lista de todas as medalhas cadastradas.
-    """
-    medalhas = Medalha.objects.all().order_by('-id') # Ordena da mais recente para a mais antiga
+    medalhas = Medalha.objects.all().select_related('cadastro')
+    cadastros = Cadastro.objects.all().order_by('nome')
+    
     context = {
         'medalhas': medalhas,
-        'title': "Lista de Medalhas"
+        'cadastros': cadastros,
+        'honraria_choices': Medalha.HONRARIA_CHOICES,
+        'title': 'Lista de Medalhas'
     }
-    # Corrigido o caminho do template para 'cursos/medalha_list.html'
     return render(request, 'cursos/medalha_list.html', context)
 
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def medalha_edit(request, pk):
+    medalha = get_object_or_404(Medalha, pk=pk)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'cadastro_id': medalha.cadastro.id,
+            'honraria': medalha.honraria,
+            'bol_g_pm_lp': medalha.bol_g_pm_lp or '',
+            'data_publicacao_lp': medalha.data_publicacao_lp.strftime('%Y-%m-%d') if medalha.data_publicacao_lp else '',
+            'observacoes': medalha.observacoes or ''
+        })
+
+    if request.method == 'POST':
+        try:
+            cadastro_id = request.POST.get('cadastro')
+            honraria = request.POST.get('honraria')
+            bol_g_pm_lp = request.POST.get('bol_g_pm_lp', '').strip() or None
+            data_publicacao_lp = request.POST.get('data_publicacao_lp') or None
+            observacoes = request.POST.get('observacoes', '').strip() or None
+
+            with transaction.atomic():
+                cadastro = Cadastro.objects.get(pk=cadastro_id)
+                medalha.cadastro = cadastro
+                medalha.honraria = honraria
+                medalha.bol_g_pm_lp = bol_g_pm_lp
+                medalha.observacoes = observacoes
+                
+                if data_publicacao_lp:
+                    medalha.data_publicacao_lp = datetime.strptime(data_publicacao_lp, '%Y-%m-%d').date()
+                
+                medalha.usuario_alteracao = request.user
+                medalha.save()
+
+            return JsonResponse({'success': True})
+        
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+from django.views.decorators.http import require_http_methods
+
+
+@login_required
+@require_http_methods(["POST"])
+def medalha_delete(request, pk):
+    medalha = get_object_or_404(Medalha, pk=pk)
+    try:
+        medalha.delete()
+        messages.success(request, 'Medalha excluída com sucesso!', extra_tags='success_message') # Adicione extra_tags
+    except Exception as e:
+        messages.error(request, f'Erro ao excluir medalha: {str(e)}', extra_tags='error_message') # Adicione extra_tags
+    return redirect('cursos:medalha_list')
 
 
 from django.db import transaction  # Importação necessária
 from datetime import datetime  # Importe datetime para conversão de datas
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from .models import Medalha, Cadastro
+from datetime import datetime
 
 @login_required
 def medalha_create(request):
@@ -38,7 +106,7 @@ def medalha_create(request):
     """
     if request.method == 'POST':
         try:
-            with transaction.atomic():  # Agora transaction está definido
+            with transaction.atomic():
                 militar_id = request.POST.get('militar_id')
                 num_medalhas = int(request.POST.get('num_medalhas', 1))
                 
@@ -56,7 +124,6 @@ def medalha_create(request):
                     data_publicacao_lp = request.POST.get(f'data_publicacao_lp_{i}') or None
                     observacoes = request.POST.get(f'observacoes_{i}', '').strip() or None
 
-                    # Processar data
                     data_publicacao = None
                     if data_publicacao_lp:
                         try:
@@ -73,123 +140,24 @@ def medalha_create(request):
                         usuario_alteracao=request.user
                     )
 
-                messages.success(request, f"{num_medalhas} medalha(s) cadastrada(s)!")
+                messages.success(request, f"{num_medalhas} medalha(s) cadastrada(s)!", extra_tags='success_message') # Adicione extra_tags
                 return redirect('cursos:medalha_list')
 
         except Cadastro.DoesNotExist:
-            messages.error(request, "Militar não encontrado.")
+            messages.error(request, "Militar não encontrado.", extra_tags='error_message') # Adicione extra_tags
         except ValueError as e:
-            messages.error(request, str(e))
+            messages.error(request, str(e), extra_tags='error_message') # Adicione extra_tags
         except Exception as e:
-            messages.error(request, f"Erro: {str(e)}")
+            messages.error(request, f"Erro: {str(e)}", extra_tags='error_message') # Adicione extra_tags
     
     return redirect('cursos:buscar_militar_medalha')
-
-# --- Update View ---
-@login_required
-def medalha_edit(request, pk):
-    """
-    Permite a edição de uma medalha existente.
-    """
-    medalha = get_object_or_404(Medalha, pk=pk) # Obtém a medalha ou retorna 404
-    cadastros = Cadastro.objects.all().order_by('nome')
-    honraria_choices = Medalha.HONRARIA_CHOICES
-
-    # Inicializa 'errors' e 'submitted_data'
-    errors = {}
-    submitted_data = None # Será preenchido com request.POST se houver erros, ou com o objeto medalha em GET
-
-    if request.method == 'POST':
-        cadastro_id = request.POST.get('cadastro')
-        honraria = request.POST.get('honraria')
-        bol_g_pm_lp = request.POST.get('bol_g_pm_lp')
-        data_publicacao_lp_str = request.POST.get('data_publicacao_lp')
-        observacoes = request.POST.get('observacoes')
-
-        submitted_data = request.POST # Captura os dados submetidos para repopular
-
-        # Validação (similar à create view)
-        if not cadastro_id:
-            errors['cadastro'] = "O militar é obrigatório."
-        else:
-            try:
-                cadastro_obj = Cadastro.objects.get(pk=cadastro_id)
-            except Cadastro.DoesNotExist:
-                errors['cadastro'] = "Militar inválido."
-
-        if not honraria:
-            errors['honraria'] = "A honraria é obrigatória."
-        elif honraria not in [choice[0] for choice in honraria_choices]:
-            errors['honraria'] = "Honraria selecionada inválida."
-
-        data_publicacao_lp = None
-        if data_publicacao_lp_str:
-            try:
-                data_publicacao_lp = datetime.datetime.strptime(data_publicacao_lp_str, '%Y-%m-%d').date()
-            except ValueError:
-                errors['data_publicacao_lp'] = "Formato de data inválido. Use AAAA-MM-DD."
-
-        if not errors:
-            try:
-                # Atualiza os campos do objeto medalha
-                medalha.cadastro = cadastro_obj
-                medalha.honraria = honraria
-                medalha.bol_g_pm_lp = bol_g_pm_lp if bol_g_pm_lp else None
-                medalha.data_publicacao_lp = data_publicacao_lp
-                medalha.observacoes = observacoes if observacoes else None
-                medalha.usuario_alteracao = request.user
-                medalha.save() # Salva as alterações
-                messages.success(request, "Medalha atualizada com sucesso!")
-                return redirect('cursos:medalha_list')
-            except Exception as e:
-                messages.error(request, f"Erro ao atualizar medalha: {e}")
-        else:
-            messages.error(request, "Por favor, corrija os erros no formulário.")
-
-    context = {
-        'medalha': medalha,  # Passa o objeto medalha existente para preencher os valores iniciais
-        'cadastros': cadastros,
-        'honraria_choices': honraria_choices,
-        'title': "Editar Medalha",
-        'errors': errors,
-        'submitted_data': submitted_data, # Usado para repopular o form em caso de erro no POST
-    }
-    # Corrigido o caminho do template para 'cursos/medalha_form.html'
-    return render(request, 'cursos/medalha_form.html', context)
-
-# --- Delete View ---
-@login_required
-def medalha_delete(request, pk):
-    """
-    Permite a exclusão de uma medalha.
-    """
-    medalha = get_object_or_404(Medalha, pk=pk) # Obtém a medalha ou retorna 404
-
-    if request.method == 'POST':
-        try:
-            medalha.delete()
-            messages.success(request, "Medalha excluída com sucesso!")
-            return redirect('cursos:medalha_list')
-        except ProtectedError:
-            # Captura erro se o objeto estiver relacionado a outros que impedem a exclusão
-            messages.error(request, "Não é possível excluir esta medalha, pois ela está protegida por relacionamentos.")
-        except Exception as e:
-            messages.error(request, f"Erro ao excluir medalha: {e}")
-
-    context = {
-        'medalha': medalha, # Passa o objeto para o template para mensagem de confirmação
-        'title': "Confirmar Exclusão"
-    }
-    # Corrigido o caminho do template para 'cursos/medalha_confirm_delete.html'
-    return render(request, 'cursos/medalha_confirm_delete.html', context)
-
-
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.messages import constants
 from django.contrib.auth.decorators import login_required
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
+from django.contrib.messages import constants # Já estava aqui, mas agora será mais explícito
 
 
 @login_required
@@ -205,46 +173,42 @@ def buscar_militar_medalha(request):
         if not re:
             messages.add_message(
                 request, 
-                constants.WARNING,
+                constants.WARNING, # Use constants.WARNING para ser mais claro
                 'Por favor, informe o RE para buscar.', 
-                extra_tags='bg-yellow-500 text-white p-4 rounded'
+                extra_tags='warning_message' # Tag mais genérica para avisos
             )
             return render(request, template_name, {
                 'honraria_choices': Medalha.HONRARIA_CHOICES,
             })
 
         try:
-            # Busca o cadastro principal
             cadastro = Cadastro.objects.get(re=re)
 
-            # Busca os dados relacionados usando as relações reversas
             promocao = Promocao.objects.filter(cadastro=cadastro).order_by('-id').first()
             detalhes = DetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-id').first()
             imagem = Imagem.objects.filter(cadastro=cadastro).order_by('-id').first()
 
-            # Prepara os dados essenciais com fallback para "Não informado"
             posto_grad = promocao.posto_grad if promocao else "Não informado"
             sgb = detalhes.sgb if detalhes else "Não informado"
             posto_secao = detalhes.posto_secao if detalhes else "Não informado"
 
-            # Adiciona mensagens informativas se dados importantes não forem encontrados
             if not detalhes:
                 messages.info(
                     request, 
                     'Atenção: Dados de SGB e Posto/Seção não encontrados.', 
-                    extra_tags='bg-blue-500 text-white p-4 rounded'
+                    extra_tags='info_message' # Tag mais genérica para informações
                 )
             if not promocao:
                 messages.info(
                     request, 
                     'Atenção: Dados de Posto/Graduação não encontrados.', 
-                    extra_tags='bg-blue-500 text-white p-4 rounded'
+                    extra_tags='info_message'
                 )
             if not imagem:
                 messages.info(
                     request, 
                     'Atenção: Foto de perfil não encontrada.', 
-                    extra_tags='bg-blue-500 text-white p-4 rounded'
+                    extra_tags='info_message'
                 )
 
             context = {
@@ -265,9 +229,9 @@ def buscar_militar_medalha(request):
         except Cadastro.DoesNotExist:
             messages.add_message(
                 request, 
-                constants.ERROR, 
+                constants.ERROR, # Use constants.ERROR
                 f'Militar com RE {re} não encontrado.', 
-                extra_tags='bg-red-500 text-white p-4 rounded'
+                extra_tags='error_message' # Use a nova tag de erro
             )
             return render(request, template_name, {
                 'honraria_choices': Medalha.HONRARIA_CHOICES,
@@ -279,17 +243,115 @@ def buscar_militar_medalha(request):
                 request, 
                 constants.ERROR, 
                 f'Erro ao buscar militar: {str(e)}', 
-                extra_tags='bg-red-500 text-white p-4 rounded'
+                extra_tags='error_message' # Use a nova tag de erro
             )
             return render(request, template_name, {
                 'honraria_choices': Medalha.HONRARIA_CHOICES,
             })
 
-    # GET request - Mostra formulário vazio
     return render(request, template_name, {
         'honraria_choices': Medalha.HONRARIA_CHOICES,
     })
 
+
+
+
+# backend/cursos/views.py
+
+# ... (seus imports existentes)
+from django.http import HttpResponse # Importe HttpResponse para a exportação
+import csv # Para lidar com CSV na exportação
+from io import TextIOWrapper, BytesIO # Para lidar com arquivos em memória na importação
+from tablib import Dataset # Importe Dataset para a importação
+from django.db import transaction # Já deve estar importado
+
+# Importe seu resource
+from .resources import MedalhaResource 
+
+
+@login_required
+@require_http_methods(["GET"]) # A exportação geralmente é um GET
+def export_medalhas_csv(request):
+    medalha_resource = MedalhaResource()
+    # Pega todos os dados
+    queryset = Medalha.objects.all().select_related('cadastro') 
+    dataset = medalha_resource.export(queryset)
+    
+    # O format() pode ser 'csv', 'json', 'xls', 'xlsx' (se tiver as libs instaladas)
+    response = HttpResponse(dataset.csv, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="medalhas.csv"'
+    return response
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def import_medalhas_csv(request):
+    if request.method == 'POST':
+        # Verifica se um arquivo foi enviado
+        if 'csv_file' not in request.FILES:
+            messages.error(request, 'Nenhum arquivo CSV foi selecionado para importação.', extra_tags='error_message')
+            return redirect('cursos:medalha_list')
+
+        csv_file = request.FILES['csv_file']
+
+        # Verifica o tipo do arquivo (opcional, mas recomendado)
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Formato de arquivo inválido. Por favor, envie um arquivo CSV.', extra_tags='error_message')
+            return redirect('cursos:medalha_list')
+
+        # Abre o arquivo em modo de texto para leitura
+        data_set = Dataset()
+        try:
+            # Decode o arquivo para string (UTF-8 é comum para CSV)
+            decoded_file = csv_file.read().decode('utf-8')
+            # Carrega os dados do CSV
+            data_set.load(decoded_file, format='csv')
+        except UnicodeDecodeError:
+            messages.error(request, 'Não foi possível decodificar o arquivo CSV. Verifique a codificação (tente UTF-8).', extra_tags='error_message')
+            return redirect('cursos:medalha_list')
+        except Exception as e:
+            messages.error(request, f'Erro ao ler o arquivo CSV: {str(e)}', extra_tags='error_message')
+            return redirect('cursos:medalha_list')
+
+        medalha_resource = MedalhaResource()
+        try:
+            with transaction.atomic(): # Garante atomicidade da transação
+                # dry_run=True executa a importação sem salvar no banco de dados para verificar erros
+                result = medalha_resource.import_data(data_set, dry_run=True, raise_errors=True, collect_failed_rows=True)
+
+                if not result.has_errors() and not result.has_validation_errors():
+                    # Se não houver erros, executa a importação real
+                    medalha_resource.import_data(data_set, dry_run=False, raise_errors=True, collect_failed_rows=True)
+                    messages.success(request, 'Medalhas importadas com sucesso!', extra_tags='success_message')
+                else:
+                    # Coleta e exibe erros de validação ou importação
+                    error_messages = []
+                    if result.has_validation_errors():
+                        for row_errors in result.validation_errors:
+                            for field_error in row_errors.field_errors:
+                                error_messages.append(f"Linha {row_errors.row_num}: Campo '{field_error.field}': {field_error.errors[0]}")
+                    if result.has_errors():
+                        for error in result.errors:
+                            error_messages.append(f"Erro na linha {error.line}: {error.error_message}")
+                    
+                    messages.error(request, f'Erro(s) na importação: <br>' + '<br>'.join(error_messages), extra_tags='error_message')
+
+        except ValueError as e:
+            messages.error(request, f'Erro de validação durante a importação: {str(e)}', extra_tags='error_message')
+        except Exception as e:
+            messages.error(request, f'Erro inesperado durante a importação: {str(e)}', extra_tags='error_message')
+        
+        return redirect('cursos:medalha_list')
+    
+    # Se for GET, apenas redireciona para a lista para que a página de listagem seja exibida
+    # ou você pode renderizar um template específico para o formulário de importação se preferir
+    return redirect('cursos:medalha_list')
+
+
+@login_required
+def importar_medalhas_view(request):
+    # Esta view simplesmente renderiza o formulário de importação.
+    # A lógica de POST para importação já está em 'import_medalhas_csv'.
+    return render(request, 'cursos/importar_medalhas.html')
 
 
 
@@ -312,12 +374,15 @@ def curso_list(request):
     Exibe a lista de todos os cursos cadastrados.
     """
     cursos = Curso.objects.all().order_by('-id')  # Ordena da mais recente para a mais antiga
+    cadastros = Cadastro.objects.all().order_by('nome') # Adiciona todos os cadastros
+    
     context = {
         'cursos': cursos,
+        'cadastros': cadastros, # Adiciona cadastros ao contexto
+        'curso_choices': Curso.CURSOS_CHOICES, # Adiciona as choices de curso ao contexto
         'title': "Lista de Cursos"
     }
     return render(request, 'cursos/curso_list.html', context)
-
 
 
 
@@ -437,108 +502,77 @@ def curso_create(request):
         })
     return render(request, template_name, context)
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+# backend/cursos/views.py
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from .models import Curso, Cadastro # Make sure to import Curso
+import json
+
+# ... other views ...
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import Curso
+
 @login_required
-def curso_update(request, pk):
+@require_http_methods(["GET", "POST"])
+def curso_edit(request, pk):
     curso = get_object_or_404(Curso, pk=pk)
-    cadastro = curso.militar # Get the associated Cadastro object
 
-    detalhes_obj = DetalhesSituacao.objects.filter(militar=cadastro).first()
-    promocao_obj = Promocao.objects.filter(militar=cadastro).first()
-    imagem_obj = Imagem.objects.filter(militar=cadastro).first()
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'curso': {
+                'id': curso.id,
+                'cadastro_id': curso.cadastro.id,
+                'curso': curso.curso,
+                'data_publicacao': curso.data_publicacao.strftime('%Y-%m-%d'),
+                'bol_publicacao': curso.bol_publicacao,
+                'observacoes': curso.observacoes
+            }
+        })
 
-    context = {
-        'curso': curso,
-        'cadastro': cadastro,
-        'detalhes': {
-            'sgb': detalhes_obj.sgb if detalhes_obj else "Não informado",
-            'posto_secao': detalhes_obj.posto_secao if detalhes_obj else "Não informado"
-        },
-        'promocao': {
-            'posto_grad': promocao_obj.posto_grad if promocao_obj else "Não informado"
-        },
-        'imagem': imagem_obj,
-        'curso_choices': CURSO_CHOICES, # Pass choices for the select field
-    }
+    elif request.method == 'POST':
+        try:
+            curso.cadastro_id = request.POST.get('cadastro_id')
+            curso.curso = request.POST.get('curso')
+            curso.data_publicacao = request.POST.get('data_publicacao')
+            curso.bol_publicacao = request.POST.get('bol_publicacao')
+            curso.observacoes = request.POST.get('observacoes')
+            curso.usuario_alteracao = request.user
+            curso.save()
+            
+            return JsonResponse({'success': True, 'message': 'Curso atualizado com sucesso!'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        
 
-    if request.method == 'POST':
-        # Assuming you're manually handling form fields, but a Django Form is highly recommended
-        curso_type = request.POST.get('curso')
-        data_publicacao = request.POST.get('data_publicacao')
-        bol_publicacao = request.POST.get('bol_publicacao')
-        observacoes = request.POST.get('observacoes')
-
-        errors = {}
-        if not curso_type:
-            errors['curso'] = ['Este campo é obrigatório.']
-        if not data_publicacao:
-            errors['data_publicacao'] = ['Este campo é obrigatório.']
-        if not bol_publicacao:
-            errors['bol_publicacao'] = ['Este campo é obrigatório.']
-
-        if errors:
-            context['errors'] = errors
-            # To re-populate fields in case of error
-            context['curso'].curso = curso_type
-            context['curso'].data_publicacao = data_publicacao
-            context['curso'].bol_publicacao = bol_publicacao
-            context['curso'].observacoes = observacoes
-
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                html_form = render_to_string('cursos/_curso_edit_form_partial.html', context, request=request)
-                return JsonResponse({'status': 'error', 'message': 'Erro de validação.', 'html_form': html_form})
-            else:
-                messages.error(request, 'Erro ao atualizar o curso. Verifique os campos.')
-                return render(request, 'cursos/curso_form.html', context) # Fallback for non-AJAX
-
-        # If validation passes
-        curso.curso = curso_type
-        curso.data_publicacao = data_publicacao
-        curso.bol_publicacao = bol_publicacao
-        curso.observacoes = observacoes
-        curso.save()
-
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success', 'message': 'Curso atualizado com sucesso!'})
-        messages.success(request, 'Curso atualizado com sucesso!')
-        return redirect('cursos:curso_list')
-
-    else: # GET request
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # This is an AJAX request from the modal, render only the partial content
-            return render(request, 'cursos/_curso_edit_form_partial.html', context)
-        else:
-            # This is a regular GET request (e.g., direct navigation), render the full page
-            return render(request, 'cursos/curso_form.html', context)
-
+        
 @login_required
+@require_http_methods(["POST"]) # Garante que só POSTs podem ser usados para exclusão
 def curso_delete(request, pk):
     curso = get_object_or_404(Curso, pk=pk)
 
-    if request.method == 'POST':
-        try:
-            curso.delete()
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'success', 'message': 'Curso excluído com sucesso!'})
-            messages.success(request, 'Curso excluído com sucesso!')
-            return redirect('cursos:curso_list')
-        except ProtectedError:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'message': 'Não é possível excluir este curso pois existem outras entidades que dependem dele.'})
-            messages.error(request, 'Não é possível excluir este curso pois existem outras entidades que dependem dele.')
-            return redirect('cursos:curso_list') # Or wherever you want to redirect
-        except Exception as e:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'message': f'Erro ao excluir o curso: {str(e)}'})
-            messages.error(request, f'Erro ao excluir o curso: {str(e)}')
-            return redirect('cursos:curso_list') # Or wherever you want to redirect
-    else:
-        # For GET requests, you might want to show a confirmation page
-        # For this modal approach, we expect POST from the JS confirmation
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-             return JsonResponse({'status': 'error', 'message': 'Requisição inválida. Use POST para exclusão.'}, status=405)
-        else:
-            # You might want to render a simple confirmation page here
-            return render(request, 'cursos/curso_confirm_delete.html', {'curso': curso})
+    try:
+        curso.delete()
+        return JsonResponse({'success': True, 'message': 'Curso excluído com sucesso!'})
+    except ProtectedError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Não é possível excluir este curso pois existem outras entidades que dependem dele.'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro ao excluir o curso: {str(e)}'
+        }, status=400)
 
 
 # --- Buscar Militar para Curso ---
@@ -613,3 +647,90 @@ def buscar_militar_curso(request):
         return render(request, template_name, context)
 
     return render(request, template_name, context)
+
+
+
+# backend/cursos/views.py
+
+# ... (seus imports existentes, como datetime, transaction, JsonResponse, etc.)
+from django.http import HttpResponse # Importe HttpResponse
+import csv # Para lidar com CSV
+from io import TextIOWrapper, BytesIO # Para lidar com arquivos em memória
+from tablib import Dataset # Importe Dataset
+from .resources import MedalhaResource, CursoResource # Importe seu CursoResource também!
+from .models import Medalha, Cadastro, Curso # Certifique-se de importar o modelo Curso
+
+# ... (todas as suas views existentes para medalhas e cursos)
+
+# --- Views de Exportação/Importação para Cursos ---
+
+@login_required
+@require_http_methods(["GET"])
+def export_cursos_csv(request):
+    curso_resource = CursoResource()
+    queryset = Curso.objects.all().select_related('cadastro') # Inclua select_related se precisar de dados do Cadastro
+    dataset = curso_resource.export(queryset)
+    
+    response = HttpResponse(dataset.csv, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="cursos.csv"'
+    return response
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def import_cursos_csv(request):
+    if request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            messages.error(request, 'Nenhum arquivo CSV foi selecionado para importação de cursos.', extra_tags='error_message')
+            return redirect('cursos:curso_list')
+
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Formato de arquivo inválido. Por favor, envie um arquivo CSV para cursos.', extra_tags='error_message')
+            return redirect('cursos:curso_list')
+
+        data_set = Dataset()
+        try:
+            decoded_file = csv_file.read().decode('utf-8')
+            data_set.load(decoded_file, format='csv')
+        except UnicodeDecodeError:
+            messages.error(request, 'Não foi possível decodificar o arquivo CSV de cursos. Verifique a codificação (tente UTF-8).', extra_tags='error_message')
+            return redirect('cursos:curso_list')
+        except Exception as e:
+            messages.error(request, f'Erro ao ler o arquivo CSV de cursos: {str(e)}', extra_tags='error_message')
+            return redirect('cursos:curso_list')
+
+        curso_resource = CursoResource()
+        try:
+            with transaction.atomic():
+                result = curso_resource.import_data(data_set, dry_run=True, raise_errors=True, collect_failed_rows=True)
+
+                if not result.has_errors() and not result.has_validation_errors():
+                    curso_resource.import_data(data_set, dry_run=False, raise_errors=True, collect_failed_rows=True)
+                    messages.success(request, 'Cursos importados com sucesso!', extra_tags='success_message')
+                else:
+                    error_messages = []
+                    if result.has_validation_errors():
+                        for row_errors in result.validation_errors:
+                            for field_error in row_errors.field_errors:
+                                error_messages.append(f"Linha {row_errors.row_num}: Campo '{field_error.field}': {field_error.errors[0]}")
+                    if result.has_errors():
+                        for error in result.errors:
+                            error_messages.append(f"Erro na linha {error.line}: {error.error_message}")
+                    
+                    messages.error(request, f'Erro(s) na importação de cursos: <br>' + '<br>'.join(error_messages), extra_tags='error_message')
+
+        except ValueError as e:
+            messages.error(request, f'Erro de validação durante a importação de cursos: {str(e)}', extra_tags='error_message')
+        except Exception as e:
+            messages.error(request, f'Erro inesperado durante a importação de cursos: {str(e)}', extra_tags='error_message')
+        
+        return redirect('cursos:curso_list')
+    
+    return redirect('cursos:curso_list')
+
+
+@login_required
+def importar_cursos_view(request):
+    # Esta view renderiza o formulário de importação para cursos.
+    return render(request, 'cursos/importar_cursos.html', {'title': 'Importar Cursos'})

@@ -186,13 +186,15 @@ class RestricaoHelper:
             'MP': '5.2.8', 'SB': '5.2.8', 'SI': '5.2.8', 'ST': '5.2.8'
         }
         return regras_map.get(sigla, '')
+    
+from backend.cursos.models import Medalha,Curso
 
 @login_required
 def ver_militar(request, id):
     # Verificação inicial do ID
     if not id:
         messages.error(request, 'ID inválido', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('efetivo:listar_militar')
+        return redirect('efetivo:listar_militar') # Certifique-se de que 'efetivo:listar_militar' é a URL correta
 
     try:
         # Obter o cadastro principal com related objects
@@ -206,7 +208,7 @@ def ver_militar(request, id):
         ).get(id=id)
     except Cadastro.DoesNotExist:
         messages.error(request, 'Militar não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('efetivo:listar_militar')
+        return redirect('efetivo:listar_militar') # Certifique-se de que 'efetivo:listar_militar' é a URL correta
 
     if request.method == "GET":
         # Obter os objetos relacionados
@@ -216,8 +218,8 @@ def ver_militar(request, id):
 
         # Processar categoria atual
         categoria_atual = cadastro.categorias_efetivo.filter(ativo=True).first()
-        
-        # Mapeamento completo das mensagens de restrição
+
+        # Mapeamento completo das mensagens de restrição (mantido como está)
         MENSAGENS_RESTRICOES = {
             'BS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
             'CI': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
@@ -264,13 +266,14 @@ def ver_militar(request, id):
         # Preparar restrições aplicáveis
         restricoes_aplicaveis = []
         if categoria_atual and categoria_atual.tipo == 'RESTRICAO':
+            # Nota: 'CatEfetivo' deve ser importado de models.py
             for field in CatEfetivo._meta.get_fields():
                 if field.name.startswith('restricao_') and getattr(categoria_atual, field.name):
                     sigla = field.name.split('_')[-1].upper()
                     if sigla in MENSAGENS_RESTRICOES:
                         restricoes_aplicaveis.append({
                             'sigla': sigla,
-                            'nome': field.verbose_name,
+                            'nome': field.verbose_name, # Assuming verbose_name is set in CatEfetivo model
                             'mensagem': MENSAGENS_RESTRICOES[sigla],
                             'regra': RestricaoHelper.get_regra_principal(sigla)
                         })
@@ -296,6 +299,12 @@ def ver_militar(request, id):
                     'icone': 'fa-check-circle'
                 }
 
+        # --- NOVA LÓGICA PARA BUSCAR MEDALHAS E CURSOS ---
+        medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
+        # Na função ver_militar, altere a linha:
+        cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
+        # cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_conclusao') # Ajuste o campo de ordenação
+
         context = {
             'cadastro': cadastro,
             'detalhes': detalhes,
@@ -303,7 +312,9 @@ def ver_militar(request, id):
             'today': today,
             'categoria_atual': categoria_atual,
             'restricoes_aplicaveis': restricoes_aplicaveis,
-            # Choices para formulários
+            'medalhas_do_militar': medalhas_do_militar,
+            'cursos_do_militar': cursos_do_militar, # Descomente quando tiver o modelo Curso real
+            # Choices para formulários (mantido como está)
             'situacao_choices': DetalhesSituacao.situacao_choices,
             'sgb_choices': DetalhesSituacao.sgb_choices,
             'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
@@ -319,8 +330,9 @@ def ver_militar(request, id):
             'categoria_choices': CatEfetivo.TIPO_CHOICES,
         }
 
+        # Certifique-se de que o caminho do template está correto para o seu projeto
         return render(request, 'ver_militar.html', context)
-
+    
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password

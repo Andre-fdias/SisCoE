@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Importar Cursos{% endblock %}
+
+{% block 'body' %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+            {# Header Section - Matched with importar_medalhas.html style #}
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-4">
+                <h1 class="text-2xl font-bold text-white tracking-tight">Importar Dados de Cursos</h1>
+                <p class="text-indigo-100 mt-1">Siga as instruções abaixo para importar dados de Cursos a partir de um arquivo CSV.</p>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <form method="post" enctype="multipart/form-data" class="space-y-6" id="import-form" action="{% url 'cursos:import_cursos_csv' %}">
+                    {% csrf_token %}
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700" for="csv_file">
+                            Selecione o arquivo CSV
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 flex items-center">
+                            {# File Input Styling - Matched with importar_medalhas.html style #}
+                            <label for="csv_file" class="cursor-pointer">
+                                <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                    <svg class="h-5 w-5 text-gray-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span>Escolher arquivo</span>
+                                </span>
+                                <input type="file" name="csv_file" id="csv_file" accept=".csv" required class="sr-only">
+                            </label>
+                            <span id="file-name" class="ml-3 text-sm text-gray-500">Nenhum arquivo selecionado</span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">O arquivo CSV deve conter os dados dos cursos, com os cabeçalhos correspondendo aos campos do sistema.</p>
+                    </div>
+
+                    {# Regras para o arquivo CSV - NEW SECTION #}
+                    <div class="space-y-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                        <h2 class="text-lg font-semibold text-gray-800">Regras para o arquivo CSV de Cursos:</h2>
+                        <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                            <li>O arquivo deve estar no formato **CSV** (Valores Separados por Vírgula).</li>
+                            <li>A primeira linha do CSV deve ser o **cabeçalho** com os nomes exatos dos campos.</li>
+                            <li>Os campos obrigatórios são:
+                                <ul class="list-disc list-inside ml-4">
+                                    <li>`re_cadastro` (Número de Registro do Militar - para vincular ao Cadastro existente)</li>
+                                    <li>`curso` (Nome do Curso - ex: "FORMAÇÃO DE CABOS", "APERFEIÇOAMENTO DE SARGENTOS")</li>
+                                    <li>`data_publicacao` (Data de Publicação - formato `AAAA-MM-DD` ou `DD/MM/AAAA`)</li>
+                                    <li>`bol_publicacao` (Boletim de Publicação)</li>
+                                </ul>
+                            </li>
+                            <li>Campos opcionais:
+                                <ul class="list-disc list-inside ml-4">
+                                    <li>`observacoes` (Texto livre para observações adicionais)</li>
+                                </ul>
+                            </li>
+                            <li>Certifique-se de que o valor em `re_cadastro` corresponda a um militar já cadastrado no sistema.</li>
+                            <li>A coluna `curso` deve ter o nome completo do curso.</li>
+                            <li>Verifique a formatação das datas para evitar erros de importação.</li>
+                        </ul>
+                        <p class="text-sm text-gray-600 italic">Exemplo de cabeçalho CSV: `re_cadastro,curso,data_publicacao,bol_publicacao,observacoes`</p>
+                    </div>
+
+                    <div class="pt-5 border-t border-gray-200">
+                        <button type="submit" id="submit-btn"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span id="btn-text">Importar Cursos</span>
+                            <svg id="btn-spinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Success/Error Modal - Matched with importar_medalhas.html style #}
+<div id="result-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <div id="modal-icon-success" class="hidden mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div id="modal-icon-error" class="hidden mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <div id="modal-icon-warning" class="hidden mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                    <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-5">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500" id="modal-message"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6">
+                <button type="button" id="modal-confirm" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-800 text-base font-medium text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const importForm = document.getElementById('import-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const fileInput = document.getElementById('csv_file');
+        const fileNameSpan = document.getElementById('file-name');
+
+        // Update file name display
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileNameSpan.textContent = this.files[0].name;
+            } else {
+                fileNameSpan.textContent = 'Nenhum arquivo selecionado';
+            }
+        });
+
+        // Function to show the result modal
+        function showResultModal(title, message, isSuccess = false, isWarning = false) {
+            const modal = document.getElementById('result-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const successIcon = document.getElementById('modal-icon-success');
+            const errorIcon = document.getElementById('modal-icon-error');
+            const warningIcon = document.getElementById('modal-icon-warning');
+
+            modalTitle.textContent = title;
+            modalMessage.innerHTML = message; // Use innerHTML to render HTML in messages
+
+            // Reset icons
+            successIcon.classList.add('hidden');
+            errorIcon.classList.add('hidden');
+            warningIcon.classList.add('hidden');
+
+            if (isSuccess) {
+                successIcon.classList.remove('hidden');
+            } else if (isWarning) {
+                warningIcon.classList.remove('hidden');
+            } else {
+                errorIcon.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+
+            // Re-attach event listener to avoid multiple listeners
+            const oldConfirmButton = document.getElementById('modal-confirm');
+            const newConfirmButton = oldConfirmButton.cloneNode(true);
+            oldConfirmButton.parentNode.replaceChild(newConfirmButton, oldConfirmButton);
+            document.getElementById('modal-confirm').addEventListener('click', function() {
+                modal.classList.add('hidden');
+                if (isSuccess) {
+                    // Optional: redirect or reload page on success
+                    // window.location.href = "{% url 'cursos:curso_list' %}"; // Example redirect
+                } else {
+                    // Re-enable button and hide spinner on error
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Importar Cursos';
+                    btnSpinner.classList.add('hidden');
+                }
+            });
+        }
+
+        importForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            submitBtn.disabled = true;
+            btnText.textContent = 'Importando...';
+            btnSpinner.classList.remove('hidden');
+
+            const formData = new FormData(importForm);
+
+            fetch(importForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'Erro desconhecido ao importar cursos.');
+                    }).catch(() => {
+                        // If response is not JSON, try to get plain text or status
+                        throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    showResultModal('Sucesso!', data.message, true);
+                } else if (data.status === 'warning') {
+                    showResultModal('Aviso!', data.message, false, true);
+                } else {
+                    showResultModal('Erro!', data.message || 'Ocorreu um erro durante a importação.', false);
+                }
+            })
+            .catch(error => {
+                showResultModal('Erro!', `Falha na requisição: ${error.message}`, false);
+            })
+            .finally(() => {
+                // If modal is not shown due to an unexpected error, re-enable button
+                if (document.getElementById('result-modal').classList.contains('hidden')) {
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Importar Cursos';
+                    btnSpinner.classList.add('hidden');
+                }
+            });
+        });
+
+        // Handle Django messages on page load
+        {% if messages %}
+            {% for message in messages %}
+                showResultModal(
+                    "{% if message.tags == 'success' %}Sucesso{% elif message.tags == 'error' %}Erro{% elif message.tags == 'warning' %}Aviso{% else %}Informação{% endif %}",
+                    "{{ message|safe }}",
+                    {% if message.tags == 'success' %}true{% else %}false{% endif %},
+                    {% if message.tags == 'warning' %}true{% else %}false{% endif %}
+                );
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

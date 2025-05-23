@@ -333,34 +333,21 @@ class Medalha(models.Model):
 
 
 
+    class Meta:
+        verbose_name = "Curso" # Como discutimos antes, isso pode ser confuso já que o modelo é Medalha
+        verbose_name_plural = "Cursos" # Mesma observação
+        # Original:
+        # ordering = ['-data_publicacao'] # Ordenação padrão
 
+        # CORREÇÃO:
+        ordering = ['-data_publicacao_lp'] # Ordenação padrão
 
 
 class Curso(models.Model):
 
     CURSOS_CHOICES = (
-        ('CEP_Atirador Designado', 'Atirador Designado - Oficiais e Praças - 1'),
-        ('CEP_Patrulhamento Tático', 'Patrulhamento Tático - Oficiais e Praças - 1'),
-        ('CEP_Combate ao Crime Organizado', 'Combate ao Crime Organizado - Oficiais, Subten PM ou Sgt PM - 1'),
-        ('CEP_Ações Especiais de Policia', 'Ações Especiais de Policia - Oficiais e Praças - 1'),
-        ('EEP_Policiamento com Motocicletas', 'Policiamento com Motocicletas - Programa de Radiopatrulha - Atendimento 190 - Praça - 1'),
-        ('CEP_Policiamento em Eventos_Cap', 'Policiamento em Eventos - Cap PM ou Ten QOPM - 2,5'),
-        ('CEP_Policiamento com Motocicletas ROCAM', 'Policiamento com Motocicletas Programa ROCAM - Praça - 1'),
-        ('CEP_Policiamento em Eventos_Subten', 'Policiamento em Eventos - Subten PM ou Sgt PM - 1'),
-        ('CEP_Policiamento com Motocicletas ROCAM_Cap_Ten', 'Policiamento com Motocicletas Programa ROCAM - Cap/TenPM - 2,5'),
-        ('CEP_Controle de Distúrbios Civis_Praça', 'Controle de Distúrbios Civis - Praça - 1'),
-        ('CEP_Operador em Controle de Multidões', 'Operador em Controle de Multidões - Praça - 1'),
-        ('CEP_Controle de Distúrbios Civis_Oficiais', 'Controle de Distúrbios Civis - Oficiais - 2,5'),
-        ('EEP_Munições de Impacto Controlado', 'Multiplicação ao Uso de Munições de Impacto Controlado - Subten PM ou Sgt PM - 1'),
-        ('EEP_Conduta de Patrulha Alto Risco', 'Conduta de Patrulha em Local de Alto Risco - Oficial ou Praça - 1'),
-        ('CEP_Gerenciamento de Crises', 'Gerenciamento de Crises - Oficial - 2,5'),
-        ('CEP_Atendimento Pré-Hospitalar Tático', 'Atendimento Pré-Hospitalar Tático - Oficiais e Praças - 1'),
-        ('CEP_Negociação de Crises', 'Negociação de Crises Envolvendo Reféns e Pessoas com Propósitos Suicidas de Posse de Armas de Fogo ou Brancas - Oficial e Praça - 1'),
-        ('CEP_Ações Táticas Especiais', 'Ações Táticas Especiais - Oficial ou Praça - 1'),
-        ('CEP_Operações Especiais', 'Operações Especiais - Cap QOPM, Ten QOPM ou Praça - 1'),
-        ('CEP_Adestramento de Cães Farejadores', 'Adestramento e Emprego de Cães Farejadores - Oficial ou Praça - 1'),
-        ('CEP_Cinotecnia', 'Cinotecnia - Oficial ou Praça - 1'),
-        ('CEP_Gestão pela Qualidade_Oficial', 'Gestão Contemporânea pela Qualidade - Oficial - 2,5'),
+               ('Atendimento Pré-Hospitalar Tático', 'Atendimento Pré-Hospitalar Tático'),
+               ('Gestão pela Qualidade_Oficial', 'Gestão Contemporânea pela Qualidade'),
         ('CEP_Administração de Projetos', 'Administração de Projetos - Oficial - 2,5'),
         ('CEP_Gestão por Processos', 'Gestão por Processos - Oficiais - 2,5'),
         ('CEP_Gestão pela Qualidade_Praça', 'Gestão Contemporânea pela Qualidade - Subten PM ou Sgt PM - 1'),
