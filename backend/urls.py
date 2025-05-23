@@ -15,7 +15,7 @@ urlpatterns = [
     path('bm/', include('backend.bm.urls', namespace='bm')),  # noqa E501
     path('municipios/', include('backend.municipios.urls', namespace='municipios')),  # noqa E501
     path('documentos/', include('backend.documentos.urls', namespace='documentos')),  # noqa E501
-
+    path('cursos/', include('backend.cursos.urls', namespace='cursos')),  # noqa E501
     path('agenda/', include('backend.agenda.urls', namespace='agenda')),  # noqa E501
     path('calculadora/', include('backend.calculadora.urls', namespace='calculadora')),  # noqa E501
 

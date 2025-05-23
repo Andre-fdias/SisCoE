@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Cursos{% endblock %}
+
+{% block 'body' %}
+<body class="bg-gray-50">
+    <div class="md:items-center md:justify-between rounded-lg w-full mt-2" id="lista_cursos">
+        <fieldset class="p-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
+                <div class="p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <h1 class="text-2xl font-bold text-white tracking-tight">Lista de Cursos</h1>
+                          
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <a href="{% url 'cursos:curso_create' %}"
+                               class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
+                                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
+                                      font-medium rounded-lg text-sm px-4 py-2 text-center transition-all duration-200">
+                                Adicionar Novo Curso
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <fieldset class="p-4 mb-2 rounded-md w-full">
+            <fieldset class="bg-gray-100 rounded-md shadow-lg mb-2 border-0">
+                <table id="cursosTable" class="w-full text-sm text-left text-gray-700">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="p-3">
+                                <div class="flex items-center">
+                                    <input id="checkbox-all" type="checkbox" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
+                                    <label for="checkbox-all" class="sr-only">checkbox</label>
+                                </div>
+                            </th>
+                            <th class="px-4 py-3 text-center">Imagem</th>
+                            <th class="px-4 py-3 text-center">Posto/Grad</th>
+                            <th class="px-4 py-3 text-center">Nome</th>
+                            <th class="px-4 py-3 text-center">SGB</th>
+                            <th class="px-4 py-3 text-center">Curso</th>
+                            <th class="px-4 py-3 text-center">Bol G PM</th>
+                            <th class="px-4 py-3 text-center">Data</th>
+                            <th class="px-4 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for curso in cursos %}
+                        <tr class="bg-white border-b hover:bg-gray-50" data-id="{{ cadastro.id }}">
+                            <td class="w-4 p-3">
+                                <div class="flex items-center">
+                                    <input id="checkbox-table-search-{{ forloop.counter }}" type="checkbox" onclick="event.stopPropagation()" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
+                                    <label for="checkbox-table-search-{{ forloop.counter }}" class="sr-only">checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                {% if curso.cadastro.imagens.exists %}
+                                    <img src="{{ curso.cadastro.imagens.last.image.url }}" class="foto-perfil rounded-full w-12 h-12 object-cover object-center" alt="Imagem">
+                                {% else %}
+                                    Sem imagem
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                {% if curso.cadastro.promocoes.last %}
+                                    {{ curso.cadastro.promocoes.last.posto_grad }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-center">
+                                    <div class="text-indigo-700 font-medium">{{ curso.cadastro.nome }}</div>
+                                    <div class="text-gray-500 text-xs">RE: {{ curso.cadastro.re }}</div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="text-center">
+                                    <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                                        {% if curso.cadastro.detalhes_situacao.last %}
+                                            {{ curso.cadastro.detalhes_situacao.last.sgb }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </span>
+                                    <div class="text-gray-500 text-xs mt-1">
+                                        {% if curso.cadastro.detalhes_situacao.last %}
+                                            {{ curso.cadastro.detalhes_situacao.last.posto_secao }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="text-left">
+                                    <div class="font-medium text-gray-900">
+                                        {% if curso.curso == 'OUTRO' and curso.outro_curso %}
+                                            {{ curso.outro_curso }}
+                                        {% else %}
+                                            {{ curso.get_curso_display }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-gray-500 text-xs mt-1">
+                                        {% if curso.observacoes %}
+                                            {{ curso.observacoes|truncatechars:50 }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                {% if curso.bol_publicacao %}
+                                    {{ curso.bol_publicacao }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                {% if curso.data_publicacao %}
+                                    {{ curso.data_publicacao|date:"d/m/Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="py-2 px-4 border-b text-center">
+                                {% if curso.pk %}
+                                <button onclick="openEditCourseModal(
+                                    '{% url 'cursos:curso_update' pk=curso.pk %}',
+                                    'Editar Curso'
+                                )"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors duration-200">
+                                    Editar
+                                </button>
+                                {% else %}
+                                <span class="text-red-500 text-sm">Item inválido (sem PK)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr class="bg-white border-b">
+                            <td colspan="9" class="px-4 py-3 text-center">Nenhum curso encontrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {# Removi a inclusão do modal de edição pois não será mais necessário #}
+
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-gray-100 rounded-lg">
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-600">
+                            Total de registros: {{ cursos|length }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        {% if user.is_superuser or user.is_staff %}
+                        <a href="#" class="text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-purple-300 shadow-lg shadow-purple-500/50 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
+                            <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                            </svg>
+                            Importar Cursos
+                        </a>
+                        {% endif %}
+
+                        <div class="relative">
+                            <button id="exportButton" type="button" class="text-gray-900 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-yellow-200 font-medium rounded-lg text-xs px-4 py-2 text-center inline-flex items-center">
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                </svg>
+                                Exportar
+                            </button>
+
+                            <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10">
+                                <form method="GET" action="#" class="py-1">
+                                    {% csrf_token %}
+                                    <button type="button" onclick="exportTable('pdf')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</button>
+                                    <button type="button" onclick="exportTable('xlsx')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</button>
+                                    <button type="button" onclick="exportTable('csv')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataTable = new simpleDatatables.DataTable("#cursosTable", {
+                perPage: 10,
+                perPageSelect: [5, 10, 15, 20, 25],
+                labels: {
+                    placeholder: "Pesquisar...",
+                    perPage: "{select} por página",
+                    noRows: "Nenhum curso encontrado",
+                    info: "Mostrando {start}-{end} de {rows}",
+                    noResults: "Nenhum resultado",
+                    loading: "Carregando...",
+                    infoFiltered: "(filtrado de {rowsTotal})",
+                    previous: "Anterior",
+                    next: "Próximo",
+                    first: "Primeiro",
+                    last: "Último"
+                }
+            });
+
+            // Export menu toggle
+            document.getElementById('exportButton').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('exportMenu').classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function() {
+                document.getElementById('exportMenu').classList.add('hidden');
+            });
+
+            document.getElementById('exportMenu').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+
+        function exportTable(type) {
+            console.log('Exportando cursos como:', type);
+            alert(`Funcionalidade de exportação para ${type} ainda não implementada no backend.`);
+        }
+
+        // Função simplificada para abrir modal de edição
+        function openEditCourseModal(url, title) {
+            window.location.href = url; // Redireciona diretamente para a página de edição
+        }
+    </script>
+</body>
+{% endblock %}

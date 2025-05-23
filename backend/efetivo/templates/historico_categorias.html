@@ -1,7 +1,7 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block 'body' %}
-
 <div class="container mx-auto px-4 py-8">
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex justify-between items-center mb-6">
@@ -10,45 +10,15 @@
             </h1>
             <a href="{% url 'efetivo:ver_militar' militar.id %}"
                class="text-indigo-600 hover:text-indigo-800 flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i> Voltar para o militar
+                <i class="fas fa-arrow-left mr-2"></i> Voltar
             </a>
         </div>
-
-        {% if categoria_atual %}
-        <div id="categoria-atual-container" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <div class="flex flex-col space-y-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600 font-medium">Categoria Atual:</span>
-                    <span class="text-gray-800 font-semibold">
-                        {{ categoria_atual.get_tipo_display }}
-                        {% if categoria_atual.data_termino %}
-                            <span class="text-xs text-gray-500 ml-1">
-                                (até {{ categoria_atual.data_termino|date:"d/m/Y" }})
-                            </span>
-                        {% endif %}
-                    </span>
-                </div>
-                {% if categoria_atual.tipo == 'RESTRICAO' and categoria_atual.restricoes_selecionadas %}
-                <div class="mt-1">
-                    <span class="text-xs text-gray-500">Restrições:</span>
-                    <div class="flex flex-wrap gap-1 mt-1">
-                        {% for restricao in categoria_atual.restricoes_selecionadas %}
-                        <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
-                            {{ restricao }}
-                        </span>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
 
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="py-3 px-4 text-left">Data Registro</th>
+                        <th class="py-3 px-4 text-left">Data</th>
                         <th class="py-3 px-4 text-left">Tipo</th>
                         <th class="py-3 px-4 text-left">Período</th>
                         <th class="py-3 px-4 text-left">Restrições</th>
@@ -57,14 +27,18 @@
                         <th class="py-3 px-4 text-left">Ações</th>
                     </tr>
                 </thead>
-                <tbody id="historico-body">
+                <tbody>
                     {% for historico in historicos %}
                     <tr class="border-t border-gray-200 hover:bg-gray-50">
                         <td class="py-3 px-4 whitespace-nowrap">
                             {{ historico.data_registro|date:"d/m/Y H:i" }}
                         </td>
                         <td class="py-3 px-4">
-                            <span class="{{ historico.tipo|lower }}-badge">
+                            <span class="px-2 py-1 rounded-full text-xs
+                                {% if historico.tipo == 'ATIVO' %}bg-green-100 text-green-800
+                                {% elif historico.tipo == 'INATIVO' %}bg-red-100 text-red-800
+                                {% elif historico.tipo == 'RESTRICAO' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ historico.get_tipo_display }}
                             </span>
                         </td>
@@ -82,22 +56,22 @@
                         </td>
                         <td class="py-3 px-4">
                             {% if historico.tipo == 'RESTRICAO' %}
-                                {{ historico.restricoes_selecionadas_siglas|default:"-" }}
+                                <div class="flex flex-wrap gap-1">
+                                    {% for campo in historico.cat_efetivo.get_restricoes_selecionadas %}
+                                    <span class="bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full text-xs">
+                                        {{ campo.verbose_name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
                             {% else %}
                                 -
                             {% endif %}
                         </td>
                         <td class="py-3 px-4">
-                            {% if historico.usuario_alteracao and historico.usuario_alteracao.profile %}
-                                {{ historico.usuario_alteracao.profile.cpf|default:"-" }}
-                            {% else %}
-                                Sistema
-                            {% endif %}
+                            {{ historico.usuario_alteracao.username|default:"Sistema" }}
                         </td>
                         <td class="py-3 px-4">
-                            {% if historico.deletado %}
-                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Excluído</span>
-                            {% elif historico.ativo %}
+                            {% if historico.ativo %}
                                 <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Ativo</span>
                             {% else %}
                                 <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">Inativo</span>
@@ -106,21 +80,19 @@
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
                                 {% if not historico.cat_efetivo.data_termino or historico.cat_efetivo.data_termino > today %}
-                                    {% if historico.cat_efetivo %}
-                                        <a href="{% url 'efetivo:editar_categoria_efetivo' historico.cat_efetivo.id %}"
-                                           class="abrir-modal-edicao text-indigo-600 hover:text-indigo-800">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% endif %}
+                                    <button onclick="abrirModalEdicao('{{ historico.cat_efetivo.id }}')"
+                                            class="text-indigo-600 hover:text-indigo-800 p-1 rounded hover:bg-indigo-50">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                 {% endif %}
 
                                 <form method="post"
-                                    action="{% url 'efetivo:excluir_categoria_efetivo' historico.cat_efetivo.id %}"
-                                    class="inline">
+                                      action="{% url 'efetivo:excluir_categoria_efetivo' historico.cat_efetivo.id %}"
+                                      class="inline">
                                     {% csrf_token %}
                                     <button type="submit"
-                                            class="texto-vermelho-600 hover:texto-vermelho-800"
-                                            onclick="return confirm('Confirma exclusão?')">
+                                            class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                                            onclick="return confirm('Tem certeza que deseja excluir?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -129,7 +101,9 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="py-4 px-4 text-center text-gray-500">Nenhum registro histórico encontrado</td>
+                        <td colspan="7" class="py-4 px-4 text-center text-gray-500">
+                            Nenhum registro histórico encontrado
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -138,145 +112,154 @@
     </div>
 </div>
 
-{% include 'modals/editar_categoria_atual.html' %}
+<div id="modalEdicao" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div id="modalContent" class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+        </div>
+</div>
 
-{% endblock %}
-
-{% block styles %}
-<style>
-/* Estilos personalizados */
-.btn-voltar { @apply text-indigo-600 hover:text-indigo-800 flex items-center; }
-.tabela-historico { @apply min-w-full bg-white; }
-.acoes-container { @apply flex items-center space-x-2; }
-.btn-editar { @apply text-indigo-600 hover:text-indigo-800; }
-.form-excluir button { @apply text-red-600 hover:text-red-800; }
-.modal-container {
-    /* As classes hidden e flex já estão inline no elemento div */
-}
-.modal-content {
-    @apply bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto;
-}
-.texto-vermelho-600 { color: #DC2626; }
-.hover:texto-vermelho-800:hover { color: #991B1B; }
-.abrir-modal-edicao { @apply text-indigo-600 hover:text-indigo-800; }
-</style>
-{% endblock %}
-
-{% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const modalEditar = document.getElementById('editCatEfetivoModal{{ categoria.id }}');
-
-    // Abrir Modal
-    document.querySelectorAll('.abrir-modal-edicao').forEach(botao => {
-        botao.addEventListener('click', async (evento) => {
-            evento.preventDefault();
-            const url = evento.target.closest('a').href;
-            const categoriaId = url.split('/').slice(-2)[0]; // Extrai o ID da categoria da URL
-
-            try {
-                const resposta = await fetch(url, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-
-                if (!resposta.ok) {
-                    throw new Error(`Erro HTTP! status: ${resposta.status}`);
-                }
-
-                const html = await resposta.text();
-                const formularioEdicao = modalEditar.querySelector('form');
-                if (formularioEdicao) {
-                    formularioEdicao.innerHTML = html;
-                    formularioEdicao.action = `/efetivo/categoria/editar/${categoriaId}/`; // Define a action do formulário dinamicamente
-                }
-
-                // Exibir o modal usando Alpine.js
-                if (window.Alpine && modalEditar.__x) {
-                    modalEditar.__x.$data.show = true;
-                } else {
-                    modalEditar.classList.remove('hidden');
-                    modalEditar.style.display = 'flex';
-                }
-
-                // Configurar o envio do formulário
-                if (formularioEdicao) {
-                    formularioEdicao.addEventListener('submit', async (eventoSubmit) => {
-                        eventoSubmit.preventDefault();
-                        const formData = new FormData(formularioEdicao);
-                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                        const botaoSalvar = formularioEdicao.querySelector('button[type="submit"]');
-
-                        try {
-                            if (botaoSalvar) {
-                                botaoSalvar.disabled = true;
-                                botaoSalvar.textContent = 'Salvando...';
-                            }
-
-                            const respostaSubmit = await fetch(formularioEdicao.action, { // Usa a action definida dinamicamente
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRFToken': csrfToken
-                                }
-                            });
-
-                            if (!respostaSubmit.ok) {
-                                const dadosErro = await respostaSubmit.json();
-                                alert(dadosErro.error || 'Erro ao salvar as alterações.');
-                            } else {
-                                const dados = await respostaSubmit.json();
-                                if (dados.success) {
-                                    window.location.reload();
-                                } else {
-                                    alert(dados.error || 'Erro ao salvar as alterações.');
-                                }
-                            }
-                        } catch (erro) {
-                            console.error('Erro ao enviar formulário:', erro);
-                            alert('Erro na comunicação com o servidor.');
-                        } finally {
-                            if (botaoSalvar) {
-                                botaoSalvar.disabled = false;
-                                botaoSalvar.textContent = 'Salvar Alterações';
-                            }
+    function abrirModalEdicao(categoriaId) {
+        fetch(`/efetivo/categoria/editar/${categoriaId}/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Criar o HTML do modal com os dados recebidos
+            const modalContent = `
+                <div id="modalContent-${data.id}">
+                    <div class="sticky top-0 bg-indigo-700 text-white p-4 flex justify-between items-center rounded-t-xl">
+                        <h3 class="text-xl font-bold">
+                            <i class="fas fa-edit mr-2"></i>Editar Categoria - ${data.tipo_display}
+                        </h3>
+                        <button onclick="document.getElementById('modalEdicao').classList.add('hidden')" class="hover:text-indigo-200 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+    
+                    <form method="POST" id="editarCategoriaForm" class="p-6" action="/efetivo/categoria/editar/${data.id}/">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+    
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-700">
+                                    Data de Início <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="data_inicio" value="${data.data_inicio || ''}" required
+                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                            </div>
+    
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-700">
+                                    Data de Término
+                                </label>
+                                <input type="date" name="data_termino" value="${data.data_termino || ''}"
+                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+    
+                        ${data.tipo === 'RESTRICAO' ? `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold mb-4 border-b pb-2">Restrições</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                ${data.restricoes.map(restricao => `
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="${restricao.name}" ${restricao.value ? 'checked' : ''}
+                                           class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">${restricao.verbose_name}</span>
+                                </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+    
+                        <div class="mb-6">
+                            <label class="block mb-2 text-sm font-medium text-gray-700">
+                                Observações
+                            </label>
+                            <textarea name="observacao" rows="3"
+                                      class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500">${data.observacao || ''}</textarea>
+                        </div>
+    
+                        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                            <button type="button"
+                                    onclick="document.getElementById('modalEdicao').classList.add('hidden')"
+                                    class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                    class="px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+    
+            document.getElementById('modalContent').innerHTML = modalContent;
+            document.getElementById('modalEdicao').classList.remove('hidden');
+            
+            // Adicionar o event listener para o formulário
+            const form = document.getElementById('editarCategoriaForm');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'include'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.error || 'Erro ao salvar alterações');
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Salvar Alterações';
                         }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        alert('Erro na comunicação com o servidor');
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Salvar Alterações';
                     });
-                }
-
-            } catch (erro) {
-                console.error('Erro ao carregar dados do modal:', erro);
-                alert('Erro ao carregar o formulário de edição.');
+                });
             }
-        });
-    });
-
-    // Fechar Modal
-    const botaoFecharModal = modalEditar ? modalEditar.querySelector('.fechar-modal') : null;
-    if (botaoFecharModal) {
-        botaoFecharModal.addEventListener('click', () => {
-            if (window.Alpine && modalEditar.__x) {
-                modalEditar.__x.$data.show = false;
-            } else {
-                modalEditar.classList.add('hidden');
-                modalEditar.style.display = 'none';
-            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar o modal:', error);
+            alert('Erro ao carregar o formulário de edição.');
         });
     }
-
-    // Fechar Modal ao clicar fora
-    if (modalEditar) {
-        modalEditar.addEventListener('click', (evento) => {
-            if (evento.target === modalEditar) {
-                if (window.Alpine && modalEditar.__x) {
-                    modalEditar.__x.$data.show = false;
-                } else {
-                    modalEditar.classList.add('hidden');
-                    modalEditar.style.display = 'none';
+    
+    // Função auxiliar para obter cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-        });
+        }
+        return cookieValue;
     }
-});
 </script>
 {% endblock %}

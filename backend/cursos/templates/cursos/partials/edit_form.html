@@ -1,0 +1,42 @@
+<form id="editForm" method="POST" action="{% url 'cursos:medalha_edit' medalha.id %}">
+    {% csrf_token %}
+    
+    <div class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium mb-1">Militar</label>
+            <select name="cadastro" class="w-full p-2 border rounded-lg" required>
+                <option value="">Selecione o militar</option>
+                {% for cadastro in cadastros %}
+                    <option value="{{ cadastro.id }}" {% if submitted_data.cadastro|add:0 == cadastro.id %}selected{% endif %}>
+                        {{ cadastro.nome }} ({{ cadastro.re }})
+                    </option>
+                {% endfor %}
+            </select>
+            {% if errors.cadastro %}<p class="text-red-500 text-sm">{{ errors.cadastro }}</p>{% endif %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium mb-1">Honraria</label>
+            <select name="honraria" class="w-full p-2 border rounded-lg" required>
+                <option value="">Selecione a honraria</option>
+                {% for value, label in honraria_choices %}
+                    <option value="{{ value }}" {% if submitted_data.honraria == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if errors.honraria %}<p class="text-red-500 text-sm">{{ errors.honraria }}</p>{% endif %}
+        </div>
+
+        <!-- Adicione os demais campos do formulário seguindo o mesmo padrão -->
+
+        <div class="flex justify-end gap-2 mt-6">
+            <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg">
+                Cancelar
+            </button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                Salvar Alterações
+            </button>
+        </div>
+    </div>
+</form>

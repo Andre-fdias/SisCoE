@@ -803,23 +803,16 @@ from .models import   Cadastro, DetalhesSituacao, Promocao,  CatEfetivo, Histori
 
 from django.utils import timezone
 
-@login_required
+
 def historico_categorias(request, militar_id):
     militar = get_object_or_404(Cadastro, id=militar_id)
-    
-    # Filtra apenas históricos NÃO excluídos (se usar soft delete)
     historicos = HistoricoCatEfetivo.objects.filter(
         cat_efetivo__cadastro=militar
-    ).select_related('cat_efetivo').order_by('-data_registro')
-
-    # Ou, para hard delete, não é necessário filtrar (os excluídos já foram removidos)
-    
-    categoria_atual = militar.categoria_ativa()
+    ).select_related('cat_efetivo', 'usuario_alteracao').order_by('-data_registro')
     
     return render(request, 'historico_categorias.html', {
         'militar': militar,
         'historicos': historicos,
-        'categoria_atual': categoria_atual,
         'today': timezone.now().date(),
     })
 
@@ -963,114 +956,45 @@ from backend.efetivo.models import CatEfetivo, HistoricoCatEfetivo  # Certifique
 @login_required
 @require_http_methods(["GET", "POST"])
 def editar_categoria_efetivo(request, categoria_id):
-    """
-    View para editar uma categoria de efetivo existente.
-
-    Permite a edição via formulário HTML normal ou via requisição AJAX.
-    Se a requisição for AJAX (X-Requested-With: XMLHttpRequest), retorna um JsonResponse
-    indicando sucesso ou erro. Caso contrário, redireciona para a página de histórico
-    de categorias do militar.
-    """
-    # Obtém a categoria de efetivo com base no ID fornecido, incluindo informações do cadastro do militar.
-    try:
-        categoria = get_object_or_404(
-            CatEfetivo.objects.select_related('cadastro'),
-            id=categoria_id
-        )
-    except CatEfetivo.DoesNotExist:
-        mensagem_erro = f"Categoria de efetivo com ID {categoria_id} não encontrada."
-        messages.error(request, mensagem_erro)
-        return redirect('efetivo:historico_categorias', militar_id=None)  # Redireciona mesmo sem militar específico
-
-    # Verifica se a requisição é AJAX.
+    categoria = get_object_or_404(
+        CatEfetivo.objects.select_related('cadastro'),
+        id=categoria_id
+    )
     eh_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Bloqueia a edição de categorias que já expiraram.
-    if categoria.data_termino and categoria.data_termino < timezone.now().date():
-        mensagem = "A edição não é permitida para categorias expiradas."
-        if eh_ajax:
-            return HttpResponse(status=403, content=mensagem)
-        else:
-            messages.error(request, mensagem)
-            return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
-
-    # Se a requisição for do tipo POST, processa os dados do formulário.
     if request.method == 'POST':
-        try:
-            # Garante que as operações de banco de dados sejam atômicas (tudo ou nada).
-            with transaction.atomic():
-                # Obtém os dados do formulário.
-                dados_formulario = request.POST
-                categoria.data_inicio = dados_formulario.get('data_inicio')
-                categoria.data_termino = dados_formulario.get('data_termino') or None  # Permite data de término nula
-                categoria.observacao = dados_formulario.get('observacao', '')
-
-                # Processa campos específicos dependendo do tipo da categoria.
-                if categoria.tipo == 'LSV':
-                    categoria.boletim_concessao_lsv = dados_formulario.get('boletim_concessao_lsv', '')
-                    categoria.data_boletim_lsv = dados_formulario.get('data_boletim_lsv') or None
-
-                # Atualiza as restrições se o tipo da categoria for 'RESTRICAO'.
-                if categoria.tipo == 'RESTRICAO':
-                    campos_restricao = [campo.name for campo in CatEfetivo._meta.fields if campo.name.startswith('restricao_')]
-                    for campo in campos_restricao:
-                        # Define o atributo da categoria como True se o campo estiver presente no formulário (marcado), False caso contrário.
-                        setattr(categoria, campo, campo in dados_formulario)
-
-                # Salva as alterações na categoria.
-                categoria.save()
-
-                # Atualiza o registro de histórico correspondente.
-                try:
-                    ultimo_historico = HistoricoCatEfetivo.objects.filter(
-                        cat_efetivo=categoria
-                    ).latest('data_registro')
-                    ultimo_historico.data_inicio = categoria.data_inicio
-                    ultimo_historico.data_termino = categoria.data_termino
-                    ultimo_historico.observacao = categoria.observacao
-                    ultimo_historico.save()
-                except HistoricoCatEfetivo.DoesNotExist:
-                    # Log de um erro, pois deveria haver um histórico para a categoria editada.
-                    print(f"Erro: Nenhum histórico encontrado para a categoria ID {categoria.id}")
-                    messages.warning(request, "Histórico da categoria não encontrado e não foi atualizado.")
-
-                # Se a requisição for AJAX, retorna uma resposta JSON de sucesso.
-                if eh_ajax:
-                    return JsonResponse({'success': True})
-                else:
-                    # Se não for AJAX, redireciona para a página de histórico do militar.
-                    messages.success(request, "Categoria atualizada com sucesso!")
-                    return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
-
-        except Exception as e:
-            mensagem_erro = f'Erro ao atualizar a categoria: {str(e)}'
-            # Se a requisição for AJAX, retorna uma resposta JSON de erro com status 400.
-            if eh_ajax:
-                return JsonResponse({'error': mensagem_erro}, status=400)
-            else:
-                # Se não for AJAX, adiciona uma mensagem de erro e redireciona.
-                messages.error(request, mensagem_erro)
-                return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
-
-    # Se a requisição for do tipo GET, renderiza o formulário de edição.
-    else:
-        contexto = {
-            'categoria': categoria,
-            'militar': categoria.cadastro,
-            'today': timezone.now().date(),
-            'restricao_fields': [
-                {'name': campo.name, 'verbose_name': campo.verbose_name, 'value': getattr(categoria, campo.name)}
-                for campo in CatEfetivo._meta.fields if campo.name.startswith('restricao_')
-            ]
+        # ... (seu código POST existente) ...
+        pass
+    else:  # GET request
+        # Criar um dicionário serializável com os dados necessários
+        dados_categoria = {
+            'id': categoria.id,
+            'tipo': categoria.tipo,
+            'tipo_display': categoria.get_tipo_display(),
+            'data_inicio': categoria.data_inicio.strftime('%Y-%m-%d') if categoria.data_inicio else None,
+            'data_termino': categoria.data_termino.strftime('%Y-%m-%d') if categoria.data_termino else None,
+            'observacao': categoria.observacao,
+            'restricoes': []
         }
-        # Se a requisição for AJAX, renderiza apenas o conteúdo do modal.
+
+        if categoria.tipo == 'RESTRICAO':
+            dados_categoria['restricoes'] = [
+                {
+                    'name': f.name,
+                    'verbose_name': f.verbose_name,
+                    'value': getattr(categoria, f.name)
+                }
+                for f in CatEfetivo._meta.fields 
+                if f.name.startswith('restricao_')
+            ]
+
         if eh_ajax:
-            return HttpResponse(render_to_string('modals/editar_categoria_atual.html', contexto))
+            return JsonResponse(dados_categoria)
         else:
-            # Se não for AJAX (o que não deveria acontecer normalmente para esta view com o fluxo AJAX),
-            # você pode optar por redirecionar ou renderizar uma página completa.
             return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
 
+
+            
 
 @login_required
 def excluir_categoria_efetivo(request, categoria_id):
