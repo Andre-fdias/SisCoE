@@ -21,200 +21,180 @@
                         </label>
                         <div class="mt-1 flex items-center">
                             <label for="arquivo" class="cursor-pointer">
-                                <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                                    </svg>
-                                    Selecionar arquivo
+                                <span class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Escolher arquivo
                                 </span>
-                                <input id="arquivo" name="arquivo" type="file" required
-                                       class="sr-only" accept=".csv,.xlsx,.xls">
+                                <input type="file" name="arquivo" id="arquivo" class="sr-only" required accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                             </label>
-                            <span id="file-name" class="ml-4 text-sm text-gray-500">Nenhum arquivo selecionado</span>
+                            <span id="file-name" class="ml-3 text-sm text-gray-500">Nenhum arquivo selecionado</span>
                         </div>
-                        <p class="text-xs text-gray-500">Formatos suportados: .CSV (separado por vírgula ou ponto e vírgula), .XLSX e .XLS (Excel)</p>
+                        <p class="mt-1 text-xs text-gray-500">Tipos de arquivo aceitos: .csv, .xls, .xlsx</p>
                     </div>
 
-                    <div class="flex items-center justify-end space-x-4 pt-4">
-                        <a href="{% url 'municipios:posto_list' %}" 
-                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            Cancelar
-                        </a>
-                        <button type="submit" id="submit-btn"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
+                    <div class="border-t border-gray-200 pt-6">
+                        <h2 class="text-lg font-semibold text-gray-900">Instruções para o arquivo:</h2>
+                        <ul class="list-inside list-disc pl-5 space-y-1 mt-3 text-gray-700 text-sm">
+                            <li>O arquivo deve ser formatado como **CSV** ou **Excel (.xls, .xlsx)**.</li>
+                            <li>A primeira linha do arquivo deve conter os **cabeçalhos** (nomes das colunas).</li>
+                            <li>Os nomes das colunas são **sensíveis a maiúsculas/minúsculas e espaços**. Use os nomes exatos listados abaixo.</li>
+                            <li>Campos vazios serão tratados como nulos ou zero, dependendo do tipo de dado.</li>
+                            <li>Campos de data devem seguir o formato `AAAA-MM-DD HH:MM:SS` ou `DD/MM/AAAA`.</li>
+                        </ul>
+
+                        <h3 class="text-md font-semibold text-gray-800 mt-4">Cabeçalhos Esperados (obrigatórios em negrito):</h3>
+                        <div class="bg-gray-50 p-4 rounded-md mt-2 text-sm text-gray-700">
+                            <ul class="list-inside list-disc pl-5 space-y-1">
+                                <li><b>sgb</b> (ex: EM, 1ºSGB, 2ºSGB)</li>
+                                <li><b>posto_secao</b> (ex: 703150000 - CMT, 703159000 - SUB CMT)</li>
+                                <li><b>posto_atendimento</b> (nome único do posto de atendimento)</li>
+                                <li>cidade_posto</li>
+                                <li>tipo_cidade</li>
+                                <li>op_adm (ex: Administrativo, Operacional)</li>
+                                <li>data_criacao (opcional, formato YYYY-MM-DD HH:MM:SS ou DD/MM/AAAA)</li>
+                                <li>usuario_id (ID numérico de um usuário existente no sistema. Se vazio, usará o usuário logado)</li>
+                                <li>telefone</li>
+                                <li>rua</li>
+                                <li>numero</li>
+                                <li>complemento</li>
+                                <li>bairro</li>
+                                <li>cidade_contato (nome da cidade para o Contato)</li>
+                                <li>cep</li>
+                                <li>email</li>
+                                <li>longitude_contato</li>
+                                <li>latitude_contato</li>
+                                <li>cel</li>
+                                <li>ten_cel</li>
+                                <li>maj</li>
+                                <li>cap</li>
+                                <li>tenqo</li>
+                                <li>tenqa</li>
+                                <li>asp</li>
+                                <li>st_sgt</li>
+                                <li>cb_sd</li>
+                                <li>descricao_cidade</li>
+                                <li><b>municipio</b> (nome do município para a Cidade)</li>
+                                <li>longitude_cidade</li>
+                                <li>latitude_cidade</li>
+                            </ul>
+                            <p class="mt-3 text-xs text-red-600">
+                                <strong>Importante:</strong> Campos de imagem (ex: `quartel`, `bandeira`) não podem ser importados diretamente via CSV/Excel. Eles devem ser carregados separadamente no sistema ou gerenciados via administração.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-6 border-t border-gray-200">
+                        <button type="submit" id="submit-btn" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                             <span id="btn-text">Importar Dados</span>
-                            <span id="btn-spinner" class="hidden ml-2">
-                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </span>
+                            <svg id="btn-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
                         </button>
                     </div>
                 </form>
-            </div>
-
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 pt-0.5">
-                        <svg class="h-6 w-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-gray-900">Instruções para importação de dados de Postos</h3>
-                        <div class="mt-2 text-sm text-gray-700">
-                            <ul class="list-disc pl-5 space-y-1">
-                                <li>O arquivo deve estar no formato .CSV (separado por vírgula ou ponto e vírgula) ou .XLSX/.XLS (Excel).</li>
-                                <li>A primeira linha do arquivo deve conter os seguintes cabeçalhos de coluna, exatamente como mostrado:
-                                    <ul class="list-inside list-disc pl-5 space-y-1 mt-1">
-                                        <li><code>sgb</code></li>
-                                        <li><code>posto_secao</code></li>
-                                        <li><code>posto_atendimento</code></li>
-                                        <li><code>cidade_posto</code></li>
-                                        <li><code>tipo_cidade</code></li>
-                                        <li><code>op_adm</code></li>
-                                        <li><code>quartel</code> (opcional)</li>
-                                        <li><code>data_criacao</code> (opcional)</li>
-                                        <li><code>usuario_id</code> (ID de um usuário existente)</li>
-                                        <li><code>telefone</code></li>
-                                        <li><code>rua</code></li>
-                                        <li><code>numero</code></li>
-                                        <li><code>complemento</code> (opcional)</li>
-                                        <li><code>bairro</code></li>
-                                        <li><code>cidade_contato</code></li>
-                                        <li><code>cep</code></li>
-                                        <li><code>email</code></li>
-                                        <li><code>longitude_contato</code></li>
-                                        <li><code>latitude_contato</code></li>
-                                        <li><code>cel</code></li>
-                                        <li><code>ten_cel</code></li>
-                                        <li><code>maj</code></li>
-                                        <li><code>cap</code></li>
-                                        <li><code>tenqo</code></li>
-                                        <li><code>tenqa</code></li>
-                                        <li><code>asp</code></li>
-                                        <li><code>st_sgt</code></li>
-                                        <li><code>cb_sd</code></li>
-                                        <li><code>descricao_cidade</code> (opcional)</li>
-                                        <li><code>municipio</code></li>
-                                        <li><code>longitude_cidade</code></li>
-                                        <li><code>latitude_cidade</code></li>
-                                        <li><code>bandeira</code> (opcional)</li>
-                                    </ul>
-                                </li>
-                                <li>Certifique-se de que os valores nas colunas correspondam aos tipos esperados (texto, número inteiro, decimal, data).</li>
-                                <li>Para os campos com opções (`choices`), os valores no arquivo devem corresponder exatamente às chaves definidas no seu modelo.</li>
-                                <li>O sistema tentará converter datas em diversos formatos comuns.</li>
-                                <li>Certifique-se de que o <code>usuario_id</code> corresponda a um usuário existente no sistema.</li>
-                                <li>O tamanho máximo do arquivo permitido é de 10MB.</li>
-                                <li>Para referência, você pode baixar um <a href="/caminho/para/modelo_postos.csv" class="text-indigo-600 hover:text-indigo-800 font-medium underline">modelo de arquivo CSV</a>.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="result-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div id="modal-icon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
-                        </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Título da Mensagem</h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-gray-500" id="modal-message">Mensagem de resultado da importação.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button id="modal-confirm" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    OK
-                </button>
-            </div>
+<div id="resultModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm m-4">
+        <div class="flex flex-col items-center space-y-4">
+            <div id="modalIcon" class="p-3 rounded-full"></div>
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900"></h3>
+            <p id="modalMessage" class="text-sm text-gray-600 text-center"></p>
+            <button id="modalConfirmBtn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                OK
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('arquivo').addEventListener('change', function(e) {
-        const fileName = e.target.files[0] ? e.target.files[0].name : 'Nenhum arquivo selecionado';
-        document.getElementById('file-name').textContent = fileName;
-    });
-
-    document.getElementById('import-form').addEventListener('submit', function(e) {
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('arquivo');
+        const fileNameSpan = document.getElementById('file-name');
+        const importForm = document.getElementById('import-form');
         const submitBtn = document.getElementById('submit-btn');
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
 
-        submitBtn.disabled = true;
-        btnText.textContent = 'Processando...';
-        btnSpinner.classList.remove('hidden');
-    });
-
-    function showResultModal(title, message, isSuccess) {
-        const modal = document.getElementById('result-modal');
-        const modalIcon = document.getElementById('modal-icon');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-        const modalConfirm = document.getElementById('modal-confirm');
-
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-
-        if (isSuccess) {
-            modalIcon.innerHTML = `
-                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-            `;
-            modalIcon.classList.add('bg-green-100');
-        } else {
-            modalIcon.innerHTML = `
-                <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            `;
-            modalIcon.classList.add('bg-red-100');
-        }
-
-        modal.classList.remove('hidden');
-
-        modalConfirm.addEventListener('click', function() {
-            modal.classList.add('hidden');
-            if (isSuccess) {
-                window.location.href =  "{% url 'municipios:posto_list' %}" ;
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileNameSpan.textContent = this.files[0].name;
             } else {
-                const submitBtn = document.getElementById('submit-btn');
-                const btnText = document.getElementById('btn-text');
-                const btnSpinner = document.getElementById('btn-spinner');
-
-                submitBtn.disabled = false;
-                btnText.textContent = 'Importar Dados';
-                btnSpinner.classList.add('hidden');
+                fileNameSpan.textContent = 'Nenhum arquivo selecionado';
             }
         });
-    }
 
-    {% if messages %}
-        {% for message in messages %}
-            showResultModal(
-                "{% if message.tags == 'success' %}Sucesso{% elif message.tags == 'warning' %}Aviso{% else %}Erro{% endif %}",
-                "{{ message }}",
-                {% if message.tags == 'success' %}true{% else %}false{% endif %}
-            );
-        {% endfor %}
-    {% endif %}
+        importForm.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            btnText.textContent = 'Importando...';
+            btnSpinner.classList.remove('hidden');
+        });
+
+        // Lógica do Modal de Resultados
+        const modal = document.getElementById('resultModal');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirm = document.getElementById('modalConfirmBtn');
+
+        function showResultModal(title, message, type) {
+            let isSuccess = false;
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalIcon.innerHTML = ''; // Limpa ícones anteriores
+            modalIcon.className = 'p-3 rounded-full'; // Reseta classes
+
+            if (type === 'success') {
+                isSuccess = true;
+                modalIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                `;
+                modalIcon.classList.add('bg-green-100');
+            } else if (type === 'warning') {
+                modalIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                `;
+                modalIcon.classList.add('bg-yellow-100');
+            } else { // Erro
+                modalIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                modalIcon.classList.add('bg-red-100');
+            }
+
+            modal.classList.remove('hidden');
+
+            modalConfirm.onclick = function() { // Usar onclick para evitar múltiplos listeners
+                modal.classList.add('hidden');
+                if (isSuccess) {
+                    window.location.href =  "{% url 'municipios:posto_list' %}" ;
+                } else {
+                    // Se não foi sucesso, reativar o botão de importação para que o usuário possa tentar novamente
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Importar Dados';
+                    btnSpinner.classList.add('hidden');
+                }
+            };
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                showResultModal(
+                    "{% if message.tags == 'success' %}Sucesso{% elif message.tags == 'warning' %}Aviso{% else %}Erro{% endif %}",
+                    "{{ message }}",
+                    "{{ message.tags }}"
+                );
+            {% endfor %}
+        {% endif %}
+    });
 </script>
 {% endblock %}

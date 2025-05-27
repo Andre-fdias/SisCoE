@@ -1,0 +1,121 @@
+{% load static %}
+{% load custom_filters %} {# Ensure this is loaded if you use custom filters like format_cpf #}
+{% load tz %} {# Ensure this is loaded if you use timezone filters or current_date #}
+{% now "Y-m-d" as current_date %} {# Define current_date if not passed from parent #}
+<head>
+    <!-- Adicione isto -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<tr>
+    <td class="px-4 py-3 text-center text-sm"> {# Added text-sm #}
+        <div class="flex justify-center">
+            {% if militar.imagens.exists %}
+            {% with last_situacao=militar.detalhes_situacao.first %} {# Use .first if not ordering by date, or .last if ordered correctly #}
+                <img src="{{ militar.imagens.first.image.url }}" {# Assuming 'image' is the field on Imagem model #}
+                     class="rounded-full w-10 h-10 object-cover border-4 
+                     {% if last_situacao and last_situacao.prontidao == 'VERDE' %}border-green-500
+                     {% elif last_situacao and last_situacao.prontidao == 'AMARELA' %}border-yellow-500
+                     {% elif last_situacao and last_situacao.prontidao == 'AZUL' %}border-blue-500
+                     {% elif last_situacao and last_situacao.prontidao == 'ADM' %}border-gray-500
+                     {% else %}border-gray-200{% endif %}">
+            {% endwith %}
+            {% else %}
+                <img class="h-10 w-10 rounded-full" src="{% static 'img/default_avatar.png' %}" alt="Default Foto">
+            {% endif %}
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200"> {# Ensured text-sm #}
+        {% if militar.promocoes.first %}
+            {{ militar.promocoes.first.grad }}
+        {% else %}
+            N/A
+        {% endif %}
+    </td>
+    {# Combined RE and Nome de Guerra into one column and increased width #}
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200"> {# Ensured text-sm for the name/RE container #}
+        <div class="text-center">
+            <div class="text-indigo-700 font-medium">{{ militar.nome_de_guerra }}</div>
+            <div class="text-gray-200 text-xs">RE: {{ militar.re }}-{{ militar.dig }}</div> {# Kept text-xs for RE as it's a detail #}
+        </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-200"> {# Ensured text-sm #}
+        {% if militar.detalhes_situacao.first %}
+            {{ militar.detalhes_situacao.first.prontidao_badge }}
+        {% else %}
+            N/A
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm"> {# Ensured text-sm and removed text-gray-500 #}
+        {% with categoria=militar.categorias_efetivo.first %}
+            {% if categoria %}
+                {{ categoria.tipo_badge }}
+            {% else %}
+                <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm font-semibold">
+                    <i class="fas fa-question-circle mr-1"></i>
+                    N/A
+                </span>
+            {% endif %}
+        {% endwith %}
+    </td>
+    <td class="px-6 py-4 text-sm whitespace-normal break-words"> {# Added whitespace-normal and break-words for line break #}
+        {% with categoria=militar.categorias_efetivo.first %}
+            <span class="text-xs px-2 py-1 rounded"> {# Kept text-xs here for the badge's inner text to be slightly smaller #}
+                {% if categoria %}
+                    <span class="px-2 py-1 rounded-full text-sm font-semibold 
+                        {% if categoria.data_termino and categoria.data_termino < current_date %}
+                            bg-red-100 text-red-800
+                        {% elif categoria.tipo != 'ATIVO' %}
+                            bg-yellow-100 text-yellow-800
+                        {% else %}
+                            bg-green-100 text-green-800
+                        {% endif %}">
+                        
+                        <i class="fas 
+                            {% if categoria.data_termino and categoria.data_termino < current_date %}
+                                fa-exclamation-triangle
+                            {% elif categoria.tipo != 'ATIVO' %}
+                                fa-info-circle
+                            {% else %}
+                                fa-check-circle
+                            {% endif %} 
+                            mr-1"></i>
+                        
+                        {% if categoria.tipo != 'ATIVO' and categoria.data_termino and categoria.data_termino < current_date %}
+                            {{ categoria.get_tipo_display }} (Expirado) - {{ categoria.restricoes_selecionadas_siglas }}
+                        {% elif categoria.tipo != 'ATIVO' %}
+                            {{ categoria.get_tipo_display }} - {{ categoria.restricoes_selecionadas_siglas }}
+                            {% if categoria.data_termino %}
+                                (Até {{ categoria.data_termino|date:"d/m/Y" }})
+                            {% else %}
+                                (Indefinido)
+                            {% endif %}
+                        {% else %}
+                            ATIVO
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        ATIVO
+                    </span>
+                {% endif %}
+            </span>
+        {% endwith %}
+    </td>
+<td class="px-4 py-3 text-center">
+    <a href="{% url 'efetivo:ver_militar' militar.id %}" 
+       class="group relative inline-flex items-center justify-center p-2 transition-all duration-200 ease-in-out 
+              bg-gray-700 hover:bg-purple-600 
+              rounded-lg shadow-md hover:shadow-lg
+              border border-transparent hover:border-purple-500/30
+              transform hover:-translate-y-0.5 active:translate-y-0
+              focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-offset-2">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             class="bi bi-eye w-4 h-4 text-gray-300 group-hover:text-white transition-colors" 
+             viewBox="0 0 16 16">
+            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+        </svg>
+    </a>
+</td>
+</tr>

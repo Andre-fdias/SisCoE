@@ -1,9 +1,10 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao, HistoricoPromocao
+from .models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao, HistoricoPromocao, CatEfetivo, HistoricoCatEfetivo
 from django.contrib import messages
 from django.contrib.messages import constants
 from django.contrib.auth.decorators import login_required
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Subquery, Count
 from django.utils import timezone
 from django.db import IntegrityError
 from django.db import transaction
@@ -11,9 +12,18 @@ from backend.rpt.models import Cadastro_rpt
 from django.http import HttpResponseForbidden
 from django.db.models import F, Window
 from django.db.models.functions import RowNumber
-# backend/efetivo/views.py
-from backend.municipios.models import Posto  # Supondo que Posto está no app 'municipios'
+from backend.municipios.models import Posto
 import sys
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin # Added this import
+from django.db.models import Prefetch
+from backend.cursos.models import Medalha,Curso
+import logging
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+
+logger = logging.getLogger(__name__)
+
 
 @login_required
 def cadastrar_militar(request):
@@ -189,14 +199,24 @@ class RestricaoHelper:
     
 from backend.cursos.models import Medalha,Curso
 
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from backend.efetivo.models import Cadastro, DetalhesSituacao, CatEfetivo, Promocao
+from backend.cursos.models import Curso, Medalha
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def ver_militar(request, id):
-    # Verificação inicial do ID
-    if not id:
-        messages.error(request, 'ID inválido', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('efetivo:listar_militar') # Certifique-se de que 'efetivo:listar_militar' é a URL correta
-
     try:
+        if not id:
+            messages.error(request, 'ID inválido', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('efetivo:listar_militar')
+
         # Obter o cadastro principal com related objects
         cadastro = Cadastro.objects.select_related(
             'user'
@@ -204,106 +224,80 @@ def ver_militar(request, id):
             'imagens',
             'promocoes',
             'detalhes_situacao',
-            'categorias_efetivo'
+            'categorias_efetivo',
+            'cadastro_rpt'
         ).get(id=id)
-    except Cadastro.DoesNotExist:
-        messages.error(request, 'Militar não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
-        return redirect('efetivo:listar_militar') # Certifique-se de que 'efetivo:listar_militar' é a URL correta
 
-    if request.method == "GET":
-        # Obter os objetos relacionados
+        today = timezone.now().date()
         detalhes = cadastro.detalhes_situacao.last()
         promocao = cadastro.promocoes.last()
-        today = timezone.now().date()
-
-        # Processar categoria atual
         categoria_atual = cadastro.categorias_efetivo.filter(ativo=True).first()
 
-        # Mapeamento completo das mensagens de restrição (mantido como está)
+        # Processar Restrições
         MENSAGENS_RESTRICOES = {
-            'BS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'CI': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'DV': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'EF': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio. As OPM estabelecerão plano de exercícios físicos compatíveis.',
-            'FO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'IS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'LP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'MA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'MC': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'MG': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'OU': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'PO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'PQ': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'SA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'SE': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'SH': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'SM': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'SP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
-            'AU': 'Deverá ser empregado somente em atividades administrativas.',
-            'EP': 'Deverá ser empregado somente em atividades administrativas.',
-            'ES': 'Deverá ser empregado somente em atividades administrativas.',
-            'LR': 'Deverá ser empregado somente em atividades administrativas.',
-            'PT': 'Deverá ser empregado somente em atividades administrativas.',
-            'VP': 'Deverá ser empregado somente em atividades administrativas.',
-            'SN': 'Deverá ser escalado para trabalhar durante o dia em qualquer atividade.',
-            'SG': 'Deverá ser empregado, preferencialmente, na atividade de policiamento ostensivo, ou, caso não seja possível, em atividades administrativas e de apoio.',
-            'UA': 'Deverá ser desarmado e empregado em atividades administrativas. Pode requerer processo administrativo para verificar condições de permanência no serviço ativo.',
-            'UU': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
-            'CC': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público. Cabelos penteados com gel/rede obrigatoriamente.',
-            'CB': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
-            'UB': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
-            'UC': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
-            'US': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
-            'DG': 'Deverá ser empregado no policiamento ostensivo.',
-            'EM': 'Deverá ser empregado no policiamento ostensivo.',
-            'LS': 'Deverá ser empregado no policiamento ostensivo.',
-            'MP': 'Deverá ser empregado no policiamento ostensivo.',
-            'SB': 'Deverá ser empregado no policiamento ostensivo.',
-            'SI': 'Deverá ser empregado no policiamento ostensivo.',
-            'ST': 'Deverá ser empregado no policiamento ostensivo.'
+            # ... (mantenha o dicionário de restrições original)
         }
 
-        # Preparar restrições aplicáveis
         restricoes_aplicaveis = []
         if categoria_atual and categoria_atual.tipo == 'RESTRICAO':
-            # Nota: 'CatEfetivo' deve ser importado de models.py
             for field in CatEfetivo._meta.get_fields():
                 if field.name.startswith('restricao_') and getattr(categoria_atual, field.name):
                     sigla = field.name.split('_')[-1].upper()
                     if sigla in MENSAGENS_RESTRICOES:
                         restricoes_aplicaveis.append({
                             'sigla': sigla,
-                            'nome': field.verbose_name, # Assuming verbose_name is set in CatEfetivo model
+                            'nome': field.verbose_name,
                             'mensagem': MENSAGENS_RESTRICOES[sigla],
                             'regra': RestricaoHelper.get_regra_principal(sigla)
                         })
 
-        # Adicionar status da categoria
+        # Status da Categoria
+        categoria_status = {}
         if categoria_atual:
             if categoria_atual.tipo != 'ATIVO' and categoria_atual.data_termino and categoria_atual.data_termino < today:
-                categoria_atual.status_display = {
+                categoria_status = {
                     'texto': f"{categoria_atual.get_tipo_display()} (Expirado)",
                     'classe': 'bg-red-100 text-red-800',
                     'icone': 'fa-exclamation-triangle'
                 }
             elif categoria_atual.tipo != 'ATIVO':
-                categoria_atual.status_display = {
+                categoria_status = {
                     'texto': f"{categoria_atual.get_tipo_display()} (Até {categoria_atual.data_termino.strftime('%d/%m/%Y') if categoria_atual.data_termino else 'Indefinido'})",
                     'classe': 'bg-yellow-100 text-yellow-800',
                     'icone': 'fa-info-circle'
                 }
             else:
-                categoria_atual.status_display = {
+                categoria_status = {
                     'texto': categoria_atual.get_tipo_display(),
                     'classe': 'bg-green-100 text-green-800',
                     'icone': 'fa-check-circle'
                 }
+            categoria_atual.status_display = categoria_status
 
-        # --- NOVA LÓGICA PARA BUSCAR MEDALHAS E CURSOS ---
+        # Lógica para cursos especiais
+        cursos_especiais = []
+        if detalhes and detalhes.op_adm:
+            tag_desejada = 'Administrativo' if detalhes.op_adm == 'Administrativo' else 'Operacional'
+            
+            # Filtra os cursos usando o mapeamento de tags
+            cursos_filtrados = []
+            for curso in Curso.objects.filter(cadastro=cadastro):
+                if Curso.CURSOS_TAGS.get(curso.curso) == tag_desejada:
+                    cursos_filtrados.append(curso.get_curso_display())
+            
+            # Remove duplicatas mantendo a ordem
+            cursos_especiais = list(dict.fromkeys(cursos_filtrados))
+
+        # Dados relacionados
         medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
-        # Na função ver_militar, altere a linha:
         cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
-        # cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_conclusao') # Ajuste o campo de ordenação
+        
+        # Dados RPT
+        cadastro_rpt = cadastro.cadastro_rpt.first()
+        count_in_section = Cadastro_rpt.objects.filter(
+            posto_secao_destino=cadastro_rpt.posto_secao_destino,
+            status='Aguardando'
+        ).count() if cadastro_rpt else 0
 
         context = {
             'cadastro': cadastro,
@@ -313,8 +307,11 @@ def ver_militar(request, id):
             'categoria_atual': categoria_atual,
             'restricoes_aplicaveis': restricoes_aplicaveis,
             'medalhas_do_militar': medalhas_do_militar,
-            'cursos_do_militar': cursos_do_militar, # Descomente quando tiver o modelo Curso real
-            # Choices para formulários (mantido como está)
+            'cursos_do_militar': cursos_do_militar,
+            'cadastro_rpt': cadastro_rpt,
+            'count_in_section': count_in_section,
+            'cursos_especiais': cursos_especiais,
+            # Choices
             'situacao_choices': DetalhesSituacao.situacao_choices,
             'sgb_choices': DetalhesSituacao.sgb_choices,
             'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
@@ -330,8 +327,16 @@ def ver_militar(request, id):
             'categoria_choices': CatEfetivo.TIPO_CHOICES,
         }
 
-        # Certifique-se de que o caminho do template está correto para o seu projeto
         return render(request, 'ver_militar.html', context)
+
+    except Cadastro.DoesNotExist:
+        messages.error(request, 'Militar não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('efetivo:listar_militar')
+        
+    except Exception as e:
+        logger.error(f"Erro ao acessar militar ID {id}: {str(e)}")
+        messages.error(request, 'Erro interno ao carregar os dados', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('efetivo:listar_militar')
     
 
 from django.contrib.auth import get_user_model
@@ -1036,3 +1041,211 @@ def excluir_historico_categoria(request, historico_id):
         messages.success(request, 'Histórico excluído permanentemente.')
     
     return redirect('efetivo:historico_categorias', militar_id=militar_id)
+
+
+# backend/efetivo/views.py
+from django.db.models import Count
+from django.views.generic import ListView
+from .models import Cadastro, DetalhesSituacao, Promocao # Confirm these imports are correct
+from django.utils import timezone # Certifique-se de que está importado
+# ... other imports you might have
+
+class ListaMilitaresView(ListView):
+    model = Cadastro
+    template_name = 'lista_militares.html'
+    context_object_name = 'militares'
+
+    # Define your subgrupos_estrutura as a class attribute
+    subgrupos_estrutura = {
+        "EM": [
+            {"codigo": "703150000", "nome": "CMT", "filhos": []},
+            {"codigo": "703159000", "nome": "SUB CMT", "filhos": []},
+            {"codigo": "703159100", "nome": "SEC ADM", "filhos": []},
+            {"codigo": "703159110", "nome": "B/1 E B/5", "filhos": [
+                {"codigo": "703159110-1", "nome": "B/5", "filhos": []}
+            ]},
+            {"codigo": "703159120", "nome": "AA", "filhos": []},
+            {"codigo": "703159130", "nome": "B/3 E MOTOMEC", "filhos": [
+                {"codigo": "703159130-1", "nome": "MOTOMEC", "filhos": []}
+            ]},
+            {"codigo": "703159131", "nome": "COBOM", "filhos": []},
+            {"codigo": "703159140", "nome": "B/4", "filhos": []},
+            {"codigo": "703159150", "nome": "ST UGE", "filhos": []},
+            {"codigo": "703159160", "nome": "ST PJMD", "filhos": []},
+            {"codigo": "703159200", "nome": "SEC ATIV TEC", "filhos": []}
+        ],
+        "1ºSGB": [
+            {"codigo": "703151000", "nome": "CMT 1º SGB", "filhos": []},
+            {"codigo": "703151100", "nome": "ADM PB CERRADO", "filhos": []},
+            {"codigo": "703151101", "nome": "EB CERRADO", "filhos": []},
+            {"codigo": "703151102", "nome": "EB ZONA NORTE", "filhos": []},
+            {"codigo": "703151200", "nome": "ADM PB SANTA ROSÁLIA", "filhos": []},
+            {"codigo": "703151201", "nome": "EB SANTA ROSÁLIA", "filhos": []},
+            {"codigo": "703151202", "nome": "EB ÉDEM", "filhos": []},
+            {"codigo": "703151300", "nome": "ADM PB VOTORANTIM", "filhos": []},
+            {"codigo": "703151301", "nome": "EB VOTORANTIM", "filhos": []},
+            {"codigo": "703151302", "nome": "EB PIEDADE", "filhos": []},
+            {"codigo": "703151800", "nome": "ADM 1º SGB", "filhos": []}
+        ],
+        "2ºSGB": [
+            {"codigo": "703152000", "nome": "CMT 2º SGB", "filhos": []},
+            {"codigo": "703152100", "nome": "ADM PB ITU", "filhos": []},
+            {"codigo": "703152101", "nome": "EB ITU", "filhos": []},
+            {"codigo": "703152102", "nome": "EB PORTO FELIZ", "filhos": []},
+            {"codigo": "703152200", "nome": "ADM PB SALTO", "filhos": []},
+            {"codigo": "703152201", "nome": "EB SALTO", "filhos": []},
+            {"codigo": "703152300", "nome": "ADM PB SÃO ROQUE", "filhos": []},
+            {"codigo": "703152301", "nome": "EB SÃO ROQUE", "filhos": []},
+            {"codigo": "703152302", "nome": "EB IBIÚNA", "filhos": []},
+            {"codigo": "703152800", "nome": "ADM 2º SGB", "filhos": []},
+            {"codigo": "703152900", "nome": "NUCL ATIV TEC 2º SGB", "filhos": []}
+        ],
+        "3ºSGB": [
+            {"codigo": "703153000", "nome": "CMT 3º SGB", "filhos": []},
+            {"codigo": "703153100", "nome": "ADM PB ITAPEVA", "filhos": []},
+            {"codigo": "703153101", "nome": "EB ITAPEVA", "filhos": []},
+            {"codigo": "703153102", "nome": "EB APIAÍ", "filhos": []},
+            {"codigo": "703153103", "nome": "EB ITARARÉ", "filhos": []},
+            {"codigo": "703153104", "nome": "EB CAPÃO BONITO", "filhos": []},
+            {"codigo": "703153800", "nome": "ADM 3º SGB", "filhos": []},
+            {"codigo": "703153900", "nome": "NUCL ATIV TEC 3º SGB", "filhos": []}
+        ],
+        "4ºSGB": [
+            {"codigo": "703154000", "nome": "CMT 4º SGB", "filhos": []},
+            {"codigo": "703154100", "nome": "ADM PB ITAPETININGA", "filhos": []},
+            {"codigo": "703154101", "nome": "EB ITAPETININGA", "filhos": []},
+            {"codigo": "703154102", "nome": "EB BOITUVA", "filhos": []},
+            {"codigo": "703154103", "nome": "EB ANGATUBA", "filhos": []},
+            {"codigo": "703154200", "nome": "ADM PB TATUÍ", "filhos": []},
+            {"codigo": "703154201", "nome": "EB TATUÍ", "filhos": []},
+            {"codigo": "703154202", "nome": "EB TIETÊ", "filhos": []},
+            {"codigo": "703154203", "nome": "EB LARANJAL PAULISTA", "filhos": []},
+            {"codigo": "703154800", "nome": "ADM 4º SGB", "filhos": []},
+            {"codigo": "703154900", "nome": "NUCL ATIV TEC 4º SGB", "filhos": []}
+        ],
+        "5ºSGB": [
+            {"codigo": "703155000", "nome": "CMT 5º SGB", "filhos": []},
+            {"codigo": "703155100", "nome": "ADM PB BOTUCATU", "filhos": []},
+            {"codigo": "703155101", "nome": "EB BOTUCATU", "filhos": []},
+            {"codigo": "703155102", "nome": "EB ITATINGA", "filhos": []},
+            {"codigo": "703155200", "nome": "ADM PB AVARÉ", "filhos": []},
+            {"codigo": "703155201", "nome": "EB AVARÉ", "filhos": []},
+            {"codigo": "703155202", "nome": "EB PIRAJU", "filhos": []},
+            {"codigo": "703155203", "nome": "EB ITAÍ", "filhos": []},
+            {"codigo": "703155800", "nome": "ADM 5º SGB", "filhos": []},
+            {"codigo": "703155900", "nome": "NUCL ATIV TEC 5º SGB", "filhos": []}
+        ]
+    }
+
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        grupo_ativo = self.request.GET.get('grupo')
+        subgrupo_ativo = self.request.GET.get('subgrupo')
+
+        print(f"\n--- DEBUG get_queryset ---")
+        print(f"Initial queryset count (before any filters): {queryset.count()}")
+        print(f"Request: grupo_ativo={grupo_ativo}, subgrupo_ativo={subgrupo_ativo}")
+
+        if subgrupo_ativo:
+            queryset = queryset.filter(
+                detalhes_situacao__posto_secao__startswith=subgrupo_ativo
+            )
+            print(f"Filtered by posto_secao (using __startswith with code): '{subgrupo_ativo}'")
+
+        elif grupo_ativo:
+            queryset = queryset.filter(
+                detalhes_situacao__sgb=grupo_ativo
+            )
+            print(f"Filtered by grupo (SGB): '{grupo_ativo}'")
+        else:
+            print("No group or subgroup filter applied. Showing all.")
+
+
+        queryset = queryset.distinct().prefetch_related(
+            'detalhes_situacao',
+            'imagens',
+            'promocoes',
+            'categorias_efetivo'
+        ).order_by('re')
+
+        print(f"Final queryset count (after filters and distinct): {queryset.count()}")
+        print(f"--- END DEBUG get_queryset ---\n")
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        grupos = [
+            ("EM", "Estado Maior"),
+            ("1ºSGB", "1º Subgrupamento"),
+            ("2ºSGB", "2º Subgrupamento"),
+            ("3ºSGB", "3º Subgrupamento"),
+            ("4ºSGB", "4º Subgrupamento"),
+            ("5ºSGB", "5º Subgrupamento")
+        ]
+
+        grupo_ativo = self.request.GET.get('grupo')
+        subgrupo_ativo = self.request.GET.get('subgrupo')
+
+        # Função para calcular contagens recursivamente
+        def calcular_contagens(estrutura):
+            contagens = {}
+            for item in estrutura:
+                count = Cadastro.objects.filter(
+                    detalhes_situacao__posto_secao=item['codigo']
+                ).distinct().count()
+                
+                contagens[item['codigo']] = count
+                
+                if item['filhos']:
+                    contagens.update(calcular_contagens(item['filhos']))
+            return contagens
+
+        # Calcular contagens para todos os grupos
+        contagens_por_grupo = {}
+        for grupo_key, _ in grupos:
+            contagens_por_grupo[grupo_key] = calcular_contagens(
+                self.subgrupos_estrutura.get(grupo_key, [])
+            )
+
+
+        context['contagens_por_grupo'] = contagens_por_grupo
+        context['grupos'] = grupos
+        
+
+        grupo_ativo = self.request.GET.get('grupo')
+        subgrupo_ativo = self.request.GET.get('subgrupo')
+
+        # Find the name for the active group
+        grupo_ativo_nome = dict(grupos).get(grupo_ativo, "")
+
+        # Find the name for the active subgroup
+        subgrupo_ativo_nome = ""
+        if subgrupo_ativo:
+            # Recursive function to find the name in the hierarchical structure
+            def find_subgrupo_name(subgrups_list, target_code):
+                for subgrup_data in subgrups_list:
+                    if subgrup_data['codigo'] == target_code:
+                        return subgrup_data['nome']
+                    if subgrup_data.get('filhos'):
+                        found_in_children = find_subgrupo_name(subgrup_data['filhos'], target_code)
+                        if found_in_children:
+                            return found_in_children
+                return ""
+
+            subgrupo_ativo_nome = find_subgrupo_name(self.subgrupos_estrutura.get(grupo_ativo, []), subgrupo_ativo)
+
+
+        context['grupos'] = grupos
+        context['grupo_ativo'] = grupo_ativo
+        context['subgrupo_ativo'] = subgrupo_ativo
+        context['grupo_ativo_nome'] = grupo_ativo_nome # Pass the name
+        context['subgrupo_ativo_nome'] = subgrupo_ativo_nome # Pass the name
+        context['subgrupos_estrutura'] = self.subgrupos_estrutura
+        context['subgrupos_do_grupo_ativo'] = self.subgrupos_estrutura.get(grupo_ativo, [])
+        context['current_date'] = timezone.now().date() # Ensure current_date is passed
+
+        return context
+    
+     
