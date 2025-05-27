@@ -14,23 +14,23 @@
         <fieldset class="p-4 rounded-md w-full">
             <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
                 <div class="p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Título -->
-                        <div class="flex-1 min-w-[200px]">
-                            <h1 class="text-2xl font-bold text-white tracking-tight">Relação de Efetivo</h1>
-                            <p class="text-gray-300 text-sm mt-1">Consulte abaixo o efetivo da unidade.</p>
-                        </div>
-                        
-                        <!-- Botão Cadastrar -->
-                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <a href="{% url 'efetivo:cadastrar_militar' %}" 
-                               class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br 
-                                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 
-                                      font-medium rounded-lg text-sm px-4 py-2 text-center transition-all duration-200">
-                                Cadastrar Militar
-                            </a>
-                        </div>
-                    </div>
+<div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex-1 min-w-[200px]">
+        <h1 class="text-2xl font-bold text-white tracking-tight">Relação de Efetivo</h1>
+        <p class="text-gray-300 text-sm mt-1">Consulte abaixo o efetivo da unidade.</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <a href="{% url 'efetivo:cadastrar_militar' %}" 
+           class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+            <i class="fas fa-user-plus mr-2"></i> Cadastrar Novo Militar
+        </a>
+        <a href="{% url 'efetivo:lista_militares' %}" 
+           class="flex items-center justify-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-white bg-gray-700 hover:bg-gray-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+            <i class="fas fa-users mr-2"></i> Relação de Efetivo 
+        </a>
+    </div>
+</div>
                 </div>
             </fieldset>
         </fieldset>
@@ -131,52 +131,52 @@
                                     {% endif %}
                                 </span>
                             </td>
-<td class="px-4 py-3 text-center">
-    {% with categoria=cadastro.categorias_ativas.0 %}
-        <span class="text-xs px-2 py-1 rounded">
-            {% if categoria %}
-                <span class="px-2 py-1 rounded-full text-sm font-semibold 
-                    {% if categoria.data_termino and categoria.data_termino < current_date %}
-                        bg-red-100 text-red-800
-                    {% elif categoria.tipo != 'ATIVO' %}
-                        bg-yellow-100 text-yellow-800
-                    {% else %}
-                        bg-green-100 text-green-800
-                    {% endif %}">
-                    
-                    <i class="fas 
-                        {% if categoria.data_termino and categoria.data_termino < current_date %}
-                            fa-exclamation-triangle
-                        {% elif categoria.tipo != 'ATIVO' %}
-                            fa-info-circle
-                        {% else %}
-                            fa-check-circle
-                        {% endif %} 
-                        mr-1"></i>
-                    
-                    {% if categoria.tipo != 'ATIVO' and categoria.data_termino and categoria.data_termino < current_date %}
-                        {{ categoria.get_tipo_display }} (Expirado)
-                    {% elif categoria.tipo != 'ATIVO' %}
-                        {{ categoria.get_tipo_display }}
-                        {% if categoria.data_termino %}
-                            (Até {{ categoria.data_termino|date:"d/m/Y" }})
-                        {% else %}
-                            (Indefinido)
-                        {% endif %}
-                    {% else %}
-                        ATIVO
-                    {% endif %}
-                </span>
-            {% else %}
-                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
-                    <i class="fas fa-check-circle mr-1"></i>
-                    ATIVO
-                </span>
-            {% endif %}
-        </span>
-    {% endwith %}
-</td>
-            
+                        <td class="px-4 py-3 text-center">
+                            {% with categoria=cadastro.categorias_ativas.0 %}
+                                <span class="text-xs px-2 py-1 rounded">
+                                    {% if categoria %}
+                                        <span class="px-2 py-1 rounded-full text-sm font-semibold 
+                                            {% if categoria.data_termino and categoria.data_termino < current_date %}
+                                                bg-red-100 text-red-800
+                                            {% elif categoria.tipo != 'ATIVO' %}
+                                                bg-yellow-100 text-yellow-800
+                                            {% else %}
+                                                bg-green-100 text-green-800
+                                            {% endif %}">
+                                            
+                                            <i class="fas 
+                                                {% if categoria.data_termino and categoria.data_termino < current_date %}
+                                                    fa-exclamation-triangle
+                                                {% elif categoria.tipo != 'ATIVO' %}
+                                                    fa-info-circle
+                                                {% else %}
+                                                    fa-check-circle
+                                                {% endif %} 
+                                                mr-1"></i>
+                                            
+                                            {% if categoria.tipo != 'ATIVO' and categoria.data_termino and categoria.data_termino < current_date %}
+                                                {{ categoria.get_tipo_display }} (Expirado)
+                                            {% elif categoria.tipo != 'ATIVO' %}
+                                                {{ categoria.get_tipo_display }}
+                                                {% if categoria.data_termino %}
+                                                    (Até {{ categoria.data_termino|date:"d/m/Y" }})
+                                                {% else %}
+                                                    (Indefinido)
+                                                {% endif %}
+                                            {% else %}
+                                                ATIVO
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            ATIVO
+                                        </span>
+                                    {% endif %}
+                                </span>
+                            {% endwith %}
+                        </td>
+                                    
                             <td class="px-4 py-3 text-center">
                                 <a href="{% url 'efetivo:ver_militar' cadastro.id %}" 
                                    class="text-gray-100 bg-gradient-to-r from-purple-700 to-purple-600 hover:bg-gradient-to-br

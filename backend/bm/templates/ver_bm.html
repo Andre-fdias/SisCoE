@@ -2,147 +2,245 @@
 {% load static %}
 {% block title %}Detalhes do BM{% endblock %}
 
+<style>
+    .bg-gradient-indigo {
+        background: linear-gradient(135deg, #1a1f37 0%, #0d1220 100%);
+    }
+    .hover-bg-gradient-indigo:hover {
+        background: linear-gradient(135deg, #0d1220 0%, #1a1f37 100%);
+    }
+</style>
+
 {% block 'body' %}
 
 <body class="bg-gray-100">
-    
-    <div class="container mx-auto px-2 py-2" id="area-impressao">
+    <div class="container mx-auto px-4 py-4" id="area-impressao">
 
-
-        <legend class="mb-8 rounded-md w-full">
-            {% if messages %}
-            {% for message in messages %}
-                <section class="alert {{ message.tags }}">
-                    {{ message }}
-                </section>
-            {% endfor %}
-            {% endif %}
-        </legend>
-
-
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <!-- Cabeçalho -->
-            <div class="bg-gray-800 px-6 py-4">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-white">Detalhamento do cadastro</h1>
-                        <p class="text-gray-300">Matrícula: {{ cadastro.id }}</p>
+    <fieldset class="p-4 rounded-md w-full">
+        <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-2xl">
+            <div class="p-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <h1 class="text-3xl font-bold text-white tracking-tight">Detalhes do Bombeiro Municipal</h1>
+                        <p class="text-indigo-200 mt-1">Matrícula: {{ cadastro.id }}</p>
                     </div>
-                    <div class="mt-4 md:mt-0">
-                        <a href="{% url 'bm:listar_bm' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg mr-2">
+
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <a href="{% url 'bm:listar_bm' %}"
+                           class="text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:bg-gradient-to-br
+                                  font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200
+                                  flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
                             Voltar
                         </a>
-                     
-                    </div>
-                </div>
-            </div>
-
-            <!-- Seção Principal -->
-            <div class="p-6">
-                <div class="flex flex-col md:flex-row gap-8">
-                    <!-- Coluna da Foto -->
-                    <div class="md:w-1/3">
-                        <div class="bg-gray-100 p-4 rounded-lg text-center">
-                            {% if cadastro.imagens.exists %}
-                                <img src="{{ cadastro.imagens.last.image.url }}" alt="Foto do BM" class="w-48 h-48 rounded-full mx-auto border-4 border-blue-500 object-cover">
-                            {% else %}
-                                <div class="w-48 h-48 rounded-full mx-auto bg-gray-300 flex items-center justify-center">
-                                    <span class="text-gray-500">Sem foto</span>
-                                </div>
-                            {% endif %}
-                            
-                            <h2 class="text-xl font-bold mt-4">{{ cadastro.nome_de_guerra }}</h2>
-                            <p class="text-gray-600">{{ cadastro.posto_secao }}</p>
-                            
-                            <div class="mt-8">
-                                <button data-modal-target="trocaFotoModal" data-modal-toggle="trocaFotoModal" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full">
-                                    Trocar Foto
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Coluna de Informações -->
-                    <div class="md:w-2/3">
-                        <!-- Informações Básicas -->
-                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                            <h3 class="text-lg font-semibold border-b pb-2 mb-4">Informações Básicas</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>Nome:</strong> {{ cadastro.nome }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>CPF:</strong> {{ cadastro.cpf }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>RG:</strong> {{ cadastro.rg }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>Data de Nascimento:</strong> {{ cadastro.nasc|date:"d/m/Y" }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Gênero:</strong> {{ cadastro.get_genero_display }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Email:</strong> {{ cadastro.email }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Informações Funcionais -->
-                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                            <h3 class="text-lg font-semibold border-b pb-2 mb-4">Informações Funcionais</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>SGB:</strong> {{ cadastro.sgb }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Posto/Seção:</strong> {{ cadastro.posto_secao }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Função:</strong> {{ cadastro.funcao }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>ESB:</strong> {{ cadastro.esb }}</p>
-                                   
-                                </div>
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>CNH:</strong> {{ cadastro.cnh }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Cat CNH:</strong> {{ cadastro.cat_cnh }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>OVB:</strong> {{ cadastro.ovb }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Status:</strong> {{ cadastro.status }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    
-
-                        <!-- Datas Importantes -->
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold border-b pb-2 mb-4">Datas Importantes</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>Admissão:</strong> {{ cadastro.admissao|date:"d/m/Y" }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Apresentação na Unidade:</strong> {{ cadastro.apresentacao_na_unidade|date:"d/m/Y" }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-gray-600 leading-loose"><strong>Saída da Unidade:</strong> {{ cadastro.saida_da_unidade|date:"d/m/Y" }}</p>
-                                    <p class="text-gray-600 leading-loose"><strong>Telefone:</strong> {{ cadastro.telefone }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Rodapé com botões de ação -->
-            <div class="bg-gray-100 px-6 py-4 border-t">
-                <div class="flex justify-between">
-                    <div>
-                        <button data-modal-target="confirmarExclusaoModal" data-modal-toggle="confirmarExclusaoModal" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
-                            Excluir Cadastro
-                        </button>
-                    </div>
-                    <div>
-                        <button data-modal-target="editarDadosModal" data-modal-toggle="editarDadosModal" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg mr-2">
-                            Editar
-                        </button>
-                   
-                        <button onclick="imprimirArea()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                        <button onclick="imprimirArea()"
+                                class="text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:bg-gradient-to-br
+                                       font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200
+                                       flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
                             Imprimir
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+    </fieldset>
+
+    <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
+        <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300">
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="flex-shrink-0 flex flex-col items-center md:block">
+                    <div class="relative group overflow-hidden rounded-xl border-4 border-indigo-300/30 shadow-xl hover:shadow-2xl transition-all duration-300 w-60 h-72">
+                        {% if cadastro.imagens.exists %}
+                        <img src="{{ cadastro.imagens.last.image.url }}"
+                             alt="Profile Picture"
+                             class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105">
+                        {% else %}
+                        <div class="w-full h-full bg-indigo-200/20 flex flex-col items-center justify-center text-indigo-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-lg font-medium">Sem imagem</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex-1 space-y-4">
+                    <div class="space-y-2">
+                        <h1 class="text-4xl font-bold text-white text-center md:text-left">{{ cadastro.nome }}</h1>
+                        <div class="flex items-center justify-center md:justify-start gap-4">
+                            <span class="bg-indigo-800/40 px-4 py-2 rounded-full text-xl font-mono text-indigo-200">
+                                {{ cadastro.cpf }}
+                            </span>
+                            <span class="text-xl font-semibold text-indigo-300">
+                                {{ cadastro.posto_secao }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid- gap-4">
+
+                        <div class="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
+                            <h3 class="text-lg font-semibold text-indigo-400 mb-2">Contatos</h3>
+                            <ul class="space-y-2 text-gray-300">
+                                <li class="flex justify-between">
+                                    <span>Email:  {{ cadastro.email }}</span>
+                                  
+                                </li>
+                                <li class="flex justify-between">
+                                    <span>Telefone:  {{ cadastro.telefone }}</span>
+                                   
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h3 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Dados Pessoais
+        </h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Nome Completo:</span>
+                <span class="font-medium">{{ cadastro.nome }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">RG:</span>
+                <span class="font-medium">{{ cadastro.rg }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Nascimento:</span>
+                <span class="font-medium">{{ cadastro.nasc|date:"d/m/Y" }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Gênero:</span>
+                <span class="font-medium">{{ cadastro.get_genero_display }}</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Modal Troca de Foto -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h3 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            Informações Funcionais
+        </h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">SGB:</span>
+                <span class="font-medium">{{ cadastro.sgb }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Posto/Seção:</span>
+                <span class="font-medium">{{ cadastro.posto_secao }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Função:</span>
+                <span class="font-medium">{{ cadastro.funcao }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Status:</span>
+                <span class="font-medium text-indigo-600">{{ cadastro.status }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h3 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Datas de Serviço
+        </h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Admissão:</span>
+                <span class="font-medium">{{ cadastro.admissao|date:"d/m/Y" }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Apresentação:</span>
+                <span class="font-medium">{{ cadastro.apresentacao_na_unidade|date:"d/m/Y" }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Saída:</span>
+                <span class="font-medium">{{ cadastro.saida_da_unidade|date:"d/m/Y"|default:"-" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+        <h3 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Documentações
+        </h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">CNH:</span>
+                <span class="font-medium">{{ cadastro.cnh }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">Categoria CNH:</span>
+                <span class="font-medium">{{ cadastro.cat_cnh }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2">
+                <span class="text-gray-600">OVB:</span>
+                <span class="font-medium">{{ cadastro.ovb }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
+        <div class="bg-gray-100 rounded-2xl shadow-xl w-full p-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex-1">
+                    <p class="text-xs text-gray-600 text-center md:text-left">
+                        Sistema de Gestão de Bombeiros Municipais - Última atualização: {% now "d/m/Y H:i" %}
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button data-modal-target="editarDadosModal" data-modal-toggle="editarDadosModal"
+                            class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white
+                                   font-semibold rounded-xl shadow-sm hover:shadow-md
+                                   transition-all duration-200 hover:scale-[1.02]
+                                   flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Editar Cadastro
+                    </button>
+
+                    <button data-modal-target="confirmarExclusaoModal" data-modal-toggle="confirmarExclusaoModal"
+                            class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white
+                                   font-semibold rounded-xl shadow-sm hover:shadow-md
+                                   transition-all duration-200 hover:scale-[1.02]
+                                   flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Excluir Cadastro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
     <div id="trocaFotoModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative w-full max-w-md max-h-full">
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -173,12 +271,9 @@
         </div>
     </div>
 
+   <div id="editarDadosModal" tabindex="-1" aria-hidden="true" class=" fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative w-full max-w-5xl max-h-full"> <div class="relative bg-gray-100 rounded-lg shadow dark:bg-gray-700">
 
-   <!-- Modal Editar Dados - Versão com 3 colunas -->
-<div id="editarDadosModal" tabindex="-1" aria-hidden="true" class=" fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative w-full max-w-5xl max-h-full"> <!-- Aumentei para max-w-5xl -->
-        <div class="relative bg-gray-100 rounded-lg shadow dark:bg-gray-700">
-            
             <button type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white" data-modal-hide="editarDadosModal">
                 <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                 <span class="sr-only">Fechar modal</span>
@@ -187,10 +282,7 @@
                 <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Editar Dados do Bombeiro Municipal</h3>
                 <form class="space-y-6" method="POST" action="{% url 'bm:editar_bm' cadastro.id %}">
                     {% csrf_token %}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <!-- Alterado para 3 colunas -->
-                        
-                        <!-- Coluna 1: Dados Pessoais -->
-                        <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <div class="space-y-4">
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white border-b pb-2">Dados Pessoais</h4>
                             <div>
                                 <label for="nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome Completo</label>
@@ -221,8 +313,7 @@
                                 </select>
                             </div>
                         </div>
-                        
-                        <!-- Coluna 2: Dados Funcionais -->
+
                         <div class="space-y-4">
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white border-b pb-2">Dados Funcionais</h4>
                             <div>
@@ -274,8 +365,7 @@
                                 </select>
                             </div>
                         </div>
-                        
-                        <!-- Coluna 3: Contatos e Datas -->
+
                         <div class="space-y-4">
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white border-b pb-2">Contatos</h4>
                             <div>
@@ -286,7 +376,7 @@
                                 <label for="telefone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label>
                                 <input type="tel" name="telefone" id="telefone" value="{{ cadastro.telefone }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
                             </div>
-                            
+
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white border-b pb-2 mt-6">Datas Importantes</h4>
                             <div>
                                 <label for="admissao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Admissão</label>
@@ -302,7 +392,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flex justify-end space-x-2 mt-6">
                         <button type="button" data-modal-hide="editarDadosModal" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">Cancelar</button>
                         <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Salvar Alterações</button>
@@ -313,7 +403,6 @@
     </div>
 </div>
 
-    <!-- Modal Confirmar Exclusão -->
     <div id="confirmarExclusaoModal" tabindex="-1" class="fixed top-0 left-0 right-0 z-50 hidden p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative w-full max-w-md max-h-full">
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -342,7 +431,6 @@
         </div>
     </div>
 
-    <!-- Scripts para os modais -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <script>
         // Função para pré-visualizar a imagem selecionada
@@ -350,110 +438,84 @@
             const input = event.target;
             const previewContainer = document.getElementById('previewContainer');
             const preview = document.getElementById('preview');
-            
+
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                
+
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     previewContainer.classList.remove('hidden');
                 }
-                
+
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // Inicializar todos os modais
-        document.addEventListener('DOMContentLoaded', function() {
-            const modalTriggers = document.querySelectorAll('[data-modal-target]');
-            
-            modalTriggers.forEach(trigger => {
-                trigger.addEventListener('click', function() {
-                    const target = this.getAttribute('data-modal-target');
-                    const modal = document.querySelector(target);
-                    modal.classList.remove('hidden');
-                    modal.setAttribute('aria-hidden', 'false');
-                });
-            });
+        function imprimirArea() {
+            var areaImpressao = document.getElementById('area-impressao');
+            var conteudoOriginal = document.body.innerHTML;
 
-            const modalCloses = document.querySelectorAll('[data-modal-hide]');
-            
-            modalCloses.forEach(close => {
-                close.addEventListener('click', function() {
-                    const target = this.getAttribute('data-modal-hide');
-                    const modal = document.querySelector(target);
-                    modal.classList.add('hidden');
-                    modal.setAttribute('aria-hidden', 'true');
-                });
-            });
-        });
-    </script>
- <script>
-    function imprimirArea() {
-        var areaImpressao = document.getElementById('area-impressao');
-        var conteudoOriginal = document.body.innerHTML;
+            // Criar um elemento para a marca d'água
+            var marcaDagua = document.createElement('div');
+            marcaDagua.style.position = 'absolute';
+            marcaDagua.style.top = '0';
+            marcaDagua.style.left = '0';
+            marcaDagua.style.width = '100%';
+            marcaDagua.style.height = '100%';
+            marcaDagua.style.pointerEvents = 'none';
+            marcaDagua.style.zIndex = '1000';
+            marcaDagua.style.display = 'flex';
+            marcaDagua.style.flexDirection = 'column';
+            marcaDagua.style.alignItems = 'center';
+            marcaDagua.style.justifyContent = 'center';
 
-        // Criar um elemento para a marca d'água
-        var marcaDagua = document.createElement('div');
-        marcaDagua.style.position = 'absolute';
-        marcaDagua.style.top = '0';
-        marcaDagua.style.left = '0';
-        marcaDagua.style.width = '100%';
-        marcaDagua.style.height = '100%';
-        marcaDagua.style.pointerEvents = 'none';
-        marcaDagua.style.zIndex = '1000';
-        marcaDagua.style.display = 'flex';
-        marcaDagua.style.flexDirection = 'column';
-        marcaDagua.style.alignItems = 'center';
-        marcaDagua.style.justifyContent = 'center';
+            // Criar elementos para o nome do usuário e CPF
+            var nomeUsuario = document.createElement('div');
+            nomeUsuario.textContent = "{{ request.user.profile.posto_grad }} {{ request.user.profile.re }}-{{ request.user.profile.dig }} {{ request.user.last_name }}";
+            nomeUsuario.style.fontSize = '15px';
+            nomeUsuario.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
+            nomeUsuario.style.transform = 'rotate(-45deg)';
 
-        // Criar elementos para o nome do usuário e CPF
-        var nomeUsuario = document.createElement('div');
-        nomeUsuario.textContent = "{{ request.user.profile.posto_grad }} {{ request.user.profile.re }}-{{ request.user.profile.dig }} {{ request.user.last_name }}";
-        nomeUsuario.style.fontSize = '15px';
-        nomeUsuario.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
-        nomeUsuario.style.transform = 'rotate(-45deg)';
+            var cpfMarcaDagua = document.createElement('div');
+            cpfMarcaDagua.textContent = "CPF: {{ request.user.profile.cpf }}";
+            cpfMarcaDagua.style.fontSize = '15px';
+            cpfMarcaDagua.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
+            cpfMarcaDagua.style.transform = 'rotate(-45deg)';
+            cpfMarcaDagua.style.marginTop = '20px';
 
-        var cpfMarcaDagua = document.createElement('div');
-        cpfMarcaDagua.textContent = "CPF: {{ request.user.profile.cpf }}";
-        cpfMarcaDagua.style.fontSize = '15px';
-        cpfMarcaDagua.style.color = 'rgba(200, 200, 200, 0.3)'; // Cor com opacidade
-        cpfMarcaDagua.style.transform = 'rotate(-45deg)';
-        cpfMarcaDagua.style.marginTop = '20px';
+            // Adicionar os elementos ao container da marca d'água
+            marcaDagua.appendChild(nomeUsuario);
+            marcaDagua.appendChild(cpfMarcaDagua);
 
-        // Adicionar os elementos ao container da marca d'água
-        marcaDagua.appendChild(nomeUsuario);
-        marcaDagua.appendChild(cpfMarcaDagua);
+            // Criar um container para repetir a marca d'água em toda a área de impressão
+            var containerMarcaDagua = document.createElement('div');
+            containerMarcaDagua.style.position = 'absolute';
+            containerMarcaDagua.style.top = '0';
+            containerMarcaDagua.style.left = '0';
+            containerMarcaDagua.style.width = '100%';
+            containerMarcaDagua.style.height = '100%';
+            containerMarcaDagua.style.pointerEvents = 'none';
+            containerMarcaDagua.style.zIndex = '1000';
 
-        // Criar um container para repetir a marca d'água em toda a área de impressão
-        var containerMarcaDagua = document.createElement('div');
-        containerMarcaDagua.style.position = 'absolute';
-        containerMarcaDagua.style.top = '0';
-        containerMarcaDagua.style.left = '0';
-        containerMarcaDagua.style.width = '100%';
-        containerMarcaDagua.style.height = '100%';
-        containerMarcaDagua.style.pointerEvents = 'none';
-        containerMarcaDagua.style.zIndex = '1000';
-
-        // Repetir a marca d'água em toda a área de impressão
-        for (var i = -500; i < window.innerWidth * 2; i += 400) {
-            for (var j = -500; j < window.innerHeight * 2; j += 300) {
-                var cloneMarcaDagua = marcaDagua.cloneNode(true);
-                cloneMarcaDagua.style.transform = 'translate(' + i + 'px, ' + j + 'px) rotate(-45deg)';
-                containerMarcaDagua.appendChild(cloneMarcaDagua);
+            // Repetir a marca d'água em toda a área de impressão
+            for (var i = -500; i < window.innerWidth * 2; i += 400) {
+                for (var j = -500; j < window.innerHeight * 2; j += 300) {
+                    var cloneMarcaDagua = marcaDagua.cloneNode(true);
+                    cloneMarcaDagua.style.transform = 'translate(' + i + 'px, ' + j + 'px) rotate(-45deg)';
+                    containerMarcaDagua.appendChild(cloneMarcaDagua);
+                }
             }
+
+            // Substituir o conteúdo do body com a área de impressão e a marca d'água repetida
+            document.body.innerHTML = areaImpressao.outerHTML;
+            document.body.appendChild(containerMarcaDagua);
+
+            // Imprimir
+            window.print();
+
+            // Restaurar o conteúdo original do body
+            document.body.innerHTML = conteudoOriginal;
         }
-
-        // Substituir o conteúdo do body com a área de impressão e a marca d'água repetida
-        document.body.innerHTML = areaImpressao.outerHTML;
-        document.body.appendChild(containerMarcaDagua);
-
-        // Imprimir
-        window.print();
-
-        // Restaurar o conteúdo original do body
-        document.body.innerHTML = conteudoOriginal;
-    }
-</script>
+    </script>
 </body>
 {% endblock %}

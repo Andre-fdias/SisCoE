@@ -1,0 +1,35 @@
+{% load static %}
+{% load custom_filters %} {# Mantenha este se você ainda usa outros filtros daqui #}
+{% load count_filters %} {# NOVO: Carrega os filtros de contagem para subgrupos #}
+
+<div class="ml-{{ nivel|add:2 }} mb-2">
+    <div class="flex items-center">
+        {# Este div com w-4 e border-l-2 cria a linha vertical de indentação #}
+        <div class="w-4 border-l-2 border-gray-600 mr-2 h-full"></div> 
+        <a href="?grupo={{ grupo_ativo }}&subgrupo={{ subgrupo.codigo }}"
+           class="flex items-center flex-grow px-3 py-2 rounded-lg text-sm transition duration-200 ease-in-out
+                  {% if subgrupo.codigo == subgrupo_ativo %}
+                  bg-blue-600 text-white shadow-md font-semibold
+                  {% else %}
+                  text-gray-300 hover:bg-gray-700 hover:text-white
+                  {% endif %}"
+           hx-get="{% url 'efetivo:lista_militares' %}"  
+           hx-target="#militares-table-body" {# Corrigido para #militares-table-body como em lista_militares.html #}
+           hx-push-url="true">
+            <span class="mr-2">📂</span>
+            {{ subgrupo.nome }}
+            <span class="ml-2 text-xs text-gray-400">
+               {# Agora usando o filtro 'dict_get' #}
+               ({{ contagens|dict_get:subgrupo.codigo }})
+            </span>
+        </a>
+    </div>
+    
+    {% if subgrupo.filhos %}
+    <div class="mt-2 space-y-1">
+        {% for filho in subgrupo.filhos %}
+            {% include "efetivo/subgrupo_item.html" with subgrupo=filho nivel=nivel|add:1 grupo_ativo=grupo_ativo subgrupo_ativo=subgrupo_ativo contagens=contagens %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

@@ -9,7 +9,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-bold text-gray-800">Calcular Rota</h3>
-                    <p class="text-sm text-gray-600 mt-1">Entre endereços</p>
+                    <p class="text-sm text-gray-600 mt-1">Selecione os Postos</p>
                 </div>
             </div>
             <button type="button" class="absolute top-4 right-4 p-1 rounded-full hover:bg-blue-100 transition-colors" onclick="closeModal('#rotaModal')">
@@ -23,29 +23,37 @@
             <div id="inputContainer" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="origemInput" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <label for="origemSelect" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Endereço de Origem
+                            Posto de Origem
                         </label>
-                        <input type="text" id="origemInput" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="Digite o endereço de origem">
-                        <div id="origemSuggestions" class="hidden mt-1 border border-gray-200 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto"></div>
-                        <input type="hidden" id="origemLat">
-                        <input type="hidden" id="origemLng">
+                        <select id="origemSelect" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
+                            <option value="">Selecione a origem</option>
+                            {% for value, label in posto_secao_choices %}
+                                {% if value %} {# Don't include the empty choice here if it's already the default #}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
                     <div>
-                        <label for="destinoInput" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <label for="destinoSelect" class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            Endereço de Destino
+                            Posto de Destino
                         </label>
-                        <input type="text" id="destinoInput" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" placeholder="Digite o endereço de destino">
-                        <div id="destinoSuggestions" class="hidden mt-1 border border-gray-200 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto"></div>
-                        <input type="hidden" id="destinoLat">
-                        <input type="hidden" id="destinoLng">
+                        <select id="destinoSelect" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white">
+                            <option value="">Selecione o destino</option>
+                            {% for value, label in posto_secao_choices %}
+                                {% if value %} {# Don't include the empty choice here if it's already the default #}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
                 
@@ -67,7 +75,7 @@
                     <h4 class="font-semibold text-gray-800 mb-2">Resultado da Rota</h4>
                     <div class="flex items-center gap-2 text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 0 0021 18.382V7.618a1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
                         Distância: <span id="distanciaValor">0</span> km
                     </div>
@@ -104,30 +112,28 @@
     height: 100%;
     border-radius: 8px;
 }
-.suggestion-item {
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.suggestion-item:hover {
-    background-color: #f0f4ff;
-}
-.suggestion-item.active {
-    background-color: #e0e7ff;
-}
+/* No longer needed for select */
+/* .suggestion-item {} */
 </style>
 
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+
 <script>
-    // Variáveis globais
+    // Global variables
     let map;
     let routeLayer;
     let origemMarker, destinoMarker;
     let routeControl;
     
-    // Funções para controle do modal
+    // Data from Django passed to JavaScript for coordinate lookup
+    const postoCoordinatesMap = JSON.parse('{{ posto_coordinates_map_json|escapejs }}');
+
+    // Functions to control the modal
     function openRotaModal() {
         const modal = document.querySelector('#rotaModal');
         modal.classList.remove('hidden');
@@ -135,9 +141,15 @@
             modal.classList.add('show');
         }, 10);
         
-        // Inicializar o mapa se ainda não foi inicializado
+        // Initialize the map if it hasn't been initialized
         if (!map) {
             initMap();
+        }
+        // Invalidate map size to ensure it renders correctly within the modal
+        if (map) {
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300); // Small delay to allow modal transition
         }
     }
     
@@ -148,99 +160,50 @@
             modal.classList.add('hidden');
         }, 300);
         
-        // Resetar o modal quando fechar
+        // Reset the modal when closing
         resetModal();
     }
     
     function resetModal() {
-        // Limpar inputs
-        document.getElementById('origemInput').value = '';
-        document.getElementById('destinoInput').value = '';
-        document.getElementById('origemLat').value = '';
-        document.getElementById('origemLng').value = '';
-        document.getElementById('destinoLat').value = '';
-        document.getElementById('destinoLng').value = '';
+        // Clear select values
+        document.getElementById('origemSelect').value = '';
+        document.getElementById('destinoSelect').value = '';
         
-        // Esconder sugestões
-        document.getElementById('origemSuggestions').classList.add('hidden');
-        document.getElementById('destinoSuggestions').classList.add('hidden');
-        
-        // Esconder mapa e mostrar inputs
+        // Hide map and show inputs
         document.getElementById('mapaContainer').classList.add('hidden');
         document.getElementById('inputContainer').classList.remove('hidden');
         
-        // Limpar o mapa
+        // Clear the map
         if (routeLayer) {
             routeLayer.clearLayers();
         }
         if (routeControl) {
             map.removeControl(routeControl);
+            routeControl = null; // Important: set to null after removal
+        }
+        // Reset map view to default (e.g., São Paulo)
+        if (map) {
+            map.setView([-23.5505, -46.6333], 10);
         }
     }
     
-    // Inicializar o mapa
+    // Initialize the map
     function initMap() {
-        map = L.map('mapa').setView([-23.5505, -46.6333], 10); // Coordenadas iniciais (São Paulo)
+        map = L.map('mapa').setView([-23.5505, -46.6333], 10); // Initial coordinates (São Paulo)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
     
-        routeLayer = L.layerGroup().addTo(map); // Camada para exibir a rota
+        routeLayer = L.layerGroup().addTo(map); // Layer to display the route
     }
     
-    // Buscar sugestões de endereço usando Nominatim
-    async function buscarSugestoes(endereco, tipo) {
-        if (endereco.length < 3) {
-            document.getElementById(`${tipo}Suggestions`).classList.add('hidden');
-            return;
-        }
-    
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}&countrycodes=br&limit=5`);
-            const data = await response.json();
-            
-            const suggestionsContainer = document.getElementById(`${tipo}Suggestions`);
-            suggestionsContainer.innerHTML = '';
-            
-            if (data.length === 0) {
-                suggestionsContainer.innerHTML = '<div class="suggestion-item p-2 text-gray-500">Nenhum resultado encontrado</div>';
-                suggestionsContainer.classList.remove('hidden');
-                return;
-            }
-            
-            data.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.innerHTML = `<div class="font-medium">${item.display_name.split(',')[0]}</div>
-                                <div class="text-xs text-gray-500">${item.display_name.split(',').slice(1, 3).join(',')}</div>`;
-                
-                div.addEventListener('click', () => {
-                    document.getElementById(`${tipo}Input`).value = item.display_name;
-                    document.getElementById(`${tipo}Lat`).value = item.lat;
-                    document.getElementById(`${tipo}Lng`).value = item.lon;
-                    suggestionsContainer.classList.add('hidden');
-                    
-                    // Se for origem, centralizar no mapa
-                    if (tipo === 'origem') {
-                        map.setView([parseFloat(item.lat), parseFloat(item.lon)], 13);
-                    }
-                });
-                
-                suggestionsContainer.appendChild(div);
-            });
-            
-            suggestionsContainer.classList.remove('hidden');
-        } catch (error) {
-            console.error('Erro ao buscar sugestões:', error);
-        }
-    }
-    
-    // Função para calcular a rota
+    // Function to calculate the route
     async function calcularRota() {
-        const origemLat = document.getElementById('origemLat').value;
-        const origemLng = document.getElementById('origemLng').value;
-        const destinoLat = document.getElementById('destinoLat').value;
-        const destinoLng = document.getElementById('destinoLng').value;
+        const origemSelect = document.getElementById('origemSelect');
+        const destinoSelect = document.getElementById('destinoSelect');
+
+        const origemPostoSecaoValue = origemSelect.value;
+        const destinoPostoSecaoValue = destinoSelect.value;
         
         const resultadoDiv = document.getElementById('resultadoRota');
         const inputContainer = document.getElementById('inputContainer');
@@ -248,32 +211,50 @@
         const distanciaElement = document.getElementById('distanciaValor');
         const tempoElement = document.getElementById('tempoValor');
     
-        // Validar seleções
-        if (!origemLat || !origemLng || !destinoLat || !destinoLng) {
-            alert('Por favor, selecione endereços válidos para origem e destino.');
+        // Validate selections
+        if (!origemPostoSecaoValue || !destinoPostoSecaoValue) {
+            alert('Por favor, selecione Postos válidos para origem e destino.');
             return;
         }
+
+        // Get lat/lng from the postoCoordinatesMap
+        const origemCoords = postoCoordinatesMap[origemPostoSecaoValue];
+        const destinoCoords = postoCoordinatesMap[destinoPostoSecaoValue];
+
+        if (!origemCoords) {
+            alert(`Coordenadas para a origem "${origemSelect.options[origemSelect.selectedIndex].text}" não encontradas. Certifique-se de que o posto tem um contato cadastrado.`);
+            return;
+        }
+        if (!destinoCoords) {
+            alert(`Coordenadas para o destino "${destinoSelect.options[destinoSelect.selectedIndex].text}" não encontradas. Certifique-se de que o posto tem um contato cadastrado.`);
+            return;
+        }
+
+        const origemLat = origemCoords.lat;
+        const origemLng = origemCoords.lon;
+        const destinoLat = destinoCoords.lat;
+        const destinoLng = destinoCoords.lon;
+
+        // Display names for map popups
+        const origemDisplayName = origemSelect.options[origemSelect.selectedIndex].text;
+        const destinoDisplayName = destinoSelect.options[destinoSelect.selectedIndex].text;
     
-        // Mostrar loading
+        // Show loading
         resultadoDiv.classList.remove('hidden');
         distanciaElement.textContent = 'calculando...';
         tempoElement.textContent = 'calculando...';
     
         try {
-            // Enviar requisição para o backend
-            const response = await fetch('/municipios/calcular-rota/', {
+            // Send request to the backend with the selected posto_secao values
+            const response = await fetch('/municipios/calcular-rota/', { // Adjust URL if necessary
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken'),
                 },
                 body: JSON.stringify({
-                    origem: document.getElementById('origemInput').value,
-                    destino: document.getElementById('destinoInput').value,
-                    origem_lat: origemLat,
-                    origem_lng: origemLng,
-                    destino_lat: destinoLat,
-                    destino_lng: destinoLng,
+                    origem_posto_secao: origemPostoSecaoValue,
+                    destino_posto_secao: destinoPostoSecaoValue
                 }),
             });
     
@@ -283,25 +264,26 @@
                 throw new Error(data.error || 'Erro ao calcular rota');
             }
     
-            // Atualizar resultados
-            distanciaElement.textContent = data.distancia;
-            tempoElement.textContent = data.tempo;
+            // Update results
+            distanciaElement.textContent = `${data.distancia} km`;
+            tempoElement.textContent = `${data.tempo} min`;
     
-            // Esconder inputs e mostrar mapa
+            // Hide inputs and show map
             inputContainer.classList.add('hidden');
             mapaContainer.classList.remove('hidden');
     
-            // Limpar marcadores anteriores
+            // Clear previous markers and route
             routeLayer.clearLayers();
             if (routeControl) {
                 map.removeControl(routeControl);
+                routeControl = null;
             }
     
-            // Coordenadas
+            // Coordinates for Leaflet
             const origemLatLng = [parseFloat(origemLat), parseFloat(origemLng)];
             const destinoLatLng = [parseFloat(destinoLat), parseFloat(destinoLng)];
     
-            // Adicionar marcadores
+            // Add markers
             origemMarker = L.marker(origemLatLng, {
                 icon: L.divIcon({
                     className: 'origin-marker',
@@ -310,7 +292,7 @@
                     iconAnchor: [15, 42],
                     popupAnchor: [0, -42]
                 })
-            }).addTo(routeLayer).bindPopup(`<b>Origem:</b> ${document.getElementById('origemInput').value.split(',')[0]}`);
+            }).addTo(routeLayer).bindPopup(`<b>Origem:</b> ${origemDisplayName}`);
     
             destinoMarker = L.marker(destinoLatLng, {
                 icon: L.divIcon({
@@ -320,9 +302,9 @@
                     iconAnchor: [15, 42],
                     popupAnchor: [0, -42]
                 })
-            }).addTo(routeLayer).bindPopup(`<b>Destino:</b> ${document.getElementById('destinoInput').value.split(',')[0]}`);
+            }).addTo(routeLayer).bindPopup(`<b>Destino:</b> ${destinoDisplayName}`);
     
-            // Desenhar rota usando OSRM (Open Source Routing Machine)
+            // Draw route using OSRM (Open Source Routing Machine)
             routeControl = L.Routing.control({
                 waypoints: [
                     L.latLng(origemLatLng[0], origemLatLng[1]),
@@ -336,10 +318,10 @@
                 lineOptions: {
                     styles: [{color: '#3b82f6', opacity: 0.8, weight: 5}]
                 },
-                createMarker: function() { return null; } // Não criar marcadores padrão
+                createMarker: function() { return null; } // Do not create default markers
             }).addTo(map);
     
-            // Ajustar o zoom para mostrar toda a rota
+            // Adjust zoom to show the entire route
             const bounds = L.latLngBounds(origemLatLng, destinoLatLng);
             map.fitBounds(bounds, {padding: [50, 50]});
     
@@ -351,7 +333,7 @@
         }
     }
     
-    // Função auxiliar para obter cookie CSRF
+    // Helper function to get CSRF cookie
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -369,81 +351,63 @@
     
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar o mapa quando o modal for aberto
+        // Example: Add a button to open the modal (you would place this wherever appropriate in your main HTML)
+        const openModalButton = document.getElementById('openRotaModalButton'); // Assuming you have a button with this ID
+        if (openModalButton) {
+            openModalButton.addEventListener('click', openRotaModal);
+        }
+
         document.getElementById('calcularRotaButton').addEventListener('click', calcularRota);
         
-        // Eventos para busca de endereços
-        document.getElementById('origemInput').addEventListener('input', (e) => {
-            buscarSugestoes(e.target.value, 'origem');
-        });
-        
-        document.getElementById('destinoInput').addEventListener('input', (e) => {
-            buscarSugestoes(e.target.value, 'destino');
-        });
-        
-        // Fechar sugestões ao clicar fora
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#origemInput') && !e.target.closest('#origemSuggestions')) {
-                document.getElementById('origemSuggestions').classList.add('hidden');
-            }
-            if (!e.target.closest('#destinoInput') && !e.target.closest('#destinoSuggestions')) {
-                document.getElementById('destinoSuggestions').classList.add('hidden');
-            }
-        });
-        
-        // Fechar modal ao pressionar ESC
+        // Close modal when pressing ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal('#rotaModal');
             }
         });
     });
-    </script>
-    
-    <style>
-    /* Estilos para os marcadores do mapa */
-    .marker-pin {
-        width: 30px;
-        height: 30px;
-        border-radius: 50% 50% 50% 0;
-        position: relative;
-        transform: rotate(-45deg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .marker-pin.origin {
-        background: #3b82f6;
-        border: 2px solid #1d4ed8;
-    }
-    
-    .marker-pin.destination {
-        background: #ef4444;
-        border: 2px solid #b91c1c;
-    }
-    
-    .marker-pin::after {
-        content: '';
-        width: 12px;
-        height: 12px;
-        margin: auto;
-        border-radius: 50%;
-        background: white;
-        position: absolute;
-    }
-    
-    /* Estilo para o controle de rota */
-    .leaflet-routing-container {
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    </style>
-    
-    <!-- Incluir o plugin de roteamento do Leaflet -->
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+</script>
+
+<style>
+/* Styles for map markers */
+.marker-pin {
+    width: 30px;
+    height: 30px;
+    border-radius: 50% 50% 50% 0;
+    position: relative;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marker-pin.origin {
+    background: #3b82f6;
+    border: 2px solid #1d4ed8;
+}
+
+.marker-pin.destination {
+    background: #ef4444;
+    border: 2px solid #b91c1c;
+}
+
+.marker-pin::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    margin: auto;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+}
+
+/* Style for routing control */
+.leaflet-routing-container {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    max-height: 200px;
+    overflow-y: auto;
+}
+</style>

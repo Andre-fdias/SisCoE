@@ -1,0 +1,208 @@
+{% extends "base_login.html" %}
+{% load static %}
+{% load tz %}
+{% load custom_filters %} {# Mantenha este se você ainda usa outros filtros daqui #}
+{% load count_filters %} {# NOVO: Carrega os filtros de contagem #}
+{% get_current_timezone as TIME_ZONE %}
+{% now "Y-m-d" as current_date %}
+
+{% block title %}Consultar Efetivo{% endblock %}
+{% block 'head' %}
+<style>
+    /* Estilos copiados do listar_rpt.html para a tabela */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .data-table-container {
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border: 1px solid #374151; /* gray-700 */
+        background-color: #1f2937; /* gray-800 */
+    }
+    /* Estilos para a tabela em si */
+    #example {
+        width: 100%; /* Garante que a tabela ocupe a largura total */
+        border-collapse: collapse; /* Remove espaçamento entre as células */
+    }
+    #example thead th {
+        /* Estilo para os cabeçalhos da tabela */
+        background-color: #4a5568; /* gray-700 */
+        color: #e2e8f0; /* gray-200 */
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 12px 24px; /* px-6 py-3 */
+        text-align: left;
+        border-bottom: 1px solid #2d3748; /* gray-800 */
+    }
+    #example tbody tr {
+        background-color: #2d3748; /* gray-800 */
+        border-bottom: 1px solid #4a5568; /* gray-700 */
+    }
+    #example tbody tr:hover {
+        background-color: #4a5568; /* gray-700 */
+    }
+    #example tbody td {
+        padding: 16px 24px; /* px-6 py-4 */
+        color: #cbd5e0; /* gray-300 */
+        font-size: 0.875rem; /* text-sm */
+        white-space: nowrap;
+    }
+    /* Estilo para a célula de checkbox (se for usar) */
+    #example tbody td.checkbox-cell {
+        width: 1%; /* Largura mínima */
+        padding: 12px; /* p-3 */
+    }
+    /* Estilo para a imagem na tabela */
+    #example tbody td img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+      /* Adicione isso no seu bloco de estilo */
+.table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Suave scroll em dispositivos móveis */
+}
+
+#example {
+    min-width: 100%; /* Força a tabela usar 100% do container */
+    table-layout: auto; /* Permite que as células se ajustem */
+}
+
+/* Ajustes para telas pequenas */
+@media (max-width: 768px) {
+    #example thead th,
+    #example tbody td {
+        white-space: normal; /* Permite quebra de linha */
+        padding: 8px 12px; /* Reduz padding em telas pequenas */
+    }
+    
+    #example tbody td:first-child {
+        width: 60px; /* Largura fixa para coluna de foto */
+        min-width: 60px;
+    }
+    
+    #example tbody td:nth-child(3) { /* Coluna do Nome */
+        min-width: 150px; /* Garante espaço mínimo para o nome */
+    }
+}
+    .count-badge {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        background-color: #374151;
+        border-radius: 9999px;
+        margin-left: 0.5rem;
+    }
+    
+    .group-count {
+        font-size: 0.875rem;
+        color: #9CA3AF;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <section class="w-full bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">Relação de Efetivo</h1>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                       <a href="{% url 'efetivo:listar_militar' %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200 ease-out">
+                            Voltar
+                        </a>
+                <div class="relative inline-block text-left w-full sm:w-auto">
+                    <button type="button" id="exportButton" class="inline-flex justify-center w-full rounded-md border border-gray-600 shadow-sm px-6 py-3 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                        <i class="fas fa-file-export mr-2"></i> Exportar
+                        <i class="fas fa-caret-down ml-2 -mr-1"></i>
+                    </button>
+                    <div id="exportMenu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-gray-700 ring-1 ring-black ring-opacity-5 z-50 hidden">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="exportButton">
+                            <a href="#" onclick="exportTable('csv')" class="text-gray-200 block px-4 py-2 text-sm hover:bg-gray-600 hover:text-white" role="menuitem">CSV</a>
+                            <a href="#" onclick="exportTable('excel')" class="text-gray-200 block px-4 py-2 text-sm hover:bg-gray-600 hover:text-white" role="menuitem">Excel</a>
+                            <a href="#" onclick="exportTable('pdf')" class="text-gray-200 block px-4 py-2 text-sm hover:bg-gray-600 hover:text-white" role="menuitem">PDF</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm mt-3">Utilize os filtros abaixo para encontrar militares específicos por grupo ou subgrupo.</p>
+    </section>
+
+    <div class="flex flex-col md:flex-row gap-6">
+   <div class="w-full md:w-1/4 bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
+            <i class="fas fa-filter mr-2"></i> Filtrar por Organização
+        </h2>
+        <div class="space-y-3">
+            {% for grupo_key, grupo_nome in grupos %}
+                <a href="?grupo={{ grupo_key }}"
+                   class="flex items-center px-4 py-2 rounded-lg text-lg font-medium transition duration-200 ease-in-out
+                          {% if grupo_key == grupo_ativo %}
+                          bg-blue-700 text-white shadow-md
+                          {% else %}
+                          text-gray-300 hover:bg-gray-700 hover:text-white
+                          {% endif %}">
+                    <i class="fas fa-sitemap mr-3"></i>
+                    {{ grupo_nome }}
+                    <span class="ml-2 text-xs font-normal text-gray-300">
+                       {# Agora usando o filtro de 'count_filters' #}
+                       ({{ contagens_por_grupo|dict_get:grupo_key|sum_values:'militar_count' }})
+                    </span>
+                </a>
+                {% if grupo_key == grupo_ativo and subgrupos_do_grupo_ativo %}
+                    <div class="ml-4 mt-2 space-y-2 border-l-2 border-gray-700 pl-4">
+                        {% for subgrupo in subgrupos_do_grupo_ativo %}
+                            {# Certifique-se de que subgrupo_item.html também carrega 'count_filters' se precisar #}
+                            {% include "efetivo/subgrupo_item.html" with subgrupo=subgrupo nivel=0 grupo_ativo=grupo_ativo subgrupo_ativo=subgrupo_ativo %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+        <div class="w-full md:w-3/4 data-table-container bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+            <h2 class="text-2xl font-bold mb-6 text-white">
+                Relação de Efetivo {% if grupo_ativo %}<span class="text-blue-400">({{ grupo_ativo_nome }})</span>{% endif %}
+                {% if subgrupo_ativo %}<span class="text-purple-400"> - {{ subgrupo_ativo_nome }}</span>{% endif %}
+            </h2>
+            
+        <div class="table-responsive">
+            <table id="example" class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-600 rounded-xl ">
+                        <tr>
+
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Foto</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Posto/Grad</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Prontidão</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Situação</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="militares-table-body" class="bg-gray-800 divide-y divide-gray-700">
+                        {% for militar in militares %}
+                            {% include "efetivo/militar_card.html" with militar=militar %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="11" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
+                                    Nenhum militar encontrado para o filtro selecionado.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Simple-datatables initialization (from listar_militar.html) #}
+          
+        </div>
+    </div>
+</div>
+
+{% endblock %}

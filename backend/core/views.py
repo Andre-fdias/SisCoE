@@ -4,7 +4,7 @@ from .models import User
 from .models import Profile
 from backend.documentos.models import Documento
 from django.shortcuts import render
-from backend.efetivo.models import Cadastro, Promocao, Imagem, DetalhesSituacao
+from backend.efetivo.models import Cadastro, Promocao, Imagem, DetalhesSituacao, CatEfetivo
 from backend.municipios.models import  Pessoal
 from backend.bm.models import Cadastro_bm
 from datetime import datetime, date
@@ -51,8 +51,7 @@ def index(request):
             print(f"Valor da função: {funcao_valor}")
             queryset = Cadastro.objects.filter(
                 detalhes_situacao__funcao=funcao_valor,
-                detalhes_situacao__situacao='Efetivo',
-                detalhes_situacao__cat_efetivo='ATIVO'
+                detalhes_situacao__situacao='Efetivo'
             ).prefetch_related('imagens', 'promocoes', 'detalhes_situacao').order_by('-detalhes_situacao__apresentacao_na_unidade')
             ocupante = queryset.first()
             if ocupante:

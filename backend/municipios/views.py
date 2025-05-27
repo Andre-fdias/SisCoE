@@ -1,10 +1,21 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy
-from .models import Posto, Contato, Pessoal,Cidade
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
-from .models import Posto
-from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy, reverse
+from .models import Posto, Contato, Pessoal, Cidade
+from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import pandas as pd
+import csv
+from io import StringIO
+from django.db.models import Prefetch, Sum # Importar Sum para agregar totais
+from django.contrib.auth import get_user_model
+
+# Importe a função de importação (se estiver em import_utils.py)
+from .import_utils import importar_dados
+
+# Importe a nova função de exportação PDF
+from .export_utils import export_efetivo_pdf_report # Importe a nova função
 
 @login_required
 def posto_list(request):
@@ -466,36 +477,59 @@ def posto_print(request, pk):
 
 
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from geopy.distance import geodesic
+
+# views.py
 import json
-from .models import Cidade
 from django.shortcuts import render
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from geopy.distance import geodesic
+from .models import Posto, Contato # Ensure Posto and Contato are imported
 
 @require_POST
 def calcular_rota(request):
     try:
         data = json.loads(request.body)
-        origem_nome = data.get('origem')
-        destino_nome = data.get('destino')
-        origem_lat = data.get('origem_lat')
-        origem_lng = data.get('origem_lng')
-        destino_lat = data.get('destino_lat')
-        destino_lng = data.get('destino_lng')
+        origem_posto_secao_value = data.get('origem_posto_secao') # This is the value from the choice tuple
+        destino_posto_secao_value = data.get('destino_posto_secao') # This is the value from the choice tuple
 
-        if not origem_nome or not destino_nome:
+        if not origem_posto_secao_value or not destino_posto_secao_value:
             return JsonResponse({
                 'success': False,
                 'error': 'Origem e destino são obrigatórios'
             }, status=400)
 
-        if not origem_lat or not origem_lng or not destino_lat or not destino_lng:
-             return JsonResponse({
+        # Retrieve lat/lng for origin Posto based on the posto_secao value
+        try:
+            # Find the Posto instance where posto_secao matches the value
+            origem_posto_instance = Posto.objects.get(posto_secao=origem_posto_secao_value)
+            origem_contato = Contato.objects.get(posto=origem_posto_instance)
+            origem_lat = origem_contato.latitude
+            origem_lng = origem_contato.longitude
+            
+            # Use the display name from the choices for response, or just the value
+            origem_nome = dict(Posto.posto_secao_choices).get(origem_posto_secao_value, origem_posto_secao_value)
+            
+        except (Posto.DoesNotExist, Contato.DoesNotExist):
+            return JsonResponse({
                 'success': False,
-                'error': 'Latitudes e Longitudes são obrigatórias'
+                'error': f'Coordenadas de origem para "{origem_posto_secao_value}" não encontradas. Certifique-se de que o Posto existe e tem um Contato associado.'
             }, status=400)
 
+        # Retrieve lat/lng for destination Posto based on the posto_secao value
+        try:
+            destino_posto_instance = Posto.objects.get(posto_secao=destino_posto_secao_value)
+            destino_contato = Contato.objects.get(posto=destino_posto_instance)
+            destino_lat = destino_contato.latitude
+            destino_lng = destino_contato.longitude
+            
+            destino_nome = dict(Posto.posto_secao_choices).get(destino_posto_secao_value, destino_posto_secao_value)
+
+        except (Posto.DoesNotExist, Contato.DoesNotExist):
+            return JsonResponse({
+                'success': False,
+                'error': f'Coordenadas de destino para "{destino_posto_secao_value}" não encontradas. Certifique-se de que o Posto existe e tem um Contato associado.'
+            }, status=400)
 
         # Cálculo da distância usando geopy
         distancia = geodesic(
@@ -512,7 +546,7 @@ def calcular_rota(request):
             'tempo': tempo,
             'origem': origem_nome,
             'destino': destino_nome,
-            'origem_lat': origem_lat,
+            'origem_lat': origem_lat, # Return these for map visualization if needed
             'origem_lng': origem_lng,
             'destino_lat': destino_lat,
             'destino_lng': destino_lng
@@ -526,36 +560,37 @@ def calcular_rota(request):
 
 def modal_rota(request):
     """
-    View para renderizar o modal de cálculo de rota
+    View para renderizar o modal de cálculo de rota, carregando apenas os Postos
+    que possuem informações de contato (latitude/longitude) salvas no sistema.
     """
-    # Obter todas as cidades do banco de dados com suas coordenadas
-    cidades_db = Cidade.objects.all()
-    
-    # Preparar as choices com os dados necessários (valor, label, lat, lng)
-    cidades_choices = []
-    for cidade in cidades_db:
-        cidades_choices.append((
-            cidade.municipio,  # valor
-            cidade.get_nome_municipio(),  # label
-            cidade.latitude,  # lat
-            cidade.longitude  # lng
-        ))
-    
-    # Adicionar também as choices do modelo (para garantir todas as opções)
-    municipio_choices = Cidade.municipio_choices
-    for choice in municipio_choices:
-        if choice[0] and not any(c[0] == choice[0] for c in cidades_choices):
-            # Se não estiver no banco de dados, adicionar com coordenadas padrão
-            cidades_choices.append((
-                choice[0],  # valor
-                choice[1],  # label
-                -23.5505,  # lat padrão (São Paulo)
-                -46.6333   # lng padrão (São Paulo)
-            ))
-    
-    return render(request, 'modals/modal_rota.html', {'cidades': cidades_choices})
+    # Get only the Posto objects that have an associated Contato and whose posto_secao is not empty
+    # We use select_related to optimize the query by fetching Contato data in the same query
+    valid_postos = Posto.objects.filter(contato__isnull=False).exclude(posto_secao='').select_related('contato').order_by('posto_secao')
 
+    # Prepare the options for the select dropdowns, mapping posto_secao values to labels
+    # We'll use the label from posto_secao_choices for display
+    posto_secao_value_to_label_map = dict(Posto.posto_secao_choices)
 
+    posto_options_for_template = []
+    posto_coordinates_map = {}
+
+    for posto in valid_postos:
+        # Get the human-readable label from the choices, fallback to value if not found
+        display_label = posto_secao_value_to_label_map.get(posto.posto_secao, posto.posto_secao)
+        
+        posto_options_for_template.append({
+            'value': posto.posto_secao,
+            'label': display_label
+        })
+        posto_coordinates_map[posto.posto_secao] = {
+            'lat': posto.contato.latitude,
+            'lon': posto.contato.longitude
+        }
+    
+    return render(request, 'modals/modal_rota.html', {
+        'posto_options': posto_options_for_template, # Now contains only valid, saved posts
+        'posto_coordinates_map_json': json.dumps(posto_coordinates_map)
+    })
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -638,3 +673,203 @@ def importar_municipios(request):
         return redirect(reverse(redirect_url))
 
     return render(request, template_name)
+
+
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy, reverse
+from .models import Posto, Contato, Pessoal, Cidade
+from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import pandas as pd
+import csv  # <--- ADICIONE ESTA LINHA
+from io import StringIO
+from django.db.models import Prefetch
+
+# Importe a função de importação (se estiver em import_utils.py)
+from .import_utils import importar_dados
+
+
+
+@login_required
+@permission_required('municipios.view_posto') # Permissão para visualizar Posto
+def exportar_postos_csv(request):
+    """
+    Exporta todos os dados de Postos, Contatos e Pessoal relacionados em um único arquivo CSV.
+    """
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="postos_e_dados_relacionados.csv"'
+
+    # Adicionar quoting=csv.QUOTE_NONNUMERIC para garantir que campos com vírgulas (decimais) sejam citados
+    writer = csv.writer(response, delimiter=';', quoting=csv.QUOTE_NONNUMERIC)
+
+    # Cabeçalhos do CSV
+    headers = [
+        'ID_Posto', 'SGB', 'Posto_Secao', 'Posto_Atendimento', 'Cidade_Posto',
+        'Tipo_Cidade', 'Op_Adm', 'Data_Criacao', 'Usuario',
+        'Contato_Telefone', 'Contato_Rua', 'Contato_Numero', 'Contato_Complemento',
+        'Contato_Bairro', 'Contato_Cidade', 'Contato_CEP', 'Contato_Email',
+        'Contato_Longitude', 'Contato_Latitude',
+        'Pessoal_Cel', 'Pessoal_Ten_Cel', 'Pessoal_Maj', 'Pessoal_Cap',
+        'Pessoal_TenQO', 'Pessoal_TenQA', 'Pessoal_Asp', 'Pessoal_St_Sgt',
+        'Pessoal_Cb_Sd', 'Pessoal_Total_Efetivo'
+    ]
+    writer.writerow(headers)
+
+    # Obter todos os Postos, pré-carregando Contato e Pessoal para evitar N+1 queries
+    # Adicionando 'usuario' ao select_related para que o objeto User seja carregado
+    postos = Posto.objects.select_related('contato', 'usuario').prefetch_related('pessoal').all()
+
+    for posto in postos:
+        # Dados do Posto
+        row_data = [
+            posto.id,
+            posto.sgb,
+            posto.posto_secao,
+            posto.posto_atendimento,
+            posto.cidade_posto,
+            posto.tipo_cidade,
+            posto.op_adm,
+            posto.data_criacao.strftime('%Y-%m-%d %H:%M:%S') if posto.data_criacao else '',
+            # Use posto.usuario.email se o seu User model usa email como USERNAME_FIELD
+            # Caso contrário, use posto.usuario.get_username() ou posto.usuario.username
+            posto.usuario.email if posto.usuario and hasattr(posto.usuario, 'email') else (posto.usuario.get_username() if posto.usuario else ''),
+        ]
+
+        # Dados do Contato (se existir)
+        contato = getattr(posto, 'contato', None)
+        if contato:
+            row_data.extend([
+                contato.telefone,
+                contato.rua,
+                contato.numero,
+                contato.complemento,
+                contato.bairro,
+                contato.cidade,
+                contato.cep,
+                contato.email,
+                # Garante que a longitude e latitude são formatadas como string com vírgula e citadas
+                str(contato.longitude).replace('.', ',') if contato.longitude is not None else '',
+                str(contato.latitude).replace('.', ',') if contato.latitude is not None else '',
+            ])
+        else:
+            row_data.extend([''] * 10)
+
+        # Dados do Pessoal (pega o primeiro, se houver, ou agrega se a lógica for diferente)
+        pessoal = posto.pessoal.first()
+        if pessoal:
+            row_data.extend([
+                pessoal.cel,
+                pessoal.ten_cel,
+                pessoal.maj,
+                pessoal.cap,
+                pessoal.tenqo,
+                pessoal.tenqa,
+                pessoal.asp,
+                pessoal.st_sgt,
+                pessoal.cb_sd,
+                pessoal.total,
+            ])
+        else:
+            row_data.extend([''] * 10)
+
+        writer.writerow(row_data)
+
+    return response
+
+
+
+@login_required
+@permission_required('municipios.view_posto') # Permissão para visualizar Posto
+def exportar_relatorio_efetivo_pdf(request):
+    """
+    Gera um relatório PDF do efetivo, agrupado por SGB e Posto/Seção.
+    Filtros: sgb (opcional), posto_secao (opcional).
+    """
+    # Obter filtros da requisição (GET)
+    sgb_filter = request.GET.get('sgb')
+    posto_secao_filter = request.GET.get('posto_secao')
+
+    # Filtrar os Postos com base nos parâmetros
+    # Pré-carrega 'pessoal' para evitar N+1 queries
+    queryset = Posto.objects.all().prefetch_related('pessoal')
+
+    if sgb_filter:
+        queryset = queryset.filter(sgb=sgb_filter)
+    if posto_secao_filter:
+        queryset = queryset.filter(posto_secao=posto_secao_filter)
+
+    # Agrupar os dados para o relatório
+    # Vamos agrupar por SGB e depois por Posto_Seção
+    # O ReportLab precisa dos dados já organizados.
+    
+    # Para calcular o efetivo_grupos e total_efetivo para cada Posto
+    # e também o pessoal.total (efetivo planejado)
+    # Precisamos iterar sobre o queryset e calcular esses valores.
+
+    report_data = []
+    for posto in queryset:
+        # Lógica para calcular efetivo_grupos e total_efetivo (do seu posto_detail)
+        # ASSUMO que 'backend.efetivo.models.DetalhesSituacao' e 'Promocao'
+        # são acessíveis ou que você tem uma forma de calcular o efetivo existente.
+        # Se não, os valores de 'efetivo_grupos' e 'total_efetivo' serão 0.
+        
+        # Simulação dos dados de efetivo_grupos (se não houver integração real)
+        # Se você tiver a integração real com 'backend.efetivo', use-a aqui.
+        efetivo_grupos = {
+            'Tc': 0, 'Maj': 0, 'Cap': 0, 'Ten': 0,
+            'Ten_QAOPM': 0, 'St_Sgt': 0, 'Cb_Sd': 0
+        }
+        total_efetivo_existente = 0
+        
+        # Se você tiver a lógica real de contagem do efetivo existente, coloque-a aqui.
+        # Exemplo (comentado, pois depende de 'backend.efetivo'):
+        # from backend.efetivo.models import DetalhesSituacao, Promocao
+        # efetivos_existentes = DetalhesSituacao.objects.filter(
+        #     situacao='Efetivo',
+        #     posto_secao=posto.posto_secao
+        # ).select_related('cadastro')
+        # for ef_existente in efetivos_existentes:
+        #     ultima_promocao = Promocao.objects.filter(
+        #         cadastro=ef_existente.cadastro
+        #     ).order_by('-ultima_promocao').first()
+        #     if ultima_promocao and ultima_promocao.grupo.strip() in GRUPOS:
+        #         grupo_key = ultima_promocao.grupo.strip().replace('/', '_') # Ex: St/Sgt -> St_Sgt
+        #         efetivo_grupos[grupo_key] += 1
+        # total_efetivo_existente = sum(efetivo_grupos.values())
+
+
+        # Dados do Pessoal (efetivo planejado/QPO)
+        pessoal = posto.pessoal.first() # Pega o primeiro registro de Pessoal
+        
+        pessoal_data = {
+            'cel': pessoal.cel if pessoal else 0,
+            'ten_cel': pessoal.ten_cel if pessoal else 0,
+            'maj': pessoal.maj if pessoal else 0,
+            'cap': pessoal.cap if pessoal else 0,
+            'tenqo': pessoal.tenqo if pessoal else 0,
+            'tenqa': pessoal.tenqa if pessoal else 0,
+            'asp': pessoal.asp if pessoal else 0,
+            'st_sgt': pessoal.st_sgt if pessoal else 0,
+            'cb_sd': pessoal.cb_sd if pessoal else 0,
+            'total_planejado': pessoal.total if pessoal else 0 # Propriedade total do modelo Pessoal
+        }
+
+        report_data.append({
+            'posto_obj': posto, # O objeto Posto completo
+            'efetivo_existente_grupos': efetivo_grupos, # Efetivo real (calculado)
+            'total_efetivo_existente': total_efetivo_existente,
+            'pessoal_planejado': pessoal_data # Efetivo planejado (do modelo Pessoal)
+        })
+
+    # Chamar a função de exportação PDF do export_utils.py
+    pdf_buffer, filename = export_efetivo_pdf_report(request, report_data, sgb_filter, posto_secao_filter)
+
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
