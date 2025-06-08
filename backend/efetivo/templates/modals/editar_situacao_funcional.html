@@ -1,302 +1,240 @@
 
-<div id="editSituacaoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-    <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all duration-300 ease-out">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-2xl font-bold text-gray-800">
-                <i class="fas fa-user-cog mr-2 text-indigo-600"></i>
-                Editar Situação Funcional
-            </h3>
+
+<!-- Modal de Edição de Situação Funcional -->
+<div id="editSituacaoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden transform transition-all duration-300">
+        <!-- Cabeçalho -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Editar Situação Funcional
+                </h3>
+                <p class="text-blue-100 text-sm mt-1">Atualize as informações de situação do militar</p>
+            </div>
             <button type="button"
-                    class="text-gray-500 hover:text-gray-700 transition-colors"
-                    data-modal-close="#editSituacaoModal">
-                <i class="fas fa-times text-xl"></i>
+                    data-modal-close="#editSituacaoModal"
+                    class="text-blue-100 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
             </button>
         </div>
 
-        <div class="p-6 space-y-6">
-            <form id="editSituacaoForm" method="POST" action="{% url 'efetivo:editar_situacao_atual' cadastro.id %}">
-                {% csrf_token %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-clipboard-list mr-2 text-indigo-600"></i>
-                                Situação Atual
-                            </label>
-                            <select name="situacao_atual"
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for value, label in situacao %}
-                                <option value="{{ value }}" {% if detalhes and detalhes.situacao == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-info-circle mr-2 text-indigo-600"></i>
-                                Detalhamento
-                            </label>
-                            <select name="cat_efetivo"
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for value, label in cat_efetivo %}
-                                <option value="{{ value }}" {% if detalhes and detalhes.cat_efetivo == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+        <!-- Formulário -->
+        <form id="editSituacaoForm" method="POST" action="{% url 'efetivo:editar_situacao_funcional' cadastro.id %}" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Dados Atuais (somente leitura) -->
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Dados Atuais</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">Situação Atual</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.situacao }}</p>
                     </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-shield-alt mr-2 text-indigo-600"></i>
-                                Prontidão
-                            </label>
-                            <select name="prontidao"
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in prontidao %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
-                                Data de Saída
-                            </label>
-                            <input type="date"
-                                name="saida_da_unidade"
-                                value="{% if detalhes %}{{ detalhes.saida_da_unidade|date:'Y-m-d' }}{% endif %}"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                        </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">SGB</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.sgb }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">Posto/Seção</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.posto_secao }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">Função</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.funcao }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">Prontidão</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.prontidao }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500 dark:text-gray-400">Data de Apresentação</label>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.apresentacao_na_unidade|date:"d/m/Y" }}</p>
                     </div>
                 </div>
-
-                <div class="mt-8 flex justify-end space-x-4">
-                    <button type="button"
-                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            data-modal-close="#editSituacaoModal">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                        Salvar Alterações
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div id="choiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-    <div class="bg-gray-100 rounded-xl shadow-2xl max-w-md w-full mx-4">
-        <div class="p-6 text-center">
-            <div class="text-3xl mb-4 text-indigo-600">
-                <i class="fas fa-question-circle"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                Nova Situação Funcional
-            </h3>
-            <p class="text-gray-600 mb-8">
-                Deseja cadastrar uma nova situação funcional?
-            </p>
-            <div class="flex justify-center space-x-4">
-                <button type="button"
-                        class="px-6 py-2.5 bg-emerald-500 text-gray-600 rounded-lg hover:bg-emerald-600 transition-colors shadow-md"
-                        data-modal-target="#newSituacaoModal">
-                    <i class="fas fa-check mr-2"></i>Sim
+
+            <!-- Campos Editáveis -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Coluna 1 -->
+                <div class="space-y-4">
+                    <!-- Situação -->
+                    <div class="relative z-0">
+                        <select name="situacao" id="situacao" required
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                            {% for value, label in cadastro.detalhes_situacao.last.situacao_choices %}
+                                <option value="{{ value }}" {% if cadastro.detalhes_situacao.last.situacao == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="situacao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            Nova Situação
+                        </label>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- SGB -->
+                    <div class="relative z-0">
+                        <select name="sgb" id="sgb" required
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                            {% for value, label in cadastro.detalhes_situacao.last.sgb_choices %}
+                                <option value="{{ value }}" {% if cadastro.detalhes_situacao.last.sgb == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="sgb" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            SGB
+                        </label>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Posto/Seção -->
+                    <div class="relative z-0">
+                        <select name="posto_secao" id="posto_secao" required
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                            {% for value, label in cadastro.detalhes_situacao.last.posto_secao_choices %}
+                                <option value="{{ value }}" {% if cadastro.detalhes_situacao.last.posto_secao == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="posto_secao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            Posto/Seção
+                        </label>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna 2 -->
+                <div class="space-y-4">
+                    <!-- Função -->
+                    <div class="relative z-0">
+                        <select name="funcao" id="funcao" required
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                            {% for value, label in cadastro.detalhes_situacao.last.funcao_choices %}
+                                <option value="{{ value }}" {% if cadastro.detalhes_situacao.last.funcao == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="funcao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            Função
+                        </label>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Prontidão -->
+                    <div class="relative z-0">
+                        <select name="prontidao" id="prontidao" required
+                                class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                            {% for value, label in cadastro.detalhes_situacao.last.prontidao_choices %}
+                                <option value="{{ value }}" {% if cadastro.detalhes_situacao.last.prontidao == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="prontidao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            Prontidão
+                        </label>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Data de Saída -->
+                    <div class="relative">
+                        <input type="date" name="saida_da_unidade" id="saida_da_unidade"
+                               class="block px-4 py-3 w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"/>
+                        <label for="saida_da_unidade" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
+                            Data de Saída (opcional)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rodapé -->
+            <div class="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" data-modal-close="#editSituacaoModal"
+                        class="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors
+                              border border-gray-300 dark:border-gray-600">
+                    Cancelar
                 </button>
-                <button type="button"
-                        class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                        data-modal-close="#choiceModal">
-                    <i class="fas fa-times mr-2"></i>Não
+                <button type="submit"
+                        class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors
+                              flex items-center gap-2 shadow-md hover:shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    Salvar Alterações
                 </button>
             </div>
-        </div>
-    </div>
-</div>
-
-<div id="newSituacaoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm hidden">
-    <div class="bg-gray-100 rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all duration-300 ease-out">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-2xl font-bold text-gray-800">
-                <i class="fas fa-plus-circle mr-2 text-indigo-600"></i>
-                Nova Situação
-            </h3>
-            <button type="button"
-                    class="text-gray-500 hover:text-gray-700 transition-colors"
-                    data-modal-close="#newSituacaoModal">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div class="p-6">
-            <form id="newSituacaoForm" method="POST" action="{% url 'efetivo:cadastrar_nova_situacao' cadastro.id %}">
-                {% csrf_token %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-list-alt mr-2 text-indigo-600"></i>
-                                Situação
-                            </label>
-                            <select name="situacao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in situacao %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-building mr-2 text-indigo-600"></i>
-                                SGB
-                            </label>
-                            <select name="sgb" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in sgb %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-briefcase mr-2 text-indigo-600"></i>
-                                Função
-                            </label>
-                            <select name="funcao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in funcao %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-map-marker-alt mr-2 text-indigo-600"></i>
-                                Posto/Seção
-                            </label>
-                            <select name="posto_secao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in posto_secao %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-exchange-alt mr-2 text-indigo-600"></i>
-                                Status de Adido
-                            </label>
-                            <select name="esta_adido" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                                {% for i in esta_adido %}
-                                <option value="{{ i.0 }}">{{ i.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-calendar-day mr-2 text-indigo-600"></i>
-                                Data de Apresentação
-                            </label>
-                            <input type="date"
-                                name="apresentacao_na_unidade"
-                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-8 flex justify-end space-x-4">
-                    <button type="button"
-                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            data-modal-close="#newSituacaoModal">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
-                        <i class="fas fa-save mr-2"></i>Salvar
-                    </button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Seletores melhorados
-    const modals = {
-        edit: document.getElementById('editSituacaoModal'),
-        choice: document.getElementById('choiceModal'),
-        new: document.getElementById('newSituacaoModal')
-    };
-
-    // Função universal para controle de modais
-    function handleModal(action, modalId) {
-        if(action === 'open') {
-            document.getElementById(modalId).classList.remove('hidden');
-        } else {
-            document.getElementById(modalId).classList.add('hidden');
+document.addEventListener('DOMContentLoaded', function() {
+    // Abrir modal
+    document.querySelector('[data-modal-open="#editSituacaoModal"]').addEventListener('click', function() {
+        document.getElementById('editSituacaoModal').classList.remove('hidden');
+    });
+    
+    // Fechar modal
+    document.querySelector('[data-modal-close="#editSituacaoModal"]').addEventListener('click', function() {
+        document.getElementById('editSituacaoModal').classList.add('hidden');
+    });
+    
+    // Fechar ao clicar fora
+    document.getElementById('editSituacaoModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
         }
-    }
-
-    // Evento de abertura do modal de edição
-    document.querySelectorAll('[data-modal-open]').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalId = button.getAttribute('data-modal-open');
-            handleModal('open', modalId);
-        });
     });
 
-    // Evento de fechamento para todos os modais
-    document.querySelectorAll('[data-modal-close]').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalId = button.getAttribute('data-modal-close');
-            handleModal('close', modalId);
-        });
-    });
-
-    // Interceptar submit do formulário de edição
-    document.getElementById('editSituacaoForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        handleModal('open', 'choiceModal');
-    });
-
-    // Botão Não - Fechar modais e submeter edição
-    document.querySelector('[data-modal-close="#choiceModal"]').addEventListener('click', () => {
-        handleModal('close', 'choiceModal');
-        document.getElementById('editSituacaoForm').submit();
-    });
-
-    // Botão Sim - Abrir modal de nova situação
-    document.querySelector('[data-modal-target="#newSituacaoModal"]').addEventListener('click', () => {
-        handleModal('close', 'choiceModal');
-        handleModal('open', 'newSituacaoModal');
-    });
-
-    // Submissão do formulário de nova situação
-    document.getElementById('newSituacaoForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    // Validação do formulário
+    document.getElementById('editSituacaoForm').addEventListener('submit', function(e) {
+        // Verificar se houve alterações nos campos (exceto data de saída)
+        const situacaoAtual = '{{ cadastro.detalhes_situacao.last.situacao }}';
+        const sgbAtual = '{{ cadastro.detalhes_situacao.last.sgb }}';
+        const postoSeccaoAtual = '{{ cadastro.detalhes_situacao.last.posto_secao }}';
+        const funcaoAtual = '{{ cadastro.detalhes_situacao.last.funcao }}';
+        const prontidaoAtual = '{{ cadastro.detalhes_situacao.last.prontidao }}';
         
-        try {
-            const response = await fetch(e.target.action, {
-                method: 'POST',
-                body: new FormData(e.target)
-            });
-
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                alert('Erro ao salvar nova situação');
+        const situacaoNova = document.getElementById('situacao').value;
+        const sgbNovo = document.getElementById('sgb').value;
+        const postoSeccaoNovo = document.getElementById('posto_secao').value;
+        const funcaoNova = document.getElementById('funcao').value;
+        const prontidaoNova = document.getElementById('prontidao').value;
+        
+        // Se houve alteração em qualquer campo (exceto data de saída)
+        if (situacaoAtual !== situacaoNova || 
+            sgbAtual !== sgbNovo || 
+            postoSeccaoAtual !== postoSeccaoNovo || 
+            funcaoAtual !== funcaoNova || 
+            prontidaoAtual !== prontidaoNova) {
+            
+            // Mostrar confirmação
+            if (!confirm('Esta alteração irá arquivar o registro atual como "Mov. Interna" e criar um novo registro. Confirmar?')) {
+                e.preventDefault();
+                return false;
             }
-        } catch (error) {
-            console.error('Error:', error);
         }
+        
+        return true;
     });
 });
 </script>

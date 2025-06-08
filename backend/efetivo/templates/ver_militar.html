@@ -241,17 +241,21 @@
                         });
                     });
             </script>
-            <fieldset class="    rounded-md">
-        
-                {% if messages %}
-                {% for message in messages %}
-                    <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                        {{ message }}
-                    </section>
-                {% endfor %}
-                {% endif %}
-        
+
+            <fieldset class="rounded-md">
+            {% if messages %}
+                <div id="django-messages" style="display:none;" data-messages='[
+                    {% for message in messages %}
+                        {
+                            "tags": "{{ message.tags|upper }}",
+                            "message": "{{ message|escapejs }}"
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]'></div>
+            {% endif %}
+                {% include 'modals/alert_modal.html' %}
             </fieldset>
+            
             <style>
                 .alert {
                     border-width: 1px;
@@ -343,213 +347,217 @@
                 </fieldset>
             {% endif %}
 
-            <!-- Dados da Situação Funcional e Documentos -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
-                <!-- Situação Funcional -->
                 <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-                    <div class="flex-grow"> <!-- Conteúdo principal -->
-                        <h2 class="text-xl font-semibold text-indigo-900 mb-2 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
-                            </svg>
-                            Situação Funcional
-                        </h2>
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
+                                </svg>
+                                Situação Funcional
+                            </h2>
+
+                        </div>
+                
                         <a href="{% url 'efetivo:historico_movimentacoes' cadastro.id %}" class="text-xs text-gray-600 hover:text-indigo-400 transition duration-300 block mb-2">
                             Histórico de Movimentações e Promoções →
                         </a>
                         <hr class="my-4 border-gray-200">
-                        
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Situação:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</span>
+                
+                        <div class="bg-indigo-50/80 rounded-xl p-5 border border-indigo-100 shadow-sm">
+                            <!-- Grid de Informações -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                <!-- Situação -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Situação</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</p>
+                                </div>
+                                
+                                <!-- SGB -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">SGB</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</p>
+                                </div>
+                                
+                                <!-- Posto/Seção -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Posto/Seção</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</p>
+                                </div>
+                                
+                                <!-- Adido ao -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Adido ao</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</p>
+                                </div>
+                                
+                                <!-- Função -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Função</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</p>
+                                </div>
+                                
+                                <!-- Prontidão -->
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Prontidão</span>
+                                    <div class="text-gray-800 font-medium">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</div>
+                                </div>
                             </div>
                             
-                           
-                           
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">SGB:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</span>
+                            <!-- Botão de Ação -->
+                            <button type="button"
+                                    data-modal-open="#editSituacaoModal"
+                                    class=" flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar Informações
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="mt-auto pt-4">
+                
+                        <div class="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-100">
+                            <div class="flex flex-col space-y-3">
+                
+                                <div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg shadow-sm">
+                                    <span class="text-indigo-700 font-medium flex items-center">
+                                        <i class="fas fa-info-circle mr-2"></i> Status:
+                                    </span>
+                                    <span class="text-gray-800 font-semibold">
+                                        {% if categoria_atual %}
+                                            <span class="px-3 py-1.5 rounded-full text-sm font-semibold {{ categoria_atual.status_display.classe }} flex items-center">
+                                                <i class="fas {{ categoria_atual.status_display.icone }} mr-2"></i>
+                                                {{ categoria_atual.status_display.texto }}
+                                            </span>
+                                        {% else %}
+                                            <span class="bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-semibold flex items-center">
+                                                <i class="fas fa-check-circle mr-2"></i>
+                                                ATIVO
+                                            </span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                
+                                {% for categoria in cadastro.categorias_efetivo.all %}
+                                    {% if categoria.ativo and categoria.tipo != 'ATIVO' %}
+                                    <div class="flex flex-col p-3 bg-white rounded-lg shadow-sm">
+                                        <div class="flex items-center justify-between gap-4 mb-1">
+                                            <span class="text-indigo-700 font-medium flex items-center">
+                                                <i class="fas fa-tag mr-2"></i> Categoria:
+                                            </span>
+                                            <span class="text-gray-800 font-semibold">
+                                                {{ categoria.get_tipo_display }}
+                                                {% if categoria.data_termino %}
+                                                    <span class="text-xs text-gray-500 ml-1">
+                                                        (até {{ categoria.data_termino|date:"d/m/Y" }})
+                                                    </span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                
+                                        <div class="mt-2 bg-gray-50 p-2 rounded">
+                                            {% if categoria.tipo == 'RESTRICAO' and categoria.restricoes_selecionadas %}
+                                                <span class="text-xs font-medium text-gray-600">Restrições ativas:</span>
+                                                <div class="flex flex-wrap gap-1 mt-1">
+                                                    {% for restricao in categoria.restricoes_selecionadas %}
+                                                    <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                                        {{ restricao }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% elif categoria.tipo == 'LSV' %}
+                                                <div class="text-xs space-y-1">
+                                                    <div class="flex items-center">
+                                                        <span class="font-medium text-gray-600 mr-2">Boletim:</span>
+                                                        <span>{{ categoria.boletim_concessao_lsv|default:"-" }}</span>
+                                                    </div>
+                                                    <div class="flex items-center">
+                                                        <span class="font-medium text-gray-600 mr-2">Data Boletim:</span>
+                                                        <span>{{ categoria.data_boletim_lsv|date:"d/m/Y"|default:"-" }}</span>
+                                                    </div>
+                                                </div>
+                                            {% elif categoria.tipo == 'FERIAS' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Período de férias</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'LP' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Licença Prêmio</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'ELEIÇÃO' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Período Eleitoral</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'CONVAL' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Convalescença</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'LTS' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Licença para Tratamento de Saúde</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'LTS FAMILIA' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Licença para Tratar de Assuntos Familiares</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'DS' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Dispensa de Serviço</span>
+                                                </div>
+                                            {% elif categoria.tipo == 'DR' %}
+                                                <div class="text-xs">
+                                                    <span class="font-medium text-gray-600">Dispensa Recompensa</span>
+                                                </div>
+                                            {% endif %}
+                
+                                            {% if categoria.observacao %}
+                                                <div class="mt-2 text-xs">
+                                                    <span class="font-medium text-gray-600">Observação:</span>
+                                                    <p class="text-gray-700">{{ categoria.observacao }}</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                
+                                <div class="flex justify-end mb-8">
+                                    <a href="{% url 'efetivo:historico_categorias' cadastro.id %}"
+                                    class="mb-4 text-indigo-600 hover:text-indigo-800 transition duration-300 text-sm font-medium flex items-center">
+                                        <span>Histórico e Edição</span>
+                                        <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
                             </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Posto/Seção:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Adido ao:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Função:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Prontidão:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</span>
+                
+                            <div class="mt-auto pt-4 flex flex-wrap gap-2">
+                
+                                <button type="button"
+                                    class="inline-flex items-center px-6 py-3 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 text-base gap-x-2 animate-pulse"
+                                    data-modal-open="editCatEfetivoModal">
+                                    <i class="fas fa-plus-circle text-lg"></i>
+                                    <span>Incluir Novo Afastamento</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Rodapé fixo -->
-                    <div class="mt-auto pt-4">
-                    
-
-                    <!-- Situação Funcional - Seção de Status e Categoria -->
-                    <div class="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-100">
-                        <div class="flex flex-col space-y-3">
-                  
-                            <!-- Status -->
-                            <div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg shadow-sm">
-                                <span class="text-indigo-700 font-medium flex items-center">
-                                    <i class="fas fa-info-circle mr-2"></i> Status:
-                                </span>
-                                <span class="text-gray-800 font-semibold">
-                                    {% if categoria_atual %}
-                                        <span class="px-3 py-1.5 rounded-full text-sm font-semibold {{ categoria_atual.status_display.classe }} flex items-center">
-                                            <i class="fas {{ categoria_atual.status_display.icone }} mr-2"></i>
-                                            {{ categoria_atual.status_display.texto }}
-                                        </span>
-                                    {% else %}
-                                        <!-- Exibir ATIVO como padrão -->
-                                        <span class="bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-semibold flex items-center">
-                                            <i class="fas fa-check-circle mr-2"></i>
-                                            ATIVO
-                                        </span>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <!-- Categorias Ativas -->
-                            {% for categoria in cadastro.categorias_efetivo.all %}
-                                {% if categoria.ativo and categoria.tipo != 'ATIVO' %}
-                                <div class="flex flex-col p-3 bg-white rounded-lg shadow-sm">
-                                    <div class="flex items-center justify-between gap-4 mb-1">
-                                        <span class="text-indigo-700 font-medium flex items-center">
-                                            <i class="fas fa-tag mr-2"></i> Categoria:
-                                        </span>
-                                        <span class="text-gray-800 font-semibold">
-                                            {{ categoria.get_tipo_display }}
-                                            {% if categoria.data_termino %}
-                                                <span class="text-xs text-gray-500 ml-1">
-                                                    (até {{ categoria.data_termino|date:"d/m/Y" }})
-                                                </span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    
-                                    <!-- Mostra detalhes específicos para cada tipo de categoria -->
-                                    <div class="mt-2 bg-gray-50 p-2 rounded">
-                                        {% if categoria.tipo == 'RESTRICAO' and categoria.restricoes_selecionadas %}
-                                            <span class="text-xs font-medium text-gray-600">Restrições ativas:</span>
-                                            <div class="flex flex-wrap gap-1 mt-1">
-                                                {% for restricao in categoria.restricoes_selecionadas %}
-                                                <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
-                                                    {{ restricao }}
-                                                </span>
-                                                {% endfor %}
-                                            </div>
-                                        {% elif categoria.tipo == 'LSV' %}
-                                            <div class="text-xs space-y-1">
-                                                <div class="flex items-center">
-                                                    <span class="font-medium text-gray-600 mr-2">Boletim:</span>
-                                                    <span>{{ categoria.boletim_concessao_lsv|default:"-" }}</span>
-                                                </div>
-                                                <div class="flex items-center">
-                                                    <span class="font-medium text-gray-600 mr-2">Data Boletim:</span>
-                                                    <span>{{ categoria.data_boletim_lsv|date:"d/m/Y"|default:"-" }}</span>
-                                                </div>
-                                            </div>
-                                        {% elif categoria.tipo == 'FERIAS' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Período de férias</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'LP' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Licença Prêmio</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'ELEIÇÃO' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Período Eleitoral</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'CONVAL' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Convalescença</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'LTS' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Licença para Tratamento de Saúde</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'LTS FAMILIA' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Licença para Tratar de Assuntos Familiares</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'DS' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Dispensa de Serviço</span>
-                                            </div>
-                                        {% elif categoria.tipo == 'DR' %}
-                                            <div class="text-xs">
-                                                <span class="font-medium text-gray-600">Dispensa Recompensa</span>
-                                            </div>
-                                        {% endif %}
-                                        
-                                        {% if categoria.observacao %}
-                                            <div class="mt-2 text-xs">
-                                                <span class="font-medium text-gray-600">Observação:</span>
-                                                <p class="text-gray-700">{{ categoria.observacao }}</p>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    
-
-                                </div>
-                                {% endif %}
-                            {% endfor %}
-                    
-                            <!-- Link para Histórico -->
-                            <div class="flex justify-end mb-8">
-                                <a href="{% url 'efetivo:historico_categorias' cadastro.id %}" 
-                                class="mb-4 text-indigo-600 hover:text-indigo-800 transition duration-300 text-sm font-medium flex items-center">
-                                    <span>Histórico e Edição</span>
-                                    <i class="fas fa-arrow-right ml-1"></i>
-                                </a>
-                            </div>
-                        </div>
-
-
-                        <div class="mt-auto pt-4 flex flex-wrap gap-2">
-                               <!-- Botão de Edição de Situação Funcional -->
-                            <button type="button" 
-                                data-modal-open="editSituacaoModal"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm gap-x-2"
-                                title="Editar">
-                                <i class="fas fa-edit text-xs"></i>
-                                Alterar Situação
-                            </button>           
-
-                            <!-- Botão de Alterar Categoria -->
-                            <button type="button" 
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-emerald-700 text-white font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 text-sm gap-x-2"
-                                data-modal-open="editCatEfetivoModal">
-                                <i class="fas fa-exchange-alt text-xs"></i>
-                                Alterar Status
-                            </button>
-                        </div>
+                
                     <script>
                         function openEditModal(modalId) {
                             document.getElementById(modalId).classList.remove('hidden');
                         }
-                        
+                
                         function closeEditModal(modalId) {
                             document.getElementById(modalId).classList.add('hidden');
                         }
                     </script>
                     <script>
+                        // This script seems to be for fetching and injecting modal content.
+                        // I've kept it as is, assuming it works with your 'editar_categoria_efetivo.html' modal.
                         function openEditModal(categoriaId) {
                             fetch(`/efetivo/categoria/editar/${categoriaId}/`, {
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -562,65 +570,131 @@
                             });
                         }
                     </script>
-
-
+                
+                
                     {% include 'modals/editar_situacao_funcional.html' %}
                     {% include 'modals/editar_categoria_efetivo.html' %}
                 </fieldset>
-
                 <!-- Documentos e Contatos -->
-                <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-                    <div class="flex-grow"> <!-- Conteúdo principal -->
-                        <h2 class="text-xl font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            Documentos e Contatos
-                        </h2>
+           <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
+                    {% if not cadastro %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+                        <p>Erro ao carregar dados do militar.</p>
+                    </div>
+                    {% else %}
+                    <div class="flex-grow">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Documentos e Contatos
+                            </h2>
+                        </div>
+                        
                         <hr class="my-4 border-gray-200">
                         
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">CPF:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.cpf|default:"-" }}</span>
+                        <div class="bg-indigo-50/80 rounded-xl p-5 border border-indigo-100 shadow-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Nome Completo</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.nome|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Nome de Guerra</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.nome_de_guerra|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">RE</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.re|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Dig</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.dig|default_if_none:"-" }}</p>
+                                </div>
+
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">CPF</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.cpf|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">RG</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.rg|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">E-mail</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.email|default_if_none:"-" }}</p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Telefone</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.telefone|default_if_none:"-" }}</p>
+                                </div>
+          
+
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Sexo</span>
+                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.genero|default_if_none:"-" }}</p>
+                                </div>
+
+                                                              
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Posto/Graduação</span>
+                                    <p class="text-gray-800 font-medium">
+                                        {{ promocao.get_posto_grad_display|default:"-" }}
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Quadro</span>
+                                    <p class="text-gray-800 font-medium">
+                                        {{ promocao.get_quadro_display|default:"-" }}
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Grupo</span>
+                                    <p class="text-gray-800 font-medium">
+                                        {{ promocao.get_grupo_display|default:"-" }}
+                                    </p>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Averbação Militar:</span>
+                                    <p class="text-gray-800 font-medium">
+                                          {{ cadastro.tempo_para_averbar_militar|default_if_none:"0" }} dias
+                                    </p>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Averbação INSS:
+                                    </span></span>
+                                    <p class="text-gray-800 font-medium">
+                                    {{ cadastro.tempo_para_averbar_inss|default_if_none:"0" }} dias
+                                    </p>
+                                </div>
+
+
                             </div>
                             
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">RG:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.rg|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">E-mail:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.email|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Telefone:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.telefone|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Matrícula:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.matricula|date:"d/m/Y"|default:"-" }}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between gap-4">
-                                <span class="text-gray-600 font-medium">Admissão:</span>
-                                <span class="text-gray-800 font-semibold">{{ cadastro.admissao|date:"d/m/Y"|default:"-" }}</span>
-                            </div>
+                        <button type="button"
+                                data-modal-open="editarDadosPessoaisModal"
+                                class="flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Editar Documentos e Contatos
+                        </button>
+
+
+                        {% include 'modals/editar_dados_pessoais.html' %}
                         </div>
                     </div>
 
-                    <!-- Rodapé fixo -->
-                 <!-- Botão para abrir o modal -->
-                 <button type="button" 
-                 class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                 data-modal-target="#editarDadosPessoaisModal">
-                 <i class="fas fa-user-edit mr-2"></i>Editar Dados Pessoais
-                 </button>
-                 
-                 {% include 'modals/editar_dados_pessoais.html' %}
+                    {% endif %}
                 </fieldset>
             </div>
 
@@ -1232,16 +1306,16 @@
                     <!-- Container de Botões -->
                     <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <!-- Botão Voltar -->
-                        <a href="{% url 'efetivo:listar_militar' %}" 
+                        <a href="{% if request.GET.from == 'list' %}{% url 'efetivo:listar_militar' %}{% else %}{% url 'efetivo:lista_militares' %}{% endif %}" 
                         class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                                font-semibold rounded-xl shadow-sm hover:shadow-md
-                                transition-all duration-200 hover:scale-[1.02]
-                                flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                            </svg>
-                            Voltar
-                        </a>
+                               font-semibold rounded-xl shadow-sm hover:shadow-md
+                               transition-all duration-200 hover:scale-[1.02]
+                               flex items-center justify-center gap-2">
+                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                         </svg>
+                         Voltar
+                     </a>
             
                         <!-- Botão Excluir -->
                         <button type="button" onclick="openDeleteModal()"

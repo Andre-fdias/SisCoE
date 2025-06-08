@@ -66,7 +66,7 @@
                                             <td class="border text-gray-700  px-4 py-2">{{ promocao.quadro }}</td>
                                             <td class="border text-gray-700 px-4 py-2">{{ promocao.grupo }}</td>
                                             <td class="border text-gray-700 px-4 py-2">{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
-                                            <td class="border text-gray-700  px-4 py-2">{{ promocao.data_alteracao|format_date }}</td>
+                                            <td class="border text-gray-700 px-4 py-2">{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
                                             <td class="border  text-gray-700 px-4 py-2">{{ promocao.usuario_alteracao }}</td>
                                         </tr>
                                         {% endfor %}
@@ -101,7 +101,7 @@
                                             <td class="border text-gray-700 px-4 py-2">{{ detalhe.posto_secao }}</td>
                                             <td class="border text-gray-700 px-4 py-2">{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
                                             <td class="border text-gray-700 px-4 py-2">{{ detalhe.saida_da_unidade|date:"d/m/Y" }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.data_alteracao|format_date }}</td>
+                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.data_alteracao|date:"d/m/Y"  }}</td>
                                             <td class="border text-gray-700 px-4 py-2">{{ detalhe.usuario_alteracao }}</td>
                                         </tr>
                                         {% endfor %}

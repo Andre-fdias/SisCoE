@@ -1,5 +1,8 @@
+
+
 from django import template
 import datetime
+from dateutil.relativedelta import relativedelta
 
 register = template.Library()
 
@@ -9,17 +12,14 @@ def format_date(value):
         return value.strftime('%d/%m/%Y - %H:%M')
     return value
 
-
 @register.filter
 def add_years(value, years):
     try:
         if isinstance(value, str):
-            value = datetime.strptime(value, "%Y-%m-%d").date()
+            value = datetime.datetime.strptime(value, "%Y-%m-%d").date()
         return value + relativedelta(years=int(years))
     except (ValueError, TypeError):
         return value
-
-
 
 @register.simple_tag
 def get_restricao_fields():
@@ -30,19 +30,11 @@ def get_restricao_fields():
 def first_active(categorias):
     return categorias.filter(ativo=True).first()
 
-from django import template
-
-register = template.Library()
-
-@register.filter(name='first_active')
-def first_active(queryset):
-    try:
-        return queryset.filter(ativo=True).first()
-    except AttributeError:
-        return None
-
-
-
 @register.filter
 def map_attr(items, attr_name):
     return [getattr(item, attr_name) for item in items]
+
+@register.filter(name='filter_prontidao')
+def filter_prontidao(queryset, value):
+    return queryset.filter(detalhassituacao__prontidao=value)
+

@@ -1,0 +1,142 @@
+
+{# backend/efetivo/templates/partials/militar_grid_card.html #}
+{% load static custom_filters tz %}
+{% now "Y-m-d" as current_date %}
+
+{% with ultima_promocao=militar.promocoes.first %}
+{% with ultima_situacao=militar.detalhes_situacao.first %}
+{% with ultima_categoria=militar.categorias_efetivo.first %}
+<div class="group relative bg-gray-800 rounded-lg overflow-hidden shadow-lg border-2 h-full flex flex-col
+              {% if ultima_promocao %}
+                  {% if ultima_promocao.posto_grad in 'Cel PM,Ten Cel PM,Maj PM,CAP PM,1º Ten PM,1º Ten QAPM,2º Ten PM,2º Ten QAPM,Asp OF PM' %}border-blue-500
+                  {% elif ultima_promocao.posto_grad in 'Subten PM,1º Sgt PM,2º Sgt PM,3º Sgt PM' %}border-red-500
+                  {% elif ultima_promocao.posto_grad in 'Cb PM,Sd PM,Sd PM 2ºCL' %}border-black
+                  {% else %}border-gray-500{% endif %}
+              {% else %}border-gray-600{% endif %}
+              hover:border-purple-500 transition-all duration-200">
+
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+        <!-- Foto do militar -->
+        <div class="w-full flex justify-center bg-gray-900  border-b-8
+                                {% if ultima_situacao and ultima_situacao.prontidao == 'VERDE' %}border-green-500
+                                {% elif ultima_situacao and ultima_situacao.prontidao == 'AMARELA' %}border-yellow-300
+                                {% elif ultima_situacao and ultima_situacao.prontidao == 'AZUL' %}border-blue-500
+                                {% elif ultima_situacao and ultima_situacao.prontidao == 'ADM' %}border-gray-500
+                                {% else %}border-gray-600{% endif %}">
+                       
+            <div class="w-36 h-48 bg-gray-700 overflow-hidden relative flex items-center justify-center mx-auto"> <!-- mx-auto para centralizar -->
+                {% if militar.imagens.exists %}
+                    <img src="{{ militar.imagens.first.image.url }}" 
+                         alt="{{ militar.nome_de_guerra|default:'Sem Nome' }}"
+                         class="w-auto h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                               
+                         style="aspect-ratio: 3/4;">
+                {% else %}
+                    <div class="w-36 h-48 bg-gray-800 flex flex-col items-center justify-center p-2" style="aspect-ratio: 3/4;">
+                        <svg class="w-12 h-12 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="text-gray-500 text-sm">Sem Foto</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Conteúdo do card -->
+        <div class="p-3 flex-1 flex flex-col bg-gray-700">
+            <!-- Cabeçalho com Posto/Graduação e RE -->
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-sm font-bold text-purple-400">
+                    {% if ultima_promocao %}
+                        {{ ultima_promocao.grad }}
+                    {% else %}
+                        <span class="text-red-500">Sem posto</span>
+                    {% endif %}
+                </span>
+                <span class="text-gray-200 font-mono text-sm">RE: {{ militar.re }}-{{ militar.dig }}</span>
+            </div>
+
+            <!-- Nome de Guerra -->
+            <h3 class="text-lg font-bold text-white truncate mb-3">{{ militar.nome_de_guerra }}</h3>
+ 
+            <!-- Status -->           
+            <div class="mb-1">
+                {% if ultima_categoria %}
+                    <span class="inline-flex items-center justify-center text-xs px-3 py-1 rounded-tl-md rounded-tr-md font-semibold w-full
+                        {% if ultima_categoria.data_termino and ultima_categoria.data_termino < current_date %}
+                            bg-red-100 text-red-800
+                        {% elif ultima_categoria.tipo != 'ATIVO' %}
+                            bg-{{ ultima_categoria.tipo_color }}-100 text-{{ ultima_categoria.tipo_color }}-800
+                        {% else %}
+                            bg-green-100 text-green-800
+                        {% endif %}">
+                        
+                        <i class="fas {{ ultima_categoria.tipo_icon }} mr-1.5"></i>
+                        
+                        {% if ultima_categoria.tipo != 'ATIVO' and ultima_categoria.data_termino and ultima_categoria.data_termino < current_date %}
+                            {{ ultima_categoria.get_tipo_display }} (Expirado)
+                        {% elif ultima_categoria.tipo != 'ATIVO' %}
+                            {{ ultima_categoria.get_tipo_display }}
+                            {% if ultima_categoria.data_termino %}
+                                (Até {{ ultima_categoria.data_termino|date:"d/m/Y" }})
+                            {% else %}
+                                (Indefinido)
+                            {% endif %}
+                        {% else %}
+                            ATIVO
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center justify-center bg-green-100 text-green-800 px-3 py-1 rounded-tl-md rounded-tr-md text-xs font-semibold w-full">
+                        <i class="fas fa-check-circle mr-1.5"></i>
+                        ATIVO
+                    </span>
+                {% endif %}
+            </div>
+            <!-- Cursos Especiais -->
+            {% with cursos_do_militar=militar.cursos.all %}
+                {% if cursos_do_militar %}
+                    <div class="mb-1">   
+                        <div class="flex flex-wrap gap-1 text-gray-600 font-bold p-2 text-sm  bg-yellow-100"> Cursos:
+                            {% for curso_obj in cursos_do_militar %}
+                                {% if curso_obj.curso == 'OVB-P' or curso_obj.curso == 'OVB-L' or curso_obj.curso == 'CMAUT' %}
+                                    <span class="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-semibold px-2 py-1 rounded-md text-xs flex items-center">
+                                      
+                                     {{ curso_obj.curso }}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Função Atual -->
+            {% if ultima_situacao and ultima_situacao.funcao %}
+            <div class="mt-auto">
+                <div class="bg-yellow-100 text-gray-700 text-xs px-3 py-1.5 rounded-bl-md rounded-br-md truncate flex items-center">
+                    <i class="fas fa-user-tag mr-2 text-purple-600"></i><span class="font-bold">Função:&nbsp; </span>
+                    <span class="truncate">{{ ultima_situacao.funcao }}</span>
+                </div>
+            </div>
+        {% endif %}
+        </div>
+
+        <!-- Botão de Visualização -->
+        <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onclick="window.location.href='{% url 'efetivo:ver_militar' militar.id %}'"
+                    class="inline-flex items-center justify-center p-2 bg-gray-700/90 hover:bg-purple-600 
+                        rounded-full shadow-md border border-gray-600 hover:border-purple-400
+                        transition-all duration-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     class="w-3.5 h-3.5 text-gray-300 group-hover:text-white" 
+                     viewBox="0 0 16 16">
+                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.828c1.543-1.407 3.6-2.172 5.17-2.172s3.623.765 5.17 2.172A13 13 0 0 1 14.828 8q.083.2.162.407l.951.274A14 14 0 0 0 8 2.052a14 14 0 0 0-7.883 5.927zM8 11.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7m0-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+{% endwith %}
+{% endwith %}
+{% endwith %}

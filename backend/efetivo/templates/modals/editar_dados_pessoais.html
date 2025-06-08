@@ -65,19 +65,17 @@
                 </div>
 
                 <!-- Gênero -->
-              <div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-venus-mars mr-2 text-indigo-600"></i>
                         Gênero
                     </label>
-                    <select name="genero"
-                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                        {% for i in genero %}
-                        <option value="{{ i.0 }}" {% if cadastro.genero == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                    <select name="genero" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white" required>
+                        {% for value, label in cadastro.genero_choices %}
+                            <option value="{{ value }}" {% if cadastro.genero == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
                 <!-- Data de Nascimento -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -192,15 +190,15 @@
             
 
                 <!-- Motivo da Alteração -->
+                <!-- Motivo da Alteração -->
                 <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-edit mr-2 text-indigo-600"></i>
                         Motivo da Alteração
                     </label>
-                    <select name="alteracao"
-                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white">
-                        {% for i in alteracao %}
-                        <option value="{{ i.0 }}" {% if cadastro.alteracao == i.0 %}selected{% endif %}>{{ i.1 }}</option>
+                    <select name="alteracao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white" required>
+                        {% for value, label in cadastro.alteracao_choices %}
+                            <option value="{{ value }}" {% if cadastro.alteracao == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -230,7 +228,8 @@
         const editarDadosPessoaisModal = document.getElementById('editarDadosPessoaisModal');
 
         const openModal = (modalId) => {
-            const modal = document.getElementById(modalId);
+            // Adicione o '#' para usar como seletor CSS
+            const modal = document.querySelector(`#${modalId}`); // <--- CORREÇÃO AQUI
             if (modal) {
                 modal.classList.remove('hidden');
             }
@@ -243,9 +242,10 @@
             }
         };
 
-        document.querySelectorAll('[data-modal-open="editarDadosPessoaisModal"]').forEach(button => {
+        document.querySelectorAll('[data-modal-open]').forEach(button => { // <--- Pequena otimização aqui, para pegar qualquer um
             button.addEventListener('click', () => {
-                openModal('editarDadosPessoaisModal');
+                const modalId = button.dataset.modalOpen; // Obter o valor do atributo data-modal-open
+                openModal(modalId);
             });
         });
 
@@ -255,4 +255,94 @@
             });
         });
     });
+    document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const modal = document.getElementById('editarDadosPessoaisModal');
+        
+        try {
+            // Mostrar estado de carregamento
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Mostrar mensagem de sucesso
+                showToast('success', data.message || 'Dados salvos com sucesso!');
+                
+                // Fechar o modal suavemente
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('opacity-0');
+                }, 300);
+                
+                // Aqui você pode atualizar partes específicas da página se necessário
+                // Exemplo: atualizar os dados exibidos sem recarregar a página
+                // updatePageData(data.updatedData);
+                
+            } else {
+                showToast('error', data.message || 'Erro ao salvar os dados');
+            }
+        } catch (error) {
+            showToast('error', 'Erro na comunicação com o servidor');
+            console.error('Erro:', error);
+        } finally {
+            // Restaurar estado normal do botão
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+        }
+    });
+    
+    // Função para mostrar notificação
+    function showToast(type, message) {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } animate-fade-in`;
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i>
+                ${message}
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Remover após 5 segundos
+        setTimeout(() => {
+            toast.classList.add('animate-fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    // Adicione estas animações no seu CSS
+    // <style>
+    // .animate-fade-in {
+    //     animation: fadeIn 0.3s ease-in-out;
+    // }
+    // .animate-fade-out {
+    //     animation: fadeOut 0.3s ease-in-out;
+    // }
+    // @keyframes fadeIn {
+    //     from { opacity: 0; transform: translateY(20px); }
+    //     to { opacity: 1; transform: translateY(0); }
+    // }
+    // @keyframes fadeOut {
+    //     from { opacity: 1; transform: translateY(0); }
+    //     to { opacity: 0; transform: translateY(20px); }
+    // }
+    // </style>
 </script>
