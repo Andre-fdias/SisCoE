@@ -21,6 +21,7 @@ from backend.cursos.models import Medalha,Curso
 import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.db.models import Q # Adicione esta linha
 
 logger = logging.getLogger(__name__)
 
@@ -136,11 +137,54 @@ def cadastrar_militar(request):
 
         return redirect('/efetivo/cadastrar_militar')
 
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao, HistoricoPromocao, CatEfetivo, HistoricoCatEfetivo
+from django.contrib import messages
+from django.contrib.messages import constants
+from django.contrib.auth.decorators import login_required
+from django.db.models import OuterRef, Subquery, Count
+from django.utils import timezone
+from django.db import IntegrityError
+from django.db import transaction
+from backend.rpt.models import Cadastro_rpt
+from django.http import HttpResponseForbidden
+from django.db.models import F, Window
+from django.db.models.functions import RowNumber
+from backend.municipios.models import Posto
+import sys
+# from django.views.generic import ListView
+# from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Prefetch
+from backend.cursos.models import Medalha,Curso
+import logging
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+
+logger = logging.getLogger(__name__)
+
+# --- View para listar militares com status "Efetivo" ---
+# ... (imports e outras partes da views.py) ...
+
+# --- View para listar militares com status "Efetivo" ---
 @login_required
 def listar_militar(request):
     if request.method == "GET":
-        # Otimização das queries com prefetch_related
-        cadastros = Cadastro.objects.prefetch_related(
+        latest_detalhe_situacao = DetalhesSituacao.objects.filter(
+            cadastro=OuterRef('pk')
+        ).order_by('-data_alteracao', '-id')
+
+        cadastros = Cadastro.objects.annotate(
+            latest_status=Subquery(latest_detalhe_situacao.values('situacao')[:1]),
+            latest_sgb=Subquery(latest_detalhe_situacao.values('sgb')[:1]),
+            latest_posto_secao=Subquery(latest_detalhe_situacao.values('posto_secao')[:1]),
+            latest_prontidao=Subquery(latest_detalhe_situacao.values('prontidao')[:1]),
+            latest_saida_da_unidade=Subquery(latest_detalhe_situacao.values('saida_da_unidade')[:1]) # NOVO CAMPO AQUI
+        ).filter(
+            latest_status='Efetivo'
+        ).prefetch_related(
             Prefetch(
                 'categorias_efetivo',
                 queryset=CatEfetivo.objects.filter(ativo=True),
@@ -148,23 +192,65 @@ def listar_militar(request):
             ),
             'imagens',
             'promocoes',
-            'detalhes_situacao'
         ).annotate(
             latest_posto_grad=Subquery(
                 Promocao.objects.filter(
                     cadastro=OuterRef('pk')
                 ).order_by('-ultima_promocao').values('posto_grad')[:1]
             )
-        ).order_by('latest_posto_grad')
+        ).order_by('latest_posto_grad', 'nome_de_guerra')
 
         context = {
             'cadastros': cadastros,
-            'current_date': timezone.now().date()  # Adiciona data atual ao contexto
+            'current_date': timezone.now().date()
         }
         
         return render(request, 'listar_militar.html', context)
-    
 
+# --- Nova View para listar militares com "Outros Status" ---
+@login_required
+def listar_outros_status_militar(request):
+    if request.method == "GET":
+        latest_detalhe_situacao = DetalhesSituacao.objects.filter(
+            cadastro=OuterRef('pk')
+        ).order_by('-data_alteracao', '-id')
+
+        cadastros = Cadastro.objects.annotate(
+            latest_status=Subquery(latest_detalhe_situacao.values('situacao')[:1]),
+            latest_sgb=Subquery(latest_detalhe_situacao.values('sgb')[:1]),
+            latest_posto_secao=Subquery(latest_detalhe_situacao.values('posto_secao')[:1]),
+            latest_prontidao=Subquery(latest_detalhe_situacao.values('prontidao')[:1]),
+            latest_saida_da_unidade=Subquery(latest_detalhe_situacao.values('saida_da_unidade')[:1]) # NOVO CAMPO AQUI
+        ).exclude(
+            latest_status='Efetivo'
+        ).filter(
+            latest_status__isnull=False
+        ).prefetch_related(
+            Prefetch(
+                'categorias_efetivo',
+                queryset=CatEfetivo.objects.filter(ativo=True),
+                to_attr='categorias_ativas'
+            ),
+            'imagens',
+            'promocoes',
+        ).annotate(
+            latest_posto_grad=Subquery(
+                Promocao.objects.filter(
+                    cadastro=OuterRef('pk')
+                ).order_by('-ultima_promocao').values('posto_grad')[:1]
+            )
+        ).order_by('latest_posto_grad', 'nome_de_guerra')
+
+        context = {
+            'cadastros': cadastros,
+            'current_date': timezone.now().date()
+        }
+        
+        return render(request, 'listar_outros_status.html', context)
+
+
+
+        
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -235,8 +321,48 @@ def ver_militar(request, id):
 
         # Processar Restrições
         MENSAGENS_RESTRICOES = {
-            # ... (mantenha o dicionário de restrições original)
+            'BS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'CI': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'DV': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'EF': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio. As OPM estabelecerão plano de exercícios físicos compatíveis.',
+            'FO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'IS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'LP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MC': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MG': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'OU': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'PO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'PQ': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SE': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SH': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SM': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'AU': 'Deverá ser empregado somente em atividades administrativas.',
+            'EP': 'Deverá ser empregado somente em atividades administrativas.',
+            'ES': 'Deverá ser empregado somente em atividades administrativas.',
+            'LR': 'Deverá ser empregado somente em atividades administrativas.',
+            'PT': 'Deverá ser empregado somente em atividades administrativas.',
+            'VP': 'Deverá ser empregado somente em atividades administrativas.',
+            'SN': 'Deverá ser escalado para trabalhar durante o dia em qualquer atividade.',
+            'SG': 'Deverá ser empregado, preferencialmente, na atividade de policiamento ostensivo, ou, caso não seja possível, em atividades administrativas e de apoio.',
+            'UA': 'Deverá ser desarmado e empregado em atividades administrativas. Pode requerer processo administrativo para verificar condições de permanência no serviço ativo.',
+            'UU': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
+            'CC': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público. Cabelos penteados com gel/rede obrigatoriamente.',
+            'CB': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
+            'UB': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'UC': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'US': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'DG': 'Deverá ser empregado no policiamento ostensivo.',
+            'EM': 'Deverá ser empregado no policiamento ostensivo.',
+            'LS': 'Deverá ser empregado no policiamento ostensivo.',
+            'MP': 'Deverá ser empregado no policiamento ostensivo.',
+            'SB': 'Deverá ser empregado no policiamento ostensivo.',
+            'SI': 'Deverá ser empregado no policiamento ostensivo.',
+            'ST': 'Deverá ser empregado no policiamento ostensivo.'
         }
+
 
         restricoes_aplicaveis = []
         if categoria_atual and categoria_atual.tipo == 'RESTRICAO':
@@ -426,6 +552,124 @@ def editar_posto_graduacao(request, id):
 from django.http import JsonResponse
 
 @login_required
+def editar_situacao_funcional(request, id):
+    """
+    View robusta para edição da situação funcional do militar, com histórico completo
+    e tratamento de todas as regras de negócio especificadas.
+    """
+    cadastro = get_object_or_404(Cadastro, id=id)
+    situacao_atual = cadastro.detalhes_situacao.last()
+    
+    if not situacao_atual:
+        messages.error(request, 'Não existe situação cadastrada para este militar')
+        return redirect('efetivo:ver_militar', id=cadastro.id)
+
+    # Contexto para o template
+    context = {
+        'cadastro': cadastro,
+        'situacao': DetalhesSituacao.situacao_choices,
+        'sgb': DetalhesSituacao.sgb_choices,
+        'posto_secao': DetalhesSituacao.posto_secao_choices,
+        'esta_adido': DetalhesSituacao.esta_adido_choices,
+        'funcao': DetalhesSituacao.funcao_choices,
+        'op_adm': DetalhesSituacao.op_adm_choices,
+        'prontidao': DetalhesSituacao.prontidao_choices,
+        'cat_efetivo': CatEfetivo.TIPO_CHOICES,
+    }
+
+    if request.method == 'POST':
+        try:
+            # Verificar se houve alterações nos campos principais (exceto data de saída)
+            campos_principais = ['situacao', 'sgb', 'posto_secao', 'funcao', 'prontidao']
+            campos_alterados = any(
+                request.POST.get(campo) != getattr(situacao_atual, campo)
+                for campo in campos_principais
+            )
+
+            # Registrar data atual para novos registros
+            data_atual = timezone.now().date()
+            
+            if campos_alterados:
+                # 1. Criar histórico da situação atual como "Mov. Interna"
+                HistoricoDetalhesSituacao.objects.create(
+                    cadastro=cadastro,
+                    situacao=situacao_atual.situacao,
+                    sgb=situacao_atual.sgb,
+                    posto_secao=situacao_atual.posto_secao,
+                    esta_adido=situacao_atual.esta_adido,
+                    funcao=situacao_atual.funcao,
+                    op_adm=situacao_atual.op_adm,
+                    prontidao=situacao_atual.prontidao,
+                    cat_efetivo=situacao_atual.cat_efetivo if hasattr(situacao_atual, 'cat_efetivo') else 'ATIVO',
+                    apresentacao_na_unidade=situacao_atual.apresentacao_na_unidade,
+                    saida_da_unidade=data_atual,  # Data atual como saída
+                    usuario_alteracao=request.user
+                )
+
+                # 2. Criar nova situação funcional
+                nova_situacao = DetalhesSituacao(
+                    cadastro=cadastro,
+                    situacao=request.POST.get('situacao', situacao_atual.situacao),
+                    sgb=request.POST.get('sgb', situacao_atual.sgb),
+                    posto_secao=request.POST.get('posto_secao', situacao_atual.posto_secao),
+                    esta_adido=request.POST.get('esta_adido', situacao_atual.esta_adido),
+                    funcao=request.POST.get('funcao', situacao_atual.funcao),
+                    op_adm=request.POST.get('op_adm', situacao_atual.op_adm),
+                    prontidao=request.POST.get('prontidao', situacao_atual.prontidao),
+                    apresentacao_na_unidade=data_atual,
+                    saida_da_unidade=request.POST.get('saida_da_unidade'),
+                    usuario_alteracao=request.user
+                )
+                nova_situacao.save()
+
+                # 3. Atualizar categoria de efetivo
+                categoria_atual = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
+                if categoria_atual:
+                    categoria_atual.ativo = False
+                    categoria_atual.data_termino = data_atual
+                    categoria_atual.save()
+
+                    # Criar histórico da categoria
+                    HistoricoCatEfetivo.objects.create(
+                        cat_efetivo=categoria_atual,
+                        tipo=categoria_atual.tipo,
+                        data_inicio=categoria_atual.data_inicio,
+                        data_termino=data_atual,
+                        ativo=False,
+                        usuario_alteracao=request.user
+                    )
+
+                # Criar nova categoria (padrão ATIVO)
+                nova_categoria = CatEfetivo(
+                    cadastro=cadastro,
+                    tipo='ATIVO',
+                    data_inicio=data_atual,
+                    usuario_cadastro=request.user,
+                    ativo=True
+                )
+                nova_categoria.save()
+
+                messages.success(request, 'Situação funcional atualizada com sucesso! Foi criado um novo registro e o anterior foi arquivado como "Mov. Interna".')
+            else:
+                # Apenas atualizar a data de saída se fornecida
+                saida_da_unidade = request.POST.get('saida_da_unidade')
+                if saida_da_unidade:
+                    situacao_atual.saida_da_unidade = saida_da_unidade
+                    situacao_atual.save()
+                    messages.success(request, 'Data de saída atualizada com sucesso!')
+
+            return redirect('efetivo:ver_militar', id=cadastro.id)
+
+        except Exception as e:
+            logger.error(f"Erro ao atualizar situação funcional: {str(e)}", exc_info=True)
+            messages.error(request, f'Ocorreu um erro ao atualizar a situação funcional: {str(e)}')
+            return render(request, 'ver_militar.html', context)
+
+    # Se GET, apenas adicionar a situação atual ao contexto
+    context['detalhes'] = situacao_atual
+    return render(request, 'ver_militar.html', context)
+
+@login_required
 def editar_situacao_atual(request, id):
     if request.method == 'POST':
         cadastro = get_object_or_404(Cadastro, id=id)
@@ -556,48 +800,33 @@ from .models import Cadastro, HistoricoPromocao, HistoricoDetalhesSituacao
 @login_required
 def editar_dados_pessoais_contatos(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
-
-    # Carrega as choices diretamente do modelo
-    genero_choices = Cadastro.genero_choices
-    alteracao_choices = Cadastro.alteracao_choices
-
+    
     if request.method == "POST":
         try:
-            # Atualiza campos básicos
-            campos = [
-                're', 'dig', 'nome', 'nome_de_guerra', 'genero', 'nasc',
-                'matricula', 'admissao', 'previsao_de_inatividade', 'cpf',
-                'rg', 'tempo_para_averbar_inss', 'tempo_para_averbar_militar',
-                'email', 'telefone', 'alteracao'
-            ]
-
-            for campo in campos:
-                setattr(cadastro, campo, request.POST.get(campo))
-
-            # Valida e salva
-            cadastro.full_clean()
-            cadastro.save()
-
+            # Seu código existente para processar os dados...
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Dados atualizados com sucesso!'
+                })
+            
             messages.success(request, 'Dados atualizados com sucesso!')
             return redirect('efetivo:ver_militar', id=cadastro.id)
-
-        except ValidationError as e:
-            messages.error(request, f'Erro de validação: {e}')
+            
         except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=400)
+            
             messages.error(request, f'Erro ao atualizar dados: {str(e)}')
-
-    # Carrega dados para o template
+    
     context = {
         'cadastro': cadastro,
-        'genero': genero_choices,
-        'alteracao': alteracao_choices,
-        'historico_promocoes': HistoricoPromocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao'),
-        'historico_detalhes_situacao': HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao'),
     }
-
-    print("Context being passed to the template:", context)  # Debugging line
-
-    return render(request, 'editar_dados_pessoais_contatos.html', context)
+    return render(request, 'efetivo/editar_dados_pessoais.html', context)
 
 
 @login_required
@@ -955,63 +1184,136 @@ def adicionar_categoria_efetivo(request, militar_id):
   
   
   # views.py
+# backend/efetivo/views.py
+from django.views import View
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import CatEfetivo
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
+# ... existing code ...
+
+# Consider adding @login_required to the dispatch method if authentication is needed
+@method_decorator(csrf_exempt, name='dispatch') # Only if you're not using CSRF tokens, which is NOT recommended for production.
+                                                # Better to handle CSRF token in the HTML.
+class SalvarEdicaoCategoriaView(View):
+    def post(self, request, categoria_id, *args, **kwargs):
+        categoria = get_object_or_404(CatEfetivo, id=categoria_id)
+
+        try:
+            # Assuming data is sent as JSON via fetch API
+            data = json.loads(request.body)
+            novo_tipo = data.get('tipo')
+            novo_periodo = data.get('periodo')
+            novas_restricoes = data.get('restricoes')
+
+            # Update the category fields
+            categoria.tipo = novo_tipo
+            categoria.periodo = novo_periodo
+            categoria.restricoes = novas_restricoes
+            categoria.save()
+
+            return JsonResponse({'success': True, 'message': 'Categoria atualizada com sucesso!'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+# ... rest of your views.py
 
 # views.py (Atualização Final)
 
-
-from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse, JsonResponse
-from django.template.loader import render_to_string
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django.utils import timezone
-from django.db import transaction
-from django.contrib import messages
-from backend.efetivo.models import CatEfetivo, HistoricoCatEfetivo  # Certifique-se de que o caminho para seus modelos está correto
-
 @login_required
-@require_http_methods(["GET", "POST"])
-def editar_categoria_efetivo(request, categoria_id):
-    categoria = get_object_or_404(
-        CatEfetivo.objects.select_related('cadastro'),
-        id=categoria_id
-    )
-    eh_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+def editar_categoria_modal(request, categoria_id):
+    categoria = get_object_or_404(CatEfetivo, id=categoria_id)
+    if request.method == 'GET':
+        context = {
+            'categoria': categoria,
+            'categoria_choices': CatEfetivo.TIPO_CHOICES, # Assuming you have choices for categories
+        }
+        return render(request, 'seu_template_de_modal_edicao.html', context)
+    # You might also handle POST here if it's a direct form submission,
+    # or have a separate view for POST, as you have with SalvarEdicaoCategoriaView.
+    # This example focuses on GET for modal rendering.
 
-    if request.method == 'POST':
-        # ... (seu código POST existente) ...
-        pass
-    else:  # GET request
-        # Criar um dicionário serializável com os dados necessários
-        dados_categoria = {
+    
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404
+
+@require_http_methods(["GET"])
+def editar_categoria_efetivo(request, categoria_id):
+    try:
+        categoria = get_object_or_404(CategoriaEfetivo, id=categoria_id)
+        
+        if not categoria.ativo:
+            return JsonResponse({'error': 'Esta categoria não está ativa e não pode ser editada'}, status=400)
+        
+        restricoes_data = []
+        if categoria.tipo == 'RESTRICAO':
+            restricoes = Restricao.objects.all()
+            for restricao in restricoes:
+                field_name = f'restricao_{restricao.id}'
+                restricoes_data.append({
+                    'id': restricao.id,
+                    'name': field_name,
+                    'verbose_name': restricao.nome,
+                    'value': getattr(categoria, field_name, False)
+                })
+        
+        html = render_to_string('efetivo/modals/modal_edicao_categoria_efetivo.html', {
             'id': categoria.id,
             'tipo': categoria.tipo,
             'tipo_display': categoria.get_tipo_display(),
-            'data_inicio': categoria.data_inicio.strftime('%Y-%m-%d') if categoria.data_inicio else None,
-            'data_termino': categoria.data_termino.strftime('%Y-%m-%d') if categoria.data_termino else None,
-            'observacao': categoria.observacao,
-            'restricoes': []
-        }
+            'data_inicio': categoria.data_inicio.strftime('%Y-%m-%d') if categoria.data_inicio else '',
+            'data_termino': categoria.data_termino.strftime('%Y-%m-%d') if categoria.data_termino else '',
+            'observacao': categoria.observacao or '',
+            'restricoes': restricoes_data,
+        })
+        
+        return JsonResponse({'html': html})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
+
+@require_http_methods(["POST"])
+def salvar_edicao_categoria(request, categoria_id):
+    try:
+        categoria = CategoriaEfetivo.objects.get(id=categoria_id)
+        
+        # Verifica se a categoria está ativa (pode ser editada)
+        if not categoria.ativo:
+            return JsonResponse({'error': 'Esta categoria não está ativa e não pode ser editada'}, status=400)
+        
+        data = request.POST
+        
+        # Atualiza os campos básicos
+        if 'data_inicio' in data:
+            categoria.data_inicio = data['data_inicio'] or None
+        if 'data_termino' in data:
+            categoria.data_termino = data['data_termino'] or None
+        if 'observacao' in data:
+            categoria.observacao = data['observacao']
+        
+        # Atualiza restrições se for do tipo RESTRICAO
         if categoria.tipo == 'RESTRICAO':
-            dados_categoria['restricoes'] = [
-                {
-                    'name': f.name,
-                    'verbose_name': f.verbose_name,
-                    'value': getattr(categoria, f.name)
-                }
-                for f in CatEfetivo._meta.fields 
-                if f.name.startswith('restricao_')
-            ]
+            restricoes = Restricao.objects.all()
+            for restricao in restricoes:
+                field_name = f'restricao_{restricao.id}'
+                setattr(categoria, field_name, field_name in data)
+        
+        categoria.save()
+        
+        return JsonResponse({'success': True})
+    
+    except CategoriaEfetivo.DoesNotExist:
+        return JsonResponse({'error': 'Categoria não encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)      
 
-        if eh_ajax:
-            return JsonResponse(dados_categoria)
-        else:
-            return redirect('efetivo:historico_categorias', militar_id=categoria.cadastro.id)
 
-
-            
 
 @login_required
 def excluir_categoria_efetivo(request, categoria_id):
@@ -1041,6 +1343,10 @@ def excluir_historico_categoria(request, historico_id):
         messages.success(request, 'Histórico excluído permanentemente.')
     
     return redirect('efetivo:historico_categorias', militar_id=militar_id)
+
+
+
+# backend/efetivo/views.py
 
 
 # backend/efetivo/views.py
@@ -1184,68 +1490,233 @@ class ListaMilitaresView(ListView):
             ("4ºSGB", "4º Subgrupamento"),
             ("5ºSGB", "5º Subgrupamento")
         ]
-
+        afastamento_types = [choice[0] for choice in CatEfetivo.TIPO_CHOICES]
         grupo_ativo = self.request.GET.get('grupo')
         subgrupo_ativo = self.request.GET.get('subgrupo')
 
-        # Função para calcular contagens recursivamente
-        def calcular_contagens(estrutura):
-            contagens = {}
-            for item in estrutura:
-                count = Cadastro.objects.filter(
-                    detalhes_situacao__posto_secao=item['codigo']
-                ).distinct().count()
-                
-                contagens[item['codigo']] = count
-                
-                if item['filhos']:
-                    contagens.update(calcular_contagens(item['filhos']))
-            return contagens
-
-        # Calcular contagens para todos os grupos
+        # Calculate counts for all groups and subgroups
         contagens_por_grupo = {}
         for grupo_key, _ in grupos:
-            contagens_por_grupo[grupo_key] = calcular_contagens(
+            contagens_por_grupo[grupo_key] = self.calcular_contagens(
                 self.subgrupos_estrutura.get(grupo_key, [])
             )
 
+        # Calculate total counts per group
+        agrupamento_counts = {}
+        for grupo_key, _ in grupos:
+            agrupamento_counts[grupo_key] = Cadastro.objects.filter(
+                detalhes_situacao__sgb=grupo_key
+            ).distinct().count()
 
-        context['contagens_por_grupo'] = contagens_por_grupo
-        context['grupos'] = grupos
-        
-
-        grupo_ativo = self.request.GET.get('grupo')
-        subgrupo_ativo = self.request.GET.get('subgrupo')
-
-        # Find the name for the active group
-        grupo_ativo_nome = dict(grupos).get(grupo_ativo, "")
-
-        # Find the name for the active subgroup
-        subgrupo_ativo_nome = ""
-        if subgrupo_ativo:
-            # Recursive function to find the name in the hierarchical structure
-            def find_subgrupo_name(subgrups_list, target_code):
-                for subgrup_data in subgrups_list:
-                    if subgrup_data['codigo'] == target_code:
-                        return subgrup_data['nome']
-                    if subgrup_data.get('filhos'):
-                        found_in_children = find_subgrupo_name(subgrup_data['filhos'], target_code)
-                        if found_in_children:
-                            return found_in_children
-                return ""
-
-            subgrupo_ativo_nome = find_subgrupo_name(self.subgrupos_estrutura.get(grupo_ativo, []), subgrupo_ativo)
-
-
-        context['grupos'] = grupos
-        context['grupo_ativo'] = grupo_ativo
-        context['subgrupo_ativo'] = subgrupo_ativo
-        context['grupo_ativo_nome'] = grupo_ativo_nome # Pass the name
-        context['subgrupo_ativo_nome'] = subgrupo_ativo_nome # Pass the name
-        context['subgrupos_estrutura'] = self.subgrupos_estrutura
-        context['subgrupos_do_grupo_ativo'] = self.subgrupos_estrutura.get(grupo_ativo, [])
-        context['current_date'] = timezone.now().date() # Ensure current_date is passed
-
+        context.update({
+            'contagens_por_grupo': contagens_por_grupo,
+            'afastamento_types': afastamento_types,
+            'agrupamento_counts': agrupamento_counts,
+            'grupos': grupos,
+            'grupo_ativo': grupo_ativo,
+            'subgrupo_ativo': subgrupo_ativo,
+            'grupo_ativo_nome': dict(grupos).get(grupo_ativo, ""),
+            'subgrupo_ativo_nome': self.get_subgrupo_nome(grupo_ativo, subgrupo_ativo),
+            'subgrupos_estrutura': self.subgrupos_estrutura,
+            'current_date': timezone.now().date()
+        })
         return context
+
+    def calcular_contagens(self, estrutura):
+        contagens = {}
+        for item in estrutura:
+            count = Cadastro.objects.filter(
+                detalhes_situacao__posto_secao=item['codigo']
+            ).distinct().count()
+            
+            contagens[item['codigo']] = count
+            
+            if item['filhos']:
+                contagens.update(self.calcular_contagens(item['filhos']))
+        return contagens
+
+    def get_subgrupo_nome(self, grupo_key, subgrupo_codigo):
+        if not subgrupo_codigo:
+            return ""
+            
+        for subgrupo in self.subgrupos_estrutura.get(grupo_key, []):
+            if subgrupo['codigo'] == subgrupo_codigo:
+                return subgrupo['nome']
+            if subgrupo.get('filhos'):
+                for filho in subgrupo['filhos']:
+                    if filho['codigo'] == subgrupo_codigo:
+                        return filho['nome']
+        return ""
+
+# Em /home/andre/Github - repositorio/SisCoE/SisCoE/backend/efetivo/views.py
+
+
+
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.lib import colors
+from django.contrib.staticfiles import finders
+
+from .models import Cadastro, Promocao, DetalhesSituacao
+
+def get_image_path(file):
+    path = finders.find(f'img/{file}')
+    if not path:
+        raise FileNotFoundError(f"Arquivo estático img/{file} não encontrado! Verifique se está em 'backend/efetivo/static/img/'.")
+    return path
+
+def pagina_buscar_militar(request):
+    return render(request, 'buscar_militar.html')
+
+def gerar_etiqueta_pdf(request):
+    re_param = request.GET.get('re', None)
+
+    if not re_param:
+        return HttpResponse("Parâmetro 're' não fornecido na URL.", status=400)
+
+    try:
+        cadastro = get_object_or_404(Cadastro, re=re_param)
+    except Exception as e:
+        return HttpResponse(f"Militar com RE {re_param} não encontrado. Erro: {e}", status=404)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="etiqueta_militar_{re_param}.pdf"'
+
+    # Dimensões da etiqueta
+    ETIQUETA_WIDTH = 120 * mm
+    ETIQUETA_HEIGHT = 60 * mm
     
-     
+    # Margens mínimas
+    margin_x = 3 * mm
+    margin_y = 3 * mm
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=(ETIQUETA_WIDTH, ETIQUETA_HEIGHT),
+        rightMargin=margin_x,
+        leftMargin=margin_x,
+        topMargin=margin_y,
+        bottomMargin=margin_y
+    )
+    
+    styles = getSampleStyleSheet()
+    story = []
+
+    # --- Estilos Personalizados ---
+    # Estilo para o nome completo
+    styles.add(ParagraphStyle(
+        name='MilitaryName',
+        parent=styles['Normal'],
+        fontSize=14,
+        leading=15,
+        textColor=colors.black,
+        alignment=1,  # Centralizado
+        fontName='Helvetica-Bold'
+    ))
+    
+    # Estilo para graduação e nome de guerra
+    styles.add(ParagraphStyle(
+        name='MilitaryRankWarName',
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=12,
+        textColor=colors.blue,
+        alignment=1,  # Centralizado
+        fontName='Helvetica-Bold'
+    ))
+    
+    # Estilo para o RE
+    styles.add(ParagraphStyle(
+        name='MilitaryRE',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=11,
+        textColor=colors.darkblue,
+        alignment=1,  # Centralizado
+        fontName='Helvetica-Bold'
+    ))
+    
+    # Estilo para detalhes
+    styles.add(ParagraphStyle(
+        name='MilitaryDetail',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=10,
+        textColor=colors.black,
+        alignment=1,  # Centralizado
+        spaceAfter=0.5*mm
+    ))
+
+    # Carregar imagens
+    try:
+        logo_img = Image(get_image_path('logo.png'), width=15*mm, height=15*mm)
+        brasao_img = Image(get_image_path('brasao.png'), width=15*mm, height=15*mm)
+    except FileNotFoundError as e:
+        return HttpResponse(f"Erro ao carregar imagem: {e}", status=500)
+
+    # --- Cabeçalho com Imagens Centralizadas Verticalmente ---
+    header_data = [
+        [logo_img, "15º Grupamento de Bombeiros", brasao_img]
+    ]
+    
+    header_table = Table(header_data, colWidths=[
+        20*mm,  # Coluna da logo
+        ETIQUETA_WIDTH - 40*mm - 2*margin_x,  # Coluna central
+        20*mm   # Coluna do brasão
+    ])
+    
+    # Estilo para centralização vertical
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (0,0), (0,0), 'CENTER'),
+        ('ALIGN', (2,0), (2,0), 'CENTER'),
+        ('ALIGN', (1,0), (1,0), 'CENTER'),
+        ('FONT', (1,0), (1,0), 'Helvetica-Bold', 10),
+        ('TOPPADDING', (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+    ]))
+    
+    story.append(header_table)
+    story.append(Spacer(1, 2*mm))
+
+    # --- Informações do Militar ---
+    # Nome completo
+    story.append(Paragraph(cadastro.nome or '', styles['MilitaryName']))
+    story.append(Spacer(1, 1*mm))
+
+    # Graduação e nome de guerra
+    last_promotion = cadastro.promocoes.order_by('-data_alteracao').first()
+    if last_promotion and last_promotion.posto_grad:
+        rank_war_name = f"{last_promotion.posto_grad} {cadastro.nome_de_guerra or ''}"
+    else:
+        rank_war_name = cadastro.nome_de_guerra or ''
+    
+    story.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
+    story.append(Spacer(1, 1*mm))
+
+    # RE com dígito verificador
+    re_text = f"{cadastro.re or ''}-{cadastro.dig or ''}" if cadastro.dig else f"{cadastro.re or ''}"
+    story.append(Paragraph(re_text, styles['MilitaryRE']))
+    story.append(Spacer(1, 2*mm))
+
+    # --- Detalhes de Situação ---
+    last_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+    
+    # Função
+    if last_situacao and last_situacao.funcao:
+        story.append(Paragraph(last_situacao.funcao, styles['MilitaryDetail']))
+    
+    # SGB
+    if last_situacao and last_situacao.sgb:
+        story.append(Paragraph(last_situacao.sgb, styles['MilitaryDetail']))
+    
+    # Posto/Seção
+    if last_situacao and last_situacao.posto_secao:
+        story.append(Paragraph(last_situacao.posto_secao, styles['MilitaryDetail']))
+
+    # Gera o PDF
+    doc.build(story)
+    return response

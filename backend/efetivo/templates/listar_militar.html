@@ -26,9 +26,14 @@
             <i class="fas fa-user-plus mr-2"></i> Cadastrar Novo Militar
         </a>
         <a href="{% url 'efetivo:lista_militares' %}" 
-           class="flex items-center justify-center px-6 py-3 border border-gray-600 text-base font-medium rounded-md text-white bg-gray-700 hover:bg-gray-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+           class="flex items-center justify-center px-6 py-3 border border-green-600 text-base font-medium rounded-md text-white bg-green-700 hover:bg-gray-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
             <i class="fas fa-users mr-2"></i> Relação de Efetivo 
         </a>
+         {# NOVO BOTÃO PARA INATIVOS #}
+         <a href="{% url 'efetivo:listar_outros_status' %}" 
+         class="flex items-center justify-center px-6 py-3 border border-red-600 text-base font-medium rounded-md text-white bg-red-700 hover:bg-red-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+          <i class="fas fa-user-times mr-2"></i> Relação de Inativos
+      </a>
     </div>
 </div>
                 </div>
@@ -60,10 +65,8 @@
                             </th>
                             <th class="px-4 py-3 text-center">Imagem</th>
                             <th class="px-4 py-3 text-center">Posto/Grad</th>
-                            <th class="px-4 py-3 text-center">RE</th>
-                            <th class="px-4 py-3 text-center">Nome Guerra</th>
-                            <th class="px-4 py-3 text-center">SGB</th>
-                            <th class="px-4 py-3 text-center">Posto/Seção</th>
+                            <th class="px-4 py-3 text-center">Nome Guerra / RE</th> {# Coluna combinada #}
+                            <th class="px-4 py-3 text-center">SGB / Posto/Seção</th> {# Coluna combinada #}
                             <th class="px-4 py-3 text-center">Situação</th>
                             <th class="px-4 py-3 text-center">Status</th>
                             <th class="px-4 py-3 text-center">Ações</th>
@@ -74,8 +77,8 @@
                         <tr class="bg-white border-b hover:bg-gray-50">
                             <td class="w-4 p-3">
                                 <div class="flex items-center">
-                                    <input id="checkbox-table-search-1" type="checkbox" onclick="event.stopPropagation()" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
-                                    <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+                                    <input id="checkbox-table-search-{{ forloop.counter }}" type="checkbox" onclick="event.stopPropagation()" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
+                                    <label for="checkbox-table-search-{{ forloop.counter }}" class="sr-only">checkbox</label>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -88,7 +91,8 @@
                                          {% elif last_status == 'AMARELA' %}border-yellow-500
                                          {% elif last_status == 'AZUL' %}border-blue-500
                                          {% elif last_status == 'ADM' %}border-gray-500
-                                         {% else %}border-gray-200{% endif %}">
+                                         {% else %}border-gray-200{% endif %}"
+                                         alt="Imagem de Perfil">
                                     {% endwith %}
                                     {% else %}
                                     <span class="text-gray-500">-</span>
@@ -102,28 +106,26 @@
                                 -
                                 {% endif %}
                             </td>
-                            <td class="px-4 py-3 text-center">{{ cadastro.re }}-{{ cadastro.dig }}</td>
-                            <td class="px-4 py-3 text-center font-medium text-gray-900">
-                                {{ cadastro.nome_de_guerra }}
+                            {# Nova coluna combinada para Nome Guerra e RE #}
+                            <td class="px-4 py-3 text-center">
+                                <div class="text-base font-semibold text-gray-900">
+                                    <a href="" class="text-sm font-medium text-cyan-600 hover:bg-gray-100 rounded-lg">
+                                        {{ cadastro.nome_de_guerra }}
+                                    </a>
+                                </div>
+                                <div class="text-sm font-normal text-gray-500">
+                                    {{ cadastro.re }}-{{ cadastro.dig }}
+                                </div>
+                            </td>
+                            {# Nova coluna combinada para SGB e Posto/Seção #}
+                            <td class="px-4 py-3 text-center">
+                                <div class="ps-3">
+                                    <div class="text-gray-700 bg-yellow-300 rounded-lg">{{ cadastro.detalhes_situacao.last.sgb }}</div>
+                                    <div class="font-normal text-gray-500">{{ cadastro.detalhes_situacao.last.posto_secao }}</div>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                    {% if cadastro.detalhes_situacao.exists %}
-                                    {{ cadastro.detalhes_situacao.last.sgb }}
-                                    {% else %}
-                                    -
-                                    {% endif %}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                {% if cadastro.detalhes_situacao.exists %}
-                                {{ cadastro.detalhes_situacao.last.posto_secao }}
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class=" text-xs px-2 py-1 rounded">
+                                <span class="text-xs px-2 py-1 rounded">
                                     {% if cadastro.detalhes_situacao.exists %}
                                     {{ cadastro.detalhes_situacao.last.status }}
                                     {% else %}
@@ -131,29 +133,27 @@
                                     {% endif %}
                                 </span>
                             </td>
-                        <td class="px-4 py-3 text-center">
-                            {% with categoria=cadastro.categorias_ativas.0 %}
-                                <span class="text-xs px-2 py-1 rounded">
-                                    {% if categoria %}
-                                        <span class="px-2 py-1 rounded-full text-sm font-semibold 
+                            <td class="px-4 py-3 text-center">
+                                {% with categoria=cadastro.categorias_ativas.0 %}
+                                    <span class="px-2 py-1 rounded-full text-sm font-semibold 
+                                        {% if categoria.data_termino and categoria.data_termino < current_date %}
+                                            bg-red-100 text-red-800
+                                        {% elif categoria.tipo != 'ATIVO' %}
+                                            bg-yellow-100 text-yellow-800
+                                        {% else %}
+                                            bg-green-100 text-green-800
+                                        {% endif %}">
+                                        <i class="fas 
                                             {% if categoria.data_termino and categoria.data_termino < current_date %}
-                                                bg-red-100 text-red-800
+                                                fa-exclamation-triangle
                                             {% elif categoria.tipo != 'ATIVO' %}
-                                                bg-yellow-100 text-yellow-800
+                                                fa-info-circle
                                             {% else %}
-                                                bg-green-100 text-green-800
-                                            {% endif %}">
-                                            
-                                            <i class="fas 
-                                                {% if categoria.data_termino and categoria.data_termino < current_date %}
-                                                    fa-exclamation-triangle
-                                                {% elif categoria.tipo != 'ATIVO' %}
-                                                    fa-info-circle
-                                                {% else %}
-                                                    fa-check-circle
-                                                {% endif %} 
-                                                mr-1"></i>
-                                            
+                                                fa-check-circle
+                                            {% endif %} 
+                                            mr-1"></i>
+                                        
+                                        {% if categoria %} {# Este IF é necessário para verificar se 'categoria' existe dentro do WITH #}
                                             {% if categoria.tipo != 'ATIVO' and categoria.data_termino and categoria.data_termino < current_date %}
                                                 {{ categoria.get_tipo_display }} (Expirado)
                                             {% elif categoria.tipo != 'ATIVO' %}
@@ -166,19 +166,14 @@
                                             {% else %}
                                                 ATIVO
                                             {% endif %}
-                                        </span>
-                                    {% else %}
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
-                                            <i class="fas fa-check-circle mr-1"></i>
+                                        {% else %} {# Este ELSE agora está dentro do WITH e se refere à existência de 'categoria' #}
                                             ATIVO
-                                        </span>
-                                    {% endif %}
-                                </span>
-                            {% endwith %}
-                        </td>
-                                    
+                                        {% endif %}
+                                    </span>
+                                {% endwith %} {# O endwith estava faltando para o else na linha 164 #}
+                            </td>
                             <td class="px-4 py-3 text-center">
-                                <a href="{% url 'efetivo:ver_militar' cadastro.id %}" 
+                                <a href="{% url 'efetivo:ver_militar' cadastro.id %}?from=list" 
                                    class="text-gray-100 bg-gradient-to-r from-purple-700 to-purple-600 hover:bg-gradient-to-br
                                           focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg 
                                           text-xs px-3 py-1.5 text-center inline-flex items-center">

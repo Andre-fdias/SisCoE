@@ -1,0 +1,199 @@
+
+{# backend/efetivo/templates/partials/detalhes_efetivo_grid_content.html #}
+{% load static custom_filters tz %}
+{% now "Y-m-d" as current_date %}
+
+{% regroup militares by detalhes_situacao.first.prontidao as grouped_by_prontidao %}
+
+{% if grouped_by_prontidao %}
+    <div class="p-4"> {# Overall padding for the entire grid content #}
+
+        <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
+            <legend class="text-xl font-bold text-white px-2">Prontidão Operacional</legend>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+                {# Loop specifically for VERDE, AMARELA, AZUL to place them in columns #}
+                {% for group in grouped_by_prontidao %}
+                    {% if group.grouper == "VERDE" or group.grouper == "AMARELA" or group.grouper == "AZUL" %}
+                        <div class="
+                            {% if group.grouper == 'VERDE' %}bg-green-900/20 border-green-500/50
+                            {% elif group.grouper == 'AMARELA' %}bg-yellow-900/20 border-yellow-500/50
+                            {% elif group.grouper == 'AZUL' %}bg-blue-900/20 border-blue-500/50
+                            {% endif %}
+                            
+                        ">
+                            <h2 class="text-xl font-bold text-center mb-4 border-b pb-2
+                                {% if group.grouper == 'VERDE' %}text-green-400 border-green-500/50
+                                {% elif group.grouper == 'AMARELA' %}text-yellow-400 border-yellow-500/50
+                                {% elif group.grouper == 'AZUL' %}text-blue-400 border-blue-500/50
+                                {% endif %}">
+                                <i class="fas fa-circle {% if group.grouper == 'VERDE' %}text-green-500
+                                                    {% elif group.grouper == 'AMARELA' %}text-yellow-500
+                                                    {% elif group.grouper == 'AZUL' %}text-blue-500
+                                                    {% endif %} mr-2"></i>  {{ group.grouper|upper }}
+                            </h2>
+                            <div class="grid grid-cols-1 gap-4"> {# Cards stack in a column within this prontidao #}
+                                {% for militar in group.list %}
+                                    {% with ultima_situacao=militar.detalhes_situacao.first %}
+                                        {% if ultima_situacao and ultima_situacao.situacao == "Efetivo" %}
+                                            {# Changed to militar_grid_card.html #}
+                                            {% include 'partials/militar_grid_card.html' with militar=militar %}
+                                        {% endif %}
+                                    {% endwith %}
+                                {% empty %}
+                                    <div class="text-center py-4 text-gray-400">
+                                        <p>Nenhum militar nesta categoria</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
+            <legend class="text-xl font-bold text-white px-2">Administrativo</legend>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {# Loop specifically for the ADM group #}
+                {% for group in grouped_by_prontidao %}
+                    {% if group.grouper == "ADM" %}
+                        {% for militar in group.list %}
+                            {% with ultima_situacao=militar.detalhes_situacao.first %}
+                                {% if ultima_situacao and ultima_situacao.situacao == "Efetivo" %}
+                                    {# Changed to militar_grid_card.html #}
+                                    {% include 'partials/militar_grid_card.html' with militar=militar %}
+                                {% endif %}
+                            {% endwith %}
+                        {% empty %}
+                            {# This empty block will only trigger if the 'ADM' group exists but has no militaries matching the filter #}
+                            <div class="col-span-full text-center py-8 text-gray-400">
+                                <i class="fas fa-user-tie text-4xl mb-4"></i>
+                                <p>Nenhum militar em atividades administrativas</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+
+                {# Fallback if 'ADM' group itself was not found at all by regroup (e.g., no ADM militaries) #}
+                {% with adm_group_found=False %}
+                    {% for group in grouped_by_prontidao %}
+                        {% if group.grouper == "ADM" %}
+                            {% with adm_group_found=True %}{% endwith %} {# This assignment is for Django 4.0+ #}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if not adm_group_found %}
+                        <div class="col-span-full text-center py-8 text-gray-400">
+                            <i class="fas fa-user-tie text-4xl mb-4"></i>
+                            <p>Nenhum militar em atividades administrativas</p>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </fieldset>
+        {# Adicione este novo fieldset após os existentes #}
+<fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
+    <legend class="text-xl font-bold text-white px-2">Status de Afastamento</legend>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {# Grupo para afastamentos ativos (não expirados) #}
+        {% for tipo in afastamento_types %}
+            {% if tipo != 'ATIVO' and tipo != 'RESTRICAO' %}
+                <div class="bg-gray-700/50 rounded-lg p-4 border-2
+                    {% if tipo == 'LSV' %}border-blue-500
+                    {% elif tipo == 'LTS' %}border-indigo-500
+                    {% elif tipo == 'LTS FAMILIA' %}border-purple-500
+                    {% elif tipo == 'CONVAL' %}border-pink-500
+                    {% elif tipo == 'ELEIÇÃO' %}border-teal-500
+                    {% elif tipo == 'LP' %}border-orange-500
+                    {% elif tipo == 'FERIAS' %}border-yellow-500
+                    {% elif tipo == 'DS' %}border-lime-500
+                    {% elif tipo == 'DR' %}border-cyan-500
+                    {% else %}border-gray-500{% endif %}">
+                    
+                    <h3 class="text-lg font-semibold mb-3 flex items-center
+                        {% if tipo == 'LSV' %}text-blue-400
+                        {% elif tipo == 'LTS' %}text-indigo-400
+                        {% elif tipo == 'LTS FAMILIA' %}text-purple-400
+                        {% elif tipo == 'CONVAL' %}text-pink-400
+                        {% elif tipo == 'ELEIÇÃO' %}text-teal-400
+                        {% elif tipo == 'LP' %}text-orange-400
+                        {% elif tipo == 'FERIAS' %}text-yellow-400
+                        {% elif tipo == 'DS' %}text-lime-400
+                        {% elif tipo == 'DR' %}text-cyan-400
+                        {% else %}text-gray-400{% endif %}">
+                        <i class="fas 
+                            {% if tipo == 'LSV' %}fa-ambulance
+                            {% elif tipo == 'LTS' %}fa-procedures
+                            {% elif tipo == 'LTS FAMILIA' %}fa-baby-carriage
+                            {% elif tipo == 'CONVAL' %}fa-heartbeat
+                            {% elif tipo == 'ELEIÇÃO' %}fa-vote-yea
+                            {% elif tipo == 'LP' %}fa-gavel
+                            {% elif tipo == 'FERIAS' %}fa-umbrella-beach
+                            {% elif tipo == 'DS' %}fa-calendar-day
+                            {% elif tipo == 'DR' %}fa-calendar-week
+                            {% else %}fa-user{% endif %} mr-2"></i>
+                        {{ tipo }}
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        {% for militar in militares %}
+                            {% with ultima_categoria=militar.categorias_efetivo.first %}
+                                {% if ultima_categoria and ultima_categoria.tipo == tipo and ultima_categoria.ativo %}
+                                    {% with ultima_situacao=militar.detalhes_situacao.first %}
+                                        {% if ultima_situacao and ultima_situacao.situacao == "Efetivo" %}
+                                            {% include 'partials/militar_grid_card.html' with militar=militar %}
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            {% endwith %}
+                        {% empty %}
+                            <div class="text-center py-4 text-gray-400">
+                                <p>Nenhum militar nesta categoria</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+        
+        {# Seção para afastamentos expirados #}
+        <div class="bg-gray-700/50 rounded-lg p-4 border-2 border-red-500">
+            <h3 class="text-lg font-semibold mb-3 flex items-center text-red-400">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Afastamentos Expirados
+            </h3>
+            
+            <div class="grid grid-cols-1 gap-3">
+                {% for militar in militares %}
+                    {% with ultima_categoria=militar.categorias_efetivo.first %}
+                        {% if ultima_categoria and ultima_categoria.data_termino and ultima_categoria.data_termino < current_date %}
+                            {% with ultima_situacao=militar.detalhes_situacao.first %}
+                                {% if ultima_situacao and ultima_situacao.situacao == "Efetivo" %}
+                                    {% include 'partials/militar_grid_card.html' with militar=militar %}
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endwith %}
+                {% empty %}
+                    <div class="text-center py-4 text-gray-400">
+                        <p>Nenhum afastamento expirado</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+    </div>
+{% else %}
+    {# Empty state if no militaries were found at all #}
+    <div class="col-span-full text-center py-12">
+        <div class="bg-gray-800/50 rounded-xl p-8 border-2 border-dashed border-gray-700">
+            <p class="text-gray-400 text-lg font-semibold">Nenhum militar encontrado com a situação "Efetivo" para exibir na grade.</p>
+            <p class="text-gray-500 mt-2">Tente ajustar seus filtros ou verificar se há militares cadastrados.</p>
+        </div>
+    </div>
+{% endif %}

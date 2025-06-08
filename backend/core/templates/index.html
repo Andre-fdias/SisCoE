@@ -411,22 +411,24 @@
                 <img  src="{% static 'img/calculadora.jpg' %}"  role="img" aria-label="people-circle" id="logo">
                 
                 <div class="p-5">
-                    
+                                    
                     <div class="flex text-gray-400 my-3">
-                        <h3 class="font-bold">Calculadora de Tempo</h3>
+                        <h3 class="font-bold">Ferramenta de Etiqueta</h3>
                     </div>
                     <div class="flex text-gray-400 flex-row my-3">
                     <p>
-                        Saiba mais sobre quanto tempo falta para inativar!
+                      Gere etiquetas de identificação em PDF para os militares.
                     </p>
                     </div>
                     <div class="flex text-gray-400 flex-row my-3">
-                    <a href="">"Saiba Mais <i class="fas fa-chevron-right"></i></a>
+                        <a href="" class="text-gray-400  hover:text-blue-800 text-sm font-medium transition duration-200 ease-in-out">
+                            Acessar <i class="fas fa-chevron-right"></i> {# Ícone de seta #}
+                        </a>
                     </div>
                 
                     <div class="flex flex-col xl:flex-row justify-between pt-4">
                     
-                    <a href="{% url 'calculadora:calcular_tempo_servico' %}"  class=" text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
+                    <a href="{% url 'efetivo:buscar_militar_page' %}"   class=" text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>

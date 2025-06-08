@@ -1,3 +1,4 @@
+
 from datetime import date, datetime
 from backend.accounts.models import User
 from dateutil.relativedelta import relativedelta
@@ -547,13 +548,15 @@ class Promocao(models.Model):
         if self.posto_grad == 'Sd PM 2ºCL':
             return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Sd PM 2ºCL</span>')
    
+
+   
     @property
     def ultima_promocao_detalhada(self):
         hoje = datetime.today()
         delta = relativedelta(hoje, self.ultima_promocao)
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
-
+   
     class Meta:
         indexes = [
             models.Index(fields=['grupo']),
@@ -632,6 +635,8 @@ class CatEfetivo(models.Model):
         ("RESTRICAO", "RESTRIÇÃO"),
         ("DS", "DS"),
         ("DR", "DR"),
+        ("FOLGA_MENSAL", "FOLGA MENSAL"),   # NOVO TIPO
+        ("FOLGA_SEMANAL", "FOLGA SEMANAL"), # NOVO TIPO
     )
 
     # Campos comuns a todos os tipos
@@ -909,6 +914,38 @@ class CatEfetivo(models.Model):
             models.Index(fields=['data_inicio', 'data_termino']),
         ]
 
+
+    @property
+    def tipo_icon(self):
+        icons = {
+            "LSV": "fa-ambulance",
+            "LTS": "fa-procedures",
+            "LTS FAMILIA": "fa-baby-carriage",
+            "CONVAL": "fa-heartbeat",
+            "ELEIÇÃO": "fa-vote-yea",
+            "LP": "fa-gavel",
+            "FERIAS": "fa-umbrella-beach",
+            "DS": "fa-calendar-day",
+            "DR": "fa-calendar-week",
+        }
+        return icons.get(self.tipo, "fa-user")
+    
+    @property
+    def tipo_color(self):
+        colors = {
+            "LSV": "blue",
+            "LTS": "indigo",
+            "LTS FAMILIA": "purple",
+            "CONVAL": "pink",
+            "ELEIÇÃO": "teal",
+            "LP": "orange",
+            "FERIAS": "yellow",
+            "DS": "lime",
+            "DR": "cyan",
+        }
+        return colors.get(self.tipo, "gray")
+
+
     @property
     def regras_restricoes_badges(self):
         if self.tipo != 'RESTRICAO':
@@ -1035,7 +1072,23 @@ def regras_restricoes_badges(self):
     
     return regras
 
+    @property
+    def get_restricao_fields(self):
+        fields_data = []
+        for field in self._meta.get_fields():
+            if field.name.startswith('restricao_') and isinstance(field, models.BooleanField):
+                fields_data.append({
+                    'name': field.name,
+                    'verbose_name': field.verbose_name,
+                    'value': getattr(self, field.name)
+                })
+        return fields_data
 
+    @property
+    def tipo_choices(self):
+        return CatEfetivo._meta.get_field('tipo').choices
+
+        
 class HistoricoCatEfetivo(models.Model):
     cat_efetivo = models.ForeignKey(CatEfetivo, on_delete=models.CASCADE, related_name='historico')
     data_registro = models.DateTimeField(auto_now_add=True)
@@ -1152,3 +1205,4 @@ class HistoricoCatEfetivo(models.Model):
                 siglas.append(sigla)
 
         return ", ".join(siglas)
+
