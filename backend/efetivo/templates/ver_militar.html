@@ -212,6 +212,7 @@
                 {% include 'modals/editar_posto.html' %}
                 
             </fieldset>
+
             <!-- Adicione este script antes do fechamento do body -->
             <script>
                     document.addEventListener('DOMContentLoaded', function() {
@@ -406,14 +407,19 @@
                             </div>
                             
                             <!-- Botão de Ação -->
-                            <button type="button"
-                            data-modal-open="editSituacaoModal"
-                            class="flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        Editar Informações
-                    </button>
+                            <!-- Dentro do campo "Situação Funcional" -->
+                            <div class="mt-6 flex justify-end">
+                                <button type="button" 
+                                        data-modal-open="editarSituacaoFuncionalModal"
+                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Editar Situação Funcional
+                                </button>
+                            </div>
+                            <!-- Incluir o modal de edição da situação funcional -->
+                            {% include 'modals/editar_situacao_funcional.html' %}
                         </div>
 
                  
@@ -536,16 +542,15 @@
                                     </a>
                                 </div>
                             </div>
-                
                             <div class="mt-auto pt-4 flex flex-wrap gap-2">
-                
                                 <button type="button"
                                     class="inline-flex items-center px-6 py-3 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 text-base gap-x-2 animate-pulse"
-                                    data-modal-open="editCatEfetivoModal">
+                                    onclick="openCatEfetivoModal()"> {# CORRIGIDO AQUI: Usa onclick para chamar a função JavaScript #}
                                     <i class="fas fa-plus-circle text-lg"></i>
                                     <span>Incluir Novo Afastamento</span>
                                 </button>
                             </div>
+                              {% include 'modals/editar_categoria_efetivo.html' %}
                         </div>
                     </div>
                 
@@ -573,10 +578,7 @@
                             });
                         }
                     </script>
-                
-                
-                    {% include 'modals/editar_situacao_funcional.html' %}
-                    {% include 'modals/editar_categoria_efetivo.html' %}
+
                 </fieldset>
                 <!-- Documentos e Contatos -->
                 <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
