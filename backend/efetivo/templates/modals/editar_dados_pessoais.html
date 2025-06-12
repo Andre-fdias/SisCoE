@@ -277,10 +277,19 @@
                 }
             });
             
+            // Verificar se a resposta é JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Resposta do servidor não é JSON');
+            }
+            
             const data = await response.json();
             
+            if (!response.ok) {
+                throw new Error(data.message || 'Erro no servidor');
+            }
+            
             if (data.success) {
-                // Mostrar mensagem de sucesso
                 showToast('success', data.message || 'Dados salvos com sucesso!');
                 
                 // Fechar o modal suavemente
@@ -290,18 +299,18 @@
                     modal.classList.remove('opacity-0');
                 }, 300);
                 
-                // Aqui você pode atualizar partes específicas da página se necessário
-                // Exemplo: atualizar os dados exibidos sem recarregar a página
-                // updatePageData(data.updatedData);
+                // Atualizar a página após 1 segundo para ver as mudanças
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
                 
             } else {
-                showToast('error', data.message || 'Erro ao salvar os dados');
+                throw new Error(data.message || 'Erro ao salvar os dados');
             }
         } catch (error) {
-            showToast('error', 'Erro na comunicação com o servidor');
+            showToast('error', error.message || 'Erro na comunicação com o servidor');
             console.error('Erro:', error);
         } finally {
-            // Restaurar estado normal do botão
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
         }

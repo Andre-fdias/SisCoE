@@ -1,40 +1,70 @@
-{% extends "base_login.html" %} {# Estende o template base do seu projeto #}
-{% load static %} {# Necessário para usar arquivos estáticos como CSS, JS #}
+{% extends "base_login.html" %}
+{% load static %}
 
-{% block title %}Buscar Militar por RE - SisCoE{% endblock %} {# Título específico para esta página #}
+{% block title %}Buscar Militar por RE - SisCoE{% endblock %}
 
 {% block content %}
 <div class="flex items-center justify-center min-h-screen">
     <div class="bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md card-container">
         <h2 class="text-3xl font-extrabold mb-8 text-center text-gray-300">Buscar Militar por RE</h2>
         
-        <form id="formBuscaRE" action="{% url 'efetivo:gerar_etiqueta_pdf' %}" method="GET" target="_blank">
-            <div class="mb-6"> {# Aumentei um pouco o espaçamento #}
-                <label for="re_input" class="block text-gray-400 text-lg font-semibold mb-3"> {# Tamanho e peso da fonte ajustados #}
+        <!-- Mensagens de erro -->
+        {% if error_message %}
+        <div id="errorMessage" class="mb-6 bg-red-600 text-white px-4 py-3 rounded-lg shadow-md">
+            {{ error_message }}
+            <button type="button" class="float-right font-bold" onclick="document.getElementById('errorMessage').classList.add('hidden')">
+                &times;
+            </button>
+        </div>
+        {% endif %}
+        
+        <form id="formBuscaRE" method="POST" action="{% url 'efetivo:gerar_etiqueta_pdf' %}">
+            {% csrf_token %}
+            <div class="mb-6">
+                <label for="re_input" class="block text-gray-400 text-lg font-semibold mb-3">
                     Digite o RE do militar:
                 </label>
                 <input type="text" id="re_input" name="re"
                        class="shadow-sm appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-800 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
                        placeholder="Ex: 123456" 
                        required
-                       pattern="[0-9]+" {# Garante que apenas números sejam digitados #}
-                       title="Por favor, digite apenas números para o RE.">
+                       pattern="[0-9]+"
+                       title="Por favor, digite apenas números para o RE."
+                       value="{{ re_value|default:'' }}">
             </div>
-            <div class="flex items-center justify-center mt-8"> {# Espaçamento superior #}
-                <button type="submit"
+            <div class="flex items-center justify-center mt-8">
+                <button type="submit" id="gerarPdfBtn"
                         class="w-full bg-gradient-to-r from-purple-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-3 px-6 rounded-lg text-lg tracking-wide shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     Gerar Etiqueta PDF
                 </button>
             </div>
         </form>
 
-        {# Opcional: Adicionar um link de retorno para a lista de militares, se houver #}
         <div class="mt-8 text-center">
             <a href="{% url 'core:index' %}" 
-               class="text-blue-600 hover:text-blue-800 text-sm font-medium transition duration-200 ease-in-out">
-                Voltar para a página inicial
+               class="text-blue-600 hover:text-blue-400 font-semibold transition duration-200 ease-in-out">
+                Voltar à Página Inicial
             </a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formBuscaRE');
+        const gerarPdfBtn = document.getElementById('gerarPdfBtn');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            gerarPdfBtn.disabled = true;
+            gerarPdfBtn.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...</span>';
+
+            // Submete o formulário normalmente
+            this.submit();
+        });
+    });
+</script>
 {% endblock %}

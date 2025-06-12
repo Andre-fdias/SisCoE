@@ -17,10 +17,10 @@ urlpatterns = [
     
     # --- Edição de Dados de Militares ---
     path('editar_posto_graduacao/<int:id>/', views.editar_posto_graduacao, name='editar_posto_graduacao'),
-    path('editar_situacao_funcional/<int:id>/', views.editar_situacao_funcional, name='editar_situacao_funcional'),
+   path('editar_situacao_funcional/<int:id>/', views.editar_situacao_funcional, name='editar_situacao_funcional'),
     path('editar_dados_pessoais_contatos/<int:id>/', views.editar_dados_pessoais_contatos, name='editar_dados_pessoais_contatos'),
     path('editar_imagem/<int:id>/', views.editar_imagem, name='editar_imagem'),
-    path('editar_situacao_atual/<int:id>/', views.editar_situacao_atual, name='editar_situacao_atual'),
+   
     path('cadastrar_nova_situacao/<int:id>/', views.cadastrar_nova_situacao, name='cadastrar_nova_situacao'),
 
     # --- Históricos e Status ---
@@ -28,7 +28,7 @@ urlpatterns = [
     path('check_rpt/<int:id>/', views.check_rpt, name='check_rpt'), # Rota para verificar RPT (Relação de Prioridade de Transferência?)
     path('detalhes_efetivo/<int:posto_id>/', views.detalhar_efetivo, name='detalhar_efetivo'),
     path('listar_outros_status/', views.listar_outros_status_militar, name='listar_outros_status'),
-
+   
     # --- Categorias de Efetivo (Férias, Restrição, DS, DR, etc.) ---
     path('militar/<int:militar_id>/adicionar-categoria/',
          views.adicionar_categoria_efetivo, name='adicionar_categoria_efetivo'),

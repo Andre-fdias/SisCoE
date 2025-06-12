@@ -341,133 +341,118 @@
             
             <!-- Cards Section -->
             <div id="products" class="my-20 mt-24">
-            <div class="grid grid-flow-row grid-cols-1 md:grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-                <div class="max-w-xs mx-auto bg-gray-900  rounded-lg overflow-hidden shadow-lg">
-                
-                    <img class="w-full"  src="{% static 'img/seu_perfil.jpeg' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
-                </a>
-                <div class="p-5">
-                    
-                    <div class="flex text-gray-400 flex-row my-3">
-                        <h3 class="font-bold">Seu Perfil</h3>
+                <div class="grid grid-flow-row grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+                    <!-- Card 1 - Seu Perfil -->
+                    <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                        <div class="w-full h-48 overflow-hidden flex items-center justify-center">
+                            <img class="w-full h-full object-cover" src="{% static 'img/seu_perfil.jpeg' %}" alt="Seu Perfil" role="img" aria-label="people-circle">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <h3 class="font-bold">Seu Perfil</h3>
+                            </div>
+                            <div class="flex flex-row text-gray-400 my-3">
+                                <p>Através deste link você terá acesso ao seu histórico funcional!</p>
+                            </div>
+                            <div class="flex flex-row text-gray-400 my-3">
+                                {% if cadastro.id %}
+                                <a href="{% url 'efetivo:ver_militar' id=cadastro.id %}">Ver Militar (ID: {{ cadastro.id }})</a>
+                                {% else %}
+                                <p>Não há cadastro para exibir.</p>
+                                {% endif %}
+                            </div>
+                            <div class="flex flex-col xl:flex-row justify-between">
+                                <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm hover:bg-purple-700 flex flex-row justify-center" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="text-gray-700 h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Saiba Mais
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-row text-gray-400 my-3">
-                    <p>
-                        Através deste link voccê terá acesso ao seu histórico funcional!
-                    </p>
+            
+                    <!-- Card 2 - Cadastrar Cursos e Medalhas -->
+                    <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                        <div class="w-full h-48 overflow-hidden flex items-center justify-center">
+                            <img class="w-full h-full object-cover" src="{% static 'img/cadastrar_cursos.jpg' %}" alt="Cadastrar Cursos" role="img" aria-label="people-circle">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <h3 class="font-bold">Cadastrar Cursos e Medalhas</h3>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <p>Atualize o seu currículo de cursos por aqui!</p>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
+                            </div>
+                            <div class="flex flex-col xl:flex-row justify-between">
+                                <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm hover:bg-purple-700 flex flex-row justify-center" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Saiba Mais
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex flex-row text-gray-400 my-3">
-                    
-
-                    {% if cadastro.id %}
-                    <a href="{% url 'efetivo:ver_militar' id=cadastro.id %}">Ver Militar (ID: {{ cadastro.id }})</a>
-                    {% else %}
-                    <p>Não há cadastro para exibir.</p>
-                    {% endif %}
+            
+                    <!-- Card 3 - Ferramenta de Etiqueta -->
+                    <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                        <div class="w-full h-48 overflow-hidden flex items-center justify-center">
+                            <img class="w-full h-full object-cover" src="{% static 'img/etiqueta.png' %}" alt="Ferramenta de Etiqueta" role="img" aria-label="people-circle">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex text-gray-400 my-3">
+                                <h3 class="font-bold">Ferramenta de Etiqueta</h3>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <p>Gere etiquetas de identificação em PDF para os militares.</p>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <a href="" class="text-gray-400 hover:text-blue-800 text-sm font-medium transition duration-200 ease-in-out">
+                                    Acessar <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                            <div class="flex flex-col xl:flex-row justify-between pt-4">
+                                <a href="{% url 'efetivo:buscar_militar_page' %}" class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm hover:bg-purple-700 flex flex-row justify-center" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Saiba Mais
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                
-                    <div class="flex flex-col xl:flex-row justify-between">
-                    
-                    <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                        <svg xmlns="http://www.w3.org/2000/svg"  class="text-gray-700 h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Saiba Mais
-                    </a>
+            
+                    <!-- Card 4 - Faísca IA -->
+                    <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                        <div class="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-800">
+                            <img class="w-full h-full object-cover" src="{% static 'img/faisca_ia.jpg' %}" alt="Faísca IA" role="img" aria-label="people-circle">
+                        </div>
+                        <div class="p-5">
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <h3 class="font-bold">Faísca IA</h3>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <p>Acesse aqui para dúvidas sobre os processos internos de forma geral.</p>
+                            </div>
+                            <div class="flex text-gray-400 flex-row my-3">
+                                <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
+                            </div>
+                            <div class="flex flex-col xl:flex-row justify-between">
+                                <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm hover:bg-purple-700 flex flex-row justify-center" href="#">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Saiba Mais
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                </div>
-                <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
-                
-                    <img class="w-full"  src="{% static 'img/cadastrar_cursos.jpg' %}" width="120" height="102 role="img" aria-label="people-circle" id="logo">
-                
-                <div class="p-5">
-                    
-                    <div class="flex  text-gray-400 flex-row my-3">
-                        <h3 class="font-bold">Cadastrar Cursos e Medalhas</h3>
-                    </div>
-                    <div class="flex text-gray-400 flex-row my-3">
-                    <p>
-                        Atualize o seu  currículo de cursos por aqui!                 
-                    </p>
-                    </div>
-                    <div class="flex text-gray-400  flex-row my-3">
-                        <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
-                    </div>
-                
-                    <div class="flex flex-col xl:flex-row justify-between">
-                    
-                    <a class="text-gray-700  bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Saiba Mais
-                    </a>
-                    </div>
-                </div>
-                </div>
-                <div class="max-w-xs mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
-
-                <img  src="{% static 'img/calculadora.jpg' %}"  role="img" aria-label="people-circle" id="logo">
-                
-                <div class="p-5">
-                                    
-                    <div class="flex text-gray-400 my-3">
-                        <h3 class="font-bold">Ferramenta de Etiqueta</h3>
-                    </div>
-                    <div class="flex text-gray-400 flex-row my-3">
-                    <p>
-                      Gere etiquetas de identificação em PDF para os militares.
-                    </p>
-                    </div>
-                    <div class="flex text-gray-400 flex-row my-3">
-                        <a href="" class="text-gray-400  hover:text-blue-800 text-sm font-medium transition duration-200 ease-in-out">
-                            Acessar <i class="fas fa-chevron-right"></i> {# Ícone de seta #}
-                        </a>
-                    </div>
-                
-                    <div class="flex flex-col xl:flex-row justify-between pt-4">
-                    
-                    <a href="{% url 'efetivo:buscar_militar_page' %}"   class=" text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Saiba Mais
-                    </a>
-                    </div>
-                </div>
-                </div>
-                <div class="max-w-xs w-full mx-auto bg-gray-900 rounded-lg overflow-hidden shadow-lg">
-
-                <img  src=""  role="img" aria-label="people-circle" id="logo">
-                
-                <div class="p-5">
-                
-                <div class="flex text-gray-400 flex-row my-3">
-                    <h3 class="font-bold">Faísca IA</h3>
-                </div>
-                <div class="flex text-gray-400 flex-row my-3">
-                    <p>
-                    Acesse aqui para duvidas sobre os processos internos dde forma geral.
-                    </p>
-                </div>
-                <div class="flex text-gray-400 flex-row my-3">
-                    <a href="">Saiba Mais <i class="fas fa-chevron-right"></i></a>
-                </div>
-                
-                <div class="flex flex-col xl:flex-row justify-between">
-                
-                    <a class="text-gray-700 bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-full py-2 px-4 my-2 text-sm  hover:bg-purple-700 flex flex-row justify-center" href="#">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 " viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Saiba Mais
-                    </a>
-                    </div>
-                </div>
                 </div>
             </div>
-            </div> 
 
 
             <!-- Table Aniversariantes Section -->

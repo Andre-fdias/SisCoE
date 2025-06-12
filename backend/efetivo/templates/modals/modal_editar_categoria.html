@@ -1,0 +1,43 @@
+<div id="editCategoriaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all duration-300">
+        <div class="bg-gradient-to-r from-yellow-600 to-orange-700 p-6 flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-.437 1.127-.437 1.554 0L17.5 9h-6c-.552 0-1 .448-1 1v12h-2V10c0-.552-.448-1-1-1H3.5L10.325 4.317z"/>
+                    </svg>
+                    Editar Categoria de Efetivo
+                </h3>
+                <p class="text-yellow-100 mt-1 text-sm">Altere a categoria atual do militar.</p>
+            </div>
+            <button onclick="closeModal('editCategoriaModal')" class="text-white hover:text-yellow-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="editCategoriaForm" method="POST" action="{% url 'efetivo:editar_situacao_atual' cadastro.id %}" class="p-6 space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ cadastro.id }}">
+            
+            <div>
+                <label for="cat_efetivo_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Categoria</label>
+                <select id="cat_efetivo_select" name="cat_efetivo" class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white" required>
+                    {% for value, label in cat_efetivo %}
+                        <option value="{{ value }}" {% if cadastro.categoria_ativa == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="closeModal('editCategoriaModal')" class="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">
+                    Atualizar Categoria
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

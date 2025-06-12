@@ -549,206 +549,187 @@ def editar_posto_graduacao(request, id):
     return redirect('efetivo:ver_militar', id=cadastro.id)
         
 
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from .models import (
+    Cadastro, 
+    DetalhesSituacao, 
+    HistoricoDetalhesSituacao,
+    CatEfetivo,
+    HistoricoCatEfetivo
+)
+import logging
 
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------
+# VIEWS PARA FLUXO DE SITUAÇÃO FUNCIONAL
+# ---------------------------------------------------------------
 @login_required
 def editar_situacao_funcional(request, id):
-    """
-    View robusta para edição da situação funcional do militar, com histórico completo
-    e tratamento de todas as regras de negócio especificadas.
-    """
     cadastro = get_object_or_404(Cadastro, id=id)
-    situacao_atual = cadastro.detalhes_situacao.last()
-    
-    if not situacao_atual:
-        messages.error(request, 'Não existe situação cadastrada para este militar')
-        return redirect('efetivo:ver_militar', id=cadastro.id)
 
-    # Contexto para o template
-    context = {
-        'cadastro': cadastro,
-        'situacao': DetalhesSituacao.situacao_choices,
-        'sgb': DetalhesSituacao.sgb_choices,
-        'posto_secao': DetalhesSituacao.posto_secao_choices,
-        'esta_adido': DetalhesSituacao.esta_adido_choices,
-        'funcao': DetalhesSituacao.funcao_choices,
-        'op_adm': DetalhesSituacao.op_adm_choices,
-        'prontidao': DetalhesSituacao.prontidao_choices,
-        'cat_efetivo': CatEfetivo.TIPO_CHOICES,
-    }
+    # Get the latest (most current) DetalhesSituacao for the current cadastro
+    # Based on your Meta.ordering in DetalhesSituacao, .first() will give the latest.
+    current_situacao_obj = DetalhesSituacao.objects.filter(cadastro=cadastro).first()
+
+    if not current_situacao_obj:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Não há situação funcional ativa para editar.'}, status=404)
+        messages.error(request, 'Não há situação funcional ativa para editar para este militar.')
+        return redirect('efetivo:ver_militar', id=cadastro.id)
 
     if request.method == 'POST':
         try:
-            # Verificar se houve alterações nos campos principais (exceto data de saída)
-            campos_principais = ['situacao', 'sgb', 'posto_secao', 'funcao', 'prontidao']
-            campos_alterados = any(
-                request.POST.get(campo) != getattr(situacao_atual, campo)
-                for campo in campos_principais
+            nova_situacao = request.POST.get('situacao')
+            saida_da_unidade_str = request.POST.get('saida_da_unidade') # This is the end date for the *current* situation
+
+            # Basic validation
+            if not nova_situacao:
+                return JsonResponse({'success': False, 'message': 'Selecione a nova situação.'}, status=400)
+            if not saida_da_unidade_str:
+                return JsonResponse({'success': False, 'message': 'A Data de Saída é obrigatória.'}, status=400)
+
+            try:
+                # Convert the date string to a Python date object
+                saida_da_unidade_date = timezone.datetime.strptime(saida_da_unidade_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({'success': False, 'message': 'Formato de data inválido. Use AAAA-MM-DD.'}, status=400)
+
+            # --- Step 1: Archive the CURRENT DetalhesSituacao record ---
+            # Create a history entry with the *details of the current situation*
+            HistoricoDetalhesSituacao.objects.create(
+                cadastro=cadastro,
+                situacao=current_situacao_obj.situacao,
+                sgb=current_situacao_obj.sgb,
+                posto_secao=current_situacao_obj.posto_secao,
+                esta_adido=current_situacao_obj.esta_adido,
+                funcao=current_situacao_obj.funcao,
+                op_adm=current_situacao_obj.op_adm,
+                prontidao=current_situacao_obj.prontidao,
+                cat_efetivo=current_situacao_obj.cat_efetivo, # Ensure this field exists in DetalhesSituacao
+                apresentacao_na_unidade=current_situacao_obj.apresentacao_na_unidade,
+                saida_da_unidade=saida_da_unidade_date, # This is the date the archived situation ended
+                usuario_alteracao=request.user,
+                # data_alteracao will be auto_now_add
             )
 
-            # Registrar data atual para novos registros
-            data_atual = timezone.now().date()
+            # --- Step 2: Delete the current DetalhesSituacao record (or mark it inactive if preferred) ---
+            # Deleting the current record and creating a new one is cleaner for 'active' situations.
+            current_situacao_obj.delete() 
+            # If you prefer marking inactive: current_situacao_obj.is_active = False; current_situacao_obj.save()
+            # Then adjust queries to filter for is_active=True
+
+            # --- Step 3: Create a NEW DetalhesSituacao record with the updated info ---
+            DetalhesSituacao.objects.create(
+                cadastro=cadastro,
+                situacao=nova_situacao, # The new situation
+                sgb=current_situacao_obj.sgb,  # Copy SGB from previous situation
+                posto_secao=current_situacao_obj.posto_secao,  # Copy Posto/Seção from previous situation
+                esta_adido=current_situacao_obj.esta_adido, # Copy from previous
+                funcao=current_situacao_obj.funcao,  # Copy Função from previous situation
+                op_adm=current_situacao_obj.op_adm, # Copy from previous
+                prontidao=current_situacao_obj.prontidao,  # Copy Prontidão from previous situation
+                apresentacao_na_unidade=saida_da_unidade_date, # The new presentation date is when the previous situation ended
+                saida_da_unidade=None, # The new situation doesn't have an end date yet
+                usuario_alteracao=request.user,
+                # data_alteracao will be auto_now_add for the new record
+            )
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': 'Situação funcional atualizada e arquivada com sucesso!'})
             
-            if campos_alterados:
-                # 1. Criar histórico da situação atual como "Mov. Interna"
-                HistoricoDetalhesSituacao.objects.create(
-                    cadastro=cadastro,
-                    situacao=situacao_atual.situacao,
-                    sgb=situacao_atual.sgb,
-                    posto_secao=situacao_atual.posto_secao,
-                    esta_adido=situacao_atual.esta_adido,
-                    funcao=situacao_atual.funcao,
-                    op_adm=situacao_atual.op_adm,
-                    prontidao=situacao_atual.prontidao,
-                    cat_efetivo=situacao_atual.cat_efetivo if hasattr(situacao_atual, 'cat_efetivo') else 'ATIVO',
-                    apresentacao_na_unidade=situacao_atual.apresentacao_na_unidade,
-                    saida_da_unidade=data_atual,  # Data atual como saída
-                    usuario_alteracao=request.user
-                )
-
-                # 2. Criar nova situação funcional
-                nova_situacao = DetalhesSituacao(
-                    cadastro=cadastro,
-                    situacao=request.POST.get('situacao', situacao_atual.situacao),
-                    sgb=request.POST.get('sgb', situacao_atual.sgb),
-                    posto_secao=request.POST.get('posto_secao', situacao_atual.posto_secao),
-                    esta_adido=request.POST.get('esta_adido', situacao_atual.esta_adido),
-                    funcao=request.POST.get('funcao', situacao_atual.funcao),
-                    op_adm=request.POST.get('op_adm', situacao_atual.op_adm),
-                    prontidao=request.POST.get('prontidao', situacao_atual.prontidao),
-                    apresentacao_na_unidade=data_atual,
-                    saida_da_unidade=request.POST.get('saida_da_unidade'),
-                    usuario_alteracao=request.user
-                )
-                nova_situacao.save()
-
-                # 3. Atualizar categoria de efetivo
-                categoria_atual = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
-                if categoria_atual:
-                    categoria_atual.ativo = False
-                    categoria_atual.data_termino = data_atual
-                    categoria_atual.save()
-
-                    # Criar histórico da categoria
-                    HistoricoCatEfetivo.objects.create(
-                        cat_efetivo=categoria_atual,
-                        tipo=categoria_atual.tipo,
-                        data_inicio=categoria_atual.data_inicio,
-                        data_termino=data_atual,
-                        ativo=False,
-                        usuario_alteracao=request.user
-                    )
-
-                # Criar nova categoria (padrão ATIVO)
-                nova_categoria = CatEfetivo(
-                    cadastro=cadastro,
-                    tipo='ATIVO',
-                    data_inicio=data_atual,
-                    usuario_cadastro=request.user,
-                    ativo=True
-                )
-                nova_categoria.save()
-
-                messages.success(request, 'Situação funcional atualizada com sucesso! Foi criado um novo registro e o anterior foi arquivado como "Mov. Interna".')
-            else:
-                # Apenas atualizar a data de saída se fornecida
-                saida_da_unidade = request.POST.get('saida_da_unidade')
-                if saida_da_unidade:
-                    situacao_atual.saida_da_unidade = saida_da_unidade
-                    situacao_atual.save()
-                    messages.success(request, 'Data de saída atualizada com sucesso!')
-
+            messages.success(request, 'Situação funcional atualizada e arquivada com sucesso!')
             return redirect('efetivo:ver_militar', id=cadastro.id)
 
         except Exception as e:
-            logger.error(f"Erro ao atualizar situação funcional: {str(e)}", exc_info=True)
-            messages.error(request, f'Ocorreu um erro ao atualizar a situação funcional: {str(e)}')
-            return render(request, 'ver_militar.html', context)
+            logger.error(f"Erro ao editar situação funcional do militar {id}: {e}", exc_info=True)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': f'Erro ao salvar: {str(e)}'}, status=500)
+            messages.error(request, f'Erro ao salvar alterações: {str(e)}')
+            return redirect('efetivo:ver_militar', id=cadastro.id)
 
-    # Se GET, apenas adicionar a situação atual ao contexto
-    context['detalhes'] = situacao_atual
-    return render(request, 'ver_militar.html', context)
+    # GET request - render the modal with current data
+    context = {
+        'cadastro': cadastro,
+        'detalhes': current_situacao_obj, # Pass the current object for displaying current data
+        'situacao_choices': situacao_choices, # Pass choices to populate the select field
+    }
+    return render(request, 'modals/editar_situacao_funcional.html', context)
+
+
+    
 
 @login_required
-def editar_situacao_atual(request, id):
-    if request.method == 'POST':
-        cadastro = get_object_or_404(Cadastro, id=id)
-        
-        try:
-            # Atualizar categoria existente ou criar nova
-            categoria = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
-            
-            if categoria:
-                # Desativar categoria atual
-                categoria.ativo = False
-                categoria.save()
-                
-                # Criar registro no histórico
-                HistoricoCatEfetivo.objects.create(
-                    cat_efetivo=categoria,
-                    tipo=categoria.tipo,
-                    data_inicio=categoria.data_inicio,
-                    data_termino=timezone.now().date(),
-                    ativo=False,
-                    observacao=categoria.observacao,
-                    usuario_alteracao=request.user
-                )
-            
-            # Criar nova categoria
-            nova_categoria = CatEfetivo(
-                cadastro=cadastro,
-                tipo=request.POST['cat_efetivo'],
-                data_inicio=timezone.now().date(),
-                usuario_cadastro=request.user,
-                ativo=True
-            )
-            nova_categoria.save()
-            
-            return JsonResponse({'success': True})
+def confirmar_arquivamento(request, id):
+    """
+    View para o Passo 2 - Modal de confirmação após arquivamento
+    """
+    cadastro = get_object_or_404(Cadastro, id=id)
 
-        except Exception as e:
-            print(f"Erro ao salvar a situação atual: {e}")
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Método de requisição inválido.'})
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'cadastrar_nova':
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('efetivo:cadastrar_nova_situacao', args=[cadastro.id])
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('efetivo:ver_militar', args=[cadastro.id])
+            })
+
+    # GET request - mostrar modal
+    return render(request, 'modals/confirmar_arquivamento.html', {
+        'cadastro': cadastro
+    })
 
 @login_required
 def cadastrar_nova_situacao(request, id):
+    """
+    View para o Passo 3 - Modal para cadastrar nova situação funcional
+    """
+    cadastro = get_object_or_404(Cadastro, id=id)
+
     if request.method == 'POST':
-        cadastro = get_object_or_404(Cadastro, id=id)
-        
         try:
-            # Criar Nova Situação
+            # Criar nova situação funcional
             nova_situacao = DetalhesSituacao(
                 cadastro=cadastro,
-                situacao=request.POST['situacao'],
+                situacao=request.POST.get('situacao', 'ATIVO'),
                 sgb=request.POST['sgb'],
                 posto_secao=request.POST['posto_secao'],
-                esta_adido=request.POST['esta_adido'],
                 funcao=request.POST['funcao'],
-                op_adm=request.POST['op_adm'],
-                prontidao=request.POST.get('prontidao'),
+                prontidao=request.POST['prontidao'],
                 apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
-                saida_da_unidade=request.POST.get('saida_da_unidade', None),
-                usuario_alteracao=request.user,
+                usuario_alteracao=request.user
             )
             nova_situacao.save()
-            
-            # Criar/Atualizar categoria
-            categoria = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
-            if categoria:
-                categoria.ativo = False
-                categoria.save()
-                
+
+            # Atualizar categoria de efetivo
+            categoria_atual = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
+            if categoria_atual:
+                categoria_atual.ativo = False
+                categoria_atual.data_termino = timezone.now().date()
+                categoria_atual.save()
+
+                # Registrar no histórico
                 HistoricoCatEfetivo.objects.create(
-                    cat_efetivo=categoria,
-                    tipo=categoria.tipo,
-                    data_inicio=categoria.data_inicio,
+                    cat_efetivo=categoria_atual,
+                    tipo=categoria_atual.tipo,
+                    data_inicio=categoria_atual.data_inicio,
                     data_termino=timezone.now().date(),
                     ativo=False,
                     usuario_alteracao=request.user
                 )
-            
+
+            # Criar nova categoria (padrão ATIVO)
             nova_categoria = CatEfetivo(
                 cadastro=cadastro,
                 tipo=request.POST.get('cat_efetivo', 'ATIVO'),
@@ -757,45 +738,39 @@ def cadastrar_nova_situacao(request, id):
                 ativo=True
             )
             nova_categoria.save()
-            
-            # Atualizar o Histórico de Detalhes da Situação
-            HistoricoDetalhesSituacao.objects.create(
-                cadastro=cadastro,
-                situacao=nova_situacao.situacao,
-                sgb=nova_situacao.sgb,
-                posto_secao=nova_situacao.posto_secao,
-                esta_adido=nova_situacao.esta_adido,
-                funcao=nova_situacao.funcao,
-                op_adm=nova_situacao.op_adm,
-                prontidao= nova_situacao.prontidao,
-                apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
-                saida_da_unidade=nova_situacao.saida_da_unidade,
-                data_alteracao=nova_situacao.data_alteracao,
-                usuario_alteracao=request.user,
-                cat_efetivo=nova_situacao.cat_efetivo,
-            )
-         
-            messages.add_message(request, constants.SUCCESS, 'Criada Nova Situação Funcional com sucesso.', 
-            extra_tags='bg-green-500 text-white p-4 rounded')
-            return redirect('efetivo:ver_militar', id=cadastro.id)
+
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('efetivo:ver_militar', args=[cadastro.id])
+            })
 
         except Exception as e:
-            print(f"Erro ao cadastrar a nova situação: {e}")
-            messages.add_message(request, constants.ERROR, 'Erro ao cadastrar nova situação.', 
-                              extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
-            return redirect('efetivo:ver_militar', id=cadastro.id)
-    
-    messages.add_message(request, constants.ERROR, 'Método de Requisição errado.', 
-                      extra_tags='bg-red-500 text-white p-4 rounded')  # SEM 'delete_error'
-    return redirect('efetivo:ver_militar', id=id)
+            logger.error(f"Erro ao cadastrar nova situação: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao processar: {str(e)}'
+            }, status=500)
+
+    # GET request - mostrar modal
+    context = {
+        'cadastro': cadastro,
+        'sgb_choices': DetalhesSituacao.SGB_CHOICES,
+        'posto_secao_choices': DetalhesSituacao.POSTO_SECAO_CHOICES,
+        'funcao_choices': DetalhesSituacao.FUNCAO_CHOICES,
+        'prontidao_choices': DetalhesSituacao.PRONTIDAO_CHOICES,
+        'cat_efetivo_choices': CatEfetivo.TIPO_CHOICES,
+    }
+    return render(request, 'modals/cadastrar_nova_situacao.html', context)
 
 
 
+
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from .models import Cadastro, HistoricoPromocao, HistoricoDetalhesSituacao
+from .models import Cadastro
 
 @login_required
 def editar_dados_pessoais_contatos(request, id):
@@ -803,7 +778,27 @@ def editar_dados_pessoais_contatos(request, id):
     
     if request.method == "POST":
         try:
-            # Seu código existente para processar os dados...
+            # Atualizar os campos do cadastro com os dados do formulário
+            cadastro.nome = request.POST.get('nome')
+            cadastro.nome_de_guerra = request.POST.get('nome_de_guerra')
+            cadastro.re = request.POST.get('re')
+            cadastro.dig = request.POST.get('dig')
+            cadastro.genero = request.POST.get('genero')
+            cadastro.nasc = request.POST.get('nasc')
+            cadastro.matricula = request.POST.get('matricula')
+            cadastro.admissao = request.POST.get('admissao')
+            cadastro.previsao_de_inatividade = request.POST.get('previsao_de_inatividade')
+            cadastro.cpf = request.POST.get('cpf')
+            cadastro.rg = request.POST.get('rg')
+            cadastro.telefone = request.POST.get('telefone')
+            cadastro.email = request.POST.get('email')
+            cadastro.tempo_para_averbar_militar = request.POST.get('tempo_para_averbar_militar', 0)
+            cadastro.tempo_para_averbar_inss = request.POST.get('tempo_para_averbar_inss', 0)
+            cadastro.alteracao = request.POST.get('alteracao')
+            
+            # Validar e salvar
+            cadastro.full_clean()  # Validação do modelo
+            cadastro.save()
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -814,6 +809,15 @@ def editar_dados_pessoais_contatos(request, id):
             messages.success(request, 'Dados atualizados com sucesso!')
             return redirect('efetivo:ver_militar', id=cadastro.id)
             
+        except ValidationError as e:
+            error_message = '; '.join([f"{k}: {', '.join(v)}" for k, v in e.message_dict.items()])
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': error_message
+                }, status=400)
+            
+            messages.error(request, f'Erro de validação: {error_message}')
         except Exception as e:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -826,7 +830,8 @@ def editar_dados_pessoais_contatos(request, id):
     context = {
         'cadastro': cadastro,
     }
-    return render(request, 'efetivo/editar_dados_pessoais.html', context)
+    return render(request, 'modals/editar_dados_pessoais.html', context)
+
 
 
 @login_required
@@ -1548,175 +1553,250 @@ class ListaMilitaresView(ListView):
                         return filho['nome']
         return ""
 
-# Em /home/andre/Github - repositorio/SisCoE/SisCoE/backend/efetivo/views.py
-
-
-
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, Frame
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus.doctemplate import PageTemplate
 from django.contrib.staticfiles import finders
-
-from .models import Cadastro, Promocao, DetalhesSituacao
+import os
 
 def get_image_path(file):
     path = finders.find(f'img/{file}')
-    if not path:
-        raise FileNotFoundError(f"Arquivo estático img/{file} não encontrado! Verifique se está em 'backend/efetivo/static/img/'.")
+    if not path or not os.path.exists(path):
+        raise FileNotFoundError(f"Arquivo estático img/{file} não encontrado!")
     return path
 
 def pagina_buscar_militar(request):
     return render(request, 'buscar_militar.html')
 
 def gerar_etiqueta_pdf(request):
-    re_param = request.GET.get('re', None)
+    if request.method == 'GET':
+        return render(request, 'buscar_militar.html')
+    
+    re_param = request.POST.get('re', '').strip()
+    context = {'re_value': re_param}
 
     if not re_param:
-        return HttpResponse("Parâmetro 're' não fornecido na URL.", status=400)
+        context['error_message'] = "Por favor, digite o RE do militar."
+        return render(request, 'buscar_militar.html', context, status=400)
 
     try:
         cadastro = get_object_or_404(Cadastro, re=re_param)
     except Exception as e:
-        return HttpResponse(f"Militar com RE {re_param} não encontrado. Erro: {e}", status=404)
+        context['error_message'] = f"Militar com RE {re_param} não encontrado."
+        return render(request, 'buscar_militar.html', context, status=404)
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="etiqueta_militar_{re_param}.pdf"'
-
-    # Dimensões da etiqueta
-    ETIQUETA_WIDTH = 120 * mm
-    ETIQUETA_HEIGHT = 60 * mm
-    
-    # Margens mínimas
-    margin_x = 3 * mm
-    margin_y = 3 * mm
-
-    doc = SimpleDocTemplate(
-        response,
-        pagesize=(ETIQUETA_WIDTH, ETIQUETA_HEIGHT),
-        rightMargin=margin_x,
-        leftMargin=margin_x,
-        topMargin=margin_y,
-        bottomMargin=margin_y
-    )
-    
-    styles = getSampleStyleSheet()
-    story = []
-
-    # --- Estilos Personalizados ---
-    # Estilo para o nome completo
-    styles.add(ParagraphStyle(
-        name='MilitaryName',
-        parent=styles['Normal'],
-        fontSize=14,
-        leading=15,
-        textColor=colors.black,
-        alignment=1,  # Centralizado
-        fontName='Helvetica-Bold'
-    ))
-    
-    # Estilo para graduação e nome de guerra
-    styles.add(ParagraphStyle(
-        name='MilitaryRankWarName',
-        parent=styles['Normal'],
-        fontSize=11,
-        leading=12,
-        textColor=colors.blue,
-        alignment=1,  # Centralizado
-        fontName='Helvetica-Bold'
-    ))
-    
-    # Estilo para o RE
-    styles.add(ParagraphStyle(
-        name='MilitaryRE',
-        parent=styles['Normal'],
-        fontSize=10,
-        leading=11,
-        textColor=colors.darkblue,
-        alignment=1,  # Centralizado
-        fontName='Helvetica-Bold'
-    ))
-    
-    # Estilo para detalhes
-    styles.add(ParagraphStyle(
-        name='MilitaryDetail',
-        parent=styles['Normal'],
-        fontSize=9,
-        leading=10,
-        textColor=colors.black,
-        alignment=1,  # Centralizado
-        spaceAfter=0.5*mm
-    ))
-
-    # Carregar imagens
     try:
-        logo_img = Image(get_image_path('logo.png'), width=15*mm, height=15*mm)
-        brasao_img = Image(get_image_path('brasao.png'), width=15*mm, height=15*mm)
-    except FileNotFoundError as e:
-        return HttpResponse(f"Erro ao carregar imagem: {e}", status=500)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="etiqueta_militar_{re_param}.pdf"'
 
-    # --- Cabeçalho com Imagens Centralizadas Verticalmente ---
-    header_data = [
-        [logo_img, "15º Grupamento de Bombeiros", brasao_img]
-    ]
-    
-    header_table = Table(header_data, colWidths=[
-        20*mm,  # Coluna da logo
-        ETIQUETA_WIDTH - 40*mm - 2*margin_x,  # Coluna central
-        20*mm   # Coluna do brasão
-    ])
-    
-    # Estilo para centralização vertical
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ALIGN', (0,0), (0,0), 'CENTER'),
-        ('ALIGN', (2,0), (2,0), 'CENTER'),
-        ('ALIGN', (1,0), (1,0), 'CENTER'),
-        ('FONT', (1,0), (1,0), 'Helvetica-Bold', 10),
-        ('TOPPADDING', (0,0), (-1,-1), 0),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
-    ]))
-    
-    story.append(header_table)
-    story.append(Spacer(1, 2*mm))
+        # --- Dimensões da Etiqueta ---
+        ETIQUETA_WIDTH = 130 * mm
+        ETIQUETA_HEIGHT = 60 * mm
+        page_width, page_height = A4
+        
+        # Margens
+        margin_page = 10 * mm
+        x_pos = margin_page
+        y_pos = page_height - margin_page - ETIQUETA_HEIGHT
 
-    # --- Informações do Militar ---
-    # Nome completo
-    story.append(Paragraph(cadastro.nome or '', styles['MilitaryName']))
-    story.append(Spacer(1, 1*mm))
+        doc = SimpleDocTemplate(
+            response,
+            pagesize=A4,
+            rightMargin=0,
+            leftMargin=0,
+            topMargin=0,
+            bottomMargin=0
+        )
+        
+        styles = getSampleStyleSheet()
+        
+        # --- Estilos Personalizados ---
+        styles.add(ParagraphStyle(
+            name='HeaderText',
+            fontSize=11,
+            leading=12,
+            textColor=colors.HexColor('#1a365d'),
+            alignment=1,
+            fontName='Helvetica-Bold',
+            spaceAfter=6*mm
+        ))
 
-    # Graduação e nome de guerra
-    last_promotion = cadastro.promocoes.order_by('-data_alteracao').first()
-    if last_promotion and last_promotion.posto_grad:
-        rank_war_name = f"{last_promotion.posto_grad} {cadastro.nome_de_guerra or ''}"
-    else:
-        rank_war_name = cadastro.nome_de_guerra or ''
-    
-    story.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
-    story.append(Spacer(1, 1*mm))
+        styles.add(ParagraphStyle(
+            name='MilitaryName',
+            fontSize=14,
+            leading=15,
+            textColor=colors.black,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='MilitaryRankWarName',
+            fontSize=11,
+            leading=12,
+            textColor=colors.HexColor('#1a365d'),
+            alignment=1,
+            fontName='Helvetica-Bold'
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='MilitaryRE',
+            fontSize=13, 
+            leading=11,
+            textColor=colors.HexColor('#9c4221'),
+            alignment=1,
+            fontName='Helvetica-Bold'
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='MilitaryDetail',
+            fontSize=9,
+            leading=10,
+            textColor=colors.black,
+            alignment=1,
+            spaceAfter=0.5*mm
+        ))
 
-    # RE com dígito verificador
-    re_text = f"{cadastro.re or ''}-{cadastro.dig or ''}" if cadastro.dig else f"{cadastro.re or ''}"
-    story.append(Paragraph(re_text, styles['MilitaryRE']))
-    story.append(Spacer(1, 2*mm))
+        # --- Carregar imagens ---
+ # --- Carregar imagens ---
+        try:
+            # Logo como marca d'água central (3x4 ocupando toda altura)
+            logo_img = Image('backend/core/static/img/logo.png', 
+                           width=(3/4)*ETIQUETA_HEIGHT,
+                           height=ETIQUETA_HEIGHT)
+            
+            # Brasão no canto superior esquerdo (15x15mm)
+            brasao_img = Image('backend/core/static/img/brasao.png', 
+                              width=15*mm, 
+                              height=15*mm)
+            
+            # Brasão PM no canto superior direito (15x15mm)
+            brasao_pm_img = Image('backend/core/static/img/brasaopm.png', 
+                                 width=15*mm, 
+                                 height=15*mm)
+            
+        except Exception as e:
+            context['error_message'] = f"Erro ao carregar imagens: {str(e)}"
+            return render(request, 'buscar_militar.html', context, status=500)
 
-    # --- Detalhes de Situação ---
-    last_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
-    
-    # Função
-    if last_situacao and last_situacao.funcao:
-        story.append(Paragraph(last_situacao.funcao, styles['MilitaryDetail']))
-    
-    # SGB
-    if last_situacao and last_situacao.sgb:
-        story.append(Paragraph(last_situacao.sgb, styles['MilitaryDetail']))
-    
-    # Posto/Seção
-    if last_situacao and last_situacao.posto_secao:
-        story.append(Paragraph(last_situacao.posto_secao, styles['MilitaryDetail']))
+        # --- Elementos da etiqueta ---
+        elements = []
 
-    # Gera o PDF
-    doc.build(story)
-    return response
+        # Cabeçalho com brasões e texto
+        header_data = [
+            [brasao_img, Paragraph("15º GRUPAMENTO DE BOMBEIROS", styles['HeaderText']), brasao_pm_img]
+        ]
+        
+        header_table = Table(header_data, 
+                           colWidths=[20*mm, ETIQUETA_WIDTH-40*mm, 20*mm],
+                           rowHeights=[15*mm])
+        
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('ALIGN', (0,0), (0,0), 'LEFT'),
+            ('ALIGN', (2,0), (2,0), 'RIGHT'),
+            ('ALIGN', (1,0), (1,0), 'CENTER'),
+            ('LEFTPADDING', (1,0), (1,0), 0),
+            ('RIGHTPADDING', (1,0), (1,0), 0),
+        ]))
+        
+        elements.append(header_table)
+
+
+        # Conteúdo principal
+        elements.append(Paragraph(cadastro.nome.upper() if cadastro.nome else '', styles['MilitaryName']))
+        elements.append(Spacer(1, 1*mm))
+
+        last_promotion = cadastro.promocoes.order_by('-data_alteracao').first()
+        if last_promotion and last_promotion.posto_grad:
+            rank_war_name = f"{last_promotion.posto_grad.upper()} {cadastro.nome_de_guerra.upper() if cadastro.nome_de_guerra else ''}"
+        else:
+            rank_war_name = cadastro.nome_de_guerra.upper() if cadastro.nome_de_guerra else ''
+        
+        elements.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
+        elements.append(Spacer(1, 1*mm))
+
+        re_text = f"{cadastro.re or ''}-{cadastro.dig or ''}" if cadastro.dig else f"{cadastro.re or ''}"
+        elements.append(Paragraph(re_text, styles['MilitaryRE']))
+        elements.append(Spacer(1, 3*mm))
+
+        last_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        if last_situacao:
+            if last_situacao.funcao:
+                elements.append(Paragraph(last_situacao.funcao.upper(), styles['MilitaryDetail']))
+            if last_situacao.sgb:
+                elements.append(Paragraph(last_situacao.sgb.upper(), styles['MilitaryDetail']))
+            if last_situacao.posto_secao:
+                elements.append(Paragraph(last_situacao.posto_secao.upper(), styles['MilitaryDetail']))
+
+        # --- Função para desenhar o layout completo ---
+        def draw_page(canvas, doc):
+            # Marca d'água
+            canvas.saveState()
+            canvas.setFillAlpha(0.1)
+            logo_img.drawOn(canvas, 
+                          x_pos + (ETIQUETA_WIDTH - logo_img.drawWidth)/2, 
+                          y_pos + (ETIQUETA_HEIGHT - logo_img.drawHeight)/2)
+            canvas.restoreState()
+            
+            # Bordas estilizadas
+            canvas.saveState()
+            
+            AZUL_ESCURO = colors.HexColor('#1a365d')
+            DOURADO = colors.HexColor('#d4af37')
+            
+            # Borda externa
+            canvas.setStrokeColor(AZUL_ESCURO)
+            canvas.setLineWidth(1.2*mm)
+            canvas.rect(
+                x_pos - 0.6*mm,
+                y_pos - 0.6*mm,
+                ETIQUETA_WIDTH + 1.2*mm,
+                ETIQUETA_HEIGHT + 1.2*mm
+            )
+            
+            # Filete dourado
+            canvas.setStrokeColor(DOURADO)
+            canvas.setLineWidth(0.6*mm)
+            canvas.rect(
+                x_pos + 2*mm,
+                y_pos + 2*mm,
+                ETIQUETA_WIDTH - 4*mm,
+                ETIQUETA_HEIGHT - 4*mm
+            )
+            
+            # Linha intermediária
+            canvas.setStrokeColor(AZUL_ESCURO)
+            canvas.setLineWidth(0.3*mm)
+            canvas.rect(
+                x_pos + 1*mm,
+                y_pos + 1*mm,
+                ETIQUETA_WIDTH - 2*mm,
+                ETIQUETA_HEIGHT - 2*mm
+            )
+            
+            # Cantos decorados
+            TAMANHO_CANTO = 5*mm
+            # (código dos cantos mantido igual)
+            
+            canvas.restoreState()
+
+        # Frame e construção do PDF
+        frame = Frame(x_pos, y_pos, ETIQUETA_WIDTH, ETIQUETA_HEIGHT,
+                     leftPadding=5*mm, bottomPadding=5*mm,
+                     rightPadding=5*mm, topPadding=5*mm,
+                     showBoundary=0)
+        
+        doc.addPageTemplates([PageTemplate(id='EtiquetaPage', frames=frame, onPage=draw_page)])
+        doc.build(elements)
+        
+        return response
+
+    except Exception as e:
+        context['error_message'] = f"Erro ao gerar etiqueta: {str(e)}"
+        return render(request, 'buscar_militar.html', context, status=500)
