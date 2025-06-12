@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% load custom_filters %}
+{% load efetivo_filters %}
 {% load cat_efetivo_tags %}
 
 {% block title %} Consultar Efetivo{% endblock %}
@@ -350,82 +350,109 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-2 mb-4 rounded-md w-full max-w-full">
                 <fieldset class="bg-gray-100 rounded-2xl shadow-lg p-6 border border-gray-200 flex flex-col h-full">
-                    <div class="flex-grow">
-                        <div class="flex items-center justify-between mb-2">
-                            <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
-                                </svg>
-                                Situação Funcional
-                            </h2>
+            <div class="flex-grow">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xl font-semibold text-indigo-900 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m5 10v-3a3 3 0 00-3-3H5a3 3 0 00-3 3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
+                        </svg>
+                        Situação Funcional
+                    </h2>
+                </div>
 
-                        </div>
-                
-                        <a href="{% url 'efetivo:historico_movimentacoes' cadastro.id %}" class="text-xs text-gray-600 hover:text-indigo-400 transition duration-300 block mb-2">
-                            Histórico de Movimentações e Promoções →
-                        </a>
-                        <hr class="my-4 border-gray-200">
-                
-                        <div class="bg-indigo-50/80 rounded-xl p-5 border border-indigo-100 shadow-sm">
-                            <!-- Grid de Informações -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                                <!-- Situação -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Situação</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</p>
-                                </div>
-                                
-                                <!-- SGB -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">SGB</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</p>
-                                </div>
-                                
-                                <!-- Posto/Seção -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Posto/Seção</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</p>
-                                </div>
-                                
-                                <!-- Adido ao -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Adido ao</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</p>
-                                </div>
-                                
-                                <!-- Função -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Função</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</p>
-                                </div>
-                                
-                                <!-- Prontidão -->
-                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
-                                    <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Prontidão</span>
-                                    <div class="text-gray-800 font-medium">{{ cadastro.detalhes_situacao.last.prontidao_badge|safe|default:"-" }}</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Botão de Ação -->
-                            <!-- Dentro do campo "Situação Funcional" -->
-                            <div class="mt-6 flex justify-end">
-                                <button type="button" 
-                                        data-modal-open="editarSituacaoFuncionalModal"
-                                        class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Editar Situação Funcional
-                                </button>
-                            </div>
-                            <!-- Incluir o modal de edição da situação funcional -->
-                            {% include 'modals/editar_situacao_funcional.html' %}
-                        </div>
+                <a href="{% url 'efetivo:historico_movimentacoes' cadastro.id %}" class="text-xs text-gray-600 hover:text-indigo-400 transition duration-300 block mb-2">
+                    Histórico de Movimentações e Promoções →
+                </a>
+                <hr class="my-4 border-gray-200">
 
-                 
+                <div class="bg-indigo-50/80 rounded-xl p-5 border border-indigo-100 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Situação</span>
+                            <p class="text-gray-800 font-medium truncate">{{ detalhe_situacao.situacao|default:"-" }}</p>
+                        </div>
                         
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">SGB</span>
+                            <p class="text-gray-800 font-medium truncate">{{ detalhe_situacao.sgb|default:"-" }}</p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Posto/Seção</span>
+                            <p class="text-gray-800 font-medium truncate">{{ detalhe_situacao.posto_secao|default:"-" }}</p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Adido ao</span>
+                            {# MELHORIA: Exibe "Sim" ou "Não" em vez de True/False #}
+                            <p class="text-gray-800 font-medium truncate">
+                                {% if detalhe_situacao.esta_adido == True %}Sim{% elif detalhe_situacao.esta_adido == False %}Não{% else %}-{% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Função</span>
+                            <p class="text-gray-800 font-medium truncate">{{ detalhe_situacao.funcao|default:"-" }}</p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
+                            <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Prontidão</span>
+                            <div class="text-gray-800 font-medium">{{ detalhe_situacao.prontidao_badge|safe|default:"-" }}</div>
+                        </div>
                     </div>
-                
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button id="openEditarSituacaoBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Editar Situação Funcional
+                        </button>
+
+                        <script>
+                            // Este script deve estar em ver_militar.html ou em um arquivo JS carregado por ele
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const openEditarSituacaoBtn = document.getElementById('openEditarSituacaoBtn');
+                                const editarSituacaoFuncionalModal = document.getElementById('editarSituacaoFuncionalModal');
+
+                                if (openEditarSituacaoBtn && editarSituacaoFuncionalModal) {
+                                    openEditarSituacaoBtn.addEventListener('click', function() {
+                                        editarSituacaoFuncionalModal.classList.remove('hidden'); // Remove 'hidden' para exibir o modal
+                                    });
+                                }
+
+                                // Defina a função openModal aqui se ela não estiver em ver_militar.js
+                                // Ela é essencial para que o modal choice_modal.html abra após a submissão.
+                                // Exemplo:
+                                /*
+                                function openModal(modalElement) {
+                                    if (modalElement) {
+                                        modalElement.classList.remove('hidden');
+                                    }
+                                }
+                                */
+                            });
+                        </script>
+                    </div>
+                    
+                    {# No final da seção de situação funcional #}
+                    {% include 'modals/choice_modal.html' %}
+                    {% include 'modals/editar_situacao_funcional.html' %}
+                    {% include 'modals/nova_situacao_funcional.html' %}  <!-- Novo modal -->
+                    {# Adicione um script para armazenar os dados atuais para o JS #}
+                    <script id="currentSituacaoData" type="application/json">
+                        {
+                            "id": "{{ detalhe_situacao.id|default:'' }}",
+                            "situacao": "{{ detalhe_situacao.situacao|default:'' }}",
+                            "sgb": "{{ detalhe_situacao.sgb|default:'' }}",
+                            "posto_secao": "{{ detalhe_situacao.posto_secao|default:'' }}",
+                            "esta_adido": "{{ detalhe_situacao.esta_adido|default:'' }}",
+                            "funcao": "{{ detalhe_situacao.funcao|default:'' }}",
+                            "op_adm": "{{ detalhe_situacao.op_adm|default:'' }}",
+                            "prontidao": "{{ detalhe_situacao.prontidao|default:'' }}",
+                            "apresentacao_na_unidade": "{{ detalhe_situacao.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}",
+                            "saida_da_unidade": "{{ detalhe_situacao.saida_da_unidade|date:'Y-m-d'|default:'' }}"
+                        }
+                    </script>
+                </div>
+            </div>                   
                     <div class="mt-auto pt-4">
                 
                         <div class="bg-indigo-50 rounded-lg p-4 mb-4 border border-indigo-100">

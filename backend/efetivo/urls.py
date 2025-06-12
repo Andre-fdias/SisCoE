@@ -47,4 +47,6 @@ urlpatterns = [
 
     # URL para editar situação funcional.
     path('editar_situacao_funcional/<int:id>/', views.editar_situacao_funcional, name='editar_situacao_funcional'),
+     # Adicione esta nova rota
+    path('nova_situacao_funcional/<int:id>/', views.nova_situacao_funcional, name='nova_situacao_funcional'),
 ]

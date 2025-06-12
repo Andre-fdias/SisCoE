@@ -1,4 +1,3 @@
-<!-- backend/efetivo/templates/modals/editar_situacao_funcional.html -->
 <div id="editarSituacaoFuncionalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden transform transition-all duration-300">
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 flex items-center justify-between">
@@ -7,9 +6,9 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
-                    Editar Situação Funcional
+                    Editar Situação Funcional (Fase 1)
                 </h3>
-                <p class="text-blue-100 text-sm mt-1">Atualizar os dados de situação funcional do militar</p>
+                <p class="text-blue-100 text-sm mt-1">Atualizar Situação e Data de Saída da Unidade.</p>
             </div>
             <button type="button"
                     data-modal-close="editarSituacaoFuncionalModal"
@@ -20,12 +19,12 @@
             </button>
         </div>
 
-        <form method="POST" action="{% url 'efetivo:editar_situacao_funcional' cadastro.id %}" class="p-6 space-y-6">
+        <form id="situacaoFuncionalForm" method="POST" action="{% url 'efetivo:editar_situacao_funcional' cadastro.id %}" class="p-6 space-y-6">
             {% csrf_token %}
             <input type="hidden" name="detalhe_situacao_id" value="{{ detalhe_situacao.id }}">
             
             <!-- Seção de Dados Atuais -->
-            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
                 <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">Dados Atuais</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
@@ -55,18 +54,16 @@
                 </div>
             </div>
 
-            <!-- Seção de Edição -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Situação -->
                 <div class="relative z-0">
                     <select name="situacao" id="situacao" required class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">Selecione uma situação</option>
+                        <option value="" selected disabled>Selecione uma situação</option> {# Adicionado 'selected disabled' para que a primeira opção seja sempre a selecionada por padrão e desabilitada para seleção #}
                         {% for choice in situacao_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.situacao %}selected{% endif %}>{{ choice.1 }}</option>
+                            <option value="{{ choice.0 }}">{{ choice.1 }}</option> {# Removido 'selected' para não pré-selecionar #}
                         {% endfor %}
                     </select>
                     <label for="situacao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Situação
+                        Situação <span class="text-red-500">*</span>
                     </label>
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,114 +72,23 @@
                     </div>
                 </div>
                 
-                <!-- SGB -->
-                <div class="relative z-0">
-                    <select name="sgb" id="sgb" required class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">Selecione um SGB</option>
-                        {% for choice in sgb_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.sgb %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="sgb" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        SGB
-                    </label>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Posto/Seção -->
-                <div class="relative z-0">
-                    <select name="posto_secao" id="posto_secao" required class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">Selecione um Posto/Seção</option>
-                        {% for choice in posto_secao_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.posto_secao %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="posto_secao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Posto/Seção
-                    </label>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Adido ao -->
-                <div class="relative z-0">
-                    <select name="esta_adido" id="esta_adido" class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">---</option>
-                        {% for choice in esta_adido_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.esta_adido %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="esta_adido" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Adido ao
-                    </label>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Função -->
-                <div class="relative z-0">
-                    <select name="funcao" id="funcao" required class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">Selecione uma Função</option>
-                        {% for choice in funcao_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.funcao %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="funcao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Função
-                    </label>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Prontidão -->
-                <div class="relative z-0">
-                    <select name="prontidao" id="prontidao" required class="block w-full px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
-                        <option value="">Selecione a Prontidão</option>
-                        {% for choice in prontidao_choices %}
-                            <option value="{{ choice.0 }}" {% if choice.0 == detalhe_situacao.prontidao %}selected{% endif %}>{{ choice.1 }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="prontidao" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Prontidão
-                    </label>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Apresentação na Unidade -->
                 <div class="relative">
-                    <input type="date" name="apresentacao_na_unidade" id="apresentacao_na_unidade" value="{{ detalhe_situacao.apresentacao_na_unidade|date:'Y-m-d' }}" required class="block px-4 py-3 w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"/>
-                    <label for="apresentacao_na_unidade" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
-                        Apresentação na Unidade
-                    </label>
-                </div>
-                
-                <!-- Saída da Unidade -->
-                <div class="relative">
-                    <input type="date" name="saida_da_unidade" id="saida_da_unidade" value="{{ detalhe_situacao.saida_da_unidade|date:'Y-m-d'|default:'' }}" class="block px-4 py-3 w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"/>
+                    <input type="date" name="saida_da_unidade" id="saida_da_unidade" class="block px-4 py-3 w-full text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"/> {# Removido o atributo 'value' #}
                     <label for="saida_da_unidade" class="absolute text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-800 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-3">
                         Saída da Unidade (opcional)
                     </label>
                 </div>
+
+                {# Os demais campos de edição são removidos ou mantidos como hidden inputs para a "Fase 1" #}
+                {# Exemplo de como manter outros campos como hidden, se necessário para a lógica do backend: #}
+                <input type="hidden" name="sgb" value="{{ detalhe_situacao.sgb|default:'' }}">
+                <input type="hidden" name="posto_secao" value="{{ detalhe_situacao.posto_secao|default:'' }}">
+                <input type="hidden" name="esta_adido" value="{{ detalhe_situacao.esta_adido|yesno:"True,False"|default:"False" }}">
+                <input type="hidden" name="funcao" value="{{ detalhe_situacao.funcao|default:'' }}">
+                <input type="hidden" name="prontidao" value="{{ detalhe_situacao.prontidao|default:'' }}">
+                <input type="hidden" name="apresentacao_na_unidade" value="{{ detalhe_situacao.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}">
             </div>
             
-            <!-- Botões -->
             <div class="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" data-modal-close="editarSituacaoFuncionalModal"
                         class="px-5 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors
@@ -202,51 +108,154 @@
     </div>
 </div>
 
+<style>
+    /* Estilo para o spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Estilo para notificações */
+.global-notification {
+    animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 2.7s;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+@keyframes slideIn {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Fechar modal
+    // Referências aos elementos importantes
+    const editarSituacaoFuncionalModal = document.getElementById('editarSituacaoFuncionalModal');
+    const choiceModal = document.getElementById('choiceModal');
+    const form = document.getElementById('situacaoFuncionalForm');
+    
+    // Funções para manipulação de modais
+    function showModal(modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    
+    function hideModal(modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    
+    // Função para mostrar notificações não bloqueantes
+    function showNotification(message, type = 'success') {
+        // Remove notificações existentes
+        document.querySelectorAll('.global-notification').forEach(el => el.remove());
+        
+        const notification = document.createElement('div');
+        notification.className = `global-notification fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg text-white font-medium transition-all ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // Auto-remover após 3 segundos
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    // Eventos para fechar o modal de edição
     document.querySelectorAll('[data-modal-close="editarSituacaoFuncionalModal"]').forEach(button => {
-        button.addEventListener('click', function() {
-            document.getElementById('editarSituacaoFuncionalModal').classList.add('hidden');
-        });
+        button.addEventListener('click', () => hideModal(editarSituacaoFuncionalModal));
     });
-
-    // Fechar ao clicar fora
-    document.getElementById('editarSituacaoFuncionalModal').addEventListener('click', function(e) {
+    
+    editarSituacaoFuncionalModal.addEventListener('click', function(e) {
         if (e.target === this) {
-            this.classList.add('hidden');
+            hideModal(editarSituacaoFuncionalModal);
         }
     });
     
-    // Form submission handling
-    const form = document.querySelector('#editarSituacaoFuncionalModal form');
+    // Evento de submissão do formulário
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(form);
+            // Exibir indicador de carregamento
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = `
+                <span class="flex items-center gap-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Salvando...
+                </span>
+            `;
+            submitButton.disabled = true;
             
-            fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            try {
+                // Preparar dados do formulário
+                const formData = new FormData(form);
+                
+                // Enviar requisição AJAX
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                // Processar resposta
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro de rede ou servidor');
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
+                
                 if (data.success) {
-                    // Fechar modal e recarregar a página
-                    document.getElementById('editarSituacaoFuncionalModal').classList.add('hidden');
-                    location.reload();
+                    // Mostrar notificação não bloqueante
+                    showNotification(data.message);
+                    
+                    // Fechar modal de edição
+                    hideModal(editarSituacaoFuncionalModal);
+                    
+                    // Verificar se precisamos mostrar o modal de escolha
+                    if (data.show_choice_modal) {
+                        // Pequeno delay para melhor experiência do usuário
+                        setTimeout(() => {
+                            showModal(choiceModal);
+                        }, 300);
+                    } else {
+                        // Recarregar a página após pequeno delay
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 } else {
-                    alert('Erro ao salvar: ' + data.message);
+                    throw new Error(data.message || 'Erro desconhecido ao salvar');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Ocorreu um erro ao tentar salvar as alterações.');
-            });
+            } catch (error) {
+                console.error('Erro no processamento:', error);
+                showNotification(`Erro: ${error.message}`, 'error');
+            } finally {
+                // Restaurar estado do botão
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+            }
         });
     }
 });

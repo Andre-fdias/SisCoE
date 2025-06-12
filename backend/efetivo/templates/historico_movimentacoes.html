@@ -1,143 +1,258 @@
 {% extends "base.html" %}
 {% load static %}
-{% load custom_filters %}
+{% load efetivo_filters %}
 {% block title %} Histórico de Movimentações{% endblock %}
 {% block 'head' %}
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
 <link rel="stylesheet" href="{% static 'efetivo/css/historico.css' %}">
+<style>
+    .table-container {
+        overflow-x: auto;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-radius: 0.5rem;
+    }
+    
+    .data-table {
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .data-table thead th {
+        background-color: #2d3748;
+        color: #f7fafc;
+        padding: 0.75rem 1.5rem;
+        text-align: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+    }
+    
+    .data-table tbody td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .data-table tbody tr:hover {
+        background-color: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .badge-info {
+        background-color: #bee3f8;
+        color: #2b6cb0;
+    }
+    
+    .badge-success {
+        background-color: #c6f6d5;
+        color: #276749;
+    }
+</style>
 {% endblock 'head' %}
 
 {% block 'body' %}
-
-
-<body>
-
-    <div class=" md:items-center md:justify-between rounded-lg mt-12  w-full" id="cad_efetivo">
-    
-        <fieldset class=" p-4 mb-8 rounded-md w-full" id="second-fieldset">
-            <fieldset class="  bg-gray-800  p-4 mb-8 rounded-md">
-            <div id="01" class="mb-4">
-                <div class="bg-gray-800 p-4 rounded-md">
-                    <div class="flex flex-wrap items-center justify-between py-3">
-                        <div class="col-12 md:w-auto">
-                            <h3 class="text-2xl font-semibold text-gray-300">Histórico de Movimentações e Promoções</h3>
-                        </div>  
-                        <div class="w-full md:w-auto text-right">
-                        
-                            <a href="{% url 'efetivo:ver_militar' cadastro.id %}" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">Voltar</a>
-                        </div>
-                    </div>
-                </div>
-                <legend>
-                    {% if messages %}
-                    {% for message in messages %}
-                        <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                            {{ message }}
-                        </section>
-                    {% endfor %}
-                    {% endif %}
-                </legend>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Cabeçalho -->
+    <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-6 mb-8 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    Histórico de Movimentações
+                </h1>
+                <p class="mt-2 text-gray-300">
+                    Registro completo das promoções e movimentações de {{ cadastro.nome_de_guerra }}
+                </p>
             </div>
-        </fieldset>
-            <div class="w-full space-y-4">
-                
-                <fieldset class="w-full bg-gray-200 p-4 rounded-lg">
-                    <div class="row">
-                        <div class="col-12">
-                            <h3 class="text-xl text-gray-700 font-semibold">Promoções</h3>
-                        </div>  
-                        <div class="container mx-auto" id="table">
-                            <div class="overflow-x-auto">
-                                <table id="dataTablePromocoes" class="min-w-full bg-white border border-gray-200">
-                                    <thead>
-                                        <tr>
-                                            <th class="px-4 text-gray-700  py-2">Posto/Grad</th>
-                                            <th class="px-4 text-gray-700 py-2">Quadro</th>
-                                            <th class="px-4 text-gray-700 py-2">Grupo</th>
-                                            <th class="px-4 text-gray-700 py-2">Última Promoção</th>
-                                            <th class="px-4 text-gray-700 py-2">Alterado em</th>
-                                            <th class="px-4 text-gray-700 py-2">Por</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for promocao in promocoes %}
-                                        <tr>
-                                            <td class="border  text-gray-700 px-4 py-2">{{ promocao.posto_grad}}</td>
-                                            <td class="border text-gray-700  px-4 py-2">{{ promocao.quadro }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ promocao.grupo }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
-                                            <td class="border  text-gray-700 px-4 py-2">{{ promocao.usuario_alteracao }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </fieldset>
-                <fieldset class="w-full bg-gray-200 p-4 rounded-lg">  
-                    <div class="row">
-                        <h3 class="text-xl text-gray-600 font-semibold">Detalhes das Movimentações</h3>
-                        <div class="container mx-auto" id="table1">
-                            <div class="overflow-x-auto">
-                                <table id="dataTableDetalhes" class="min-w-full bg-white border border-gray-200">
-                                    <thead>
-                                        <tr>
-                                            <th class="px-4 text-gray-700 py-2">Situação</th>
-                                            <th class="px-4 text-gray-700 py-2">SGB</th>
-                                            <th class="px-4 text-gray-700 py-2">Posto/Seção</th>
-                                            <th class="px-4 text-gray-700 py-2">Apresentação</th>
-                                            <th class="px-4 text-gray-700 py-2">Saída</th>
-                                            <th class="px-4 text-gray-700 py-2">Alterado em</th>
-                                            <th class="px-4 text-gray-700 py-2">Por</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for detalhe in cadastro.detalhes_situacao.all %}
-                                        <tr>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.situacao }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.sgb }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.posto_secao }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.saida_da_unidade|date:"d/m/Y" }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.data_alteracao|date:"d/m/Y"  }}</td>
-                                            <td class="border text-gray-700 px-4 py-2">{{ detalhe.usuario_alteracao }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </fieldset>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'efetivo:ver_militar' cadastro.id %}" 
+                   class="flex items-center justify-center px-5 py-2.5 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-all shadow-md hover:shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Voltar para o Perfil
+                </a>
             </div>
-        </fieldset>
-    </fieldset>
-        
-        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const dataTablePromocoes = new simpleDatatables.DataTable("#dataTablePromocoes", {
-                    labels: {
-                        placeholder: "Pesquisar...",
-                        perPage: "{select} registros por página",
-                        noRows: "Nenhum registro encontrado",
-                        info: "Mostrando {start} a {end} de {rows} registros (Página {page} de {pages})"
-                    }
-                });
-    
-                const dataTableDetalhes = new simpleDatatables.DataTable("#dataTableDetalhes", {
-                    labels: {
-                        placeholder: "Pesquisar...",
-                        perPage: "{select} registros por página",
-                        noRows: "Nenhum registro encontrado",
-                        info: "Mostrando {start} a {end} de {rows} registros (Página {page} de {pages})"
-                    }
-                });
-            });
-        </script>
+        </div>
     </div>
-</body>
-{% endblock %}
 
+    <!-- Mensagens -->
+    {% if messages %}
+    <div class="mb-8">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg mb-4 text-white font-medium 
+                    {% if message.tags == 'success' %}bg-green-600{% endif %}
+                    {% if message.tags == 'error' %}bg-red-600{% endif %}
+                    {% if message.tags == 'warning' %}bg-yellow-600{% endif %}
+                    {% if message.tags == 'info' %}bg-blue-600{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Conteúdo Principal -->
+    <div class="grid grid-cols-1 gap-8">
+        <!-- Seção de Promoções -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    Histórico de Promoções
+                </h2>
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {{ promocoes|length }} registro{{ promocoes|length|pluralize }}
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTablePromocoes" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Posto/Grad</th>
+                            <th>Quadro</th>
+                            <th>Grupo</th>
+                            <th>Última Promoção</th>
+                            <th>Alterado em</th>
+                            <th>Por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for promocao in promocoes %}
+                        <tr>
+                            <td class="font-medium text-gray-900">{{ promocao.posto_grad }}</td>
+                            <td>{{ promocao.quadro }}</td>
+                            <td>{{ promocao.grupo }}</td>
+                            <td>{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
+                            <td>{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
+                            <td class="font-medium">{{ promocao.usuario_alteracao }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de Movimentações -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Histórico de Movimentações
+                </h2>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {{ historico_detalhes_situacao|length }} registro{{ historico_detalhes_situacao|length|pluralize }}
+                </span>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTableDetalhes" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Situação</th>
+                            <th>SGB</th>
+                            <th>Posto/Seção</th>
+                            <th>Apresentação</th>
+                            <th>Saída</th>
+                            <th>Alterado em</th>
+                            <th>Por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalhe in historico_detalhes_situacao %}
+                        <tr>
+                            <td class="font-medium">
+                                {% if detalhe.situacao == "Efetivo" %}
+                                    <span class="badge badge-success">Efetivo</span>
+                                {% elif detalhe.situacao == "Exonerado a Pedido" %}
+                                    <span class="badge badge-info">Exonerado</span>
+                                {% else %}
+                                    {{ detalhe.situacao }}
+                                {% endif %}
+                            </td>
+                            <td>{{ detalhe.sgb }}</td>
+                            <td>{{ detalhe.posto_secao }}</td>
+                            <td>{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if detalhe.saida_da_unidade %}
+                                    {{ detalhe.saida_da_unidade|date:"d/m/Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ detalhe.data_alteracao|date:"d/m/Y H:i" }}</td>
+                            <td class="font-medium">{{ detalhe.usuario_alteracao }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuração das tabelas com opções estendidas
+    const tableOptions = {
+        labels: {
+            placeholder: "Pesquisar...",
+            perPage: "{select} registros por página",
+            noRows: "Nenhum registro encontrado",
+            info: "Mostrando {start} a {end} de {rows} registros (Página {page} de {pages})",
+            loading: "Carregando...",
+            infoFiltered: "(filtrado de {rows} registros)"
+        },
+        classes: {
+            active: "bg-gray-800 text-white",
+            paginationButton: "px-3 py-1 rounded hover:bg-gray-200",
+            paginationButtonCurrent: "bg-gray-800 text-white"
+        }
+    };
+
+    const dataTablePromocoes = new simpleDatatables.DataTable("#dataTablePromocoes", tableOptions);
+    const dataTableDetalhes = new simpleDatatables.DataTable("#dataTableDetalhes", tableOptions);
+    
+    // Melhorias de acessibilidade
+    document.querySelectorAll('.datatable-input').forEach(input => {
+        input.setAttribute('aria-label', 'Pesquisar na tabela');
+        input.placeholder = "Digite para pesquisar...";
+    });
+    
+    document.querySelectorAll('.datatable-select').forEach(select => {
+        select.setAttribute('aria-label', 'Registros por página');
+    });
+});
+</script>
+{% endblock %}

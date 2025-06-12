@@ -382,18 +382,24 @@ class DetalhesSituacao(models.Model):
 
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE,
                                  related_name='detalhes_situacao')
-    situacao = models.CharField(max_length=30, blank=False, null=False, choices=situacao_choices,    default="Efetivo")
-   
-    sgb = models.CharField(max_length=9, blank=False, null=False, choices=sgb_choices)
-    posto_secao = models.CharField(max_length=100, blank=False, null=False, choices=posto_secao_choices)
+    # Modificado para permitir em branco/nulo
+    situacao = models.CharField(max_length=30, blank=True, null=True, choices=situacao_choices, default="Efetivo")
+    # Modificado para permitir em branco/nulo
+    cat_efetivo = models.CharField(max_length=20, blank=True, null=True, choices=cat_efetivo_choices, default="ATIVO")
+    # Modificado para permitir em branco/nulo
+    sgb = models.CharField(max_length=9, blank=True, null=True, choices=sgb_choices)
+    # Modificado para permitir em branco/nulo
+    posto_secao = models.CharField(max_length=100, blank=True, null=True, choices=posto_secao_choices)
     esta_adido = models.CharField(max_length=100, blank=True, null=True, choices=esta_adido_choices)
-    funcao = models.CharField(max_length=50, blank=False, null=False, choices=funcao_choices)
+    # Modificado para permitir em branco/nulo
+    funcao = models.CharField(max_length=50, blank=True, null=True, choices=funcao_choices)
     op_adm = models.CharField(max_length=18, blank=True, null=True, choices=op_adm_choices)
-    prontidao = models.CharField(max_length=18, blank=False, null=False, choices=prontidao_choices, default="") # Added default value
-    apresentacao_na_unidade = models.DateField(blank=False, null=False)
+    # Modificado para permitir em branco/nulo (o default="" já ajuda no blank=True, mas null=True é para o BD)
+    prontidao = models.CharField(max_length=18, blank=True, null=True, choices=prontidao_choices, default="VERDE") # Sugestão: um default mais significativo, como "VERDE"
+    apresentacao_na_unidade = models.DateField(blank=True, null=True)
     saida_da_unidade = models.DateField(blank=True, null=True)
-    data_alteracao  = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True,  related_name='detalhes_usuario')
+    data_alteracao = models.DateTimeField(auto_now_add=True) # Geralmente não é alterado pelo usuário
+    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name='detalhes_usuario')
 
     def __str__(self):
       return f'{self.cadastro.re} - {self.situacao}'
@@ -596,23 +602,27 @@ class HistoricoPromocao(models.Model):
 
 
 class HistoricoDetalhesSituacao(models.Model):
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE)
-    situacao = models.CharField(max_length=50)
-    sgb = models.CharField(max_length=50)
-    posto_secao = models.CharField(max_length=50)
-    esta_adido = models.CharField(max_length=50)
-    funcao = models.CharField(max_length=50)
-    op_adm = models.CharField(max_length=50)
-    prontidao = models.CharField(max_length=18, blank=False, null=False, default="") # Added default value
-    cat_efetivo = models.CharField(max_length=30, blank=False, null=False,  default="Efetivo")
-    apresentacao_na_unidade = models.DateField()
-    saida_da_unidade = models.DateField(null=True, blank=True)
+    cadastro = models.ForeignKey('Cadastro', on_delete=models.CASCADE) # Use 'Cadastro' como string se Cadastro for definido abaixo
+    situacao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
+    sgb = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
+    posto_secao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
+    esta_adido = models.CharField(max_length=50, blank=True, null=True) # Já era nullable
+    funcao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
+    op_adm = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
+    prontidao = models.CharField(max_length=18, blank=True, null=True, default="") # blank=True, null=True
+    cat_efetivo = models.CharField(max_length=30, blank=True, null=True, default="ATIVO") # blank=True, null=True
+    apresentacao_na_unidade = models.DateField(blank=True, null=True) # Adicionado blank=True, null=True
+    saida_da_unidade = models.DateField(null=True, blank=True) # Já era nullable
     data_alteracao = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    
+    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True) # Usar get_user_model() é mais robusto
     
     def __str__(self):
-        return f' {self.situacao}'
+        return f'Histórico para {self.cadastro.nome_de_guerra if self.cadastro else "Militar Desconhecido"} - {self.situacao}'
+
+    class Meta:
+        verbose_name = "Histórico de Detalhes de Situação"
+        verbose_name_plural = "Históricos de Detalhes de Situação"
+        ordering = ['-data_alteracao'] # Boa prática para históricos
 
 from django.db import models
 from django.utils.safestring import mark_safe
