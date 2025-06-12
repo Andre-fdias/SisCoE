@@ -705,7 +705,12 @@ class CatEfetivo(models.Model):
             return "AGUARDANDO INÍCIO"
         else:
             return "EM VIGOR"
-        
+
+    def get_total_dias(self):
+        if self.data_inicio and self.data_termino:
+            # Calcula a diferença em dias. Adicionamos +1 para incluir o dia de início e o dia de término.
+            return (self.data_termino - self.data_inicio).days + 1
+        return 0     
         
     @property
     def restricoes_selecionadas(self):
@@ -1088,14 +1093,28 @@ def regras_restricoes_badges(self):
     def tipo_choices(self):
         return CatEfetivo._meta.get_field('tipo').choices
 
-        
+
 class HistoricoCatEfetivo(models.Model):
-    cat_efetivo = models.ForeignKey(CatEfetivo, on_delete=models.CASCADE, related_name='historico')
+    cat_efetivo = models.ForeignKey('CatEfetivo', on_delete=models.CASCADE, related_name='historico') # Usar string para evitar importação circular se CatEfetivo estiver abaixo
     data_registro = models.DateTimeField(auto_now_add=True)
     usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
 
     # Campos espelho do CatEfetivo
-    tipo = models.CharField(max_length=20, choices=CatEfetivo.TIPO_CHOICES)
+    tipo = models.CharField(max_length=20, choices=[ # Definir as escolhas aqui ou referenciar CatEfetivo.TIPO_CHOICES
+        ('ATIVO', 'Ativo'),
+        ('INATIVO', 'Inativo'),
+        ('LSV', 'LSV - Licença para Serviço Voluntário'),
+        ('LTS', 'LTS - Licença para Tratamento de Saúde'),
+        ('LTS FAMILIA', 'LTS Família - Licença para Tratamento de Saúde de Familiar'),
+        ('CONVAL', 'Convalescença'),
+        ('ELEIÇÃO', 'Eleição'),
+        ('LP', 'Licença Prêmio'),
+        ('FERIAS', 'Férias'),
+        ('RESTRICAO', 'Restrição'),
+        ('DS', 'Dispensado de Serviço'),
+        ('DR', 'Dispensa Recompensa'),
+        # ... Adicione outras escolhas se existirem em CatEfetivo.TIPO_CHOICES
+    ])
     data_inicio = models.DateField()
     data_termino = models.DateField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
@@ -1151,6 +1170,8 @@ class HistoricoCatEfetivo(models.Model):
 
     @property
     def tipo_badge(self):
+        # A lógica do tipo_badge está perfeita e pode ser mantida como está.
+        # Apenas garantir que mark_safe seja importado.
         tipo = self.tipo
         if tipo == "ATIVO":
             return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>')
@@ -1179,6 +1200,48 @@ class HistoricoCatEfetivo(models.Model):
         else:
             return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
 
+    @property
+    def status(self):
+        hoje = date.today()
+
+        # Condição 1: Se o afastamento tem data de término e essa data já passou
+        if self.data_termino and self.data_termino < hoje:
+            return "ENCERRADO"
+        # Condição 2: Se o afastamento tem data de início no futuro
+        elif self.data_inicio > hoje:
+            return "AGUARDANDO INÍCIO"
+        # Condição 3: Se o afastamento já começou (data_inicio <= hoje) e
+        #             ou não tem data de término (None) ou a data de término é hoje ou no futuro
+        elif self.data_inicio <= hoje and (self.data_termino is None or self.data_termino >= hoje):
+            return "EM VIGOR"
+        # Condição 4: Para qualquer outro caso (ex: data_inicio futura, sem data_termino)
+        else:
+            return "N/A" # Ou algum status padrão para casos não cobertos
+
+    def get_total_dias(self):
+        if self.data_inicio and self.data_termino:
+            # Calcula a diferença em dias. Adicionamos +1 para incluir o dia de início e o dia de término.
+            return (self.data_termino - self.data_inicio).days + 1
+        return 0 # Retorna 0 se as datas não estiverem completas para o cálculo
+
+    @property
+    def restricoes_selecionadas_siglas(self):
+        if self.tipo != 'RESTRICAO':
+            return ""
+
+        siglas = []
+        # Percorre todos os campos do modelo
+        for field in self._meta.get_fields():
+            # Verifica se o campo é um booleano e começa com 'restricao_'
+            if isinstance(field, models.BooleanField) and field.name.startswith('restricao_'):
+                # Se o valor do campo booleano for True
+                if getattr(self, field.name):
+                    # Pega as duas últimas letras do nome do campo (a sigla)
+                    sigla = field.name.split('_')[-1].upper()
+                    siglas.append(sigla)
+
+        return ", ".join(siglas)
+
     class Meta:
         verbose_name = "Histórico de Categoria de Efetivo"
         verbose_name_plural = "Históricos de Categorias de Efetivo"
@@ -1188,21 +1251,3 @@ class HistoricoCatEfetivo(models.Model):
             models.Index(fields=['data_registro']),
             models.Index(fields=['tipo']),
         ]
-
-    @property
-    def restricoes_selecionadas_siglas(self):
-        if self.tipo != 'RESTRICAO':
-            return ""
-
-        siglas = []
-        campos_restricao = [field.name for field in self._meta.get_fields()
-                                    if field.name.startswith('restricao_')]
-
-        for campo in campos_restricao:
-            if getattr(self, campo):
-                # Pega as duas últimas letras do nome do campo
-                sigla = campo.split('_')[-1].upper()
-                siglas.append(sigla)
-
-        return ", ".join(siglas)
-

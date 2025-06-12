@@ -1,20 +1,25 @@
-{% load cat_efetivo_tags %}
+{% load cat_efetivo_tags %} {# Certifique-se de que suas tags personalizadas estão carregadas #}
 
-<div id="editCatEfetivoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+{# O MODAL PRINCIPAL PARA ADIÇÃO DE CATEGORIA #}
+<div id="editCatEfetivoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 overflow-y-auto p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl transform transition-all duration-300">
+        {# Cabeçalho do Modal #}
         <div class="sticky top-0 bg-indigo-700 text-white p-6 rounded-t-xl flex justify-between items-center">
             <h3 id="modalTitle" class="text-xl font-bold">
-                <i class="fas fa-exchange-alt mr-2"></i> Alterar Categoria de Efetivo
+                {# Título inicial - será atualizado pelo JS #}
+                <i class="fas fa-plus-circle mr-2"></i> Incluir Nova Categoria de Efetivo
             </h3>
-            <button type="button" onclick="closeCatEfetivoModal()" class="text-white hover:text-gray-200 text-2xl">
+            <button type="button" onclick="closeCatEfetivoModal()" class="text-white hover:text-gray-200 text-2xl" title="Fechar">
                 &times;
             </button>
         </div>
 
+        {# Corpo do Modal com Formulário #}
         <div class="p-6">
             <form id="catEfetivoForm" method="POST" action="{% url 'efetivo:adicionar_categoria_efetivo' cadastro.id %}">
                 {% csrf_token %}
-                <input type="hidden" id="tipo_categoria" name="tipo">
+                {# O campo hidden 'tipo_categoria' pode ser removido se o select de 'tipo' for suficiente #}
+                {# <input type="hidden" id="tipo_categoria" name="tipo"> #}
 
                 <div class="mb-6">
                     <label for="tipo" class="block text-sm font-medium text-gray-700 mb-2">
@@ -23,6 +28,7 @@
                     <select id="tipo" name="tipo" required
                             class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">Selecione uma categoria</option>
+                        {# Assumindo que 'categoria_choices' é passado da sua view #}
                         {% for value, label in categoria_choices %}
                             <option value="{{ value }}">{{ label }}</option>
                         {% endfor %}
@@ -30,9 +36,18 @@
                 </div>
 
                 <div id="dynamicFieldsContainer">
-                    <!-- Campos dinâmicos serão inseridos aqui -->
+                    </div>
+
+                {# Campo de Observação (comum a todas as categorias, se desejar) #}
+                <div class="mb-6">
+                    <label for="observacao" class="block text-sm font-medium text-gray-700 mb-2">
+                        Observação
+                    </label>
+                    <textarea id="observacao" name="observacao" rows="3"
+                              class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-y"></textarea>
                 </div>
 
+                {# Botões de Ação do Formulário #}
                 <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
                     <button type="button" onclick="closeCatEfetivoModal()"
                             class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
@@ -40,7 +55,7 @@
                     </button>
                     <button type="submit"
                             class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        Salvar Alterações
+                        Salvar Categoria
                     </button>
                 </div>
             </form>
@@ -48,28 +63,28 @@
     </div>
 </div>
 
-<!-- Templates para cada tipo de categoria -->
+{# TEMPLATES OCULTOS PARA CONTEÚDO DINÂMICO DO MODAL #}
 <div id="template-ativo" class="hidden">
-    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
-        <p class="text-sm text-blue-800">Categoria básica de status do militar. Não requer configurações adicionais.</p>
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <p class="text-sm text-blue-800"><i class="fas fa-info-circle mr-2"></i> Esta categoria define o status básico de "ATIVO". Não requer configurações adicionais de datas.</p>
     </div>
 </div>
 
 <div id="template-lsv" class="hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="lsv_data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Início <span class="text-red-500">*</span>
             </label>
-            <input type="date" id="data_inicio" name="data_inicio" required
+            <input type="date" id="lsv_data_inicio" name="data_inicio" required
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
         <div>
-            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="lsv_data_termino" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Término
             </label>
-            <input type="date" id="data_termino" name="data_termino"
+            <input type="date" id="lsv_data_termino" name="data_termino"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
@@ -77,7 +92,7 @@
             <label for="boletim_concessao_lsv" class="block text-sm font-medium text-gray-700 mb-2">
                 Boletim de Concessão
             </label>
-            <input type="text" id="boletim_concessao_lsv" name="boletim_concessao_lsv"
+            <input type="text" id="boletim_concessao_lsv" name="boletim_concessao_lsv" placeholder="Ex: BGPM N° 123 de DDMMYY"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
@@ -94,33 +109,33 @@
 <div id="template-restricao" class="hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="restricao_data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Início <span class="text-red-500">*</span>
             </label>
-            <input type="date" id="data_inicio" name="data_inicio" required
+            <input type="date" id="restricao_data_inicio" name="data_inicio" required
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
         <div>
-            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="restricao_data_termino" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Término
             </label>
-            <input type="date" id="data_termino" name="data_termino"
+            <input type="date" id="restricao_data_termino" name="data_termino"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
     </div>
 
     <div class="mb-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">Restrições</h4>
-        <p class="text-sm text-gray-600 mb-4">Marque as restrições aplicáveis:</p>
+        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center"><i class="fas fa-hand-paper mr-2"></i> Restrições Aplicáveis</h4>
+        <p class="text-sm text-gray-600 mb-4">Marque as restrições de serviço que se aplicam a este militar:</p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {% get_restricao_fields as restricao_fields %}
+            {% get_restricao_fields as restricao_fields %} {# Usa a tag personalizada para obter os campos de restrição #}
             {% for field in restricao_fields %}
                 <div class="flex items-center">
                     <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}"
                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                    <label for="{{ field.name }}" class="ml-2 text-sm text-gray-700">
+                    <label for="{{ field.name }}" class="ml-2 text-sm text-gray-700 cursor-pointer">
                         {{ field.verbose_name }}
                     </label>
                 </div>
@@ -129,122 +144,130 @@
     </div>
 </div>
 
+{# Template genérico para categorias com apenas data de início/término #}
 <div id="template-generic" class="hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="generic_data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Início <span class="text-red-500">*</span>
             </label>
-            <input type="date" id="data_inicio" name="data_inicio" required
+            <input type="date" id="generic_data_inicio" name="data_inicio" required
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
         <div>
-            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="generic_data_termino" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Término
             </label>
-            <input type="date" id="data_termino" name="data_termino"
+            <input type="date" id="generic_data_termino" name="data_termino"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
     </div>
 
-    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
-        <p class="text-sm text-indigo-800">Configure as datas de início e término para esta categoria.</p>
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <p class="text-sm text-indigo-800"><i class="fas fa-calendar-alt mr-2"></i> Configure as datas de início e término para esta categoria de afastamento.</p>
     </div>
 </div>
-<!-- Adicione esses novos templates após o template-generic -->
+
+{# Templates específicos para DS e DR (usando a estrutura do template-generic) #}
 <div id="template-ds" class="hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="ds_data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Início <span class="text-red-500">*</span>
             </label>
-            <input type="date" id="data_inicio" name="data_inicio" required
+            <input type="date" id="ds_data_inicio" name="data_inicio" required
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
         <div>
-            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="ds_data_termino" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Término
             </label>
-            <input type="date" id="data_termino" name="data_termino"
+            <input type="date" id="ds_data_termino" name="data_termino"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
     </div>
 
-    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
-        <p class="text-sm text-indigo-800">Configure as datas de início e término para o período de Dispensa de Serviço.</p>
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <p class="text-sm text-indigo-800"><i class="fas fa-bell-slash mr-2"></i> Configure as datas de início e término para o período de Dispensa de Serviço (DS).</p>
     </div>
 </div>
 
 <div id="template-dr" class="hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-            <label for="data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="dr_data_inicio" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Início <span class="text-red-500">*</span>
             </label>
-            <input type="date" id="data_inicio" name="data_inicio" required
+            <input type="date" id="dr_data_inicio" name="data_inicio" required
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
 
         <div>
-            <label for="data_termino" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="dr_data_termino" class="block text-sm font-medium text-gray-700 mb-2">
                 Data de Término
             </label>
-            <input type="date" id="data_termino" name="data_termino"
+            <input type="date" id="dr_data_termino" name="data_termino"
                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
         </div>
     </div>
 
-    <div class="mb-6 p-4 bg-indigo-50 rounded-lg">
-        <p class="text-sm text-indigo-800">Configure as datas de início e término para o período de Dispensa de Rotina.</p>
+    <div class="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <p class="text-sm text-indigo-800"><i class="fas fa-award mr-2"></i> Configure as datas de início e término para o período de Dispensa Recompensa (DR).</p>
     </div>
 </div>
 
+{# SCRIPT PARA A LÓGICA DO MODAL #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo');
     const dynamicContainer = document.getElementById('dynamicFieldsContainer');
-    const modalTitle = document.getElementById('modalTitle');
-    const tipoHidden = document.getElementById('tipo_categoria');
+    const modalTitleElement = document.getElementById('modalTitle');
+    const catEfetivoForm = document.getElementById('catEfetivoForm');
+    const observacaoField = document.getElementById('observacao'); // Pegando o campo de observação
 
-    // Mapeamento de templates para cada tipo
+    // Mapeamento de templates para cada tipo de categoria (tudo em minúsculas para consistência)
     const templates = {
         'ativo': document.getElementById('template-ativo').innerHTML,
-        'inativo': document.getElementById('template-ativo').innerHTML,
+        'inativo': document.getElementById('template-ativo').innerHTML, // Inativo usa o mesmo template de ativo
         'lsv': document.getElementById('template-lsv').innerHTML,
         'restricao': document.getElementById('template-restricao').innerHTML,
         'ds': document.getElementById('template-ds').innerHTML,
         'dr': document.getElementById('template-dr').innerHTML,
-        'default': document.getElementById('template-generic').innerHTML
+        // Todos os outros tipos que não têm um template específico usarão o 'template-generic'
+        'ferias': document.getElementById('template-generic').innerHTML,
+        'lp': document.getElementById('template-generic').innerHTML,
+        'eleicao': document.getElementById('template-generic').innerHTML,
+        'conval': document.getElementById('template-generic').innerHTML,
+        'lts': document.getElementById('template-generic').innerHTML,
+        'lts familia': document.getElementById('template-generic').innerHTML,
+        'default': document.getElementById('template-generic').innerHTML // Fallback
     };
 
-    // Títulos personalizados para cada tipo
+    // Títulos personalizados para o modal (use as chaves exatas dos VALUES do <option>)
     const titles = {
         'ATIVO': 'Definir como ATIVO',
         'INATIVO': 'Definir como INATIVO',
-        'LSV': 'Configurar Licença para Serviço Voluntário',
-        'LTS': 'Configurar Licença para Tratar de Interesses Particulares',
+        'LSV': 'Configurar Licença para Serviço Voluntário (LSV)',
+        'LTS': 'Configurar Licença para Tratamento de Saúde (LTS)',
         'LTS FAMILIA': 'Configurar Licença para Tratar de Assuntos Familiares',
         'CONVAL': 'Configurar Convalescença',
         'ELEIÇÃO': 'Configurar Período Eleitoral',
         'LP': 'Configurar Licença Prêmio',
         'FERIAS': 'Configurar Período de Férias',
-        'RESTRICAO': 'Configurar Restrições',
-        'DS': 'Configurar Dispensa de Serviço',
-        'DR': 'Configurar Dispensa de Rotina'
+        'RESTRICAO': 'Configurar Restrições de Serviço',
+        'DS': 'Configurar Dispensa de Serviço (DS)',
+        'DR': 'Configurar Dispensa Recompensa (DR)'
     };
 
-    function updateModalContent() {
-        const selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
-        const tipoValue = selectedOption.value;
-        const tipoKey = tipoValue.toLowerCase();
+    function updateModalContent(initialLoad = false) {
+        const selectedOptionValue = tipoSelect.value;
+        const selectedOptionText = tipoSelect.options[tipoSelect.selectedIndex].text;
+        const tipoKey = selectedOptionValue.toLowerCase(); // Chave para buscar no mapeamento
 
         // Atualiza o título do modal
-        modalTitle.innerHTML = `<i class="fas fa-exchange-alt mr-2"></i> ${titles[tipoValue] || 'Alterar Categoria de Efetivo'}`;
-
-        // Atualiza o campo hidden com o tipo selecionado
-        tipoHidden.value = tipoValue;
+        modalTitleElement.innerHTML = `<i class="fas fa-plus-circle mr-2"></i> ${titles[selectedOptionValue] || 'Incluir Nova Categoria de Efetivo'}`;
 
         // Limpa o container dinâmico
         dynamicContainer.innerHTML = '';
@@ -256,60 +279,112 @@ document.addEventListener('DOMContentLoaded', function() {
             dynamicContainer.innerHTML = templates['default'];
         }
 
-        // Validação especial para datas
-        if (tipoKey !== 'ativo' && tipoKey !== 'inativo') {
-            const dataInicio = dynamicContainer.querySelector('#data_inicio');
-            const dataTermino = dynamicContainer.querySelector('#data_termino');
+        // Re-atribui IDs únicos e listeners de validação de data após a inserção do novo HTML
+        assignUniqueDateInputIds();
+        setupDateValidationListeners();
+    }
 
-            if (dataInicio && dataTermino) {
-                dataInicio.addEventListener('change', function() {
-                    if (dataTermino.value && new Date(dataTermino.value) < new Date(this.value)) {
-                        alert('A data de término não pode ser anterior à data de início');
-                        this.value = '';
-                    }
-                });
+    // Função para atribuir IDs únicos aos inputs de data
+    function assignUniqueDateInputIds() {
+        const dataInicioInput = dynamicContainer.querySelector('input[name="data_inicio"]');
+        const dataTerminoInput = dynamicContainer.querySelector('input[name="data_termino"]');
 
-                dataTermino.addEventListener('change', function() {
-                    if (dataInicio.value && new Date(this.value) < new Date(dataInicio.value)) {
-                        alert('A data de término não pode ser anterior à data de início');
-                        this.value = '';
-                    }
-                });
-            }
+        if (dataInicioInput) {
+            // Garante que o ID é único para que a validação de data funcione corretamente
+            const uniqueId = `data_inicio_${Date.now()}`;
+            dataInicioInput.id = uniqueId;
+            // Atualiza o 'for' do label correspondente
+            const label = dynamicContainer.querySelector(`label[for="${dataInicioInput.name}"]`);
+            if (label) label.setAttribute('for', uniqueId);
+        }
+        if (dataTerminoInput) {
+            const uniqueId = `data_termino_${Date.now() + 1}`; // +1 para garantir que seja diferente
+            dataTerminoInput.id = uniqueId;
+            const label = dynamicContainer.querySelector(`label[for="${dataTerminoInput.name}"]`);
+            if (label) label.setAttribute('for', uniqueId);
         }
     }
 
+
+    // Função para configurar os listeners de validação de data
+    function setupDateValidationListeners() {
+        // Seleciona os campos de data DINAMICAMENTE inseridos no dynamicContainer
+        const dataInicio = dynamicContainer.querySelector('input[name="data_inicio"]');
+        const dataTermino = dynamicContainer.querySelector('input[name="data_termino"]');
+
+        if (dataInicio && dataTermino) {
+            dataInicio.addEventListener('change', function() {
+                if (this.value && dataTermino.value && new Date(dataTermino.value) < new Date(this.value)) {
+                    alert('A data de término não pode ser anterior à data de início.');
+                    dataTermino.value = ''; // Limpa a data de término se for inválida
+                }
+            });
+
+            dataTermino.addEventListener('change', function() {
+                if (this.value && dataInicio.value && new Date(this.value) < new Date(dataInicio.value)) {
+                    alert('A data de término não pode ser anterior à data de início.');
+                    this.value = ''; // Limpa a data de término se for inválida
+                }
+            });
+        }
+    }
+
+
+    // Event listener para mudança no seletor de tipo
     tipoSelect.addEventListener('change', updateModalContent);
 
-    // Inicializa o modal com o primeiro tipo selecionado (se houver)
+    // Inicializa o modal se um tipo já estiver selecionado (útil para casos de recarregamento da página)
     if (tipoSelect.value) {
-        updateModalContent();
+        updateModalContent(true);
     }
 });
 
-// Função para abrir o modal com um tipo específico
-function openCatEfetivoModal(tipo) {
+
+// FUNÇÕES PARA ABRIR E FECHAR O MODAL
+function openCatEfetivoModal(tipo = '') { // Adicionado um valor padrão '' para 'tipo'
     const modal = document.getElementById('editCatEfetivoModal');
     const select = document.getElementById('tipo');
+    const dynamicContainer = document.getElementById('dynamicFieldsContainer');
+    const observacaoField = document.getElementById('observacao');
 
-    // Define o tipo selecionado
-    select.value = tipo;
+    // Reseta o formulário e o estado do modal antes de abri-lo para uma nova inclusão
+    select.value = tipo; // Define o tipo (se passado) ou reseta para vazio
+    // Se o tipo for vazio, o evento 'change' não será disparado automaticamente.
+    // Então, chamamos updateModalContent diretamente para resetar os campos dinâmicos.
+    if (tipo === '') {
+        select.value = ''; // Garante que a opção 'Selecione uma categoria' esteja selecionada
+        dynamicContainer.innerHTML = ''; // Limpa os campos dinâmicos
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Incluir Nova Categoria de Efetivo';
+    } else {
+        // Dispara o evento de change para atualizar o conteúdo dinâmico baseado no tipo
+        const event = new Event('change');
+        select.dispatchEvent(event);
+    }
+    
+    observacaoField.value = ''; // Limpa o campo de observação ao abrir
 
-    // Dispara o evento de change para atualizar o conteúdo
-    const event = new Event('change');
-    select.dispatchEvent(event);
-
-    // Mostra o modal
-    modal.classList.remove('hidden');
+    modal.classList.remove('hidden'); // Mostra o modal
+    modal.classList.add('flex'); // Adiciona flex para centralizar
 }
 
-// Função para fechar o modal
 function closeCatEfetivoModal() {
-    document.getElementById('editCatEfetivoModal').classList.add('hidden');
+    const modal = document.getElementById('editCatEfetivoModal');
+    modal.classList.add('hidden'); // Oculta o modal
+    modal.classList.remove('flex'); // Remove flex
+    // Opcional: Resetar o formulário ou campos específicos ao fechar
+    // document.getElementById('catEfetivoForm').reset();
+    // document.getElementById('dynamicFieldsContainer').innerHTML = '';
 }
 
-// Configura os botões de fechar
+// Configura os botões de fechar que possuem o atributo data-modal-close
 document.querySelectorAll('[data-modal-close="editCatEfetivoModal"]').forEach(button => {
     button.addEventListener('click', closeCatEfetivoModal);
+});
+
+// Fecha o modal ao clicar fora dele
+document.getElementById('editCatEfetivoModal').addEventListener('click', function(event) {
+    if (event.target === this) { // Verifica se o clique foi diretamente no overlay do modal
+        closeCatEfetivoModal();
+    }
 });
 </script>

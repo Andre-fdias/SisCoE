@@ -1,139 +1,152 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %} Histórico de Afastamento{% endblock %}
+{% block title %}Histórico de Afastamento{% endblock %}
+
 {% block 'body' %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">
+    <section class="w-full bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-4 sm:mb-0">
                 Histórico de Categorias - {{ cadastro.nome_de_guerra }}
             </h1>
             <a href="{% url 'efetivo:ver_militar' militar.id %}"
-               class="text-indigo-600 hover:text-indigo-800 flex items-center">
+               class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                 <i class="fas fa-arrow-left mr-2"></i> Voltar
             </a>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white">
-                <thead class="bg-gray-100">
+        <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th class="py-3 px-4 text-left">Data</th>
-                        <th class="py-3 px-4 text-left">Tipo</th>
-                        <th class="py-3 px-4 text-left">Período</th>
-                        <th class="py-3 px-4 text-left">Restrições</th> {# This header is correct #}
-                        <th class="py-3 px-4 text-left">Registrado Por</th>
-                        <th class="py-3 px-4 text-left">Ações</th>
+                        {# Títulos centralizados com 'text-center' #}
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Dias</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Restrições</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> {# Movido para o final #}
                     </tr>
                 </thead>
-<tbody>
-    {% for historico in historicos_categorias %}
-    <tr class="border-b border-gray-200 hover:bg-gray-50">
-        <td class="py-3 px-4">{{ historico.data_registro|date:"d/m/Y H:i" }}</td>
-        <td class="py-3 px-4">{{ historico.get_tipo_display }}</td>
-        <td class="py-3 px-4">
-            {% if historico.data_inicio and historico.data_fim %}
-                {{ historico.data_inicio|date:"d/m/Y" }} - {{ historico.data_fim|date:"d/m/Y" }}
-            {% elif historico.data_inicio %}
-                A partir de {{ historico.data_inicio|date:"d/m/Y" }}
-            {% else %}
-                N/A
-            {% endif %}
-        </td>
-        <td class="py-3 px-4">
-            {# Esta é a parte crucial: Exibindo as restrições #}
-            {{ historico.restricoes_selecionadas_siglas }}
-        </td>
-        <td class="py-3 px-4">{{ historico.registrado_por.username }}</td>
-        <td class="py-3 px-4 flex space-x-2">
-            <button onclick="abrirModalEdicao('{% url 'efetivo:editar_categoria_efetivo' historico.id %}')"
-                    class="text-blue-600 hover:text-blue-800" title="Editar">
-                <i class="fas fa-edit"></i>
-            </button>
-            <a href="{% url 'efetivo:excluir_historico_categoria' historico.id %}"
-               onclick="return confirm('Tem certeza que deseja excluir este histórico de categoria?');"
-               class="text-red-600 hover:text-red-800" title="Excluir">
-                <i class="fas fa-trash-alt"></i>
-            </a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="6" class="py-3 px-4 text-center text-gray-500">
-            Nenhum histórico de categoria encontrado.
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for historico in historicos %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">{{ historico.data_registro|date:"d/m/Y H:i" }}</td>
+                        <td class="py-4 px-4 whitespace-nowrap text-sm font-medium text-center">
+                            {{ historico.tipo_badge|safe }}
+                        </td>
+                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {% if historico.data_inicio and historico.data_termino %}
+                                {{ historico.data_inicio|date:"d/m/Y" }} - {{ historico.data_termino|date:"d/m/Y" }}
+                            {% elif historico.data_inicio %}
+                                A partir de {{ historico.data_inicio|date:"d/m/Y" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {% if historico.get_total_dias > 0 %}
+                                {{ historico.get_total_dias }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                            {{ historico.restricoes_selecionadas_siglas }}
+                        </td>
+                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                            <div class="font-medium">{{ request.user.profile.posto_grad }} {{ request.user.profile.re }}-{{ request.user.profile.dig }} {{ request.user.last_name }}</div>
+                            <div class="text-gray-500">{{ request.user.profile.cpf }}</div>
+                        </td>
+                           {# Campo Status estilizado e movido para o final #}
+                        <td class="py-4 px-4 whitespace-nowrap text-sm text-center">
+                            {% if historico.status == "EM VIGOR" %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ historico.status }}
+                                </span>
+                            {% elif historico.status == "ENCERRADO" %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    {{ historico.status }}
+                                </span>
+                            {% elif historico.status == "AGUARDANDO INÍCIO" %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    {{ historico.status }}
+                                </span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ historico.status }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 whitespace-nowrap text-sm font-medium flex space-x-3 items-center justify-center">
+                            <button onclick="abrirModalExclusao('{% url 'efetivo:excluir_historico_categoria' historico.id %}')"
+                                    class="text-red-600 hover:text-red-800 transition duration-150 ease-in-out" title="Excluir">
+                                <i class="fas fa-trash-alt text-lg"></i>
+                            </button>
+                        </td>
+                     
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        {# Ajuste o colspan para 8, conforme o número total de colunas #}
+                        <td colspan="8" class="py-4 px-4 text-center text-gray-500">
+                            Nenhum histórico de categoria encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
-    </div>
+    </section>
 </div>
 
-{# Modal de Edição (Certifique-se de que este modal está definido no seu template) #}
-<div id="modalEdicao" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
+{# Modal de Confirmação de Exclusão (mantido como está, pois não foi solicitado alteração) #}
+<div id="modalExclusao" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg p-6 shadow-2xl w-full max-w-sm transform transition-all sm:my-8 sm:align-middle sm:w-full border border-gray-200">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">Editar Categoria</h2>
-            <button onclick="fecharModal()" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
+            <h2 class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
+            <button onclick="fecharModalExclusao()" class="text-gray-400 hover:text-gray-600 transition duration-150 ease-in-out">
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        <div id="modalContent">
-            {# O conteúdo do formulário de edição será carregado aqui via AJAX #}
+        <div class="text-center py-4">
+            <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4 animate-bounce"></i>
+            <p class="text-gray-700 text-lg mb-6">Você tem certeza que deseja excluir este histórico?</p>
+            <p class="text-sm text-gray-500 mb-6">Esta ação é irreversível.</p>
+            
+            <form id="formExclusao" method="POST" action="">
+                {% csrf_token %}
+                <div class="flex justify-center space-x-4">
+                    <button type="button" onclick="fecharModalExclusao()"
+                            class="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-150 ease-in-out">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                        Excluir
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-    function abrirModalEdicao(url) {
-        fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('modalContent').innerHTML = html;
-                document.getElementById('modalEdicao').classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Erro ao carregar o formulário de edição:', error);
-                alert('Não foi possível carregar o formulário de edição.');
-            });
+    function abrirModalExclusao(url) {
+        document.getElementById('formExclusao').action = url;
+        document.getElementById('modalExclusao').classList.remove('hidden');
     }
 
-    function fecharModal() {
-        document.getElementById('modalEdicao').classList.add('hidden');
+    function fecharModalExclusao() {
+        document.getElementById('modalExclusao').classList.add('hidden');
     }
 
-    function enviarFormularioEdicao(form) {
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-
-        fetch(form.action, {
-            method: 'POST',
-            body: new FormData(form),
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();  // Recarrega a página após sucesso
-            } else {
-                alert(data.error || 'Erro ao salvar as alterações');
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro na comunicação com o servidor');
-        })
-        .finally(() => {
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalText;
-        });
-    }
+    document.getElementById('modalExclusao').addEventListener('click', function(event) {
+        if (event.target === this) {
+            fecharModalExclusao();
+        }
+    });
 </script>
 {% endblock %}

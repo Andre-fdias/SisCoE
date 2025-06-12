@@ -1,27 +1,61 @@
-
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao, HistoricoPromocao, CatEfetivo, HistoricoCatEfetivo
-from django.contrib import messages
-from django.contrib.messages import constants
-from django.contrib.auth.decorators import login_required
-from django.db.models import OuterRef, Subquery, Count
-from django.utils import timezone
-from django.db import IntegrityError
-from django.db import transaction
-from backend.rpt.models import Cadastro_rpt
-from django.http import HttpResponseForbidden
-from django.db.models import F, Window
-from django.db.models.functions import RowNumber
-from backend.municipios.models import Posto
-import sys
-from django.views.generic import ListView
-from django.contrib.auth.mixins import LoginRequiredMixin # Added this import
-from django.db.models import Prefetch
-from backend.cursos.models import Medalha,Curso
+# Bibliotecas padrão
+import json
 import logging
+import sys
+from datetime import datetime
+
+# Django
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
-from django.db.models import Q # Adicione esta linha
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages import constants
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+from django.db.models import (
+    Count, F, OuterRef, Prefetch, Q, Subquery, Window
+)
+from django.db.models.functions import RowNumber
+from django.http import (
+    HttpResponse, HttpResponseForbidden, JsonResponse
+)
+from django.shortcuts import (
+    get_object_or_404, redirect, render
+)
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.http import require_http_methods
+from django.views.generic import ListView
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.staticfiles import finders
+
+# Modelos locais
+from .models import (
+    Cadastro, CatEfetivo, DetalhesSituacao, HistoricoCatEfetivo,
+    HistoricoDetalhesSituacao, HistoricoPromocao, Imagem, Promocao
+)
+
+# Modelos de outros apps
+from backend.accounts.models import User
+from backend.cursos.models import Curso, Medalha
+from backend.municipios.models import Posto
+from backend.rpt.models import Cadastro_rpt
+
+
+# resposavel pelas etiquetas
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, Frame
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus.doctemplate import PageTemplate
+from django.contrib.staticfiles import finders
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -138,36 +172,6 @@ def cadastrar_militar(request):
         return redirect('/efetivo/cadastrar_militar')
 
 
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao, HistoricoPromocao, CatEfetivo, HistoricoCatEfetivo
-from django.contrib import messages
-from django.contrib.messages import constants
-from django.contrib.auth.decorators import login_required
-from django.db.models import OuterRef, Subquery, Count
-from django.utils import timezone
-from django.db import IntegrityError
-from django.db import transaction
-from backend.rpt.models import Cadastro_rpt
-from django.http import HttpResponseForbidden
-from django.db.models import F, Window
-from django.db.models.functions import RowNumber
-from backend.municipios.models import Posto
-import sys
-# from django.views.generic import ListView
-# from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Prefetch
-from backend.cursos.models import Medalha,Curso
-import logging
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
-
-logger = logging.getLogger(__name__)
-
-# --- View para listar militares com status "Efetivo" ---
-# ... (imports e outras partes da views.py) ...
-
 # --- View para listar militares com status "Efetivo" ---
 @login_required
 def listar_militar(request):
@@ -207,7 +211,8 @@ def listar_militar(request):
         
         return render(request, 'listar_militar.html', context)
 
-# --- Nova View para listar militares com "Outros Status" ---
+
+# --- View para listar militares com "Outros Status" ---
 @login_required
 def listar_outros_status_militar(request):
     if request.method == "GET":
@@ -249,16 +254,7 @@ def listar_outros_status_militar(request):
         return render(request, 'listar_outros_status.html', context)
 
 
-
-        
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db.models import F, Window
-from django.db.models.functions import RowNumber
-from django.utils import timezone
-from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, CatEfetivo
-
+# --- View para controlar afastamentos" ---
 class RestricaoHelper:
     @staticmethod
     def get_regra_principal(sigla):
@@ -283,19 +279,9 @@ class RestricaoHelper:
         }
         return regras_map.get(sigla, '')
     
-from backend.cursos.models import Medalha,Curso
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.utils import timezone
-from backend.efetivo.models import Cadastro, DetalhesSituacao, CatEfetivo, Promocao
-from backend.cursos.models import Curso, Medalha
-import logging
-
-logger = logging.getLogger(__name__)
-
+# --- View para Detalhar militares" ---
 @login_required
 def ver_militar(request, id):
     try:
@@ -465,9 +451,7 @@ def ver_militar(request, id):
         return redirect('efetivo:listar_militar')
     
 
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
-
+# --- View para excluir militares" ---
 @login_required
 def excluir_militar(request, id):
     if request.method == 'POST':
@@ -549,229 +533,7 @@ def editar_posto_graduacao(request, id):
     return redirect('efetivo:ver_militar', id=cadastro.id)
         
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.urls import reverse
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils import timezone
-from .models import (
-    Cadastro, 
-    DetalhesSituacao, 
-    HistoricoDetalhesSituacao,
-    CatEfetivo,
-    HistoricoCatEfetivo
-)
-import logging
-
-logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------
-# VIEWS PARA FLUXO DE SITUAÇÃO FUNCIONAL
-# ---------------------------------------------------------------
-@login_required
-def editar_situacao_funcional(request, id):
-    cadastro = get_object_or_404(Cadastro, id=id)
-
-    # Get the latest (most current) DetalhesSituacao for the current cadastro
-    # Based on your Meta.ordering in DetalhesSituacao, .first() will give the latest.
-    current_situacao_obj = DetalhesSituacao.objects.filter(cadastro=cadastro).first()
-
-    if not current_situacao_obj:
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': 'Não há situação funcional ativa para editar.'}, status=404)
-        messages.error(request, 'Não há situação funcional ativa para editar para este militar.')
-        return redirect('efetivo:ver_militar', id=cadastro.id)
-
-    if request.method == 'POST':
-        try:
-            nova_situacao = request.POST.get('situacao')
-            saida_da_unidade_str = request.POST.get('saida_da_unidade') # This is the end date for the *current* situation
-
-            # Basic validation
-            if not nova_situacao:
-                return JsonResponse({'success': False, 'message': 'Selecione a nova situação.'}, status=400)
-            if not saida_da_unidade_str:
-                return JsonResponse({'success': False, 'message': 'A Data de Saída é obrigatória.'}, status=400)
-
-            try:
-                # Convert the date string to a Python date object
-                saida_da_unidade_date = timezone.datetime.strptime(saida_da_unidade_str, '%Y-%m-%d').date()
-            except ValueError:
-                return JsonResponse({'success': False, 'message': 'Formato de data inválido. Use AAAA-MM-DD.'}, status=400)
-
-            # --- Step 1: Archive the CURRENT DetalhesSituacao record ---
-            # Create a history entry with the *details of the current situation*
-            HistoricoDetalhesSituacao.objects.create(
-                cadastro=cadastro,
-                situacao=current_situacao_obj.situacao,
-                sgb=current_situacao_obj.sgb,
-                posto_secao=current_situacao_obj.posto_secao,
-                esta_adido=current_situacao_obj.esta_adido,
-                funcao=current_situacao_obj.funcao,
-                op_adm=current_situacao_obj.op_adm,
-                prontidao=current_situacao_obj.prontidao,
-                cat_efetivo=current_situacao_obj.cat_efetivo, # Ensure this field exists in DetalhesSituacao
-                apresentacao_na_unidade=current_situacao_obj.apresentacao_na_unidade,
-                saida_da_unidade=saida_da_unidade_date, # This is the date the archived situation ended
-                usuario_alteracao=request.user,
-                # data_alteracao will be auto_now_add
-            )
-
-            # --- Step 2: Delete the current DetalhesSituacao record (or mark it inactive if preferred) ---
-            # Deleting the current record and creating a new one is cleaner for 'active' situations.
-            current_situacao_obj.delete() 
-            # If you prefer marking inactive: current_situacao_obj.is_active = False; current_situacao_obj.save()
-            # Then adjust queries to filter for is_active=True
-
-            # --- Step 3: Create a NEW DetalhesSituacao record with the updated info ---
-            DetalhesSituacao.objects.create(
-                cadastro=cadastro,
-                situacao=nova_situacao, # The new situation
-                sgb=current_situacao_obj.sgb,  # Copy SGB from previous situation
-                posto_secao=current_situacao_obj.posto_secao,  # Copy Posto/Seção from previous situation
-                esta_adido=current_situacao_obj.esta_adido, # Copy from previous
-                funcao=current_situacao_obj.funcao,  # Copy Função from previous situation
-                op_adm=current_situacao_obj.op_adm, # Copy from previous
-                prontidao=current_situacao_obj.prontidao,  # Copy Prontidão from previous situation
-                apresentacao_na_unidade=saida_da_unidade_date, # The new presentation date is when the previous situation ended
-                saida_da_unidade=None, # The new situation doesn't have an end date yet
-                usuario_alteracao=request.user,
-                # data_alteracao will be auto_now_add for the new record
-            )
-
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': 'Situação funcional atualizada e arquivada com sucesso!'})
-            
-            messages.success(request, 'Situação funcional atualizada e arquivada com sucesso!')
-            return redirect('efetivo:ver_militar', id=cadastro.id)
-
-        except Exception as e:
-            logger.error(f"Erro ao editar situação funcional do militar {id}: {e}", exc_info=True)
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': f'Erro ao salvar: {str(e)}'}, status=500)
-            messages.error(request, f'Erro ao salvar alterações: {str(e)}')
-            return redirect('efetivo:ver_militar', id=cadastro.id)
-
-    # GET request - render the modal with current data
-    context = {
-        'cadastro': cadastro,
-        'detalhes': current_situacao_obj, # Pass the current object for displaying current data
-        'situacao_choices': situacao_choices, # Pass choices to populate the select field
-    }
-    return render(request, 'modals/editar_situacao_funcional.html', context)
-
-
-    
-
-@login_required
-def confirmar_arquivamento(request, id):
-    """
-    View para o Passo 2 - Modal de confirmação após arquivamento
-    """
-    cadastro = get_object_or_404(Cadastro, id=id)
-
-    if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'cadastrar_nova':
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('efetivo:cadastrar_nova_situacao', args=[cadastro.id])
-            })
-        else:
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('efetivo:ver_militar', args=[cadastro.id])
-            })
-
-    # GET request - mostrar modal
-    return render(request, 'modals/confirmar_arquivamento.html', {
-        'cadastro': cadastro
-    })
-
-@login_required
-def cadastrar_nova_situacao(request, id):
-    """
-    View para o Passo 3 - Modal para cadastrar nova situação funcional
-    """
-    cadastro = get_object_or_404(Cadastro, id=id)
-
-    if request.method == 'POST':
-        try:
-            # Criar nova situação funcional
-            nova_situacao = DetalhesSituacao(
-                cadastro=cadastro,
-                situacao=request.POST.get('situacao', 'ATIVO'),
-                sgb=request.POST['sgb'],
-                posto_secao=request.POST['posto_secao'],
-                funcao=request.POST['funcao'],
-                prontidao=request.POST['prontidao'],
-                apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
-                usuario_alteracao=request.user
-            )
-            nova_situacao.save()
-
-            # Atualizar categoria de efetivo
-            categoria_atual = CatEfetivo.objects.filter(cadastro=cadastro, ativo=True).first()
-            if categoria_atual:
-                categoria_atual.ativo = False
-                categoria_atual.data_termino = timezone.now().date()
-                categoria_atual.save()
-
-                # Registrar no histórico
-                HistoricoCatEfetivo.objects.create(
-                    cat_efetivo=categoria_atual,
-                    tipo=categoria_atual.tipo,
-                    data_inicio=categoria_atual.data_inicio,
-                    data_termino=timezone.now().date(),
-                    ativo=False,
-                    usuario_alteracao=request.user
-                )
-
-            # Criar nova categoria (padrão ATIVO)
-            nova_categoria = CatEfetivo(
-                cadastro=cadastro,
-                tipo=request.POST.get('cat_efetivo', 'ATIVO'),
-                data_inicio=request.POST['apresentacao_na_unidade'],
-                usuario_cadastro=request.user,
-                ativo=True
-            )
-            nova_categoria.save()
-
-            return JsonResponse({
-                'success': True,
-                'redirect_url': reverse('efetivo:ver_militar', args=[cadastro.id])
-            })
-
-        except Exception as e:
-            logger.error(f"Erro ao cadastrar nova situação: {str(e)}", exc_info=True)
-            return JsonResponse({
-                'success': False,
-                'message': f'Erro ao processar: {str(e)}'
-            }, status=500)
-
-    # GET request - mostrar modal
-    context = {
-        'cadastro': cadastro,
-        'sgb_choices': DetalhesSituacao.SGB_CHOICES,
-        'posto_secao_choices': DetalhesSituacao.POSTO_SECAO_CHOICES,
-        'funcao_choices': DetalhesSituacao.FUNCAO_CHOICES,
-        'prontidao_choices': DetalhesSituacao.PRONTIDAO_CHOICES,
-        'cat_efetivo_choices': CatEfetivo.TIPO_CHOICES,
-    }
-    return render(request, 'modals/cadastrar_nova_situacao.html', context)
-
-
-
-
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.core.exceptions import ValidationError
-from .models import Cadastro
-
+# responsável pela edição da model  cadastro
 @login_required
 def editar_dados_pessoais_contatos(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
@@ -833,7 +595,7 @@ def editar_dados_pessoais_contatos(request, id):
     return render(request, 'modals/editar_dados_pessoais.html', context)
 
 
-
+# responsável pela edição da model imagens
 @login_required
 def editar_imagem(request, id):
     
@@ -873,90 +635,15 @@ def historico_movimentacoes(request, id):
     })
 
 
-# responsável pela edição da model De
-@login_required
-def editar_situacao_funcional(request, id):
-    cadastro = get_object_or_404(Cadastro, id=id)
-    
-    if request.method == 'POST':
-        try:
-            # Atualizar a Situação Atual
-            cadastro.situacao = request.POST['situacao_atual']
-            cadastro.save()
-            
-            # Criar Nova Situação
-            nova_situacao = DetalhesSituacao(
-                cadastro=cadastro,
-                situacao=request.POST['situacao'],
-                sgb=request.POST['sgb'],
-                posto_secao=request.POST['posto_secao'],
-                esta_adido=request.POST['esta_adido'],
-                funcao=request.POST['funcao'],
-                op_adm=request.POST['op_adm'],
-                apresentacao_na_unidade=request.POST['apresentacao_na_unidade'],
-                saida_da_unidade=request.POST.get('saida_da_unidade', None),
-                cat_efetivo=request.POST('cat_efetivo'),
-            )
-            nova_situacao.save()
-            
-            # Atualizar o Histórico de Detalhes da Situação
-            HistoricoDetalhesSituacao.objects.create(
-                cadastro=cadastro,
-                situacao=nova_situacao.situacao,
-                sgb=nova_situacao.sgb,
-                posto_secao=nova_situacao.posto_secao,
-                esta_adido=nova_situacao.esta_adido,
-                funcao=nova_situacao.funcao,
-                op_adm=nova_situacao.op_adm,
-                apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
-                saida_da_unidade=nova_situacao.saida_da_unidade,
-                data_alteracao=nova_situacao.data_alteracao,
-                usuario_alteracao=request.user,
-                cat_efetivo=nova_situacao.cat_efetivo,
-            )
-            messages.add_message(request, constants.SUCCESS, 'Situação funcional atualizada com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
 
-        except Exception as e:
-            messages.add_message(request, constants.SUCCESS, 'Dados de Posto e Graduação atualizados com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
-            messages.error(request, f'Ocorreu um erro ao atualizar a situação funcional: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
-
-          # Permanecer na mesma URL após salvar
-        return redirect('editar_situacao_funcional', id=id)
-        
-    # Renderizar o formulário de edição com os dados atuais
-    return render(request, 'editar_situacao_funcional.html', {
-        'cadastro': cadastro,
-        'situacao': DetalhesSituacao.objects.all(),
-        'sgb_choices': DetalhesSituacao._meta.get_field('sgb').choices,
-        'posto_secao_choices': DetalhesSituacao._meta.get_field('posto_secao').choices,
-        'esta_adido_choices': DetalhesSituacao._meta.get_field('esta_adido').choices,
-        'funcao_choices': DetalhesSituacao._meta.get_field('funcao').choices,
-        'op_adm_choices': DetalhesSituacao._meta.get_field('op_adm').choices,
-        'cat_efetivo': DetalhesSituacao._meta.get_field('cat_efetivo').choices,
-        'detalhes': cadastro.detalhes_situacao.last()
-    })
-
-
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from backend.rpt.models import Cadastro_rpt
-from backend.efetivo.models import Cadastro
-
+# responsável por checar a existencia do RPT
 @login_required
 def check_rpt(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
     exists = Cadastro_rpt.objects.filter(cadastro=cadastro).exists()
     return JsonResponse({'exists': exists})
 
-# backend/efetivo/views.py
-# backend/efetivo/views.py
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch, Q
-from .models import Cadastro, Imagem, Promocao, DetalhesSituacao
-from backend.municipios.models import Posto
-from datetime import datetime
-
+# responsável pela visualização em grade do efetivo existente
 @login_required
 def detalhar_efetivo(request, posto_id):
     posto = get_object_or_404(Posto, pk=posto_id)
@@ -1043,18 +730,8 @@ def detalhar_efetivo(request, posto_id):
     }
     return render(request, 'detalhes_efetivo.html', context)
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db.models import Window, F
-from django.db.models.functions import RowNumber
-from django.db import transaction
-from datetime import date
-from .models import   Cadastro, DetalhesSituacao, Promocao,  CatEfetivo, HistoricoCatEfetivo
 
-from django.utils import timezone
-
-
+# responsável pelo historico de afastamentos
 def historico_categorias(request, militar_id):
     militar = get_object_or_404(Cadastro, id=militar_id)
     historicos = HistoricoCatEfetivo.objects.filter(
@@ -1066,16 +743,6 @@ def historico_categorias(request, militar_id):
         'historicos': historicos,
         'today': timezone.now().date(),
     })
-
-# views.py
-from django.utils import timezone
-from django.contrib import messages
-from django.utils import timezone
-from django.http import JsonResponse
-from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db import transaction
-from datetime import datetime
 
 
 def parse_date(date_str):
@@ -1189,20 +856,9 @@ def adicionar_categoria_efetivo(request, militar_id):
   
   
   # views.py
-# backend/efetivo/views.py
-from django.views import View
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import CatEfetivo
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-import json
 
-# ... existing code ...
 
-# Consider adding @login_required to the dispatch method if authentication is needed
-@method_decorator(csrf_exempt, name='dispatch') # Only if you're not using CSRF tokens, which is NOT recommended for production.
-                                                # Better to handle CSRF token in the HTML.
+@method_decorator(csrf_exempt, name='dispatch')
 class SalvarEdicaoCategoriaView(View):
     def post(self, request, categoria_id, *args, **kwargs):
         categoria = get_object_or_404(CatEfetivo, id=categoria_id)
@@ -1224,63 +880,6 @@ class SalvarEdicaoCategoriaView(View):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-# ... rest of your views.py
-
-# views.py (Atualização Final)
-
-@login_required
-def editar_categoria_modal(request, categoria_id):
-    categoria = get_object_or_404(CatEfetivo, id=categoria_id)
-    if request.method == 'GET':
-        context = {
-            'categoria': categoria,
-            'categoria_choices': CatEfetivo.TIPO_CHOICES, # Assuming you have choices for categories
-        }
-        return render(request, 'seu_template_de_modal_edicao.html', context)
-    # You might also handle POST here if it's a direct form submission,
-    # or have a separate view for POST, as you have with SalvarEdicaoCategoriaView.
-    # This example focuses on GET for modal rendering.
-
-    
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.template.loader import render_to_string
-from django.shortcuts import get_object_or_404
-
-@require_http_methods(["GET"])
-def editar_categoria_efetivo(request, categoria_id):
-    try:
-        categoria = get_object_or_404(CategoriaEfetivo, id=categoria_id)
-        
-        if not categoria.ativo:
-            return JsonResponse({'error': 'Esta categoria não está ativa e não pode ser editada'}, status=400)
-        
-        restricoes_data = []
-        if categoria.tipo == 'RESTRICAO':
-            restricoes = Restricao.objects.all()
-            for restricao in restricoes:
-                field_name = f'restricao_{restricao.id}'
-                restricoes_data.append({
-                    'id': restricao.id,
-                    'name': field_name,
-                    'verbose_name': restricao.nome,
-                    'value': getattr(categoria, field_name, False)
-                })
-        
-        html = render_to_string('efetivo/modals/modal_edicao_categoria_efetivo.html', {
-            'id': categoria.id,
-            'tipo': categoria.tipo,
-            'tipo_display': categoria.get_tipo_display(),
-            'data_inicio': categoria.data_inicio.strftime('%Y-%m-%d') if categoria.data_inicio else '',
-            'data_termino': categoria.data_termino.strftime('%Y-%m-%d') if categoria.data_termino else '',
-            'observacao': categoria.observacao or '',
-            'restricoes': restricoes_data,
-        })
-        
-        return JsonResponse({'html': html})
-    
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
 
 
 @require_http_methods(["POST"])
@@ -1319,7 +918,6 @@ def salvar_edicao_categoria(request, categoria_id):
         return JsonResponse({'error': str(e)}, status=400)      
 
 
-
 @login_required
 def excluir_categoria_efetivo(request, categoria_id):
     categoria = get_object_or_404(CatEfetivo, id=categoria_id)
@@ -1337,7 +935,7 @@ def excluir_categoria_efetivo(request, categoria_id):
             
     return redirect('efetivo:historico_categorias', militar_id=militar_id)
 
-# views.py
+
 @login_required
 def excluir_historico_categoria(request, historico_id):
     historico = get_object_or_404(HistoricoCatEfetivo, id=historico_id)
@@ -1351,16 +949,7 @@ def excluir_historico_categoria(request, historico_id):
 
 
 
-# backend/efetivo/views.py
-
-
-# backend/efetivo/views.py
-from django.db.models import Count
-from django.views.generic import ListView
-from .models import Cadastro, DetalhesSituacao, Promocao # Confirm these imports are correct
-from django.utils import timezone # Certifique-se de que está importado
-# ... other imports you might have
-
+# resposnsavel pelos filtros da visualização de detalhes de efetivo
 class ListaMilitaresView(ListView):
     model = Cadastro
     template_name = 'lista_militares.html'
@@ -1553,17 +1142,10 @@ class ListaMilitaresView(ListView):
                         return filho['nome']
         return ""
 
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, Frame
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus.doctemplate import PageTemplate
-from django.contrib.staticfiles import finders
-import os
 
+
+
+# resposnsavel pelos gerção de etiquetas
 def get_image_path(file):
     path = finders.find(f'img/{file}')
     if not path or not os.path.exists(path):
@@ -1800,3 +1382,133 @@ def gerar_etiqueta_pdf(request):
     except Exception as e:
         context['error_message'] = f"Erro ao gerar etiqueta: {str(e)}"
         return render(request, 'buscar_militar.html', context, status=500)
+    
+
+    # backend/efetivo/views.py
+
+
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def editar_situacao_funcional(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    detalhe_situacao = get_object_or_404(DetalhesSituacao, cadastro=cadastro)
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Cria um registro de histórico ANTES de atualizar os dados
+                HistoricoDetalhesSituacao.objects.create(
+                    cadastro=detalhe_situacao.cadastro,
+                    situacao=detalhe_situacao.situacao,
+                    sgb=detalhe_situacao.sgb,
+                    posto_secao=detalhe_situacao.posto_secao,
+                    # Corrigido: Garante que esta_adido seja True ou False para o histórico
+                    esta_adido=bool(detalhe_situacao.esta_adido),
+                    funcao=detalhe_situacao.funcao,
+                    prontidao=detalhe_situacao.prontidao,
+                    apresentacao_na_unidade=detalhe_situacao.apresentacao_na_unidade,
+                    saida_da_unidade=detalhe_situacao.saida_da_unidade,
+                    usuario_alteracao=request.user
+                )
+
+                # --- Atualiza os campos do DetalhesSituacao com os dados do POST ---
+                detalhe_situacao.situacao = request.POST.get('situacao')
+                detalhe_situacao.sgb = request.POST.get('sgb')
+                detalhe_situacao.posto_secao = request.POST.get('posto_secao')
+
+                # Tratamento do checkbox 'esta_adido':
+                detalhe_situacao.esta_adido = 'esta_adido' in request.POST.keys()
+
+                detalhe_situacao.funcao = request.POST.get('funcao')
+                detalhe_situacao.prontidao = request.POST.get('prontidao')
+
+                # Tratamento dos campos de data
+                apresentacao_na_unidade_str = request.POST.get('apresentacao_na_unidade')
+                if apresentacao_na_unidade_str:
+                    try:
+                        detalhe_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_na_unidade_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        return JsonResponse({'success': False, 'message': 'Formato de data de apresentação inválido.'}, status=400)
+                else:
+                    detalhe_situacao.apresentacao_na_unidade = None
+
+                saida_da_unidade_str = request.POST.get('saida_da_unidade')
+                if saida_da_unidade_str:
+                    try:
+                        detalhe_situacao.saida_da_unidade = datetime.strptime(saida_da_unidade_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        return JsonResponse({'success': False, 'message': 'Formato de data de saída inválido.'}, status=400)
+                else:
+                    detalhe_situacao.saida_da_unidade = None
+
+                detalhe_situacao.data_alteracao = timezone.now()
+                detalhe_situacao.usuario_alteracao = request.user
+                detalhe_situacao.save()
+
+                # Retorna os dados atualizados para o frontend
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Situação funcional atualizada com sucesso!',
+                    'updated_data': {
+                        'situacao': detalhe_situacao.situacao,
+                        'sgb': detalhe_situacao.sgb,
+                        'posto_secao': detalhe_situacao.posto_secao,
+                        'esta_adido': detalhe_situacao.esta_adido, # Já é True/False aqui
+                        'funcao': detalhe_situacao.funcao,
+                        'prontidao': detalhe_situacao.prontidao,
+                        'apresentacao_na_unidade': detalhe_situacao.apresentacao_na_unidade.strftime('%d/%m/%Y') if detalhe_situacao.apresentacao_na_unidade else None,
+                        'saida_da_unidade': detalhe_situacao.saida_da_unidade.strftime('%d/%m/%Y') if detalhe_situacao.saida_da_unidade else None,
+                    }
+                })
+
+        except Exception as e:
+            logger.error(f"Erro inesperado ao salvar a situação funcional para o militar ID {id}: {e}")
+            return JsonResponse({'success': False, 'message': f'Erro interno do servidor: {e}'}, status=500)
+
+    # --- Para requisições GET: Carregar dados e opções para o formulário ---
+    # Importe as choices diretamente da classe DetalhesSituacao
+    situacao_choices = DetalhesSituacao.situacao_choices
+    sgb_choices = DetalhesSituacao.sgb_choices
+    
+    # Assumindo a estrutura para estas choices, se não estiverem explícitas no models.py
+    # Adapte conforme a definição real em seu models.py
+    posto_secao_choices = [
+        ('', 'Selecione um Posto/Seção'),
+        ('ADM', 'Administração'),
+        ('OP', 'Operacional'),
+        # Adicione suas outras opções de posto/seção aqui
+    ]
+    esta_adido_choices = [
+        (True, 'Sim'),
+        (False, 'Não'),
+    ]
+    funcao_choices = [
+        ('', 'Selecione uma Função'),
+        ('Comandante', 'Comandante'),
+        ('Adjunto', 'Adjunto'),
+        ('Motorista', 'Motorista'),
+        # Adicione suas outras opções de função aqui
+    ]
+    prontidao_choices = [
+        ('', 'Selecione a Prontidão'),
+        ('1', 'Pronto'),
+        ('2', 'Em Apoio'),
+        ('3', 'Disp. Médica'),
+        ('4', 'Férias'),
+        # Adicione suas outras opções de prontidão aqui
+    ]
+
+    context = {
+        'cadastro': cadastro,
+        'detalhe_situacao': detalhe_situacao,
+        'apresentacao_na_unidade_formatted': detalhe_situacao.apresentacao_na_unidade.strftime('%Y-%m-%d') if detalhe_situacao.apresentacao_na_unidade else '',
+        'saida_da_unidade_formatted': detalhe_situacao.saida_da_unidade.strftime('%Y-%m-%d') if detalhe_situacao.saida_da_unidade else '',
+        'situacao_choices': situacao_choices,
+        'sgb_choices': sgb_choices,
+        'posto_secao_choices': posto_secao_choices,
+        'esta_adido_choices': esta_adido_choices,
+        'funcao_choices': funcao_choices,
+        'prontidao_choices': prontidao_choices,
+    }
+    return render(request, 'modals/editar_situacao_funcional.html', context)
