@@ -14,6 +14,19 @@
 <body>
 
     <br>
+    <fieldset class="rounded-md">
+    {% if messages %}
+        <div id="django-messages" style="display:none;" data-messages='[
+            {% for message in messages %}
+                {
+                    "tags": "{{ message.tags|upper }}",
+                    "message": "{{ message|escapejs }}"
+                }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]'></div>
+    {% endif %}
+        {% include 'modals/alert_modal.html' %}
+</fieldset>
     <div class=" md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
      <fieldset class=" p-4 mb-8   rounded-md w-full" id="second-fieldset">
         <fieldset class=" p-2 mb-8 rounded-md w-full" id="first-fieldset">

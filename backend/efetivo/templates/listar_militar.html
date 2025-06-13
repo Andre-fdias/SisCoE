@@ -41,15 +41,19 @@
         </fieldset>
 
         <!-- Mensagens -->
-        {% if messages %}
-        <div class="mb-4">
-            {% for message in messages %}
-            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+           <fieldset class="rounded-md">
+                {% if messages %}
+                    <div id="django-messages" style="display:none;" data-messages='[
+                        {% for message in messages %}
+                            {
+                                "tags": "{{ message.tags|upper }}",
+                                "message": "{{ message|escapejs }}"
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]'></div>
+                {% endif %}
+                    {% include 'modals/alert_modal.html' %}
+            </fieldset>
 
         <!-- Tabela -->
         <fieldset class="p-4 mb-2 rounded-md w-full">

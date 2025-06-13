@@ -1448,8 +1448,26 @@ def nova_situacao_funcional(request, id):
     logger.info(f"Iniciando nova_situacao_funcional para militar ID: {id}")
     try:
         cadastro = get_object_or_404(Cadastro, id=id)
-
-        # Criar APENAS nova instância em DetalhesSituacao
+        
+        # Obter situação atual e criar histórico
+        situacao_atual = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        if situacao_atual:
+            HistoricoDetalhesSituacao.objects.create(
+                cadastro=cadastro,
+                situacao=situacao_atual.situacao,
+                sgb=situacao_atual.sgb,
+                posto_secao=situacao_atual.posto_secao,
+                esta_adido=situacao_atual.esta_adido,
+                funcao=situacao_atual.funcao,
+                op_adm=situacao_atual.op_adm,
+                cat_efetivo=situacao_atual.cat_efetivo,
+                prontidao=situacao_atual.prontidao,
+                apresentacao_na_unidade=situacao_atual.apresentacao_na_unidade,
+                saida_da_unidade=situacao_atual.saida_da_unidade,
+                usuario_alteracao=request.user
+            )
+        
+        # Criar nova situação (substitui a anterior)
         nova_situacao = DetalhesSituacao(
             cadastro=cadastro,
             situacao=request.POST.get('situacao'),
@@ -1458,25 +1476,25 @@ def nova_situacao_funcional(request, id):
             esta_adido=request.POST.get('esta_adido') or None,
             funcao=request.POST.get('funcao'),
             op_adm=request.POST.get('op_adm', None), 
-            cat_efetivo=request.POST.get('cat_efetivo', None),
-            prontidao=request.POST.get('prontidao'),
+            cat_efetivo=request.POST.get('cat_efetivo', "ATIVO"),
+            prontidao=request.POST.get('prontidao', "VERDE"),
             usuario_alteracao=request.user,
         )
 
-        # Processar datas
+        # Validação de datas
         apresentacao_str = request.POST.get('apresentacao_na_unidade')
-        if apresentacao_str:
-            try:
-                nova_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
-            except ValueError:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Formato de data de apresentação inválido. Use AAAA-MM-DD.'
-                }, status=400)
-        else:
+        if not apresentacao_str:
             return JsonResponse({
                 'success': False,
-                'message': 'A data de apresentação na unidade é obrigatória.'
+                'message': 'Data de apresentação é obrigatória'
+            }, status=400)
+        
+        try:
+            nova_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Formato de data de apresentação inválido'
             }, status=400)
 
         saida_str = request.POST.get('saida_da_unidade')
@@ -1486,26 +1504,24 @@ def nova_situacao_funcional(request, id):
             except ValueError:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Formato de data de saída inválido. Use AAAA-MM-DD.'
+                    'message': 'Formato de data de saída inválido'
                 }, status=400)
-        else:
-            nova_situacao.saida_da_unidade = None
 
         nova_situacao.save()
-        
         logger.info(f"Nova situação funcional cadastrada para militar ID: {id}.")
         return JsonResponse({
             'success': True,
-            'message': 'Nova situação funcional cadastrada com sucesso!'
+            'message': 'Nova situação cadastrada com sucesso!'
         })
 
     except Exception as e:
-        logger.error(f"Erro inesperado ao cadastrar nova situação funcional para militar ID {id}: {e}", exc_info=True)
+        logger.error(f"Erro ao cadastrar nova situação: {e}", exc_info=True)
         return JsonResponse({
             'success': False,
-            'message': f'Erro interno do servidor: {str(e)}'
+            'message': f'Erro interno: {str(e)}'
         }, status=500)
     
+        
     
 @login_required
 def historico_movimentacoes(request, id):
