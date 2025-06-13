@@ -140,123 +140,238 @@
     }
 }
 </style>
+
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Referências aos elementos importantes
-    const editarSituacaoFuncionalModal = document.getElementById('editarSituacaoFuncionalModal');
-    const choiceModal = document.getElementById('choiceModal');
-    const form = document.getElementById('situacaoFuncionalForm');
-    
-    // Funções para manipulação de modais
-    function showModal(modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-    
-    function hideModal(modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-    
-    // Função para mostrar notificações não bloqueantes
-    function showNotification(message, type = 'success') {
-        // Remove notificações existentes
-        document.querySelectorAll('.global-notification').forEach(el => el.remove());
-        
-        const notification = document.createElement('div');
-        notification.className = `global-notification fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg text-white font-medium transition-all ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        }`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Auto-remover após 3 segundos
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
-    
-    // Eventos para fechar o modal de edição
-    document.querySelectorAll('[data-modal-close="editarSituacaoFuncionalModal"]').forEach(button => {
-        button.addEventListener('click', () => hideModal(editarSituacaoFuncionalModal));
-    });
-    
-    editarSituacaoFuncionalModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideModal(editarSituacaoFuncionalModal);
+    document.addEventListener('DOMContentLoaded', function() {
+        const editarSituacaoFuncionalModal = document.getElementById('editarSituacaoFuncionalModal');
+        const choiceModal = document.getElementById('choiceModal');
+        const novaSituacaoFuncionalModal = document.getElementById('novaSituacaoFuncionalModal');
+        const formEditar = document.getElementById('situacaoFuncionalForm'); // Form do modal de edição
+        const currentSituacaoDataScript = document.getElementById('currentSituacaoData');
+
+        // Função para mostrar notificação (já deve estar lá)
+        function showNotification(message, type = 'success') {
+            document.querySelectorAll('.global-notification').forEach(el => el.remove());
+            const notification = document.createElement('div');
+            notification.className = `global-notification fixed top-4 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg text-white font-medium transition-all ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
-    });
-    
-    // Evento de submissão do formulário
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Exibir indicador de carregamento
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.innerHTML;
-            submitButton.innerHTML = `
-                <span class="flex items-center gap-2">
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Salvando...
-                </span>
-            `;
-            submitButton.disabled = true;
-            
-            try {
-                // Preparar dados do formulário
-                const formData = new FormData(form);
+
+        // Funções showModal e hideModal (já devem estar lá)
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function hideModal(modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Lógica de preenchimento dos campos do modal de edição
+        if (currentSituacaoDataScript && formEditar) {
+            const currentData = JSON.parse(currentSituacaoDataScript.textContent);
+
+            // Adiciona um listener para quando o modal de edição é aberto
+            document.getElementById('openEditarSituacaoBtn').addEventListener('click', function() {
+                // Preenche os campos do formulário de edição com os dados atuais
+                formEditar.querySelector('[name="situacao"]').value = currentData.situacao;
+                formEditar.querySelector('[name="sgb"]').value = currentData.sgb;
+                formEditar.querySelector('[name="posto_secao"]').value = currentData.posto_secao;
+                // Para booleans ou campos que podem ser null, adicione uma verificação
+                formEditar.querySelector('[name="esta_adido"]').value = currentData.esta_adido || ''; // Se for True/False, o HTML espera 'True' ou 'False' string. Se for ID, espera o ID.
+                formEditar.querySelector('[name="funcao"]').value = currentData.funcao;
+                formEditar.querySelector('[name="op_adm"]').value = currentData.op_adm;
+                formEditar.querySelector('[name="prontidao"]').value = currentData.prontidao;
+                formEditar.querySelector('[name="apresentacao_na_unidade"]').value = currentData.apresentacao_na_unidade;
+                formEditar.querySelector('[name="saida_da_unidade"]').value = currentData.saida_da_unidade;
                 
-                // Enviar requisição AJAX
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                });
-                
-                // Processar resposta
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erro de rede ou servidor');
-                }
-                
-                if (data.success) {
-                    // Mostrar notificação não bloqueante
-                    showNotification(data.message);
-                    
-                    // Fechar modal de edição
-                    hideModal(editarSituacaoFuncionalModal);
-                    
-                    // Verificar se precisamos mostrar o modal de escolha
-                    if (data.show_choice_modal) {
-                        // Pequeno delay para melhor experiência do usuário
-                        setTimeout(() => {
-                            showModal(choiceModal);
-                        }, 300);
-                    } else {
-                        // Recarregar a página após pequeno delay
-                        setTimeout(() => location.reload(), 1000);
-                    }
-                } else {
-                    throw new Error(data.message || 'Erro desconhecido ao salvar');
-                }
-            } catch (error) {
-                console.error('Erro no processamento:', error);
-                showNotification(`Erro: ${error.message}`, 'error');
-            } finally {
-                // Restaurar estado do botão
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
+                // Exibe o modal
+                showModal(editarSituacaoFuncionalModal);
+            });
+        }
+
+        // Restante do seu script existente (fechar modais, submissão de formulários, etc.)
+        // ... (todo o código que você já tem para os listeners de fechar modais,
+        //      e a lógica de submissão dos formulários editarSituacaoFuncionalForm e novaSituacaoFuncionalForm)
+        
+        // Eventos para fechar o modal de edição (editarSituacaoFuncionalModal)
+        document.querySelectorAll('[data-modal-close="editarSituacaoFuncionalModal"]').forEach(button => {
+            button.addEventListener('click', () => hideModal(editarSituacaoFuncionalModal));
+        });
+        editarSituacaoFuncionalModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModal(editarSituacaoFuncionalModal);
             }
         });
-    }
-});
+
+        // Eventos para fechar o modal de escolha (choiceModal)
+        document.querySelectorAll('[data-modal-close="choiceModal"]').forEach(button => {
+            button.addEventListener('click', () => hideModal(choiceModal));
+        });
+        if (choiceModal) { 
+            choiceModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideModal(choiceModal);
+                }
+            });
+        }
+
+        // Eventos para fechar o modal de nova situação (novaSituacaoFuncionalModal)
+        document.querySelectorAll('[data-modal-close="novaSituacaoFuncionalModal"]').forEach(button => {
+            button.addEventListener('click', () => hideModal(novaSituacaoFuncionalModal));
+        });
+        if (novaSituacaoFuncionalModal) { 
+            novaSituacaoFuncionalModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideModal(novaSituacaoFuncionalModal);
+                }
+            });
+        }
+
+        // Lógica de submissão do formulário de EDIÇÃO
+        if (formEditar) {
+            formEditar.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitButton = formEditar.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.innerHTML = `
+                    <span class="flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </span>
+                `;
+                submitButton.disabled = true;
+                
+                try {
+                    const formData = new FormData(formEditar);
+                    
+                    const response = await fetch(formEditar.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Erro de rede ou servidor');
+                    }
+                    
+                    if (data.success) {
+                        hideModal(editarSituacaoFuncionalModal); // Fecha o modal de edição
+                        
+                        if (data.show_choice_modal) {
+                            setTimeout(() => {
+                                showModal(choiceModal); // Abre o modal de escolha
+                            }, 300);
+                        } else {
+                            showNotification(data.message || 'Alterações salvas com sucesso!', 'success');
+                            location.reload(); 
+                        }
+                    } else {
+                        throw new Error(data.message || 'Erro desconhecido ao salvar');
+                    }
+                } catch (error) {
+                    console.error('Erro no processamento:', error);
+                    showNotification(`Erro: ${error.message}`, 'error');
+                } finally {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                }
+            });
+        }
+
+        // Lógica para os botões do choiceModal
+        const btnCadastrarNova = document.getElementById('btnCadastrarNova');
+        const btnEditarExistente = document.getElementById('btnEditarExistente');
+
+        if (btnCadastrarNova) {
+            btnCadastrarNova.addEventListener('click', function() {
+                hideModal(choiceModal); // Esconde o modal de escolha
+                if (novaSituacaoFuncionalModal) {
+                    showModal(novaSituacaoFuncionalModal); // Abre o modal de nova situação
+                } else {
+                    showNotification('Modal de Nova Situação Funcional não encontrado.', 'error');
+                }
+            });
+        }
+
+        if (btnEditarExistente) {
+            btnEditarExistente.addEventListener('click', function() {
+                hideModal(choiceModal); // Esconde o modal de escolha
+                showNotification('Situação funcional atualizada com sucesso!', 'success'); // Exibe a mensagem de sucesso final
+                location.reload(); // Recarrega a página para refletir as alterações
+            });
+        }
+
+        // Lógica de submissão do formulário de NOVA SITUAÇÃO (do nova_situacao_funcional.html)
+        const novaSituacaoForm = document.getElementById('novaSituacaoFuncionalForm');
+        if (novaSituacaoForm) {
+            novaSituacaoForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitButton = novaSituacaoForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.innerHTML = `
+                    <span class="flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando Nova Situação...
+                    </span>
+                `;
+                submitButton.disabled = true;
+
+                try {
+                    const formData = new FormData(novaSituacaoForm);
+                    
+                    const response = await fetch(novaSituacaoForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Erro ao cadastrar nova situação.');
+                    }
+                    
+                    if (data.success) {
+                        showNotification(data.message || 'Nova situação cadastrada com sucesso!', 'success');
+                        hideModal(novaSituacaoFuncionalModal); // Fecha o modal de nova situação
+                        location.reload(); // Recarrega a página para exibir a nova situação
+                    } else {
+                        throw new Error(data.message || 'Erro desconhecido ao cadastrar nova situação.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao cadastrar nova situação:', error);
+                    showNotification(`Erro: ${error.message}`, 'error');
+                } finally {
+                    submitButton.innerHTML = originalButtonText;
+                    submitButton.disabled = false;
+                }
+            });
+        }
+    });
 </script>
