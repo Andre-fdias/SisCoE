@@ -1375,6 +1375,8 @@ def gerar_etiqueta_pdf(request):
     # backend/efetivo/views.py
 
 
+# backend/efetivo/views.py (ou onde suas views estão)
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -1382,9 +1384,15 @@ def editar_situacao_funcional(request, id):
     logger.info(f"Iniciando editar_situacao_funcional para militar ID: {id}")
     try:
         cadastro = get_object_or_404(Cadastro, id=id)
-        detalhe_situacao = get_object_or_404(DetalhesSituacao, cadastro=cadastro)
+        detalhe_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        
+        if not detalhe_situacao:
+            return JsonResponse({
+                'success': False,
+                'message': 'Situação funcional não encontrada para o militar especificado.'
+            }, status=404)
 
-        # Criar registro no histórico ANTES de atualizar
+        # Criar histórico com os DADOS ATUAIS (ANTES da atualização)
         HistoricoDetalhesSituacao.objects.create(
             cadastro=cadastro,
             situacao=detalhe_situacao.situacao,
@@ -1400,85 +1408,118 @@ def editar_situacao_funcional(request, id):
             usuario_alteracao=request.user
         )
         
-        # Atualizar os campos com validação e tratamento adequado
+        # Atualizar campos do detalhe_situacao principal com os novos dados do POST
         detalhe_situacao.situacao = request.POST.get('situacao')
-        detalhe_situacao.sgb = request.POST.get('sgb')
-        detalhe_situacao.posto_secao = request.POST.get('posto_secao')
-        detalhe_situacao.funcao = request.POST.get('funcao')
-        detalhe_situacao.prontidao = request.POST.get('prontidao')
-
-        # Tratamento para esta_adido (BooleanField)
-        # Se o valor for 'True', converte para True booleano. Se for 'False', converte para False booleano.
-        # Se for vazio (e.g., ""), atribui None para campos null=True.
-        esta_adido_str = request.POST.get('esta_adido')
-        if esta_adido_str == 'True':
-            detalhe_situacao.esta_adido = True
-        elif esta_adido_str == 'False':
-            detalhe_situacao.esta_adido = False
-        else:
-            detalhe_situacao.esta_adido = None # Permite salvar como null se nada for selecionado
-
-        # Tratamento para campos de data (DateField)
-        # Converte a string YYYY-MM-DD para objeto date. Se for string vazia ou inválida, atribui None.
-        apresentacao_str = request.POST.get('apresentacao_na_unidade')
-        if apresentacao_str:
-            try:
-                detalhe_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
-            except ValueError:
-                # Se o formato estiver incorreto, define como None e pode adicionar uma mensagem de erro
-                logger.warning(f"Formato de data inválido para 'apresentacao_na_unidade': {apresentacao_str}")
-                detalhe_situacao.apresentacao_na_unidade = None
-                # messages.warning(request, "Formato de data inválido para 'Apresentação na Unidade'.") # Pode adicionar se quiser feedback visual imediato
-        else:
-            detalhe_situacao.apresentacao_na_unidade = None # Se o campo estiver vazio no POST, salve como None
-
+        
         saida_str = request.POST.get('saida_da_unidade')
         if saida_str:
             try:
                 detalhe_situacao.saida_da_unidade = datetime.strptime(saida_str, '%Y-%m-%d').date()
             except ValueError:
-                # Se o formato estiver incorreto, define como None
-                logger.warning(f"Formato de data inválido para 'saida_da_unidade': {saida_str}")
-                detalhe_situacao.saida_da_unidade = None
-                # messages.warning(request, "Formato de data inválido para 'Saída da Unidade'.") # Pode adicionar se quiser feedback visual imediato
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Formato de data de saída da unidade inválido. Use AAAA-MM-DD.'
+                }, status=400)
         else:
-            detalhe_situacao.saida_da_unidade = None # Se o campo estiver vazio no POST, salve como None
-
-        # Campos hidden inputs (op_adm, cat_efetivo):
-        # Se eles são hidden e devem ser atualizados APENAS se presentes no POST, use a atribuição.
-        # Caso contrário, se devem manter o valor existente se não forem enviados, o tratamento 'or detalhe_situacao.campo' é válido,
-        # mas certifique-se de que o campo hidden está realmente sendo enviado.
-        # No seu HTML, eles são definidos, então é provável que estejam sendo enviados.
-        detalhe_situacao.op_adm = request.POST.get('op_adm', detalhe_situacao.op_adm)
-        detalhe_situacao.cat_efetivo = request.POST.get('cat_efetivo', detalhe_situacao.cat_efetivo)
-
+            detalhe_situacao.saida_da_unidade = None
 
         detalhe_situacao.data_alteracao = timezone.now()
         detalhe_situacao.usuario_alteracao = request.user
-        detalhe_situacao.save() # Salva as alterações no banco de dados
+        detalhe_situacao.save()
 
+        logger.info(f"Situação funcional atualizada para militar ID: {id}. Exibindo modal de escolha.")
         return JsonResponse({
             'success': True,
-            'show_choice_modal': True,  # Novo indicador
-            'message': 'Situação funcional atualizada com sucesso!',
-            'updated_data': { # Você pode retornar os dados atualizados aqui se o JS precisar
-                'situacao': detalhe_situacao.situacao,
-                'sgb': detalhe_situacao.sgb,
-                # ... outros campos para atualização no front-end
-            }
+            'message': 'Situação funcional atualizada com sucesso! Prossiga com a ação desejada.', # Mensagem para ser exibida antes da escolha
+            'show_choice_modal': True 
         })
 
     except Exception as e:
-        logger.error(f"Erro inesperado ao salvar a situação funcional para o militar ID {id}: {e}", exc_info=True)
+        logger.error(f"Erro inesperado ao editar situação funcional para militar ID {id}: {e}", exc_info=True)
         return JsonResponse({
             'success': False,
-            'show_choice_modal': False,
-            'message': f'Erro interno do servidor: {e}'
+            'message': f'Erro interno do servidor: {str(e)}'
         }, status=500)
 
 
+@login_required
+@require_http_methods(["POST"])
+def nova_situacao_funcional(request, id):
+    logger.info(f"Iniciando nova_situacao_funcional para militar ID: {id}")
+    try:
+        cadastro = get_object_or_404(Cadastro, id=id)
 
-# responsável por armazenar os dados de movimentação
+        # Criar uma nova instância de DetalhesSituacao
+        # Certifique-se de que todos os campos obrigatórios sejam preenchidos
+        # Use .get() para obter os valores do POST
+        nova_situacao = DetalhesSituacao(
+            cadastro=cadastro,
+            situacao=request.POST.get('situacao'),
+            sgb=request.POST.get('sgb'),
+            posto_secao=request.POST.get('posto_secao'),
+            esta_adido=request.POST.get('esta_adido') or None, # Trata vazio como None
+            funcao=request.POST.get('funcao'),
+            prontidao=request.POST.get('prontidao'),
+            
+            # Campos que talvez não estejam no formulário de nova situação, mas podem ser requeridos
+            # ou ter um valor padrão. Se estiverem, use request.POST.get().
+            # Se não estiverem, defina um valor padrão ou None se for opcional.
+            op_adm=request.POST.get('op_adm', None), 
+            cat_efetivo=request.POST.get('cat_efetivo', None),
+
+            usuario_alteracao=request.user,
+            # data_alteracao é auto_now_add ou auto_now, dependendo da sua definição no modelo
+            # Se auto_now_add=True, não precisa definir aqui.
+            # Se auto_now=True, será atualizado automaticamente ao salvar.
+        )
+
+        apresentacao_str = request.POST.get('apresentacao_na_unidade')
+        if apresentacao_str:
+            try:
+                nova_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Formato de data de apresentação inválido. Use AAAA-MM-DD.'
+                }, status=400)
+        else:
+            return JsonResponse({ # Apresentação na unidade é required no HTML
+                'success': False,
+                'message': 'A data de apresentação na unidade é obrigatória.'
+            }, status=400)
+
+        saida_str = request.POST.get('saida_da_unidade')
+        if saida_str:
+            try:
+                nova_situacao.saida_da_unidade = datetime.strptime(saida_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Formato de data de saída inválido. Use AAAA-MM-DD.'
+                }, status=400)
+        else:
+            nova_situacao.saida_da_unidade = None # Campo opcional
+
+        nova_situacao.save()
+        logger.info(f"Nova situação funcional cadastrada para militar ID: {id}.")
+        return JsonResponse({
+            'success': True,
+            'message': 'Nova situação funcional cadastrada com sucesso!'
+        })
+
+    except Exception as e:
+        logger.error(f"Erro inesperado ao cadastrar nova situação funcional para militar ID {id}: {e}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro interno do servidor: {str(e)}'
+        }, status=500)
+
+# As views 'historico_movimentacoes' e 'salvar_situacao_funcional' permanecem as mesmas.
+# Relembrando: 'salvar_situacao_funcional' parece fazer uma atualização completa do DetalhesSituacao
+# e 'editar_situacao_funcional' é a "Fase 1". Certifique-se de que seus fluxos não se sobreponham
+# de forma indesejada ou que não haja redundância.
+# Se 'salvar_situacao_funcional' não for usada, considere removê-la para evitar confusão.
+
 @login_required
 def historico_movimentacoes(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
@@ -1562,58 +1603,89 @@ def salvar_situacao_funcional(request, id):
         return JsonResponse({'success': False, 'message': f'Erro interno do servidor: {e}'}, status=500)
     
 
-@login_required
-@require_http_methods(["POST"])
-def nova_situacao_funcional(request, id):
-    logger.info(f"Criando nova situação funcional para militar ID: {id}")
+    logger.info(f"Iniciando nova_situacao_funcional para militar ID: {id}")
     try:
         cadastro = get_object_or_404(Cadastro, id=id)
         
-        # Cria novo registro na situação funcional
+        # Obter a situação atual do militar
+        situacao_atual = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        if not situacao_atual:
+            return JsonResponse({
+                'success': False,
+                'message': 'Não foi encontrada uma situação funcional atual para este militar.'
+            }, status=404)
+
+        # 1. Registrar a situação atual no histórico
+        HistoricoDetalhesSituacao.objects.create(
+            cadastro=cadastro,
+            situacao=situacao_atual.situacao,
+            sgb=situacao_atual.sgb,
+            posto_secao=situacao_atual.posto_secao,
+            esta_adido=situacao_atual.esta_adido,
+            funcao=situacao_atual.funcao,
+            op_adm=situacao_atual.op_adm,
+            cat_efetivo=situacao_atual.cat_efetivo,
+            prontidao=situacao_atual.prontidao,
+            apresentacao_na_unidade=situacao_atual.apresentacao_na_unidade,
+            saida_da_unidade=situacao_atual.saida_da_unidade,
+            usuario_alteracao=request.user
+        )
+        logger.info(f"Histórico criado para situação anterior do militar ID: {id}")
+
+        # 2. Criar nova situação funcional com os dados do formulário
         nova_situacao = DetalhesSituacao(
             cadastro=cadastro,
             situacao=request.POST.get('situacao'),
             sgb=request.POST.get('sgb'),
             posto_secao=request.POST.get('posto_secao'),
-            esta_adido=request.POST.get('esta_adido'),
             funcao=request.POST.get('funcao'),
             op_adm=request.POST.get('op_adm'),
             prontidao=request.POST.get('prontidao'),
-            cat_efetivo=request.POST.get('cat_efetivo'),
-            apresentacao_na_unidade=request.POST.get('apresentacao_na_unidade'),
-            saida_da_unidade=request.POST.get('saida_da_unidade'),
+            cat_efetivo=request.POST.get('cat_efetivo', 'ATIVO'),  # Default se não enviado
             usuario_alteracao=request.user
         )
-        
-        # Validação de campos obrigatórios
-        if not nova_situacao.situacao:
-            return JsonResponse({'success': False, 'message': 'Situação é obrigatória'}, status=400)
-            
-        # Salvar novo registro
+
+        # Tratar campo booleano esta_adido
+        esta_adido_str = request.POST.get('esta_adido')
+        if esta_adido_str:
+            nova_situacao.esta_adido = (esta_adido_str == 'True')
+        else:
+            nova_situacao.esta_adido = None
+
+        # Tratar datas
+        apresentacao_str = request.POST.get('apresentacao_na_unidade')
+        if apresentacao_str:
+            try:
+                nova_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
+            except ValueError:
+                logger.warning(f"Formato de data inválido para apresentacao_na_unidade: {apresentacao_str}")
+                nova_situacao.apresentacao_na_unidade = None
+
+        saida_str = request.POST.get('saida_da_unidade')
+        if saida_str:
+            try:
+                nova_situacao.saida_da_unidade = datetime.strptime(saida_str, '%Y-%m-%d').date()
+            except ValueError:
+                logger.warning(f"Formato de data inválido para saida_da_unidade: {saida_str}")
+                nova_situacao.saida_da_unidade = None
+
+        # Salvar a nova situação
         nova_situacao.save()
-        
-        # Cria registro histórico automaticamente
-        HistoricoDetalhesSituacao.objects.create(
-            cadastro=cadastro,
-            situacao=nova_situacao.situacao,
-            sgb=nova_situacao.sgb,
-            posto_secao=nova_situacao.posto_secao,
-            esta_adido=nova_situacao.esta_adido,
-            funcao=nova_situacao.funcao,
-            op_adm=nova_situacao.op_adm,
-            prontidao=nova_situacao.prontidao,
-            cat_efetivo=nova_situacao.cat_efetivo,
-            apresentacao_na_unidade=nova_situacao.apresentacao_na_unidade,
-            saida_da_unidade=nova_situacao.saida_da_unidade,
-            usuario_alteracao=request.user
-        )
-        
+        logger.info(f"Nova situação funcional criada para militar ID: {id}")
+
+        # 3. Atualizar o cadastro principal se necessário
+        # (Exemplo: se mudou de unidade, SGB, etc.)
+        # cadastro.ultima_atualizacao = timezone.now()
+        # cadastro.save()
+
         return JsonResponse({
             'success': True,
-            'message': 'Nova situação funcional cadastrada com sucesso!',
-            'nova_situacao_id': nova_situacao.id
+            'message': 'Nova situação funcional cadastrada com sucesso!'
         })
 
     except Exception as e:
-        logger.error(f"Erro ao criar nova situação funcional: {e}", exc_info=True)
-        return JsonResponse({'success': False, 'message': f'Erro interno: {e}'}, status=500)
+        logger.error(f"Erro ao criar nova situação funcional para militar ID {id}: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': f'Erro interno do servidor: {str(e)}'
+        }, status=500)
