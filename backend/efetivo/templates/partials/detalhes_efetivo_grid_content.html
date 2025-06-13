@@ -1,6 +1,6 @@
 
 {# backend/efetivo/templates/partials/detalhes_efetivo_grid_content.html #}
-{% load static custom_filters tz %}
+{% load static efetivo_filters tz %}
 {% now "Y-m-d" as current_date %}
 
 {% regroup militares by detalhes_situacao.first.prontidao as grouped_by_prontidao %}

@@ -1,6 +1,6 @@
 
 {# backend/efetivo/templates/partials/militar_grid_card.html #}
-{% load static custom_filters tz %}
+{% load static efetivo_filters tz %}
 {% now "Y-m-d" as current_date %}
 
 {% with ultima_promocao=militar.promocoes.first %}
