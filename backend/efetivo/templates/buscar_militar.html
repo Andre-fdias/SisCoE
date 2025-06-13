@@ -9,14 +9,19 @@
         <h2 class="text-3xl font-extrabold mb-8 text-center text-gray-300">Buscar Militar por RE</h2>
         
         <!-- Mensagens de erro -->
-        {% if error_message %}
-        <div id="errorMessage" class="mb-6 bg-red-600 text-white px-4 py-3 rounded-lg shadow-md">
-            {{ error_message }}
-            <button type="button" class="float-right font-bold" onclick="document.getElementById('errorMessage').classList.add('hidden')">
-                &times;
-            </button>
-        </div>
-        {% endif %}
+           <fieldset class="rounded-md">
+                {% if messages %}
+                    <div id="django-messages" style="display:none;" data-messages='[
+                        {% for message in messages %}
+                            {
+                                "tags": "{{ message.tags|upper }}",
+                                "message": "{{ message|escapejs }}"
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]'></div>
+                {% endif %}
+                    {% include 'modals/alert_modal.html' %}
+            </fieldset>
         
         <form id="formBuscaRE" method="POST" action="{% url 'efetivo:gerar_etiqueta_pdf' %}">
             {% csrf_token %}
