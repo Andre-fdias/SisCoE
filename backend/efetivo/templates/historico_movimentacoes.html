@@ -4,8 +4,6 @@
 {% block title %} Histórico de Movimentações{% endblock %}
 {% block 'head' %}
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
-{# Se houver um arquivo CSS compartilhado com estilos globais, adicione aqui #}
-{# <link rel="stylesheet" href="{% static 'efetivo/css/shared_styles.css' %}"> #}
 <style>
     /* Estilos copiados e ajustados para padronizar com historico_categorias.html */
     .table-container {
@@ -96,20 +94,20 @@
             </a>
         </div>
     </section>
-
-    {% if messages %}
-    <div class="mb-8">
-        {% for message in messages %}
-        <div class="message-container 
-                    {% if message.tags == 'success' %}message-success{% endif %}
-                    {% if message.tags == 'error' %}message-error{% endif %}
-                    {% if message.tags == 'warning' %}message-warning{% endif %}
-                    {% if message.tags == 'info' %}message-info{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+            <fieldset class="rounded-md">
+                {% if messages %}
+                    <div id="django-messages" style="display:none;" data-messages='[
+                        {% for message in messages %}
+                            {
+                                "tags": "{{ message.tags|upper }}",
+                                "message": "{{ message|escapejs }}"
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]'></div>
+                {% endif %}
+                    {% include 'modals/alert_modal.html' %}
+            </fieldset>
+            
 
     <div class="grid grid-cols-1 gap-8">
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
@@ -134,7 +132,8 @@
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Última Promoção</th>
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
-                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th> {# Campo alterado #}
+                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> <!-- Nova coluna -->
                         </tr>
                     </thead>
                     <tbody>
@@ -145,22 +144,30 @@
                             <td class="text-center">{{ promocao.grupo }}</td>
                             <td class="text-center">{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
                             <td class="text-center">{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
-                            <td class="py-4 px-4 text-sm text-gray-900 text-center"> {# Campo alterado #}
-                                {% if promocao.usuario_alteracao %}
-                                    <div class="font-medium">
-                                        {{ promocao.usuario_alteracao.profile.posto_grad }} 
-                                        {{ promocao.usuario_alteracao.profile.re }}-{{ promocao.usuario_alteracao.profile.dig }} 
-                                        {{ promocao.usuario_alteracao.last_name }}
-                                    </div>
-                                    <div class="text-gray-500">{{ promocao.usuario_alteracao.profile.cpf }}</div>
-                                {% else %}
-                                    <div class="text-gray-500">-</div>
-                                {% endif %}
+                            <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                {% with militar_cadastro=request.user.cadastros.last %}
+                                    {% if militar_cadastro %}
+                                        <div class="font-medium">
+                                            {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                            {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                            {{ request.user.last_name }}
+                                        </div>
+                                        <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                    {% else %}
+                                        <div class="font-medium">Dados do usuário não disponíveis</div>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="py-4 px-4 whitespace-nowrap text-sm font-medium flex space-x-3 items-center justify-center">
+                                <button onclick="abrirModalExclusao('{% url 'efetivo:excluir_historico_promocao' promocao.id %}')"
+                                        class="text-red-600 hover:text-red-800 transition duration-150 ease-in-out" title="Excluir">
+                                    <i class="fas fa-trash-alt text-lg"></i>
+                                </button>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="py-4 px-4 text-center text-gray-500">
+                            <td colspan="7" class="py-4 px-4 text-center text-gray-500">
                                 Nenhuma promoção encontrada.
                             </td>
                         </tr>
@@ -193,7 +200,8 @@
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Apresentação</th>
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
                             <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
-                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th> {# Campo alterado #}
+                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                            <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> <!-- Nova coluna -->
                         </tr>
                     </thead>
                     <tbody>
@@ -225,22 +233,30 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">{{ detalhe.data_alteracao|date:"d/m/Y H:i" }}</td>
-                            <td class="py-4 px-4 text-sm text-gray-900 text-center"> {# Campo alterado #}
-                                {% if detalhe.usuario_alteracao %}
-                                    <div class="font-medium">
-                                        {{ detalhe.usuario_alteracao.profile.posto_grad }} 
-                                        {{ detalhe.usuario_alteracao.profile.re }}-{{ detalhe.usuario_alteracao.profile.dig }} 
-                                        {{ detalhe.usuario_alteracao.last_name }}
-                                    </div>
-                                    <div class="text-gray-500">{{ detalhe.usuario_alteracao.profile.cpf }}</div>
-                                {% else %}
-                                    <div class="text-gray-500">-</div>
-                                {% endif %}
+                            <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                {% with militar_cadastro=request.user.cadastros.last %}
+                                    {% if militar_cadastro %}
+                                        <div class="font-medium">
+                                            {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                            {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                            {{ request.user.last_name }}
+                                        </div>
+                                        <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                    {% else %}
+                                        <div class="font-medium">Dados do usuário não disponíveis</div>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="py-4 px-4 whitespace-nowrap text-sm font-medium flex space-x-3 items-center justify-center">
+                                <button onclick="abrirModalExclusao('{% url 'efetivo:excluir_historico_detalhe_situacao' detalhe.id %}')"
+                                        class="text-red-600 hover:text-red-800 transition duration-150 ease-in-out" title="Excluir">
+                                    <i class="fas fa-trash-alt text-lg"></i>
+                                </button>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="py-4 px-4 text-center text-gray-500">
+                            <td colspan="8" class="py-4 px-4 text-center text-gray-500">
                                 Nenhuma movimentação encontrada.
                             </td>
                         </tr>
@@ -252,8 +268,82 @@
     </div>
 </div>
 
+
+
+<!-- Modal de Confirmação de Exclusão -->
+<div id="modalExclusao" class="modal-exclusao">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
+            <button onclick="fecharModalExclusao()" class="text-gray-400 hover:text-gray-600 transition duration-150 ease-in-out">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="text-center py-4">
+            <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4 animate-pulse"></i>
+            <p class="text-gray-700 text-lg mb-6">Você tem certeza que deseja excluir este histórico?</p>
+            <p class="text-sm text-gray-500 mb-6">Esta ação é irreversível.</p>
+            
+            <form id="formExclusao" method="POST" action="">
+                {% csrf_token %}
+                <div class="flex justify-center space-x-4">
+                    <button type="button" onclick="fecharModalExclusao()"
+                            class="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-150 ease-in-out">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                        Excluir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-exclusao {
+    display: none; /* Inicialmente oculto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000; /* Garante que fique acima de tudo */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    padding: 1.5rem;
+}
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
 <script>
+// Funções globais para controle do modal
+function abrirModalExclusao(url, tipo) {
+    document.getElementById('formExclusao').action = url;
+    document.getElementById('modalExclusao').style.display = 'flex';
+}
+
+function fecharModalExclusao() {
+    document.getElementById('modalExclusao').style.display = 'none';
+}
+
+// Fechar modal ao clicar fora do conteúdo
+document.getElementById('modalExclusao').addEventListener('click', function(event) {
+    if (event.target === this) {
+        fecharModalExclusao();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração das tabelas com opções estendidas
     const tableOptions = {

@@ -12,15 +12,14 @@ urlpatterns = [
     path('ver_militar/<int:id>/', views.ver_militar, name="ver_militar"),
     path('excluir_militar/<int:id>/', views.excluir_militar, name='excluir_militar'),
     
-    # --- Edição de Dados Específicos de Militares (Mantidas as que você já tinha) ---
+    # --- Edição de Dados Específicos de Militares ---
     path('editar_posto_graduacao/<int:id>/', views.editar_posto_graduacao, name='editar_posto_graduacao'),
     path('editar_dados_pessoais_contatos/<int:id>/', views.editar_dados_pessoais_contatos, name='editar_dados_pessoais_contatos'),
     path('editar_imagem/<int:id>/', views.editar_imagem, name='editar_imagem'),
    
     # --- Históricos e Outros Status ---
     path('historico_movimentacoes/<int:id>/', views.historico_movimentacoes, name='historico_movimentacoes'),
-    path('check_rpt/<int:id>/', views.check_rpt, name='check_rpt'), 
-    path('detalhes_efetivo/<int:posto_id>/', views.detalhar_efetivo, name='detalhar_efetivo'),
+    path('check_rpt/<int:id>/', views.check_rpt, name='check_rpt'), # Mantido conforme o original
     path('listar_outros_status/', views.listar_outros_status_militar, name='listar_outros_status'),
    
     # --- Gerenciamento de Categorias de Efetivo (Férias, Restrição, DS, DR, etc.) ---
@@ -41,12 +40,17 @@ urlpatterns = [
          views.excluir_categoria_efetivo,
          name='excluir_categoria_efetivo'),
 
+    # --- Novas URLs para Exclusão de Histórico de Movimentações ---
+    path('excluir_historico_promocao/<int:promocao_id>/',
+         views.excluir_historico_promocao, name='excluir_historico_promocao'),
+    path('excluir_historico_detalhe_situacao/<int:detalhe_id>/',
+         views.excluir_historico_detalhe_situacao, name='excluir_historico_detalhe_situacao'),
+
     # --- Funcionalidades de Etiqueta PDF ---
     path('buscar_militar/', views.pagina_buscar_militar, name='buscar_militar_page'),
     path('gerar_etiqueta_pdf/', views.gerar_etiqueta_pdf, name='gerar_etiqueta_pdf'),
 
     # URL para editar situação funcional.
     path('editar_situacao_funcional/<int:id>/', views.editar_situacao_funcional, name='editar_situacao_funcional'),
-     # Adicione esta nova rota
     path('nova_situacao_funcional/<int:id>/', views.nova_situacao_funcional, name='nova_situacao_funcional'),
 ]

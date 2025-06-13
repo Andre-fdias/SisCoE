@@ -1,5 +1,5 @@
 {% load static %}
-{% load custom_filters %} {# Ensure this is loaded if you use custom filters like format_cpf #}
+{% load efetivo_filters %} {# Ensure this is loaded if you use custom filters like format_cpf #}
 {% load tz %} {# Ensure this is loaded if you use timezone filters or current_date #}
 {% now "Y-m-d" as current_date %} {# Define current_date if not passed from parent #}
 <head>

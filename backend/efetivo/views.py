@@ -1376,7 +1376,7 @@ def gerar_etiqueta_pdf(request):
 
 
 # backend/efetivo/views.py (ou onde suas views estão)
-
+# views.py
 
 @login_required
 @require_http_methods(["POST"])
@@ -1392,7 +1392,7 @@ def editar_situacao_funcional(request, id):
                 'message': 'Situação funcional não encontrada para o militar especificado.'
             }, status=404)
 
-        # Criar histórico com os DADOS ATUAIS (ANTES da atualização)
+        # Criar histórico APENAS com os dados ANTES da atualização
         HistoricoDetalhesSituacao.objects.create(
             cadastro=cadastro,
             situacao=detalhe_situacao.situacao,
@@ -1408,7 +1408,7 @@ def editar_situacao_funcional(request, id):
             usuario_alteracao=request.user
         )
         
-        # Atualizar campos do detalhe_situacao principal com os novos dados do POST
+        # Atualizar APENAS o modelo DetalhesSituacao
         detalhe_situacao.situacao = request.POST.get('situacao')
         
         saida_str = request.POST.get('saida_da_unidade')
@@ -1427,10 +1427,10 @@ def editar_situacao_funcional(request, id):
         detalhe_situacao.usuario_alteracao = request.user
         detalhe_situacao.save()
 
-        logger.info(f"Situação funcional atualizada para militar ID: {id}. Exibindo modal de escolha.")
+        logger.info(f"Situação funcional atualizada para militar ID: {id}.")
         return JsonResponse({
             'success': True,
-            'message': 'Situação funcional atualizada com sucesso! Prossiga com a ação desejada.', # Mensagem para ser exibida antes da escolha
+            'message': 'Situação funcional atualizada com sucesso!',
             'show_choice_modal': True 
         })
 
@@ -1449,30 +1449,21 @@ def nova_situacao_funcional(request, id):
     try:
         cadastro = get_object_or_404(Cadastro, id=id)
 
-        # Criar uma nova instância de DetalhesSituacao
-        # Certifique-se de que todos os campos obrigatórios sejam preenchidos
-        # Use .get() para obter os valores do POST
+        # Criar APENAS nova instância em DetalhesSituacao
         nova_situacao = DetalhesSituacao(
             cadastro=cadastro,
             situacao=request.POST.get('situacao'),
             sgb=request.POST.get('sgb'),
             posto_secao=request.POST.get('posto_secao'),
-            esta_adido=request.POST.get('esta_adido') or None, # Trata vazio como None
+            esta_adido=request.POST.get('esta_adido') or None,
             funcao=request.POST.get('funcao'),
-            prontidao=request.POST.get('prontidao'),
-            
-            # Campos que talvez não estejam no formulário de nova situação, mas podem ser requeridos
-            # ou ter um valor padrão. Se estiverem, use request.POST.get().
-            # Se não estiverem, defina um valor padrão ou None se for opcional.
             op_adm=request.POST.get('op_adm', None), 
             cat_efetivo=request.POST.get('cat_efetivo', None),
-
+            prontidao=request.POST.get('prontidao'),
             usuario_alteracao=request.user,
-            # data_alteracao é auto_now_add ou auto_now, dependendo da sua definição no modelo
-            # Se auto_now_add=True, não precisa definir aqui.
-            # Se auto_now=True, será atualizado automaticamente ao salvar.
         )
 
+        # Processar datas
         apresentacao_str = request.POST.get('apresentacao_na_unidade')
         if apresentacao_str:
             try:
@@ -1483,7 +1474,7 @@ def nova_situacao_funcional(request, id):
                     'message': 'Formato de data de apresentação inválido. Use AAAA-MM-DD.'
                 }, status=400)
         else:
-            return JsonResponse({ # Apresentação na unidade é required no HTML
+            return JsonResponse({
                 'success': False,
                 'message': 'A data de apresentação na unidade é obrigatória.'
             }, status=400)
@@ -1498,9 +1489,10 @@ def nova_situacao_funcional(request, id):
                     'message': 'Formato de data de saída inválido. Use AAAA-MM-DD.'
                 }, status=400)
         else:
-            nova_situacao.saida_da_unidade = None # Campo opcional
+            nova_situacao.saida_da_unidade = None
 
         nova_situacao.save()
+        
         logger.info(f"Nova situação funcional cadastrada para militar ID: {id}.")
         return JsonResponse({
             'success': True,
@@ -1513,13 +1505,8 @@ def nova_situacao_funcional(request, id):
             'success': False,
             'message': f'Erro interno do servidor: {str(e)}'
         }, status=500)
-
-# As views 'historico_movimentacoes' e 'salvar_situacao_funcional' permanecem as mesmas.
-# Relembrando: 'salvar_situacao_funcional' parece fazer uma atualização completa do DetalhesSituacao
-# e 'editar_situacao_funcional' é a "Fase 1". Certifique-se de que seus fluxos não se sobreponham
-# de forma indesejada ou que não haja redundância.
-# Se 'salvar_situacao_funcional' não for usada, considere removê-la para evitar confusão.
-
+    
+    
 @login_required
 def historico_movimentacoes(request, id):
     cadastro = get_object_or_404(Cadastro, id=id)
@@ -1601,91 +1588,50 @@ def salvar_situacao_funcional(request, id):
     except Exception as e:
         logger.error(f"Erro inesperado ao salvar a situação funcional para o militar ID {id}: {e}")
         return JsonResponse({'success': False, 'message': f'Erro interno do servidor: {e}'}, status=500)
-    
 
-    logger.info(f"Iniciando nova_situacao_funcional para militar ID: {id}")
+
+
+
+@login_required
+@require_http_methods(["POST"])
+def excluir_historico_promocao(request, promocao_id):
+    cadastro_id = None # Initialize cadastro_id to None for safe fallback
     try:
-        cadastro = get_object_or_404(Cadastro, id=id)
-        
-        # Obter a situação atual do militar
-        situacao_atual = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
-        if not situacao_atual:
-            return JsonResponse({
-                'success': False,
-                'message': 'Não foi encontrada uma situação funcional atual para este militar.'
-            }, status=404)
-
-        # 1. Registrar a situação atual no histórico
-        HistoricoDetalhesSituacao.objects.create(
-            cadastro=cadastro,
-            situacao=situacao_atual.situacao,
-            sgb=situacao_atual.sgb,
-            posto_secao=situacao_atual.posto_secao,
-            esta_adido=situacao_atual.esta_adido,
-            funcao=situacao_atual.funcao,
-            op_adm=situacao_atual.op_adm,
-            cat_efetivo=situacao_atual.cat_efetivo,
-            prontidao=situacao_atual.prontidao,
-            apresentacao_na_unidade=situacao_atual.apresentacao_na_unidade,
-            saida_da_unidade=situacao_atual.saida_da_unidade,
-            usuario_alteracao=request.user
-        )
-        logger.info(f"Histórico criado para situação anterior do militar ID: {id}")
-
-        # 2. Criar nova situação funcional com os dados do formulário
-        nova_situacao = DetalhesSituacao(
-            cadastro=cadastro,
-            situacao=request.POST.get('situacao'),
-            sgb=request.POST.get('sgb'),
-            posto_secao=request.POST.get('posto_secao'),
-            funcao=request.POST.get('funcao'),
-            op_adm=request.POST.get('op_adm'),
-            prontidao=request.POST.get('prontidao'),
-            cat_efetivo=request.POST.get('cat_efetivo', 'ATIVO'),  # Default se não enviado
-            usuario_alteracao=request.user
-        )
-
-        # Tratar campo booleano esta_adido
-        esta_adido_str = request.POST.get('esta_adido')
-        if esta_adido_str:
-            nova_situacao.esta_adido = (esta_adido_str == 'True')
-        else:
-            nova_situacao.esta_adido = None
-
-        # Tratar datas
-        apresentacao_str = request.POST.get('apresentacao_na_unidade')
-        if apresentacao_str:
-            try:
-                nova_situacao.apresentacao_na_unidade = datetime.strptime(apresentacao_str, '%Y-%m-%d').date()
-            except ValueError:
-                logger.warning(f"Formato de data inválido para apresentacao_na_unidade: {apresentacao_str}")
-                nova_situacao.apresentacao_na_unidade = None
-
-        saida_str = request.POST.get('saida_da_unidade')
-        if saida_str:
-            try:
-                nova_situacao.saida_da_unidade = datetime.strptime(saida_str, '%Y-%m-%d').date()
-            except ValueError:
-                logger.warning(f"Formato de data inválido para saida_da_unidade: {saida_str}")
-                nova_situacao.saida_da_unidade = None
-
-        # Salvar a nova situação
-        nova_situacao.save()
-        logger.info(f"Nova situação funcional criada para militar ID: {id}")
-
-        # 3. Atualizar o cadastro principal se necessário
-        # (Exemplo: se mudou de unidade, SGB, etc.)
-        # cadastro.ultima_atualizacao = timezone.now()
-        # cadastro.save()
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Nova situação funcional cadastrada com sucesso!'
-        })
-
+        # Use HistoricoPromocao model for get_object_or_404
+        promocao = get_object_or_404(HistoricoPromocao, id=promocao_id)
+        cadastro_id = promocao.cadastro.id # Get cadastro_id before deletion
+        promocao.delete()
+        # Removed redundant extra_tags as styling is handled by message.tags in the template
+        messages.success(request, 'Registro de promoção excluído com sucesso!') 
     except Exception as e:
-        logger.error(f"Erro ao criar nova situação funcional para militar ID {id}: {str(e)}", exc_info=True)
-        return JsonResponse({
-            'success': False,
-            'message': f'Erro interno do servidor: {str(e)}'
-        }, status=500)
+        # Removed redundant extra_tags
+        messages.error(request, f'Erro ao excluir registro de promoção: {str(e)}')
+    
+    # Always attempt to redirect, prioritizing the specific militar's history
+    if cadastro_id:
+        return redirect('efetivo:historico_movimentacoes', id=cadastro_id)
+    else:
+        # Fallback if cadastro_id could not be determined (e.g., object not found initially)
+        return redirect('efetivo:listar_militar')
+
+@login_required
+@require_http_methods(["POST"])
+def excluir_historico_detalhe_situacao(request, detalhe_id):
+    cadastro_id = None # Initialize cadastro_id to None for safe fallback
+    try:
+        # Use HistoricoDetalhesSituacao model for get_object_or_404
+        detalhe_situacao = get_object_or_404(HistoricoDetalhesSituacao, id=detalhe_id)
+        cadastro_id = detalhe_situacao.cadastro.id # Get cadastro_id before deletion
+        detalhe_situacao.delete()
+        # Removed redundant extra_tags
+        messages.success(request, 'Registro de detalhe de situação excluído com sucesso!')
+    except Exception as e:
+        # Removed redundant extra_tags
+        messages.error(request, f'Erro ao excluir registro de detalhe de situação: {str(e)}')
+    
+    # Always attempt to redirect, prioritizing the specific militar's history
+    if cadastro_id:
+        return redirect('efetivo:historico_movimentacoes', id=cadastro_id)
+    else:
+        # Fallback if cadastro_id could not be determined
+        return redirect('efetivo:listar_militar')
