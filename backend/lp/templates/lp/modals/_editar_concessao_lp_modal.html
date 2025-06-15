@@ -1,0 +1,159 @@
+<div id="editarConcessaoLPModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form method="post" action="{% url 'lp:editar_concessao_lp' pk=lp.pk %}" id="formEditarConcessaoLP">
+                {% csrf_token %}
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Inserir Dados da Concessão de LP
+                            </h3>
+                            <div class="mt-2">
+                                <div class="mb-4">
+                                    <label for="dataConcessaoLPInput" class="block text-sm font-medium text-gray-700">
+                                        Data de Concessão *
+                                    </label>
+                                    <input type="date" name="data_concessao" id="dataConcessaoLPInput" required
+                                           value="{{ lp.data_concessao_lp|date:'Y-m-d' }}"
+                                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <div id="dataConcessaoLPError" class="text-red-600 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="bolGPmLPInput" class="block text-sm font-medium text-gray-700">
+                                        BOL GPm LP
+                                    </label>
+                                    <input type="text" name="bol_g_pm_lp" id="bolGPmLPInput"
+                                           value="{{ lp.bol_g_pm_lp|default:'' }}"
+                                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <div id="bolGPmLPError" class="text-red-600 text-sm mt-1 hidden"></div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="dataPublicacaoLPInput" class="block text-sm font-medium text-gray-700">
+                                        Data de Publicação
+                                    </label>
+                                    <input type="date" name="data_publicacao" id="dataPublicacaoLPInput"
+                                           value="{{ lp.data_publicacao_lp|date:'Y-m-d' }}"
+                                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <div id="dataPublicacaoLPError" class="text-red-600 text-sm mt-1 hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" id="submitEditarConcessaoLP"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto">
+                        <span id="normalStateEditarConcessao">Salvar</span>
+                        <span id="loadingStateEditarConcessao" class="hidden">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Salvando...
+                        </span>
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto" onclick="closeEditarConcessaoLPModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editarConcessaoLPModal = document.getElementById('editarConcessaoLPModal');
+    const formEditarConcessaoLP = document.getElementById('formEditarConcessaoLP');
+    const submitButton = formEditarConcessaoLP.querySelector('#submitEditarConcessaoLP');
+    const normalState = submitButton.querySelector('#normalStateEditarConcessao');
+    const loadingState = submitButton.querySelector('#loadingStateEditarConcessao');
+
+    window.openEditarConcessaoLPModal = function(lpId, dataConcessao, bolGpm, dataPublicacao) {
+        const form = document.getElementById('formEditarConcessaoLP');
+        form.action = `{% url 'lp:editar_concessao_lp' pk=0 %}`.replace('0', lpId);
+        
+        document.getElementById('dataConcessaoLPInput').value = dataConcessao || '';
+        document.getElementById('bolGPmLPInput').value = bolGpm || '';
+        document.getElementById('dataPublicacaoLPInput').value = dataPublicacao || '';
+        
+        editarConcessaoLPModal.classList.remove('hidden');
+    };
+
+    window.closeEditarConcessaoLPModal = function() {
+        editarConcessaoLPModal.classList.add('hidden');
+        // Limpar mensagens de erro
+        document.getElementById('dataConcessaoLPError').classList.add('hidden');
+        document.getElementById('bolGPmLPError').classList.add('hidden');
+        document.getElementById('dataPublicacaoLPError').classList.add('hidden');
+    };
+
+    formEditarConcessaoLP.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        normalState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        submitButton.disabled = true;
+        
+        // Limpar mensagens de erro anteriores
+        document.getElementById('dataConcessaoLPError').classList.add('hidden');
+        document.getElementById('bolGPmLPError').classList.add('hidden');
+        document.getElementById('dataPublicacaoLPError').classList.add('hidden');
+
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                closeEditarConcessaoLPModal();
+                if (data.reload_page) {
+                    location.reload(); 
+                }
+            } else if (data.alert && data.alert.type === 'error') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                // Assuming `data.errors` might contain field-specific errors
+                if (data.errors) {
+                    if (data.errors.data_concessao) {
+                        document.getElementById('dataConcessaoLPError').textContent = data.errors.data_concessao;
+                        document.getElementById('dataConcessaoLPError').classList.remove('hidden');
+                    }
+                    if (data.errors.data_publicacao) {
+                        document.getElementById('dataPublicacaoLPError').textContent = data.errors.data_publicacao;
+                        document.getElementById('dataPublicacaoLPError').classList.remove('hidden');
+                    }
+                    if (data.errors.bol_g_pm_lp) {
+                        document.getElementById('bolGPmLPError').textContent = data.errors.bol_g_pm_lp;
+                        document.getElementById('bolGPmLPError').classList.remove('hidden');
+                    }
+                }
+            } else {
+                showAlert('error', 'Erro Desconhecido!', 'Ocorreu um erro inesperado.');
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.');
+        } finally {
+            normalState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+});
+</script>

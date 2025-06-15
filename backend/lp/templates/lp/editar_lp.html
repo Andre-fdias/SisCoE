@@ -1,0 +1,116 @@
+<div id="deleteLPModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-red-700 to-red-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Confirmar Exclusão da LP</h2>
+            <button onclick="closeDeleteLPModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form method="POST" action="" class="p-6 space-y-4" id="formDeleteLP">
+            {% csrf_token %}
+            
+            <div class="space-y-2">
+                <label for="passwordInputDelete" class="block text-sm font-medium text-gray-700">Senha de Confirmação *</label>
+                <input type="password" name="password" id="passwordInputDelete" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                       placeholder="Digite sua senha">
+                <div id="passwordErrorDelete" class="hidden text-sm text-red-600"></div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-6">
+                <button type="button" onclick="closeDeleteLPModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitDeleteLP"
+                        class="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalStateDelete">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Excluir
+                    </span>
+                    <span id="loadingStateDelete" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Excluindo...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteLPModal = document.getElementById('deleteLPModal');
+    const formDeleteLP = document.getElementById('formDeleteLP');
+    const submitButton = formDeleteLP.querySelector('#submitDeleteLP');
+    const normalState = submitButton.querySelector('#normalStateDelete');
+    const loadingState = submitButton.querySelector('#loadingStateDelete');
+    const passwordError = document.getElementById('passwordErrorDelete');
+
+    window.openDeleteLPModal = function(lpId) {
+        const form = document.getElementById('formDeleteLP');
+        form.action = `{% url 'lp:excluir_lp' pk=0 %}`.replace('0', lpId);
+        deleteLPModal.classList.remove('hidden');
+    };
+
+    window.closeDeleteLPModal = function() {
+        deleteLPModal.classList.add('hidden');
+        formDeleteLP.reset();
+        passwordError.classList.add('hidden');
+    };
+
+    formDeleteLP.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        normalState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        submitButton.disabled = true;
+        passwordError.classList.add('hidden'); // Ocultar erro anterior
+
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                closeDeleteLPModal();
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    location.reload(); 
+                }
+            } else if (data.alert && data.alert.type === 'error') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                passwordError.textContent = data.error || data.alert.message || 'Erro desconhecido';
+                passwordError.classList.remove('hidden');
+            } else {
+                passwordError.textContent = data.error || 'Erro desconhecido.';
+                passwordError.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            passwordError.textContent = 'Erro na comunicação com o servidor. Tente novamente.';
+            passwordError.classList.remove('hidden');
+        } finally {
+            normalState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+});
+</script>

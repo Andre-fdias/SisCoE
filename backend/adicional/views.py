@@ -10,71 +10,87 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from datetime import datetime, date, timedelta
-from django.contrib.messages import constants
-from .models import Cadastro_adicional, HistoricoCadastro, LP, HistoricoLP
+from dateutil.relativedelta import relativedelta
+from django.contrib.messages import constants # This might not be strictly needed but keeping for context if it's used elsewhere
+from .models import Cadastro_adicional, HistoricoCadastro
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
-from datetime import timedelta
-@login_required
-def cadastrar_lp(request):
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+import logging
+logger = logging.getLogger(__name__)
+
+
+def alert_response(type, title, message, status=200):
     """
-    View para cadastrar Adicional e LP para um militar.
+    Helper function to return a JSON response with alert data for AJAX requests.
+    The 'modal_alerts.html' JavaScript listens for this structure.
+    """
+    return JsonResponse({
+        'alert': {
+            'type': type,
+            'title': title,
+            'message': message
+        }
+    }, status=status)
+
+
+
+@login_required
+def cadastrar_adicional(request):
+    """
+    View para cadastrar Adicional para um militar.
     """
     if request.method == 'GET':
-        return render(request, 'cadastrar_lp.html')
+        return render(request, 'adicional/cadastrar_adicional.html')
 
     elif request.method == 'POST':
         # Obtenção dos dados do formulário
         n_bloco_adicional = request.POST.get('n_bloco_adicional')
-        n_bloco_lp = request.POST.get('n_bloco_lp')
         cadastro_id = request.POST.get('cadastro_id')
         data_ultimo_adicional_str = request.POST.get('data_ultimo_adicional')
-        data_ultimo_lp_str = request.POST.get('data_ultimo_lp')
         situacao_adicional = request.POST.get('situacao_adicional')
-        situacao_lp = request.POST.get('situacao_lp')
         dias_desconto_adicional = int(request.POST.get('dias_desconto_adicional', 0) or 0)
-        dias_desconto_lp = int(request.POST.get('dias_desconto_lp', 0) or 0)
         sexta_parte = request.POST.get('sexta_parte_hidden', 'False') == 'True'  # Campo oculto
         user = request.user
 
+        # Determine if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         # Validações básicas
         if not cadastro_id:
-            messages.add_message(request, constants.ERROR, 'Cadastro do militar não localizado.', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('adicional:cadastrar_lp')
+            error_msg = 'Cadastro do militar não localizado.'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
+            return redirect('adicional:cadastrar_adicional')
 
         cadastro = get_object_or_404(Cadastro, id=cadastro_id)
 
         if not data_ultimo_adicional_str:
-            messages.add_message(request, constants.ERROR, 'Favor inserir a data de concessão do último Adicional', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('adicional:cadastrar_lp')
-
-        if not data_ultimo_lp_str:
-            messages.add_message(request, constants.ERROR, 'Favor inserir a data de concessão da última LP', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('adicional:cadastrar_lp')
+            error_msg = 'Favor inserir a data de concessão do último Adicional'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
+            return redirect('adicional:cadastrar_adicional')
 
         try:
             # Conversão de datas
             data_ultimo_adicional = datetime.strptime(data_ultimo_adicional_str, '%Y-%m-%d').date()
-            data_ultimo_lp = datetime.strptime(data_ultimo_lp_str, '%Y-%m-%d').date()
 
             # Validação dos números de bloco
             if not n_bloco_adicional or not n_bloco_adicional.isdigit():
-                messages.add_message(request, constants.ERROR, 'Número do Bloco Adicional inválido.', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('adicional:cadastrar_lp')
-            if not n_bloco_lp or not n_bloco_lp.isdigit():
-                messages.add_message(request, constants.ERROR, 'Número do Bloco LP inválido.', extra_tags='bg-red-500 text-white p-4 rounded')
-                return redirect('adicional:cadastrar_lp')
+                error_msg = 'Número do Bloco Adicional inválido.'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+                messages.error(request, error_msg)
+                return redirect('adicional:cadastrar_adicional')
 
             numero_adicional = int(n_bloco_adicional)
             numero_prox_adicional = numero_adicional + 1
             proximo_adicional = data_ultimo_adicional + timezone.timedelta(days=365 * 5) - timezone.timedelta(days=dias_desconto_adicional)
             mes_proximo_adicional = proximo_adicional.month
             ano_proximo_adicional = proximo_adicional.year
-
-            numero_lp = int(n_bloco_lp)
-            numero_prox_lp = numero_lp + 1
-            proximo_lp = data_ultimo_lp + timezone.timedelta(days=365 * 5) - timezone.timedelta(days=dias_desconto_lp)
-            mes_proximo_lp = proximo_lp.month
-            ano_proximo_lp = proximo_lp.year
 
             with transaction.atomic():
                 # Criação do Adicional
@@ -92,23 +108,9 @@ def cadastrar_lp(request):
                     sexta_parte=sexta_parte
                 )
 
-                # Criação da LP
-                lp = LP.objects.create(
-                    cadastro=cadastro,
-                    user_created=user,
-                    numero_lp=numero_lp,
-                    data_ultimo_lp=data_ultimo_lp,
-                    numero_prox_lp=numero_prox_lp,
-                    proximo_lp=proximo_lp,
-                    mes_proximo_lp=mes_proximo_lp,
-                    ano_proximo_lp=ano_proximo_lp,
-                    dias_desconto_lp=dias_desconto_lp,
-                    situacao_lp=situacao_lp
-                )
-
                 # Registrar no histórico do Adicional
                 HistoricoCadastro.objects.create(
-                    cadastro=cadastro,  # CAMPO OBRIGATÓRIO ADICIONADO
+                    cadastro=cadastro,
                     cadastro_adicional=adicional,
                     numero_adicional=adicional.numero_adicional,
                     data_ultimo_adicional=adicional.data_ultimo_adicional,
@@ -119,45 +121,45 @@ def cadastrar_lp(request):
                     mes_proximo_adicional=mes_proximo_adicional,
                     ano_proximo_adicional=ano_proximo_adicional,
                     dias_desconto_adicional=dias_desconto_adicional,
-                    status_adicional=adicional.status_adicional  # ADICIONAR SE NECESSÁRIO
+                    status_adicional=adicional.status_adicional
                 )
 
-                # Registrar no histórico da LP
-                HistoricoLP.objects.create(
-                    lp=lp,
-                    situacao_lp=situacao_lp,
-                    usuario_alteracao=user,
-                    numero_prox_lp=numero_prox_lp,
-                    proximo_lp=proximo_lp,
-                    mes_proximo_lp=mes_proximo_lp,
-                    ano_proximo_lp=ano_proximo_lp,
-                    dias_desconto_lp=dias_desconto_lp
-                )
-
-            messages.add_message(request, constants.SUCCESS, 'Adicional e LP cadastrados com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
-            return redirect('adicional:listar_lp')
+            success_msg = 'Adicional cadastrado com sucesso!'
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg)
+            messages.success(request, success_msg)
+            return redirect('adicional:listar_adicional')
 
         except ValueError as e:
-            messages.add_message(request, constants.ERROR, f'Formato de data inválido. Use o formato AAAA-MM-DD. Erro: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('adicional:cadastrar_lp')
+            error_msg = f'Formato de data inválido. Use o formato AAAA-MM-DD. Erro: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
+            return redirect('adicional:cadastrar_adicional')
         except Exception as e:
-            messages.add_message(request, constants.ERROR, f'Ocorreu um erro ao cadastrar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('adicional:cadastrar_lp')
+            error_msg = f'Ocorreu um erro ao cadastrar: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
+            return redirect('adicional:cadastrar_adicional')
+        
 
 
 @login_required
 def buscar_militar_adicional(request):
     """
-    Busca um militar pelo RE (via POST) para pré-preencher o formulário de cadastro de Adicional/LP,
-    ou exibe o formulário de busca (via GET).
+    Busca um militar pelo RE para pré-preencher o formulário de cadastro de Adicional.
     """
-    # Template principal que contém tanto a busca quanto o formulário
-    template_name = 'cadastrar_lp.html'
+    template_name = 'adicional/cadastrar_adicional.html'
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == "POST":
         re = request.POST.get('re', '').strip()
         if not re:
-            messages.warning(request, 'Por favor, informe o RE para buscar.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+            # Removed extra_tags as modal_alerts.html handles styling
+            if is_ajax:
+                return alert_response(type='error', title='Atenção!', message='Por favor, informe o RE para buscar.', status=400)
+            messages.warning(request, 'Por favor, informe o RE para buscar.')
             return render(request, template_name)
 
         try:
@@ -171,10 +173,14 @@ def buscar_militar_adicional(request):
 
             # Verifica dados obrigatórios
             if not detalhes:
-                messages.error(request, 'Detalhamento não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message='Detalhamento não encontrado', status=400)
+                messages.error(request, 'Detalhamento não encontrado')
                 return render(request, template_name)
             if not promocao:
-                messages.error(request, 'Dados de Posto e graduação não localizados', extra_tags='bg-red-500 text-white p-4 rounded')
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message='Dados de Posto e graduação não localizados', status=400)
+                messages.error(request, 'Dados de Posto e graduação não localizados')
                 return render(request, template_name)
 
             # Prepara o contexto
@@ -183,142 +189,39 @@ def buscar_militar_adicional(request):
                 'detalhes': detalhes,
                 'imagem': imagem,
                 'promocao': promocao,
-                'found_re': re  # Indica que a busca foi feita
+                'found_re': re
             }
+            # For AJAX, you might want to return HTML snippet or JSON data for dynamic update
+            if is_ajax:
+                # Example: render a partial template or just return a success signal
+                html_form = render_to_string('adicional/_militar_details_partial.html', context, request=request)
+                return JsonResponse({
+                    'success': True,
+                    'html_form': html_form,
+                    'alert': {
+                        'type': 'success',
+                        'title': 'Militar Encontrado!',
+                        'message': f'Dados do militar {cadastro.nome_completo} carregados.'
+                    }
+                })
             return render(request, template_name, context)
 
         except Cadastro.DoesNotExist:
-            messages.error(request, f'Militar com RE "{re}" não cadastrado no sistema', extra_tags='bg-red-500 text-white p-4 rounded')
+            error_msg = f'Militar com RE "{re}" não cadastrado no sistema'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=404)
+            messages.error(request, error_msg)
             return render(request, template_name, {'searched_re': re})
         
         except Exception as e:
-            messages.error(request, f'Ocorreu um erro ao buscar o militar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            error_msg = f'Ocorreu um erro ao buscar o militar: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
             return render(request, template_name)
 
-    # Se for GET, mostra o formulário vazio
     return render(request, template_name)
 
-
-@login_required
-def listar_lp(request):
-    """
-    View para listar todos os Adicionais e LPs cadastrados.
-    """
-    registros_adicional = Cadastro_adicional.objects.all() # Alterado para pegar todos os registros
-    registros_lp = LP.objects.all()
-
-    current_year = datetime.now().year
-    anos = list(range(2018, current_year + 2))  # Inclui o próximo ano
-
-    context = {
-        'registros_adicional': registros_adicional,
-        'registros_lp': registros_lp,
-        'anos': anos,
-    }
-
-    return render(request, 'listar_lp.html', context)
-
-
-# Exibe os detalhes de um registro específico LP
-
-def ver_lp(request, id):
-    """
-    View para exibir os detalhes de um registro de Adicional e LP.
-    """
-    # Obtém o cadastro de adicional
-    cadastro_adicional = get_object_or_404(Cadastro_adicional, id=id)
-
-    # Tenta obter o registro de LP associado ao mesmo cadastro
-    try:
-        cadastro_lp = LP.objects.get(cadastro=cadastro_adicional.cadastro)
-    except LP.DoesNotExist:
-        cadastro_lp = None
-
-    # Obter todos os registros deste militar ordenados por data
-    historico_adicional = Cadastro_adicional.objects.filter(
-        cadastro=cadastro_adicional.cadastro
-    ).order_by('-data_ultimo_adicional')
-
-    historico_lp = LP.objects.filter(
-        cadastro=cadastro_adicional.cadastro
-    ).order_by('-data_ultimo_lp')
-
-    context = {
-        'cadastro_adicional': cadastro_adicional,
-        'cadastro_lp': cadastro_lp,
-        'historico_adicional': historico_adicional,
-        'historico_lp': historico_lp,
-    }
-    return render(request, 'ver_lp.html', context)
-
-
-@login_required
-def editar_lp(request, id):
-    """
-    View para editar um registro de LP existente
-    """
-    lp = get_object_or_404(LP, id=id)
-
-    if request.method == 'POST':
-        try:
-            data_ultimo_lp_str = request.POST.get('data_ultimo_lp')
-
-            if not data_ultimo_lp_str:
-                messages.error(request, 'Data da última LP é obrigatória')
-                return redirect(reverse('adicional:editar_lp', args=[id]))
-
-            data_ultimo_lp = datetime.strptime(data_ultimo_lp_str, '%Y-%m-%d').date()
-
-            # Atualiza os campos
-            lp.numero_lp = int(request.POST.get('numero_lp'))
-            lp.data_ultimo_lp = data_ultimo_lp
-            lp.dias_desconto_lp = int(request.POST.get('dias_desconto_lp', 0))
-            lp.situacao_lp = request.POST.get('situacao_lp')
-            lp.save()
-
-            messages.success(request, 'LP atualizada com sucesso')
-            return redirect(reverse('adicional:ver_lp', args=[id]))
-
-        except ValueError as e:
-            messages.error(request, f'Erro ao processar os dados: {str(e)}')
-            return redirect(reverse('adicional:editar_lp', args=[id]))
-
-    context = {
-        'lp': lp,
-    }
-    return render(request, 'adicional/editar_lp.html', context)
-
-@login_required
-def excluir_lp(request, id):
-    """
-    View para excluir um registro de LP
-    """
-    lp = get_object_or_404(LP, id=id)
-
-    if request.method == 'POST':
-        try:
-            password = request.POST.get('password')
-            user = authenticate(request, username=request.user.username, password=password)
-
-            if not user or user != request.user:
-                messages.error(request, 'Autenticação falhou - senha incorreta')
-                return redirect(reverse('adicional:ver_lp', args=[id]))
-
-            lp.delete()
-            messages.success(request, 'LP excluída com sucesso')
-            return redirect('adicional:listar_lp')
-
-        except Exception as e:
-            messages.error(request, f'Erro ao excluir: {str(e)}')
-            return redirect(reverse('adicional:ver_lp', args=[id]))
-
-    return redirect(reverse('adicional:ver_lp', args=[id]))
-
-
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from .models import Cadastro_adicional, HistoricoCadastro
 
 def gravar_historico(instance, usuario_alteracao):
     """
@@ -327,8 +230,6 @@ def gravar_historico(instance, usuario_alteracao):
     HistoricoCadastro.objects.create(
         cadastro_adicional=instance,
         usuario_alteracao=usuario_alteracao,
-        
-        # Copia todos os campos relevantes
         cadastro=instance.cadastro,
         user_created=instance.user_created,
         user_updated=instance.user_updated,
@@ -351,6 +252,23 @@ def gravar_historico(instance, usuario_alteracao):
         data_publicacao_adicional=instance.data_publicacao_adicional,
         status_adicional=instance.status_adicional
     )
+
+@login_required
+def listar_adicional(request):
+    """
+    View para listar todos os Adicionais cadastrados.
+    """
+    registros_adicional = Cadastro_adicional.objects.all()
+    current_year = datetime.now().year
+    anos = list(range(2018, current_year + 2))
+
+    context = {
+        'registros_adicional': registros_adicional,
+        'anos': anos,
+    }
+
+    return render(request, 'adicional/listar_adicional.html', context)
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -385,176 +303,6 @@ def historico_adicional(request, id):
     
     return render(request, 'adicional/historico_adicional.html', context)
 
-@login_required
-def historico_lp(request, id):
-    """
-    View para exibir o histórico de uma LP
-    """
-    lp = get_object_or_404(LP, id=id)
-    historicos = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
-
-    context = {
-        'lp': lp,
-        'historicos': historicos,
-    }
-    return render(request, 'historico_lp.html', context)
-
-@login_required
-def concluir_lp(request, id):
-    """
-    Processa a conclusão de uma licença prêmio com todas as validações
-    """
-    cadastro = get_object_or_404(Cadastro_adicional, id=id)
-
-    if request.method == 'POST':
-        try:
-            # Validações básicas
-            password = request.POST.get('password')
-            data_concessao_str = request.POST.get('data_concessao')
-
-            if not data_concessao_str:
-                raise ValidationError("A data de concessão é obrigatória")
-
-            data_concessao = date.fromisoformat(data_concessao_str)
-
-            if data_concessao > date.today():
-                raise ValidationError("A data de concessão não pode ser no futuro")
-
-            # Validação do usuário
-            user = authenticate(request, username=request.user.username, password=password)
-            if not user or user != request.user:
-                raise ValidationError("Autenticação falhou - senha incorreta")
-
-            # Atualização do registro atual
-            cadastro.situacao_lp = "Concluído"
-            cadastro.data_concessao_lp = data_concessao
-            cadastro.data_conclusao_lp = timezone.now()
-            cadastro.usuario_conclusao_lp = request.user
-            cadastro.save()
-
-            # Criação do novo registro
-            novo_lp = Cadastro_adicional.objects.create(
-                cadastro=cadastro.cadastro,
-                numero_adicional=cadastro.numero_adicional,
-                data_ultimo_adicional=cadastro.data_ultimo_adicional,
-                numero_lp=cadastro.numero_prox_lp,
-                data_ultimo_lp=data_concessao,  # Usa a data informada no modal
-                user_created=request.user,
-                situacao_adicional=cadastro.situacao_adicional,
-                situacao_lp="Aguardando",
-                dias_desconto_adicional=0,
-                dias_desconto_lp=0
-            )
-
-            # Registro no histórico
-            HistoricoCadastro.objects.create(
-                    cadastro_adicional=novo_lp,
-                    situacao_adicional=novo_lp.situacao_adicional,
-                    situacao_lp="Aguardando",
-                    usuario_alteracao=request.user,
-                    numero_prox_adicional=novo_lp.numero_prox_adicional,
-                    proximo_adicional=novo_lp.proximo_adicional,
-                    mes_proximo_adicional=novo_lp.mes_proximo_adicional,
-                    ano_proximo_adicional=novo_lp.ano_proximo_adicional,
-                    dias_desconto_adicional=0,
-                )
-
-            messages.success(request, 'Licença Prêmio concluída com sucesso!')
-            return redirect(reverse('adicional:ver_lp', args=[novo_lp.id]))
-
-        except ValidationError as e:
-            messages.error(request, str(e), extra_tags='concluir_lp')
-        except Exception as e:
-            messages.error(request, f'Erro: {str(e)}', extra_tags='concluir_lp')
-
-        return redirect(reverse('adicional:ver_lp', args=[id]))
-
-
-
-@login_required
-@permission_required('adicional.can_concluir_adicional', raise_exception=True)
-def concluir_adicional(request, id):
-    """
-    Processa a conclusão de um adicional com todas as validações
-    """
-    adicional = get_object_or_404(Cadastro_adicional, id=id)
-
-    if not request.method == 'POST':
-        return redirect(reverse('adicional:ver_adicional', args=[id]))
-
-    try:
-        # Validações iniciais
-        if adicional.situacao_adicional == "Concluído":
-            raise ValidationError("Este adicional já foi concluído")
-
-        # Validação de senha
-        password = request.POST.get('password')
-        user = authenticate(request, username=request.user.username, password=password)
-        if not user or user != request.user:
-            raise ValidationError("Autenticação falhou - senha incorreta")
-
-        # Validação de dados
-        data_concessao_str = request.POST.get('data_concessao')
-        if not data_concessao_str:
-            raise ValidationError("A data de concessão é obrigatória")
-
-        data_concessao = date.fromisoformat(data_concessao_str)
-        if data_concessao > date.today():
-            raise ValidationError("A data de concessão não pode ser no futuro")
-
-        # Validação específica para 6ª Parte
-        if adicional.numero_prox_adicional == 4:
-            sexta_parte = request.POST.get('sexta_parte') == 'on'
-            if not sexta_parte:
-                raise ValidationError("Confirmação da 6ª Parte é obrigatória")
-            adicional.confirmacao_6parte = True
-
-        # Atualização do registro atual
-        adicional.situacao_adicional = "Concluído"
-        adicional.status_adicional = "encerrado"
-        adicional.data_concessao_adicional = data_concessao
-        adicional.usuario_conclusao = request.user
-        adicional.data_conclusao = timezone.now()
-
-        if adicional.numero_prox_adicional == 4:
-            adicional.sexta_parte = True
-
-        # Criação do novo registro antes de salvar o atual
-        novo_adicional = Cadastro_adicional(
-            cadastro=adicional.cadastro,
-            numero_adicional=adicional.numero_prox_adicional,
-            data_ultimo_adicional=data_concessao,
-            user_created=request.user,
-            situacao_adicional="Aguardando",
-            status_adicional="aguardando_requisitos",
-            dias_desconto_adicional=0
-        )
-
-        # Salva ambos os registros em transação
-        with transaction.atomic():
-            adicional.save()
-            novo_adicional.save()
-
-            # Atualiza o próximo adicional com base no último salvo
-            novo_adicional.numero_prox_adicional = novo_adicional.numero_adicional + 1
-            novo_adicional.proximo_adicional = novo_adicional.data_ultimo_adicional + timedelta(days=1825)  # 5 anos em dias
-            novo_adicional.save()
-
-        messages.success(request, 'Adicional concluído com sucesso! Foi criado um novo registro para o próximo período.')
-        return redirect(reverse('adicional:ver_adicional', args=[novo_adicional.id]))
-
-    except ValidationError as e:
-        messages.error(request, str(e), extra_tags='concluir_adicional')
-    except Exception as e:
-        messages.error(request, f'Erro inesperado: {str(e)}', extra_tags='concluir_adicional')
-
-    return redirect(reverse('adicional:ver_adicional', args=[id]))
-
-# Exibe os detalhes de um registro específico ADICIONAL
-from datetime import datetime
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Cadastro_adicional, HistoricoCadastro
 
 @login_required
 def ver_adicional(request, id):
@@ -578,12 +326,12 @@ def ver_adicional(request, id):
     ).exclude(id=id).order_by('numero_adicional') 
 
     context = {
-        'cadastro_adicional': adicional,  # Nome corrigido para bater com o template
+        'cadastro_adicional': adicional,
         'historico_alteracoes': historico_alteracoes,
         'historico_encerrados': historico_encerrados,
         'current_year': datetime.now().year,
     }
-    return render(request, 'detalhar_adicional.html', context)
+    return render(request, 'adicional/detalhar_adicional.html', context)
 
 @login_required
 def editar_adicional(request, id):
@@ -591,13 +339,17 @@ def editar_adicional(request, id):
     View para editar um registro de Adicional existente
     """
     adicional = get_object_or_404(Cadastro_adicional, id=id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
         try:
             data_ultimo_adicional_str = request.POST.get('data_ultimo_adicional')
 
             if not data_ultimo_adicional_str:
-                messages.error(request, 'Data do último adicional é obrigatória')
+                error_msg = 'Data do último adicional é obrigatória'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+                messages.error(request, error_msg)
                 return redirect(reverse('adicional:editar_adicional', args=[id]))
 
             data_ultimo_adicional = datetime.strptime(data_ultimo_adicional_str, '%Y-%m-%d').date()
@@ -615,11 +367,23 @@ def editar_adicional(request, id):
 
             adicional.save()
 
-            messages.success(request, 'Adicional atualizado com sucesso')
+            success_msg = 'Adicional atualizado com sucesso'
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg)
+            messages.success(request, success_msg)
             return redirect(reverse('adicional:ver_adicional', args=[id]))
 
         except ValueError as e:
-            messages.error(request, f'Erro ao processar os dados: {str(e)}')
+            error_msg = f'Erro ao processar os dados: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
+            return redirect(reverse('adicional:editar_adicional', args=[id]))
+        except Exception as e:
+            error_msg = f'Ocorreu um erro inesperado ao editar: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
             return redirect(reverse('adicional:editar_adicional', args=[id]))
 
     context = {
@@ -633,49 +397,38 @@ def excluir_adicional(request, id):
     View para excluir um registro de Adicional
     """
     adicional = get_object_or_404(Cadastro_adicional, id=id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
         try:
             password = request.POST.get('password')
             
-            # Verifica a senha diretamente (sem usar authenticate)
             if not request.user.check_password(password):
-                messages.error(request, 'Autenticação falhou - senha incorreta')
+                error_msg = 'Autenticação falhou - senha incorreta'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro de Autenticação!', message=error_msg, status=403)
+                messages.error(request, error_msg)
                 return redirect(reverse('adicional:ver_adicional', args=[id]))
 
             adicional.delete()
-            messages.success(request, 'Adicional excluído com sucesso')
-            return redirect('adicional:listar_lp')
+            success_msg = 'Adicional excluído com sucesso'
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg, status=200)
+            messages.success(request, success_msg)
+            return redirect('adicional:listar_adicional')
 
         except Exception as e:
-            messages.error(request, f'Erro ao excluir: {str(e)}')
+            error_msg = f'Erro ao excluir: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
             return redirect(reverse('adicional:ver_adicional', args=[id]))
 
     return redirect(reverse('adicional:ver_adicional', args=[id]))
 
-# Views para LP
-@login_required
-def ver_lp(request, id):
-    """
-    View para exibir os detalhes de um registro de LP
-    """
-    lp = get_object_or_404(LP, id=id)
-    historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
 
-    context = {
-        'lp': lp,
-        'historico_lp': historico_lp,
-        'current_year': datetime.now().year,
-    }
-    return render(request, 'detalhar_lp.html', context)
-
-    # views.py
-# views.py
-from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
-
-# views.py
 def editar_dias_desconto(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if request.method == 'POST':
         adicional = get_object_or_404(Cadastro_adicional, pk=pk)
         try:
@@ -685,39 +438,47 @@ def editar_dias_desconto(request, pk):
 
             adicional.dias_desconto_adicional = dias_desconto
             adicional.save()
-            messages.success(request, "Dias de desconto atualizados com sucesso!")
+            success_msg = "Dias de desconto atualizados com sucesso!"
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg)
+            messages.success(request, success_msg)
         except ValueError as e:
-            messages.error(request, str(e), extra_tags='dias_desconto')
+            error_msg = str(e)
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg) # Removed extra_tags
+        except Exception as e:
+            error_msg = f'Ocorreu um erro inesperado: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
 
-        # Redireciona para a página de visualização do adicional
         return redirect('adicional:ver_adicional', id=pk)
 
-    # Fallback para requisições GET
     return redirect('adicional:ver_adicional', id=pk)
 
 
 @login_required
 def editar_concessao(request, pk):
     adicional = get_object_or_404(Cadastro_adicional, id=pk)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
         try:
-            # Verificar se o usuário está autenticado
             if not request.user.is_authenticated:
-                messages.error(request, 'Usuário não autenticado', extra_tags='concessao')
+                error_msg = 'Usuário não autenticado'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro de Autenticação!', message=error_msg, status=403)
+                messages.error(request, error_msg) # Removed extra_tags
                 return redirect('adicional:ver_adicional', id=pk)
             
-            # Atualizar data de concessão
             data_concessao = request.POST.get('data_concessao')
             if data_concessao:
                 adicional.data_concessao_adicional = data_concessao
-                # Atualiza status para Publicado quando salvar os detalhes
                 adicional.status_adicional = Cadastro_adicional.StatusAdicional.PUBLICADO
 
-            # Atualizar BOL G Pm
             adicional.bol_g_pm_adicional = request.POST.get('bol_g_pm', '')
 
-            # Atualizar data de publicação
             data_publicacao = request.POST.get('data_publicacao')
             if data_publicacao:
                 adicional.data_publicacao_adicional = data_publicacao
@@ -725,9 +486,8 @@ def editar_concessao(request, pk):
             adicional.user_updated = request.user
             adicional.save()
             
-            # Registrar no histórico - CORREÇÃO AQUI
             HistoricoCadastro.objects.create(
-                cadastro_adicional=adicional,  # Isso deve resolver o erro
+                cadastro_adicional=adicional,
                 situacao_adicional=adicional.situacao_adicional,
                 usuario_alteracao=request.user,
                 numero_prox_adicional=adicional.numero_prox_adicional,
@@ -735,62 +495,84 @@ def editar_concessao(request, pk):
                 mes_proximo_adicional=adicional.mes_proximo_adicional,
                 ano_proximo_adicional=adicional.ano_proximo_adicional,
                 dias_desconto_adicional=adicional.dias_desconto_adicional,
-                # Certifique-se de incluir todos os campos obrigatórios do HistoricoCadastro
-                cadastro=adicional.cadastro  # Se o histórico também precisa do cadastro principal
+                cadastro=adicional.cadastro
             )
             
-            messages.success(request, "Detalhes atualizados!")
+            success_msg = "Detalhes atualizados!"
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg)
+            messages.success(request, success_msg)
             return redirect('adicional:ver_adicional', id=adicional.id)
             
         except ValueError as e:
-            messages.error(request, f"Erro: {str(e)}")
+            error_msg = f"Erro: {str(e)}"
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
             return redirect('adicional:ver_adicional', id=adicional.id)
             
         except Exception as e:
-            messages.error(request, f"Erro: {str(e)}")
+            error_msg = f"Erro: {str(e)}"
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
             return redirect('adicional:ver_adicional', id=adicional.id)
 
     return redirect('adicional:ver_adicional', id=adicional.id)
 
 @require_POST
-@csrf_exempt  # Temporário para testes, remova em produção
+@csrf_exempt # Consider if you need to exempt CSRF here, generally not recommended for POST
 def confirmar_6parte(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     try:
         adicional = Cadastro_adicional.objects.get(pk=pk)
         adicional.confirmacao_6parte = True
         adicional.save()
-        return JsonResponse({'success': True})
+        if is_ajax:
+            return alert_response(type='success', title='Sucesso!', message='Confirmação da 6ª Parte registrada com sucesso!')
+        return JsonResponse({'success': True}) # Fallback for non-modal AJAX, though modal is preferred
     except Cadastro_adicional.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Adicional não encontrado'}, status=404)
+        error_msg = 'Adicional não encontrado'
+        if is_ajax:
+            return alert_response(type='error', title='Erro!', message=error_msg, status=404)
+        return JsonResponse({'success': False, 'message': error_msg}, status=404)
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
+        error_msg = str(e)
+        if is_ajax:
+            return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+        return JsonResponse({'success': False, 'message': error_msg}, status=500)
 
 
 @login_required
 def confirmar_sipa(request, pk):
     adicional = get_object_or_404(Cadastro_adicional, pk=pk)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         try:
-            # Verificar se o usuário está autenticado
             if not request.user.is_authenticated:
-                messages.error(request, 'Usuário não autenticado')
+                error_msg = 'Usuário não autenticado'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro de Autenticação!', message=error_msg, status=403)
+                messages.error(request, error_msg)
                 return redirect('adicional:ver_adicional', id=pk)
             
-            # Verificar senha
             password = request.POST.get('password')
             if not password:
-                messages.error(request, 'Senha não fornecida')
+                error_msg = 'Senha não fornecida'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+                messages.error(request, error_msg)
                 return redirect('adicional:ver_adicional', id=pk)
             
-            # Verificar credenciais
             user = authenticate(request, username=request.user.get_username(), password=password)
             if not user or user != request.user:
-                messages.error(request, 'Senha incorreta')
+                error_msg = 'Senha incorreta'
+                if is_ajax:
+                    return alert_response(type='error', title='Erro!', message=error_msg, status=403)
+                messages.error(request, error_msg)
                 return redirect('adicional:ver_adicional', id=pk)
             
-            # Atualizar campos
             adicional.dias_desconto_adicional = int(request.POST.get('dias_desconto', 0))
             adicional.status_adicional = Cadastro_adicional.StatusAdicional.LANCADO_SIPA
             adicional.numero_prox_adicional = int(request.POST.get('numero_prox_adicional', 1))
@@ -801,8 +583,7 @@ def confirmar_sipa(request, pk):
             else:
                 adicional.proximo_adicional = None
             
-            # Verificar e atualizar 6ª parte se necessário
-            if adicional.numero_prox_adicional == 4:
+            if adicional.numero_prox_adicional == 4: # Assuming 4th additional grants sexta_parte
                 adicional.sexta_parte = request.POST.get('sexta_parte') == 'on'
             else:
                 adicional.sexta_parte = False
@@ -810,7 +591,6 @@ def confirmar_sipa(request, pk):
             adicional.user_updated = request.user
             adicional.save()
             
-            # Registrar no histórico
             HistoricoCadastro.objects.create(
                 cadastro_adicional=adicional,
                 situacao_adicional=adicional.situacao_adicional,
@@ -822,15 +602,23 @@ def confirmar_sipa(request, pk):
                 dias_desconto_adicional=adicional.dias_desconto_adicional
             )
             
-            messages.success(request, 'Lançamento no SIPA confirmado com sucesso!')
+            success_msg = 'Lançamento no SIPA confirmado com sucesso!'
+            if is_ajax:
+                return alert_response(type='success', title='Sucesso!', message=success_msg)
+            messages.success(request, success_msg)
             return redirect('adicional:ver_adicional', id=pk)
             
         except ValueError as e:
-            messages.error(request, f'Erro nos dados fornecidos: {str(e)}')
+            error_msg = f'Erro nos dados fornecidos: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
         except Exception as e:
-            messages.error(request, f'Erro inesperado: {str(e)}')
+            error_msg = f'Erro inesperado: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+            messages.error(request, error_msg)
     
-    # Redireciona para a página de visualização em caso de erro ou método GET
     return redirect('adicional:ver_adicional', id=pk)
 
 
@@ -845,257 +633,220 @@ def carregar_dados_sipa(request, pk):
         'sexta_parte': adicional.sexta_parte,
         'n_choices': [{'value': c[0], 'label': c[1]} for c in Cadastro_adicional.StatusAdicional.choices]
     }
-
+    # This view is purely for AJAX data loading, so JsonResponse is appropriate.
     return JsonResponse(data)
 
 
-
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect
-from django.utils import timezone
-from .models import Cadastro_adicional
-
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.db import transaction
-from django.utils import timezone
-import json
-import logging
-
-logger = logging.getLogger(__name__)
-
-@require_http_methods(["POST"])
 @login_required
-def concluir_adicional(request, pk):
-    logger.info(f"Iniciando conclusão para adicional {pk}")
-    
-    try:
-        # Verifica o tipo de conteúdo
-        if request.content_type == 'application/json':
-            try:
-                data = json.loads(request.body.decode('utf-8'))
-                password = data.get('password')
-            except json.JSONDecodeError as e:
-                logger.error(f"Erro ao decodificar JSON: {str(e)}")
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Dados JSON inválidos'
-                }, status=400)
-        else:
-            password = request.POST.get('password')
-        
-        # Validações
-        if not password:
-            return JsonResponse({
-                'success': False,
-                'message': 'Senha não fornecida'
-            }, status=400)
+@permission_required('adicional.can_concluir_adicional', raise_exception=True)
+def concluir_adicional(request, id):
+    logger.info(f"Usuário acessando a view: {request.user.email}")
+    logger.info(f"Usuário está autenticado: {request.user.is_authenticated}")
+  
+    adicional = get_object_or_404(Cadastro_adicional, id=id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-        if not request.user.check_password(password):
-            return JsonResponse({
-                'success': False,
-                'message': 'Senha incorreta'
-            }, status=403)
-
-        if not request.user.has_perm('adicional.can_concluir_adicional'):
-            return JsonResponse({
-                'success': False,
-                'message': 'Permissão negada'
-            }, status=403)
-
-        adicional = get_object_or_404(Cadastro_adicional, pk=pk)
-        
-        with transaction.atomic():
-            # Atualiza o adicional
-            adicional.status_adicional = Cadastro_adicional.StatusAdicional.ENCERRADO
-            adicional.situacao_adicional = "Concluído"
-            adicional.data_conclusao = timezone.now()
-            adicional.usuario_conclusao = request.user
-            adicional.save()
-
-            # Cria histórico com TODOS os campos obrigatórios
-            HistoricoCadastro.objects.create(
-                cadastro_adicional=adicional,
-                cadastro=adicional.cadastro,
-                user_created=adicional.user_created,
-                user_updated=request.user,
-                usuario_alteracao=request.user,
-                numero_adicional=adicional.numero_adicional,
-                numero_prox_adicional=adicional.numero_prox_adicional,
-                data_ultimo_adicional=adicional.data_ultimo_adicional,
-                situacao_adicional="Concluído",
-                status_adicional=Cadastro_adicional.StatusAdicional.ENCERRADO,
-                data_conclusao=timezone.now(),
-                # Outros campos conforme necessário
-                proximo_adicional=adicional.proximo_adicional,
-                mes_proximo_adicional=adicional.mes_proximo_adicional,
-                ano_proximo_adicional=adicional.ano_proximo_adicional,
-                dias_desconto_adicional=adicional.dias_desconto_adicional
+    if request.method != 'POST':
+        if is_ajax:
+            return alert_response(
+                type='error',
+                title='Erro!',
+                message='Método não permitido',
+                status=405
             )
+        return redirect(reverse('adicional:ver_adicional', args=[id]))
 
-            return JsonResponse({
-                'success': True,
-                'message': 'Processo concluído com sucesso',
-               
-            })
+    # Using alert_response directly for AJAX and messages for non-AJAX for consistency
+    try:
+        if adicional.situacao_adicional == "Concluído":
+            raise ValidationError("Este adicional já foi concluído.")
+
+        password = request.POST.get('password')
+        if not password:
+            raise ValidationError("Senha não fornecida.")
         
+        # Autenticação usando email como identificador (ensure your User model supports email authentication this way)
+        user = authenticate(request, email=request.user.email, password=password)
+        
+        if not user or user != request.user:
+            raise ValidationError("Autenticação falhou - senha incorreta.")
 
+        data_concessao_str = request.POST.get('data_concessao')
+        if not data_concessao_str:
+            raise ValidationError("A data de concessão é obrigatória.")
+        
+        try:
+            data_concessao = date.fromisoformat(data_concessao_str)
+        except ValueError:
+            raise ValidationError("Formato de data inválido. Use AAAA-MM-DD.")
+        
+        if data_concessao > date.today():
+            raise ValidationError("A data de concessão não pode ser no futuro.")
+
+        # Check for sexta_parte only if numero_prox_adicional is 4
+        if adicional.numero_prox_adicional == 4:
+            sexta_parte = request.POST.get('sexta_parte') == 'on'
+            if not sexta_parte:
+                raise ValidationError("Confirmação da 6ª Parte é obrigatória para o 4º Adicional.")
+            adicional.confirmacao_6parte = True
+        else:
+            adicional.confirmacao_6parte = False # Ensure it's false if not 4th additional
+
+
+        # Atualiza o adicional atual para concluído
+        adicional.situacao_adicional = "Concluído"
+        adicional.status_adicional = "encerrado"
+        adicional.data_concessao_adicional = data_concessao
+        adicional.usuario_conclusao = request.user
+        adicional.data_conclusao = timezone.now()
+        adicional.sexta_parte = (adicional.numero_prox_adicional == 4) # Recalculate based on the current state
+
+        with transaction.atomic():
+            adicional.save()
+            # If you have a gravar_historico, ensure it's called with relevant data
+            # gravar_historico(adicional, request.user) # If you want a full snapshot on conclusion
+
+        success_message = 'Adicional concluído com sucesso!'
+        if is_ajax:
+            return alert_response(type='success', title='Concluído!', message=success_message)
+        messages.success(request, success_message)
+        return redirect(reverse('adicional:ver_adicional', args=[id]))
+        
+    except ValidationError as e:
+        error_message = str(e)
+        logger.warning(f"Erro de validação: {error_message}")
+        if is_ajax:
+            return alert_response(type='error', title='Erro de Validação', message=error_message, status=400)
+        messages.error(request, error_message)
+        return redirect(reverse('adicional:ver_adicional', args=[id]))
     except Exception as e:
-        logger.error(f"Erro ao concluir adicional: {str(e)}", exc_info=True)
-        return JsonResponse({
-            'success': False,
-            'message': 'Erro interno do servidor',
-            'error': str(e)
-        }, status=500)
+        error_message = f'Ocorreu um erro inesperado: {str(e)}'
+        logger.exception(f"Erro inesperado: {error_message}")
+        if is_ajax:
+            return alert_response(type='error', title='Erro Interno', message=error_message, status=500)
+        messages.error(request, error_message)
+        return redirect(reverse('adicional:ver_adicional', args=[id]))
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-from django.http import JsonResponse
-from django.db import transaction
-from django.core.exceptions import ValidationError
-from .models import Cadastro_adicional, HistoricoCadastro
-from datetime import timedelta
-from dateutil.relativedelta import relativedelta
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
 
 @login_required
+@require_POST
 def novo_adicional(request):
-    if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                # Validação dos campos obrigatórios
-                required_fields = ['cadastro_id', 'n_bloco_adicional', 'data_ultimo_adicional']
-                for field in required_fields:
-                    if not request.POST.get(field):
-                        raise ValidationError(f"Campo obrigatório faltando: {field}")
+    # Verificação dupla de AJAX
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    if not is_ajax:
+        # If not AJAX, return a bad request response with a message the modal will still catch
+        messages.error(request, 'Requisição inválida: Esta operação requer AJAX.')
+        return redirect('some_fallback_url') # Redirect to a relevant page or previous page
+        # return JsonResponse({
+        #     'success': False,
+        #     'alert': {
+        #         'type': 'error',
+        #         'title': 'Erro!',
+        #         'message': 'Requisição inválida'
+        #     }
+        # }, status=400) # This won't work for non-AJAX if no client-side JS handles it.
 
-                # Coleta de dados
-                cadastro_id = int(request.POST['cadastro_id'])
-                bloco_atual = int(request.POST['n_bloco_adicional'])
-                data_ultimo = request.POST['data_ultimo_adicional']
-                situacao = request.POST.get('situacao_adicional', 'Aguardando')
-                sexta_parte = request.POST.get('sexta_parte', 'False') == 'True'
-                dias_desconto = int(request.POST.get('dias_desconto_adicional', 0) or 0)
-
-                # Validações
-                if not (1 <= bloco_atual <= 8):
-                    raise ValidationError("Número do bloco deve estar entre 1 e 8")
-
-                try:
-                    data_ultima = timezone.datetime.strptime(data_ultimo, '%Y-%m-%d').date()
-                except ValueError:
-                    raise ValidationError("Formato de data inválido. Use AAAA-MM-DD.")
-
-                if data_ultima > timezone.now().date():
-                    raise ValidationError("Data do último adicional não pode ser futura")
-
-                # Cálculo do próximo adicional
-                proximo_adicional = data_ultima + relativedelta(years=5) - timedelta(days=dias_desconto)
-                mes_proximo = proximo_adicional.month
-                ano_proximo = proximo_adicional.year
-                prox_bloco = bloco_atual + 1
-
-                # Busca o Cadastro relacionado
-                cadastro = get_object_or_404(Cadastro, id=cadastro_id)
-
-                # Criação do objeto Adicional (APENAS ADICIONAL, SEM LP)
-                novo_adicional_obj = Cadastro_adicional(
-                    cadastro=cadastro,
-                    numero_adicional=bloco_atual,
-                    data_ultimo_adicional=data_ultima,
-                    numero_prox_adicional=prox_bloco,
-                    proximo_adicional=proximo_adicional,
-                    mes_proximo_adicional=mes_proximo,
-                    ano_proximo_adicional=ano_proximo,
-                    dias_desconto_adicional=dias_desconto,
-                    situacao_adicional=situacao,
-                    sexta_parte=sexta_parte,
-                    user_created=request.user
-                )
-
-                novo_adicional_obj.full_clean()
-                novo_adicional_obj.save()
-
-                # Registrar no histórico
-                HistoricoCadastro.objects.create(
-                    cadastro_adicional=novo_adicional_obj,
-                    cadastro=novo_adicional_obj.cadastro,
-                    usuario_alteracao=request.user,
-                    numero_adicional=novo_adicional_obj.numero_adicional,
-                    data_ultimo_adicional=novo_adicional_obj.data_ultimo_adicional,
-                    numero_prox_adicional=novo_adicional_obj.numero_prox_adicional,
-                    proximo_adicional=novo_adicional_obj.proximo_adicional,
-                    mes_proximo_adicional=novo_adicional_obj.mes_proximo_adicional,
-                    ano_proximo_adicional=novo_adicional_obj.ano_proximo_adicional,
-                    dias_desconto_adicional=novo_adicional_obj.dias_desconto_adicional,
-                    situacao_adicional=novo_adicional_obj.situacao_adicional,
-                    status_adicional=novo_adicional_obj.status_adicional
-                )
-
-                return JsonResponse({
-                    'success': True,
-                    'redirect_url': reverse('adicional:ver_adicional', kwargs={'id': novo_adicional_obj.id}),
-                    'message': 'Adicional criado com sucesso!'
-                })
-
-        except ValidationError as e:
-            return JsonResponse({
-                'success': False,
-                'message': '; '.join(e.messages)
-            }, status=400)
-
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Erro interno ao criar adicional: {str(e)}'
-            }, status=500)
-
-    else:
-        # Renderizar um formulário para cadastrar um novo adicional
-        return render(request, 'cadastrar_adicional.html')
+    try:
+        data = request.POST
+        cadastro_id = data.get('cadastro_id')
+        n_bloco_adicional = data.get('n_bloco_adicional')
+        data_ultimo_adicional_str = data.get('data_ultimo_adicional')
+        situacao_adicional = data.get('situacao_adicional')
         
+        # Validações básicas
+        if not all([cadastro_id, n_bloco_adicional, data_ultimo_adicional_str]):
+            return alert_response(
+                type='error',
+                title='Erro!',
+                message='Dados obrigatórios faltando',
+                status=400
+            )
+        
+        # Obter o objeto Cadastro
+        cadastro_militar = get_object_or_404(Cadastro, id=cadastro_id)
+        
+        # Converter dados
+        try:
+            numero_adicional = int(n_bloco_adicional)
+            data_ultimo_adicional = datetime.strptime(data_ultimo_adicional_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError) as e:
+            return alert_response(
+                type='error',
+                title='Erro!',
+                message=f'Dados inválidos: {str(e)}',
+                status=400
+            )
+        
+        # Calcular campos derivados
+        proximo_adicional = data_ultimo_adicional + timedelta(days=1825)  # 5 anos
+        mes_proximo_adicional = proximo_adicional.month
+        ano_proximo_adicional = proximo_adicional.year
+        numero_prox_adicional = numero_adicional + 1
+        
+        # Criar novo adicional
+        novo_adicional_obj = Cadastro_adicional(
+            cadastro=cadastro_militar,
+            numero_adicional=numero_adicional,
+            data_ultimo_adicional=data_ultimo_adicional,
+            situacao_adicional=situacao_adicional or 'Aguardando',
+            dias_desconto_adicional=0,
+            proximo_adicional=proximo_adicional,
+            mes_proximo_adicional=mes_proximo_adicional,
+            ano_proximo_adicional=ano_proximo_adicional,
+            numero_prox_adicional=numero_prox_adicional,
+            user_created=request.user,
+            status_adicional='aguardando_requisitos'
+        )
+        
+        novo_adicional_obj.full_clean()
+        novo_adicional_obj.save()
 
-import logging
-from django.db import transaction
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-from datetime import datetime
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
+        # No need for redirect_url if the modal handles the feedback.
+        # If you still need a redirect after modal, the client-side JS would handle it.
+        return alert_response(
+            type='success',
+            title='Sucesso!',
+            message='Novo adicional criado com sucesso!'
+        )
+        
+    except ValidationError as e:
+        return alert_response(
+            type='error',
+            title='Erro de Validação',
+            message=f'Erro de validação: {", ".join(e.messages)}',
+            status=400
+        )
+    except Exception as e:
+        logger.error(f"Erro ao criar novo adicional: {str(e)}", exc_info=True)
+        return alert_response(
+            type='error',
+            title='Erro Interno',
+            message=f'Erro ao criar adicional: {str(e)}',
+            status=500
+        )
+    
 
-# Configura o logger
-logger = logging.getLogger(__name__)
-
+    
 @login_required
 def editar_cadastro_adicional(request, id):
-    """
-    View robusta para edição de Cadastro_adicional com:
-    - Tratamento completo de erros
-    - Logging adequado
-    - Validação de campos
-    - Suporte a histórico (opcional)
-    """
     adicional = get_object_or_404(Cadastro_adicional, id=id)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
-    # Obter choices para os selects
     try:
         n_choices = Cadastro_adicional._meta.get_field('numero_adicional').choices
         situacao_choices = Cadastro_adicional._meta.get_field('situacao_adicional').choices
         status_choices = Cadastro_adicional._meta.get_field('status_adicional').choices
     except Exception as e:
-        logger.error(f"Erro ao obter choices: {str(e)}")
-        messages.error(request, "Erro ao carregar opções do formulário")
+        error_msg = "Erro ao carregar opções do formulário"
+        if is_ajax:
+            return alert_response(type='error', title='Erro!', message=error_msg, status=500)
+        messages.error(request, error_msg)
         return redirect('adicional:ver_adicional', id=id)
 
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                # 1. Processar campos básicos
                 fields_to_update = [
                     'numero_adicional', 'numero_prox_adicional',
                     'situacao_adicional', 'status_adicional',
@@ -1106,7 +857,6 @@ def editar_cadastro_adicional(request, id):
                     if field in request.POST:
                         setattr(adicional, field, request.POST.get(field))
 
-                # 2. Processar campos numéricos especiais
                 numeric_fields = {
                     'mes_proximo_adicional': int,
                     'ano_proximo_adicional': int
@@ -1116,7 +866,6 @@ def editar_cadastro_adicional(request, id):
                     if request.POST.get(field):
                         setattr(adicional, field, type_func(request.POST.get(field)))
 
-                # 3. Processar datas
                 date_fields = [
                     'data_ultimo_adicional',
                     'proximo_adicional',
@@ -1128,42 +877,50 @@ def editar_cadastro_adicional(request, id):
                     if request.POST.get(field):
                         setattr(adicional, field, datetime.strptime(request.POST.get(field), '%Y-%m-%d').date())
 
-                # 4. Processar booleanos
                 adicional.sexta_parte = 'sexta_parte' in request.POST
                 adicional.confirmacao_6parte = 'confirmacao_6parte' in request.POST
 
-                # 5. Atualizar metadados
                 adicional.user_updated = request.user
                 adicional.updated_at = timezone.now()
 
-                # 6. Validar e salvar
                 adicional.full_clean()
                 adicional.save()
 
-                # 7. Tentar criar histórico (se existir)
-                try:
-                    if hasattr(adicional, 'historicos'):
-                        HistoricoCadastro.objects.create(
-                            cadastro_adicional=adicional,
-                            usuario=request.user,
-                            acao="EDIÇÃO",
-                            detalhes=f"Editado por {request.user.username}"
-                        )
-                except Exception as hist_error:
-                    logger.warning(f"Erro ao criar histórico (pode ser normal): {str(hist_error)}")
+                # This HistoricoCadastro creation seems to be generic logging for any edit.
+                # Ensure 'usuario' and 'acao' fields exist in HistoricoCadastro model if uncommenting.
+                # try:
+                #     if hasattr(adicional, 'historicos'): # This check might not be robust
+                #         HistoricoCadastro.objects.create(
+                #             cadastro_adicional=adicional,
+                #             usuario=request.user,
+                #             acao="EDIÇÃO",
+                #             detalhes=f"Editado por {request.user.username}"
+                #         )
+                # except Exception:
+                #     pass
 
-                messages.success(request, 'Cadastro atualizado com sucesso!')
+                success_msg = 'Cadastro atualizado com sucesso!'
+                if is_ajax:
+                    return alert_response(type='success', title='Sucesso!', message=success_msg)
+                messages.success(request, success_msg)
                 return redirect('adicional:ver_adicional', id=adicional.id)
 
         except ValueError as e:
-            logger.error(f"Erro de valor ao editar adicional {id}: {str(e)}")
-            messages.error(request, f'Erro nos valores informados: {str(e)}')
+            error_msg = f'Erro nos valores informados: {str(e)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro!', message=error_msg, status=400)
+            messages.error(request, error_msg)
         except ValidationError as e:
-            logger.error(f"Erro de validação ao editar adicional {id}: {str(e)}")
-            messages.error(request, f'Erro de validação: {", ".join(e.messages)}')
+            error_msg = f'Erro de validação: {", ".join(e.messages)}'
+            if is_ajax:
+                return alert_response(type='error', title='Erro de Validação!', message=error_msg, status=400)
+            messages.error(request, error_msg)
         except Exception as e:
-            logger.critical(f"Erro inesperado ao editar adicional {id}: {str(e)}", exc_info=True)
-            messages.error(request, 'Ocorreu um erro inesperado. Administrador foi notificado.')
+            error_msg = 'Ocorreu um erro inesperado. Administrador foi notificado.'
+            logger.exception(f"Erro inesperado em editar_cadastro_adicional: {str(e)}")
+            if is_ajax:
+                return alert_response(type='error', title='Erro Interno!', message=error_msg, status=500)
+            messages.error(request, error_msg)
 
     context = {
         'adicional': adicional,

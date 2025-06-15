@@ -8,16 +8,41 @@
         </div>
 
         <!-- Corpo do Formulário -->
-        <form method="POST" action="{% url 'adicional:concluir_adicional' cadastro_adicional.id %}" class="p-6 space-y-4">
+        <form method="POST" action="{% url 'adicional:concluir_adicional' cadastro_adicional.id %}" 
+              class="p-6 space-y-4" id="formConcluirAdicional">
             {% csrf_token %}
             
+            <!-- Campo de data de concessão -->
             <div class="space-y-2">
-                <label for="passwordInput" class="block text-sm font-medium text-gray-700">Senha de Confirmação *</label>
+                <label for="dataConcessaoInput" class="block text-sm font-medium text-gray-700">
+                    Data de Concessão *
+                </label>
+                <input type="date" name="data_concessao" id="dataConcessaoInput" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       value="{{ cadastro_adicional.data_concessao_adicional|date:'Y-m-d' }}">
+            </div>
+            
+            <!-- Campo de senha -->
+            <div class="space-y-2">
+                <label for="passwordInput" class="block text-sm font-medium text-gray-700">
+                    Senha de Confirmação *
+                </label>
                 <input type="password" name="password" id="passwordInput" required
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                        placeholder="Digite sua senha">
-                <div id="passwordError" class="hidden text-sm text-red-600"></div>
+                <div id="passwordError" class="hidden text-sm text-red-600 mt-2 p-2 bg-red-50 rounded-lg"></div>
             </div>
+
+            <!-- Confirmação da 6ª parte (se aplicável) -->
+            {% if cadastro_adicional.numero_prox_adicional == 4 %}
+            <div class="flex items-center space-x-2 pt-2">
+                <input type="checkbox" name="sexta_parte" id="sextaParteCheckbox"
+                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label for="sextaParteCheckbox" class="text-sm font-medium text-gray-700">
+                    Confirmo que é a 6ª parte do adicional
+                </label>
+            </div>
+            {% endif %}
 
             <!-- Rodapé -->
             <div class="flex justify-end gap-4 pt-6">
@@ -25,11 +50,13 @@
                         class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
                     Cancelar
                 </button>
-                <button type="submit" id="submitButton" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition-all duration-200">
+                <button type="submit" id="submitButton" 
+                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center transition-all duration-200">
                     <span id="normalState">Confirmar</span>
                     <span id="loadingState" class="hidden ml-2">
-                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <path d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12c0 5.421 4.579 10 10 10z"/>
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     </span>
                 </button>
@@ -37,3 +64,81 @@
         </form>
     </div>
 </div>
+
+<script>
+function openConcluirAdicionalModal() {
+    document.getElementById('concluirAdicionalModal').classList.remove('hidden');
+}
+
+function closeConcluirAdicionalModal() {
+    document.getElementById('concluirAdicionalModal').classList.add('hidden');
+}
+
+// Função para abrir o modal de novo adicional
+function openNovoAdicionalModal(cadastroId) {
+    // Preenche o campo oculto do formulário de novo adicional
+    document.getElementById('cadastro_id').value = cadastroId;
+    
+    // Exibe o modal de novo adicional
+    document.getElementById('novoAdicionalModal').classList.remove('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const formConcluirAdicional = document.getElementById('formConcluirAdicional');
+    if (!formConcluirAdicional) return;
+
+    formConcluirAdicional.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Elementos UI
+        const passwordError = document.getElementById('passwordError');
+        const normalState = document.getElementById('normalState');
+        const loadingState = document.getElementById('loadingState');
+        const submitButton = document.getElementById('submitButton');
+        
+        // Resetar erros
+        passwordError.classList.add('hidden');
+        passwordError.textContent = '';
+        
+        // Mostrar loading
+        normalState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        submitButton.disabled = true;
+        
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Fechar o modal de conclusão
+                closeConcluirAdicionalModal();
+                
+                // Abrir modal de novo adicional com o cadastro_id
+                openNovoAdicionalModal(data.cadastro_id);
+            } else {
+                passwordError.textContent = data.error || 'Erro desconhecido';
+                passwordError.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            passwordError.textContent = 'Erro na comunicação com o servidor. Tente novamente.';
+            passwordError.classList.remove('hidden');
+        } finally {
+            normalState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+});
+</script>

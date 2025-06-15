@@ -1,0 +1,119 @@
+<div id="alert-modal" class="fixed inset-0 z-[99999] flex items-center justify-center hidden bg-black/70 backdrop-blur-md">
+    <div id="alert-modal-content" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 transition-all duration-300 transform scale-95 opacity-0">
+        <button id="close-alert-modal" class="absolute top-5 right-5 text-gray-500 hover:text-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <div class="flex flex-col items-center text-center">
+            <div id="alert-icon" class="mb-6">
+                </div>
+            <h3 id="alert-title" class="text-2xl font-bold mb-3 text-gray-800"></h3>
+            <p id="alert-message" class="text-gray-600 mb-8 text-lg"></p>
+            <button id="alert-confirm" class="px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertModal = document.getElementById('alert-modal');
+        const alertModalContent = document.getElementById('alert-modal-content');
+        const alertIcon = document.getElementById('alert-icon');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertConfirmButton = document.getElementById('alert-confirm');
+        const closeAlertModalButton = document.getElementById('close-alert-modal');
+
+        function showAlert(type, title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            
+            // Reset styles
+            alertIcon.innerHTML = '';
+            alertConfirmButton.className = 'px-6 py-3 rounded-xl text-white font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg';
+
+            // Set styles based on type
+            let iconSvg = '';
+            switch (type) {
+                case 'success':
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                    alertConfirmButton.classList.add('bg-green-500', 'hover:bg-green-600');
+                    break;
+                case 'error':
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                    alertConfirmButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                    break;
+                case 'warning':
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.308 18c-.77 1.333.192 3 1.732 3z"/></svg>`;
+                    alertConfirmButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                    break;
+                default:
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                    alertConfirmButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }
+            alertIcon.innerHTML = iconSvg;
+            alertConfirmButton.textContent = 'OK';
+
+            alertModal.classList.remove('hidden');
+            setTimeout(() => {
+                alertModalContent.classList.remove('scale-95', 'opacity-0');
+                alertModalContent.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        function closeAlertModal() {
+            alertModalContent.classList.remove('scale-100', 'opacity-100');
+            alertModalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                alertModal.classList.add('hidden');
+            }, 300); // Match transition duration
+        }
+
+        alertConfirmButton.addEventListener('click', closeAlertModal);
+        closeAlertModalButton.addEventListener('click', closeAlertModal);
+        alertModal.addEventListener('click', function(event) {
+            if (event.target === alertModal) {
+                closeAlertModal();
+            }
+        });
+
+        // Check for Django messages and display them
+        const djangoMessagesEl = document.getElementById('django-messages');
+        if (djangoMessagesEl) {
+            try {
+                const messages = JSON.parse(djangoMessagesEl.getAttribute('data-messages'));
+                
+                messages.forEach(msg => {
+                    let type = 'info';
+                    if (msg.tags.toLowerCase().includes('success')) {
+                        type = 'success';
+                    } else if (msg.tags.toLowerCase().includes('error')) {
+                        type = 'error';
+                    } else if (msg.tags.toLowerCase().includes('warning')) {
+                        type = 'warning';
+                    }
+                    
+                    let title = '';
+                    switch(type) {
+                        case 'success': title = 'Sucesso!'; break;
+                        case 'error': title = 'Erro!'; break;
+                        case 'warning': title = 'Atenção!'; break;
+                        default: title = 'Informação';
+                    }
+                    
+                    showAlert(type, title, msg.message);
+                });
+                
+                // Remove the element after processing the messages
+                djangoMessagesEl.remove(); 
+            } catch (e) {
+                console.error('Error parsing Django messages:', e);
+            }
+        }
+        
+        // Expose the showAlert function globally
+        window.showAlert = showAlert;
+    });
+</script>
