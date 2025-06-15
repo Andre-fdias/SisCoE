@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Cadastrar Licença Prêmio{% endblock %}
+
+{% block 'body' %}
+<body class="bg-gray-50">
+    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_lp">
+        <fieldset class="p-4 mb-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
+                <div class="p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">
+                                Cadastrar Licença Prêmio
+                            </h1>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <a href="{% url 'lp:listar_lp' %}" class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
+                                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-md rounded-lg
+                                      text-sm px-5 py-2.5 text-center font-medium transition-all duration-200">
+                                <i class="fa-solid fa-arrow-left mr-2"></i> Voltar para Listagem
+                            </a>
+                        </div>
+                    </div>
+                    <hr class="border-gray-500 my-4">
+                </div>
+            </fieldset>
+
+            {% if messages %}
+                <div id="django-messages" style="display:none;" data-messages='[
+                    {% for message in messages %}
+                        {
+                            "tags": "{{ message.tags|upper }}",
+                            "message": "{{ message|escapejs }}"
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]'></div>
+            {% endif %}
+            {% include 'modals/modal_alerts.html' %}
+
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 mt-4 border-0">
+                <div class="bg-white p-6 rounded-md shadow-inner">
+                    <div class="mb-4">
+                        <p class="text-gray-700 font-medium">Digite abaixo o RE (sem dígito) do militar que será cadastrado!</p>
+                    </div>
+                    
+                    <form id="searchForm" method="post" action="{% url 'lp:buscar_militar_lp' %}">
+                        {% csrf_token %}
+                        <div class="space-y-4">
+                            <div>
+                                <label for="re" class="block text-sm font-medium text-gray-700 mb-1">RE do Militar *</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="re" name="re" placeholder="Ex: 990000" required
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900
+                                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <button type="submit"
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Buscar Militar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="militar-details-section" class="mt-6 hidden">
+                        <form id="lpForm" method="post" action="{% url 'lp:cadastrar_lp' %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="cadastro_id" id="cadastro_id_hidden">
+                            
+                            <div class="space-y-6">
+                                <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-4">Dados do Militar</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="space-y-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">RE</label>
+                                                    <div class="input-readonly" id="militar_re"></div>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Posto/Grad</label>
+                                                    <div class="input-readonly" id="militar_posto_grad"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="space-y-2">
+                                                <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Nome Completo</label>
+                                                <div class="input-readonly" id="militar_nome"></div>
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">SGB</label>
+                                                    <div class="input-readonly" id="militar_sgb"></div>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Posto/Seção</label>
+                                                    <div class="input-readonly" id="militar_posto_secao"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-center">
+                                            <div class="relative group w-48 h-48">
+                                                <img id="preview" src="" 
+                                                     class="w-full h-full object-cover rounded-xl border-4 border-white shadow-lg hidden">
+                                                <div id="no-image-placeholder" class="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
+                                                    <span class="text-gray-500 text-sm">Sem imagem cadastrada</span>
+                                                </div>
+                                                
+                                                <label class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity 
+                                                            rounded-xl flex flex-col items-center justify-center cursor-pointer gap-2">
+                                                    <i class="fa-solid fa-camera text-white text-xl"></i>
+                                                    <span class="text-white text-sm font-medium">Alterar Foto</span>
+                                                    <input type="file" name="image" class="hidden" accept="image/*" onchange="previewImage(event)">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-4">Dados da Licença Prêmio</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div class="space-y-2">
+                                            <label for="numero_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide flex items-center">
+                                                Número da LP <span class="text-red-500 ml-1">*</span>
+                                            </label>
+                                            <div class="relative">
+                                                <select name="numero_lp" id="numero_lp" required
+                                                        class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                               shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                               transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                               appearance-none">
+                                                    <option value="" disabled selected>Selecione...</option>
+                                                    {% for value, label in n_choices %}
+                                                    <option value="{{ value }}">{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="data_ultimo_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide flex items-center">
+                                                Data Último LP <span class="text-red-500 ml-1">*</span>
+                                            </label>
+                                            <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
+                                                   class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                           transition-all duration-200 placeholder-gray-500
+                                                           hover:border-gray-400 text-gray-900 font-medium
+                                                           [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                           bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI4IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                                           bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
+                                        </div>
+
+
+
+                                        <div class="space-y-2">
+                                            <label for="dias_desconto_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                                                Dias de Desconto LP
+                                            </label>
+                                            <input type="number" name="dias_desconto_lp" id="dias_desconto_lp" value="0"
+                                                   class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="numero_prox_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                                                Próximo Nº LP
+                                            </label>
+                                            <input type="text" name="numero_prox_lp_output" id="numero_prox_lp_output" readonly
+                                                   class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                                                Próximo LP
+                                            </label>
+                                            <input type="text" name="proximo_lp_output" id="proximo_lp_output" readonly
+                                                   class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="mes_proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                                                Mês Próximo LP
+                                            </label>
+                                            <input type="number" name="mes_proximo_lp_output" id="mes_proximo_lp_output" readonly
+                                                   class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="ano_proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">
+                                                Ano Próximo LP
+                                            </label>
+                                            <input type="number" name="ano_proximo_lp_output" id="ano_proximo_lp_output" readonly
+                                                   class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                           shadow-xs text-gray-900 font-medium">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-4 justify-end mt-6">
+                                <button type="submit"
+                                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg shadow-md
+                                               hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                                               transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center">
+                                    <i class="fa-solid fa-save mr-2"></i>Salvar Dados
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                     <p id="initial-message" class="text-gray-600 mt-4 text-center">Por favor, utilize o campo acima para buscar um militar pelo RE.</p>
+
+                </div>
+            </fieldset>
+        </fieldset>
+    </div>
+
+    <script>
+        // Função para pré-visualizar imagem
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('preview');
+                output.src = reader.result;
+                output.style.display = 'block'; // Mostra a imagem
+                document.getElementById('no-image-placeholder').classList.add('hidden'); // Oculta o placeholder
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('searchForm');
+            const militarDetailsSection = document.getElementById('militar-details-section');
+            const initialMessage = document.getElementById('initial-message');
+            
+            // Elementos de dados do militar
+            const cadastroIdHidden = document.getElementById('cadastro_id_hidden');
+            const militarRe = document.getElementById('militar_re');
+            const militarNome = document.getElementById('militar_nome');
+            const militarPostoGrad = document.getElementById('militar_posto_grad');
+            const militarSgb = document.getElementById('militar_sgb');
+            const militarPostoSecao = document.getElementById('militar_posto_secao');
+            const previewImg = document.getElementById('preview');
+            const noImagePlaceholder = document.getElementById('no-image-placeholder');
+
+            // Elementos da LP
+            const lpForm = document.getElementById('lpForm');
+            const numeroLp = document.getElementById('numero_lp');
+            const dataUltimoLp = document.getElementById('data_ultimo_lp');
+            const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
+            const proximoLpOutput = document.getElementById('proximo_lp_output');
+            const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
+            const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
+            const diasDescontoLp = document.getElementById('dias_desconto_lp');
+
+            // Função para habilitar/desabilitar campos do formulário LP
+            function toggleFormFields(enable) {
+                const fields = lpForm.querySelectorAll('input, select, button[type="submit"]');
+                fields.forEach(field => {
+                    if (field.id !== 're') { // Não desabilita o input de RE da busca
+                        field.disabled = !enable;
+                        // Opcional: Adicionar/remover classes de estilo para indicar disabled/enabled
+                        if (!enable) {
+                            field.classList.add('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            field.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+                });
+            }
+
+            // Inicialmente desabilita os campos do formulário LP
+            toggleFormFields(false);
+            militarDetailsSection.classList.add('hidden'); // Oculta a seção de detalhes
+
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Impede o envio padrão do formulário
+
+                const formData = new FormData(this);
+                const url = this.action;
+
+                // Mostrar indicador de carregamento
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Buscando...';
+                submitBtn.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Indica que é uma requisição AJAX
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Envia o token CSRF
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    if (data.success) {
+                        const militar = data.militar_data;
+
+                        // Preenche os campos de dados do militar
+                        cadastroIdHidden.value = militar.id;
+                        militarRe.textContent = militar.re;
+                        militarNome.textContent = militar.nome;
+                        militarPostoGrad.textContent = militar.posto_grad;
+                        militarSgb.textContent = militar.sgb;
+                        militarPostoSecao.textContent = militar.posto_secao;
+
+                        // Lida com a imagem
+                        if (militar.image_url) {
+                            previewImg.src = militar.image_url;
+                            previewImg.classList.remove('hidden');
+                            noImagePlaceholder.classList.add('hidden');
+                        } else {
+                            previewImg.src = '';
+                            previewImg.classList.add('hidden');
+                            noImagePlaceholder.classList.remove('hidden');
+                        }
+
+                        // Mostra a seção de detalhes e habilita os campos
+                        militarDetailsSection.classList.remove('hidden');
+                        initialMessage.classList.add('hidden'); // Oculta a mensagem inicial
+                        toggleFormFields(true);
+
+                        // Se houver dados iniciais da LP vindos do backend (initial_lp_data)
+                        // Você pode preencher os campos de LP aqui, por exemplo:
+                        // if (militar.initial_lp_data) {
+                        //     numeroLp.value = militar.initial_lp_data.numero_lp;
+                        //     dataUltimoLp.value = militar.initial_lp_data.data_ultimo_lp;
+                        //     dataInicioPeriodo.value = militar.initial_lp_data.data_inicio_periodo;
+                        //     diasDescontoLp.value = militar.initial_lp_data.dias_desconto_lp;
+                        //     calcularCampos(); // Recalcula após preencher
+                        // }
+
+                        // Mostrar alerta de sucesso
+                        if (data.alert) {
+                            showAlert(data.alert.type, data.alert.title, data.alert.message);
+                        }
+                    } else {
+                        // Limpa/oculta a seção de detalhes e desabilita os campos
+                        militarDetailsSection.classList.add('hidden');
+                        initialMessage.classList.remove('hidden'); // Mostra a mensagem inicial novamente
+                        toggleFormFields(false); // Desabilita os campos de LP
+
+                        // Limpa os campos de dados do militar
+                        cadastroIdHidden.value = '';
+                        militarRe.textContent = '';
+                        militarNome.textContent = '';
+                        militarPostoGrad.textContent = '';
+                        militarSgb.textContent = '';
+                        militarPostoSecao.textContent = '';
+                        previewImg.src = '';
+                        previewImg.classList.add('hidden');
+                        noImagePlaceholder.classList.remove('hidden'); // Mostra o placeholder de sem imagem
+
+                        // Limpa os campos de LP
+                        numeroLp.value = '';
+                        dataUltimoLp.value = '';
+                        dataInicioPeriodo.value = '';
+                        diasDescontoLp.value = '0'; // Volta para o valor padrão
+                        numeroProxLpOutput.value = '';
+                        proximoLpOutput.value = '';
+                        mesProximoLpOutput.value = '';
+                        anoProximoLpOutput.value = '';
+
+                        // Mostrar alerta de erro
+                        if (data.alert) {
+                            showAlert(data.alert.type, data.alert.title, data.alert.message);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na requisição AJAX:', error);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    showAlert('error', 'Erro de Rede', 'Não foi possível conectar ao servidor para buscar o militar.');
+                    
+                    // Em caso de erro de rede, limpa e oculta tudo
+                    militarDetailsSection.classList.add('hidden');
+                    initialMessage.classList.remove('hidden');
+                    toggleFormFields(false);
+                });
+            });
+
+            // Validação do formulário principal de LP (se o militar já foi carregado)
+            if (lpForm) {
+                lpForm.addEventListener('submit', function(e) {
+                    const requiredFields = [
+                        'numero_lp', 'data_ultimo_lp'
+                    ];
+                    
+                    let isValid = true;
+                    
+                    requiredFields.forEach(field => {
+                        const input = document.getElementById(field);
+                        if (!input.value) {
+                            input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        }
+                    });
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        showAlert('warning', 'Campos Obrigatórios', 'Por favor, preencha todos os campos obrigatórios marcados com *');
+                        
+                        // Rolagem para o primeiro erro
+                        const firstError = document.querySelector('.border-red-500');
+                        if (firstError) {
+                            firstError.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        }
+                    } else {
+                        // Mostrar indicador de carregamento
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const originalBtnText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
+                        submitBtn.disabled = true;
+                    }
+                });
+                
+                // Remover estilos de erro quando o usuário começa a digitar
+                lpForm.querySelectorAll('input, select').forEach(input => {
+                    input.addEventListener('input', function() {
+                        this.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    });
+                });
+            }
+
+            // Função para calcular datas futuras (5 anos - dias de desconto)
+            function calcularDataFutura(dataBaseStr, diasDesconto = 0) {
+                const dataBase = new Date(dataBaseStr + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+                dataBase.setFullYear(dataBase.getFullYear() + 5);
+                dataBase.setDate(dataBase.getDate() - diasDesconto); // Subtrai dias de desconto
+                return dataBase;
+            }
+
+            // Função principal de cálculo da LP
+            function calcularCampos() {
+                try {
+                    // Garante que os elementos existem e que o formulário está visível/habilitado
+                    if (!militarDetailsSection.classList.contains('hidden') && numeroLp.value && dataUltimoLp.value) {
+                        const numero = parseInt(numeroLp.value);
+                        numeroProxLpOutput.value = numero + 1;
+                        
+                        const diasDesconto = parseInt(diasDescontoLp.value) || 0;
+                        const dataLp = calcularDataFutura(dataUltimoLp.value, diasDesconto);
+                        proximoLpOutput.value = formatarData(dataLp);
+                        mesProximoLpOutput.value = dataLp.getMonth() + 1;
+                        anoProximoLpOutput.value = dataLp.getFullYear();
+                    } else {
+                        // Limpar campos se dados de entrada estiverem incompletos ou formulário oculto
+                        numeroProxLpOutput.value = '';
+                        proximoLpOutput.value = '';
+                        mesProximoLpOutput.value = '';
+                        anoProximoLpOutput.value = '';
+                    }
+                } catch (e) {
+                    console.error("Erro nos cálculos:", e);
+                }
+            }
+
+            // Função auxiliar para formatar data como DD-MM-AAAA
+            function formatarData(data) {
+                const dia = String(data.getDate()).padStart(2, '0');
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+                const ano = data.getFullYear();
+                return `${dia}-${mes}-${ano}`;
+            }
+
+            // Event listeners para todos os campos relevantes para o cálculo da LP
+            [numeroLp, dataUltimoLp].forEach(element => {
+                // Adiciona o evento 'input' também para reagir a digitação
+                element.addEventListener('input', calcularCampos); 
+                element.addEventListener('change', calcularCampos); // Mantém para seleção de datas e selects
+            });
+
+            // Funções de alerta (assumindo que 'modal_alerts.html' está incluído e possui JS para showAlert)
+            // Se 'modal_alerts.html' não injetar 'showAlert' globalmente, você precisará defini-la aqui:
+            function showAlert(type, title, message) {
+                // Exemplo simplificado, adapte à sua implementação de modal_alerts.html
+                // Se você já tem a lógica em modal_alerts.html, esta função pode chamar a sua.
+                console.log(`ALERTA (${type}): ${title} - ${message}`);
+                // Ex: Se você usa SweetAlert2
+                // Swal.fire({ icon: type, title: title, text: message });
+            }
+
+        });
+    </script>
+</body>
+{% endblock %}

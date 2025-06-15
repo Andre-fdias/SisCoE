@@ -148,8 +148,8 @@ def profile_list(request):
 @login_required
 def profile_detail(request, pk):
     profile = get_object_or_404(Profile, pk=pk)
-    return render(request, 'accounts/accounts/user_detail.html', {'profile': profile})
-
+    user = profile.user  # Obtenha o User associado
+    return render(request, 'accounts/user_detail.html', {'object': user})  # Passe o User como 'object'
 
 
 @login_required

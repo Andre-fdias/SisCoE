@@ -1,0 +1,256 @@
+<div id="novoLPModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Novo LP - {{ cadastro.nome_guerra }}</h2>
+            <button onclick="closeNovoLPModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'lp:cadastrar_lp' %}" class="p-6 space-y-4" id="formNovoLP">
+            {% csrf_token %}
+            <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
+
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados da Licença Prêmio</h2>
+                    <hr class="border-t border-gray-100">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="numero_lp" class="block text-sm font-medium text-gray-700">Número da LP *</label>
+                            <select name="numero_lp" id="numero_lp" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                {% for value, label in n_choices %}
+                                    <option value="{{ value }}" {% if initial_data.numero_lp == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="error_numero_lp" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+
+                        <div>
+                            <label for="data_inicio_periodo" class="block text-sm font-medium text-gray-700">Início do Período Aquisitivo *</label>
+                            <input type="date" name="data_inicio_periodo" id="data_inicio_periodo" required
+                                value="{{ initial_data.data_inicio_periodo|date:'Y-m-d' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Data de início da contagem dos 5 anos para este bloco.</p>
+                            <div id="error_data_inicio_periodo" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data de Fechamento do Bloco Aquisitivo *</label>
+                            <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
+                                value="{{ initial_data.data_ultimo_lp|date:'Y-m-d' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Esta é a data em que o bloco de 5 anos se completa.</p>
+                            <div id="error_data_ultimo_lp" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                        <div>
+                            <label for="dias_desconto_lp" class="block text-sm font-medium text-gray-700">Dias de Desconto (se houver) *</label>
+                            <input type="number" name="dias_desconto_lp" id="dias_desconto_lp" value="{{ initial_data.dias_desconto_lp|default:0 }}" required min="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Dias que não contaram como efetivo exercício e devem ser compensados.</p>
+                            <div id="error_dias_desconto_lp" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Campos de Saída Calculados (para exibição) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="numero_prox_lp_output" class="block text-sm font-medium text-gray-700">Próximo Número LP</label>
+                            <input type="text" id="numero_prox_lp_output" value="{{ initial_data.numero_prox_lp|default:'N/A' }}" readonly
+                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="proximo_lp_output" class="block text-sm font-medium text-gray-700">Previsão Próximo Período</label>
+                            <input type="date" id="proximo_lp_output" value="{{ initial_data.proximo_lp|date:'Y-m-d' }}" readonly
+                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="mes_proximo_lp_output" class="block text-sm font-medium text-gray-700">Mês/Ano Próximo LP</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="mes_proximo_lp_output" value="{{ initial_data.mes_proximo_lp|default:'N/A' }}" readonly
+                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                                <input type="text" id="ano_proximo_lp_output" value="{{ initial_data.ano_proximo_lp|default:'N/A' }}" readonly
+                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end gap-4">
+                <button type="button" onclick="closeNovoLPModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitNovoLP"
+                        class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalState">Cadastrar LP</span>
+                    <span id="loadingState" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processando...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const novoLPModal = document.getElementById('novoLPModal');
+    const formNovoLP = document.getElementById('formNovoLP');
+    const submitButton = formNovoLP.querySelector('#submitNovoLP');
+    const normalState = submitButton.querySelector('#normalState');
+    const loadingState = submitButton.querySelector('#loadingState');
+
+    window.openNovoLPModal = function(cadastroId) {
+        // Isso é uma simplificação. Em produção, você poderia fazer uma requisição
+        // AJAX aqui para pré-popular os campos de forma mais dinâmica e precisa,
+        // considerando todas as regras de cálculo do backend (interrupções, suspensões).
+        // Por ora, confiamos que a view de GET já envia 'initial_data' preenchido.
+        
+        // Limpa os campos do formulário ao abrir (para garantir que não haja dados de uma tentativa anterior)
+        formNovoLP.reset();
+        // Limpar mensagens de erro
+        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
+
+        // Define o cadastro_id no campo hidden do formulário
+        formNovoLP.querySelector('input[name="cadastro_id"]').value = cadastroId;
+
+        // Se você precisa que os campos calculados sejam atualizados dinamicamente
+        // sem um reload completo da página, uma chamada AJAX para a view `cadastrar_lp`
+        // com o GET parameter `cadastro_id` (e talvez o número da LP) seria ideal.
+        // fetch(`/lp/cadastrar/?cadastro_id=${cadastroId}`)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         // Preencher initial_data aqui
+        //     });
+        
+        novoLPModal.classList.remove('hidden');
+    };
+
+    window.closeNovoLPModal = function() {
+        novoLPModal.classList.add('hidden');
+        formNovoLP.reset(); // Limpa o formulário ao fechar
+        // Limpar mensagens de erro
+        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
+    };
+
+    formNovoLP.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        normalState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        submitButton.disabled = true;
+        
+        // Limpar mensagens de erro anteriores
+        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
+
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                closeNovoLPModal();
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    location.reload(); // Recarrega a página para refletir as mudanças
+                }
+            } else if (data.alert && data.alert.type === 'error') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        const errorDiv = document.getElementById(`error_${field}`);
+                        if (errorDiv) {
+                            errorDiv.textContent = data.errors[field];
+                        }
+                    }
+                }
+            } else {
+                showAlert('error', 'Erro Desconhecido!', 'Ocorreu um erro inesperado.');
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.');
+        } finally {
+            normalState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+
+    // Função de atualização dos campos calculados no front-end
+    // Nota: Para cálculos precisos de LP (com interrupções/suspensões),
+    // é altamente recomendado que esses cálculos sejam feitos no backend e retornados via AJAX.
+    // Esta função JS é uma simulação simplificada.
+    function updateCalculatedFields() {
+        const dataUltimoLpInput = document.getElementById('data_ultimo_lp');
+        const numeroLpSelect = document.getElementById('numero_lp');
+        const dataInicioPeriodoInput = document.getElementById('data_inicio_periodo'); // Novo campo
+
+        const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
+        const proximoLpOutput = document.getElementById('proximo_lp_output');
+        const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
+        const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
+
+        let numeroLP = parseInt(numeroLpSelect.value) || 0;
+        let dataUltimoLP = dataUltimoLpInput.value;
+        let dataInicioPeriodo = dataInicioPeriodoInput.value; // Pega o valor do novo campo
+
+        if (dataInicioPeriodo) { // A lógica de cálculo deve começar a partir do `data_inicio_periodo`
+            try {
+                const dataBaseCalculo = new Date(dataInicioPeriodo);
+                
+                // Calcula a data de fechamento do bloco base (5 anos a partir do início do período)
+                const dataFechamentoBlocoBase = new Date(dataBaseCalculo);
+                dataFechamentoBlocoBase.setFullYear(dataFechamentoBlocoBase.getFullYear() + 5);
+                dataFechamentoBlocoBase.setDate(dataFechamentoBlocoBase.getDate() - 1); // Um dia antes para ser o fim do 5º ano
+
+                // A data de previsão do PRÓXIMO LP é o dia seguinte ao fechamento do bloco atual
+                const proximoLpDate = new Date(dataFechamentoBlocoBase);
+                proximoLpDate.setDate(proximoLpDate.getDate() + 1);
+
+                numeroProxLpOutput.value = numeroLP + 1;
+                proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0];
+                mesProximoLpOutput.value = proximoLpDate.getMonth() + 1;
+                anoProximoLpOutput.value = proximoLpDate.getFullYear();
+            } catch (e) {
+                console.error("Erro nos cálculos do front-end:", e);
+                numeroProxLpOutput.value = 'Erro';
+                proximoLpOutput.value = '';
+                mesProximoLpOutput.value = 'Erro';
+                anoProximoLpOutput.value = 'Erro';
+            }
+        } else {
+             numeroProxLpOutput.value = 'N/A';
+             proximoLpOutput.value = '';
+             mesProximoLpOutput.value = 'N/A';
+             anoProximoLpOutput.value = 'N/A';
+        }
+    }
+    
+    // Disparar atualização se as datas forem alteradas (mesmo que pré-preenchidas)
+    document.getElementById('data_ultimo_lp').addEventListener('change', updateCalculatedFields);
+    document.getElementById('numero_lp').addEventListener('change', updateCalculatedFields);
+    document.getElementById('data_inicio_periodo').addEventListener('change', updateCalculatedFields); // Adicionado listener
+    updateCalculatedFields(); // Chamar uma vez para preencher no carregamento
+});
+</script>

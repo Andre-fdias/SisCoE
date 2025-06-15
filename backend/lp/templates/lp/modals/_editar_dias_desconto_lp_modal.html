@@ -1,0 +1,108 @@
+<div id="editarDiasDescontoLPModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Editar Dias de Desconto da LP</h2>
+            <button onclick="closeEditarDiasDescontoLPModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form method="POST" action="" class="p-6 space-y-4" id="formEditarDiasDescontoLP">
+            {% csrf_token %}
+            
+            <div class="space-y-2">
+                <label for="diasDescontoLPInput" class="block text-sm font-medium text-gray-700">Dias de Desconto *</label>
+                <input type="number" name="dias_desconto_lp" id="diasDescontoLPInput" required min="0"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div id="diasDescontoLPError" class="hidden text-sm text-red-600"></div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-6">
+                <button type="button" onclick="closeEditarDiasDescontoLPModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitEditarDiasDescontoLP"
+                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalStateEditarDiasDesconto">Salvar</span>
+                    <span id="loadingStateEditarDiasDesconto" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editarDiasDescontoLPModal = document.getElementById('editarDiasDescontoLPModal');
+    const formEditarDiasDescontoLP = document.getElementById('formEditarDiasDescontoLP');
+    const submitButton = formEditarDiasDescontoLP.querySelector('#submitEditarDiasDescontoLP');
+    const normalState = submitButton.querySelector('#normalStateEditarDiasDesconto');
+    const loadingState = submitButton.querySelector('#loadingStateEditarDiasDesconto');
+    const errorDiv = document.getElementById('diasDescontoLPError');
+
+    window.openEditarDiasDescontoLPModal = function(lpId, diasDesconto) {
+        const form = document.getElementById('formEditarDiasDescontoLP');
+        form.action = `{% url 'lp:editar_dias_desconto_lp' pk=0 %}`.replace('0', lpId);
+        document.getElementById('diasDescontoLPInput').value = diasDesconto;
+        editarDiasDescontoLPModal.classList.remove('hidden');
+    };
+
+    window.closeEditarDiasDescontoLPModal = function() {
+        editarDiasDescontoLPModal.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+    };
+
+    formEditarDiasDescontoLP.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        normalState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        submitButton.disabled = true;
+        errorDiv.classList.add('hidden'); // Ocultar erro anterior
+
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                closeEditarDiasDescontoLPModal();
+                if (data.reload_page) {
+                    location.reload(); 
+                }
+            } else if (data.alert && data.alert.type === 'error') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                errorDiv.textContent = data.error || data.alert.message || 'Erro desconhecido.';
+                errorDiv.classList.remove('hidden');
+            } else {
+                errorDiv.textContent = data.error || 'Erro desconhecido.';
+                errorDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            errorDiv.textContent = 'Erro na comunicação com o servidor. Tente novamente.';
+            errorDiv.classList.remove('hidden');
+        } finally {
+            normalState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+});
+</script>

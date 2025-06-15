@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'backend.crm',
     'backend.efetivo',
     'backend.adicional',
-   
+    'backend.lp', 
     'backend.rpt',
     'backend.bm',
     'backend.municipios',

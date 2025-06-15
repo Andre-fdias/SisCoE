@@ -17,7 +17,7 @@
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <a href="{% url 'adicional:listar_lp' %}" class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
+                        <a href="{% url 'adicional:listar_adicional' %}" class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br
                                       focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-md rounded-lg
                                       text-sm px-5 py-2.5 text-center font-medium transition-all duration-200">
                             <i class="fa-solid fa-arrow-left-long mr-2"></i>Voltar para Lista
@@ -69,7 +69,7 @@
                 </form>
 
                 {% if cadastro %}
-                <form id="adicionalForm" method="post" action="{% url 'adicional:cadastrar_lp' %}" enctype="multipart/form-data">
+                <form id="adicionalForm" method="post" action="{% url 'adicional:cadastrar_adicional' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
                     
@@ -240,92 +240,7 @@
                             </div>
                         </div>
 
-                        <!-- Seção LP -->
-                        <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">Dados LP</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="space-y-2">
-                                    <label for="n_bloco_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Nº Bloco LP *</label>
-                                    <div class="relative">
-                                        <select name="n_bloco_lp" id="n_bloco_lp" required
-                                                class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                       shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                                       transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
-                                                       appearance-none">
-                                            <option value="" disabled selected>Selecione...</option>
-                                            {% for i in "12345678" %}
-                                            <option value="{{ i }}">{{ i }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="data_ultimo_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Último LP *</label>
-                                    <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
-                                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                   shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                                   transition-all duration-200 placeholder-gray-500
-                                                   hover:border-gray-400 text-gray-900 font-medium
-                                                   [&::-webkit-calendar-picker-indicator]:opacity-0
-                                                   bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
-                                                   bg-no-repeat bg-[right_1rem_center] bg-[length:1.5rem]">
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="numero_prox_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Próximo Nº LP *</label>
-                                    <input type="text" name="numero_prox_lp_output" id="numero_prox_lp_output" readonly
-                                           class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                   shadow-xs text-gray-900 font-medium">
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Próximo LP</label>
-                                    <input type="text" name="proximo_lp_output" id="proximo_lp_output" readonly
-                                           class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                   shadow-xs text-gray-900 font-medium">
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="mes_proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Mês Próximo LP</label>
-                                    <input type="number" name="mes_proximo_lp_output" id="mes_proximo_lp_output" readonly
-                                           class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                   shadow-xs text-gray-900 font-medium">
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="ano_proximo_lp_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Ano Próximo LP</label>
-                                    <input type="number" name="ano_proximo_lp_output" id="ano_proximo_lp_output" readonly
-                                           class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                   shadow-xs text-gray-900 font-medium">
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="situacao_lp" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Situação da LP *</label>
-                                    <div class="relative">
-                                        <select name="situacao_lp" id="situacao_lp" required
-                                                class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
-                                                       shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                                       transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
-                                                       appearance-none">
-                                            <option value="Aguardando" selected>Aguardando</option>
-                                            <option value="Concedido">Concedido</option>
-                                            <option value="Concluído">Concluído</option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                     
                     </div>
 
                     <!-- Botões de Ação -->

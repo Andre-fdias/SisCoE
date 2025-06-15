@@ -80,15 +80,19 @@ h3 {
 <br>
 <div class="container-fluid" id="his_mov">
     <fieldset>
-        <legend>
-            {% if messages %}
+<fieldset class="rounded-md">
+    {% if messages %}
+        <div id="django-messages" style="display:none;" data-messages='[
             {% for message in messages %}
-                <section class="alert {{ message.tags }}">
-                    {{ message }}
-                </section>
+                {
+                    "tags": "{{ message.tags|upper }}",
+                    "message": "{{ message|escapejs }}"
+                }{% if not forloop.last %},{% endif %}
             {% endfor %}
-            {% endif %}
-        </legend>
+        ]'></div>
+    {% endif %}
+    {% include 'modals/modal_alerts.html' %}
+</fieldset>
         <div id="01" class="row">
             <div class="col-12 highlighted-div bg-lightblue">
                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between">
