@@ -1,78 +1,100 @@
-<div id="confirmarSipaModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
-    <div class="bg-gray-100 rounded-lg shadow-xl w-full max-w-md">
-        <div class="flex justify-between items-center p-4 bg-blue-700 rounded-t-lg">
-            <h1 class="text-xl text-white font-medium">Confirmar Lançamento no SIPA</h1>
-            <button type="button" onclick="closeConfirmarSipaModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
-        </div>
+{% comment %}
+    backend/lp/templates/modals/confirmar_sipa_lp_modal.html
+    Este modal permite ao usuário confirmar o lançamento de uma LP no SIPA,
+    incluindo campos para data de concessão, dias de desconto, próximo LP, e 6ª Parte,
+    e exige a senha do usuário para autenticação.
+{% endcomment %}
 
-        <div class="p-6">
-            <form method="POST" action="{% url 'adicional:confirmar_sipa' cadastro_adicional.id %}" id="formConfirmarSipa">
-                {% csrf_token %}
+<div id="confirmarSipaLpModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Confirmar Lançamento no SIPA</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Por favor, insira a data de concessão (se aplicável), os dias de desconto,
+                    e sua senha para confirmar o lançamento desta Licença Prêmio no SIPA.
+                </p>
+                
+                {# Garante que lp e lp.pk estão disponíveis antes de renderizar o formulário #}
+                {% if lp and lp.pk %}
+                <form id="formConfirmarSipaLp" method="post" action="{% url 'lp:confirmar_sipa_lp' lp.pk %}" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="data_concessao" class="block text-sm font-medium text-gray-700 text-left">
+                            Data de Concessão (Opcional)
+                        </label>
+                        <input type="date" name="data_concessao" id="data_concessao"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                               value="{{ lp.data_concessao_lp|date:'Y-m-d'|default_if_none:'' }}">
+                    </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Próximo Número do Adicional:</label>
-                    <select name="numero_prox_adicional" id="numero_prox_adicional_select" class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" onchange="toggleSextaParte()">
-                        <option value="1" {% if cadastro_adicional.numero_prox_adicional == 1 %}selected{% endif %}>1º Adicional</option>
-                        <option value="2" {% if cadastro_adicional.numero_prox_adicional == 2 %}selected{% endif %}>2º Adicional</option>
-                        <option value="3" {% if cadastro_adicional.numero_prox_adicional == 3 %}selected{% endif %}>3º Adicional</option>
-                        <option value="4" {% if cadastro_adicional.numero_prox_adicional == 4 %}selected{% endif %}>4º Adicional</option>
-                        <option value="5" {% if cadastro_adicional.numero_prox_adicional == 5 %}selected{% endif %}>5º Adicional</option>
-                        <option value="6" {% if cadastro_adicional.numero_prox_adicional == 6 %}selected{% endif %}>6º Adicional </option>
-                    </select>
-                </div>
+                    <div class="mb-4">
+                        <label for="dias_desconto" class="block text-sm font-medium text-gray-700 text-left">
+                            Dias de Desconto (Opcional)
+                        </label>
+                        <input type="number" name="dias_desconto" id="dias_desconto"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                               min="0" value="{{ lp.dias_desconto_lp|default:0 }}">
+                    </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Próximo Adicional:</label>
-                    <input type="date" name="proximo_adicional"
-                        value="{{ cadastro_adicional.proximo_adicional|date:'Y-m-d' }}"
-                        class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
-                </div>
+                    <div class="mb-4">
+                        <label for="numero_prox_lp" class="block text-sm font-medium text-gray-700 text-left">
+                            Próximo Número da LP
+                        </label>
+                        <select name="numero_prox_lp" id="numero_prox_lp_select" onchange="toggleSextaParteLp()"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="">Selecione...</option> {# Opção vazia #}
+                            {% for n_val, n_label in N_CHOICES %}
+                                <option value="{{ n_val }}" {% if lp.numero_prox_lp == n_val %}selected{% endif %}>{{ n_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div class="mb-4" id="sexta_parte_container">
-                    <div class="flex items-center">
-                        <input type="checkbox" name="sexta_parte" id="sexta_parte_checkbox"
-                            class="w-4 h-4 text-blue-700 bg-gray-200 border-gray-400 rounded focus:ring-blue-600"
-                            {% if cadastro_adicional.sexta_parte %}checked{% endif %}>
-                        <label for="sexta_parte_checkbox" class="ml-2 text-sm font-medium text-gray-800">
-                            6ª Parte Concluída
+                    <div class="mb-4">
+                        <label for="proximo_lp" class="block text-sm font-medium text-gray-700 text-left">
+                            Data do Próximo LP
+                        </label>
+                        <input type="date" name="proximo_lp" id="proximo_lp_input"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                               value="{{ lp.proximo_lp|date:'Y-m-d'|default_if_none:'' }}">
+                    </div>
+
+                    <div id="sexta_parte_container_lp" class="mb-4 {% if lp.numero_prox_lp != 4 %}hidden{% endif %}"> {# Esconde por padrão se não for o 4º LP #}
+                        <label for="sexta_parte_lp_checkbox" class="inline-flex items-center">
+                            <input type="checkbox" name="sexta_parte" id="sexta_parte_lp_checkbox"
+                                   class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                   {% if lp.sexta_parte %}checked{% endif %}>
+                            <span class="ml-2 text-sm text-gray-700">Confirmar 6ª Parte (se aplicável)</span>
                         </label>
                     </div>
-                    <div id="sexta_parte_error" class="text-red-600 text-sm mt-2 hidden">
-                        É obrigatório confirmar a conclusão da 6ª Parte
+
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700 text-left">
+                            Sua Senha
+                        </label>
+                        <input type="password" name="password" id="password" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                     </div>
-                </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Dias de Desconto Adicional:</label>
-                        <input type="number" name="dias_desconto"
-                            value="{{ cadastro_adicional.dias_desconto_adicional|default:'0' }}"
-                            min="0" step="1"
-                            class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    
+                    <div class="flex justify-end gap-4 mt-6">
+                        <button type="button" onclick="closeConfirmarSipaLpModal()"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Confirmar
+                        </button>
                     </div>
-
-                <div class="mb-6">
-                    <label for="sipaPassword" class="block text-sm font-medium text-gray-700 mb-2">Digite sua senha:</label>
-                    <input type="password" name="password" id="sipaPasswordInput" required
-                        class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
-                    <div id="sipaPasswordError" class="text-red-600 text-sm mt-2 hidden"></div>
-                </div>
-
-                <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="closeConfirmarSipaModal()"
-                            class="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                            class="px-6 py-2 bg-gray-100 text-green-600 rounded-md hover:bg-gray-200
-                                transition-colors duration-200 font-medium shadow-sm
-                                flex items-center justify-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Confirmar
-                    </button>
-                </div>
-            </form>
+                </form>
+                {% else %}
+                <p class="text-sm text-red-500">Não foi possível carregar os dados da LP. Por favor, recarregue a página.</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

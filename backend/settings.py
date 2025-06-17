@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'compressor',
     'django_seed',
      'fontawesomefree',
+     
     # minhas apps
     'backend.core',
     'backend.crm',
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'backend.accounts.middleware.UserActionLoggingMiddleware',
+    'backend.core.middleware.JSONMessagesMiddleware',  # Adicione isto
 ]
 
 ROOT_URLCONF = 'backend.urls'

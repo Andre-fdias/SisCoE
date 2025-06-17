@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% load messages_tag %}
 {% block title %}Cadastrar RPT{% endblock %}
 
 <style>
@@ -53,17 +55,11 @@
                                     Buscar Militar
                                 </button>
                             </div>
-                            {% if messages %}
-                                <ul class="messages mt-2">
-                                    {% for message in messages %}
-                                        <li {% if message.tags %} class="{{ message.tags }} text-sm font-medium {% if message.tags == 'error' %}text-red-600{% elif message.tags == 'success' %}text-green-600{% elif message.tags == 'warning' %}text-yellow-600{% endif %}"{% endif %}>{{ message }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
+
                         </div>
                     </div>
                 </form>
-
+{% military_messages %}
                 <!-- Informações do Militar Encontrado -->
                 {% if cadastro %}
                     <div class="bg-gray-100 p-4 rounded-md shadow-sm mb-6 border border-gray-200">

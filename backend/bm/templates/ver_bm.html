@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load messages_tag %}
 {% block title %}Detalhes do BM{% endblock %}
 
 <style>
@@ -49,6 +50,10 @@
             </div>
         </div>
     </fieldset>
+
+    
+{% military_messages %}
+
 
     <fieldset class="p-4 mb-2 rounded-md w-full max-w-full">
         <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-2xl w-full p-8 transition-all duration-300">

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% load messages_tag %}
 {% block 'title' %} Consultar Ordens{% endblock %}
 {% block 'head' %}
 
@@ -20,7 +22,7 @@
                     <div class="d-grid gap-12 d-md-block">
                         <h1 class="titulo3"> {{ documento.numero_documento }}</h1>
                     </div>
-                 
+   {% military_messages %}              
                 </div>
                 <div class="col-md-6 text-end"> 
                       <!-- Botão para abrir o modal de edição -->

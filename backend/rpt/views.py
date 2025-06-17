@@ -58,7 +58,7 @@ def cadastrar_rpt(request):
         usuario_alteracao = request.user
 
         if not cadastro_id:
-            messages.add_message(request, constants.ERROR, 'Cadastro não encontrado. Por favor, pesquise um RE válido.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, 'Cadastro não encontrado. Por favor, pesquise um RE válido.')
             return redirect('rpt:cadastrar_rpt')
 
         cadastro = get_object_or_404(Cadastro, id=cadastro_id)
@@ -66,7 +66,7 @@ def cadastrar_rpt(request):
         # Verificar se já existe um cadastro com status "aguardando" para o RE retornado
         cadastro_existente = Cadastro_rpt.objects.filter(cadastro=cadastro, status='Aguardando').exists()
         if cadastro_existente:
-            messages.add_message(request, constants.ERROR, 'Militar ja possui cadasto ativo no Rpt.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, 'Militar ja possui cadasto ativo no Rpt.')
             return redirect('rpt:listar_rpt')
 
         Cadastro_rpt.objects.create(
@@ -78,7 +78,7 @@ def cadastrar_rpt(request):
             doc_solicitacao=doc_solicitacao,
             usuario_alteracao=usuario_alteracao
         )
-        messages.add_message(request, constants.SUCCESS, 'Cadastro realizado com Sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
+        messages.add_message(request, constants.SUCCESS, 'Cadastro realizado com Sucesso.')
         return redirect('rpt:listar_rpt')
     return render(request, 'cadastrar_rpt.html')
 
@@ -270,28 +270,24 @@ def excluir_rpt(request, id):
 
             # Verificar senha
             if not password:
-                 messages.add_message(request, messages.ERROR, 'Senha não fornecida. Operação cancelada.',
-                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                 messages.add_message(request, messages.ERROR, 'Senha não fornecida. Operação cancelada.')
                  return redirect(error_redirect_url) # Redireciona de volta
 
             if not check_password(password, current_user.password):
-                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.',
-                                   extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.add_message(request, messages.ERROR, 'Senha incorreta! Operação cancelada.')
                 return redirect(error_redirect_url) # Redireciona de volta
 
             # Realizar exclusão
             cadastro_rpt_obj.delete()
-            messages.add_message(request, messages.SUCCESS, 'Registro RPT excluído com sucesso.',
-                               extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.add_message(request, messages.SUCCESS, 'Registro RPT excluído com sucesso.')
             return redirect('rpt:listar_rpt') # Redireciona para a lista após sucesso
 
         except Exception as e:
-            messages.add_message(request, messages.ERROR, f'Erro ao excluir o registro RPT: {str(e)}',
-                               extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, messages.ERROR, f'Erro ao excluir o registro RPT: {str(e)}')
             return redirect(error_redirect_url) # Redireciona de volta em caso de erro
 
     # Se a requisição não for POST, redirecionar para a lista ou página de detalhes
-    messages.warning(request, 'Método inválido para exclusão.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+    messages.warning(request, 'Método inválido para exclusão.')
     return redirect(redirect_url)
 
 
@@ -311,7 +307,7 @@ def buscar_militar_rpt(request):
     if request.method == "POST":
         re = request.POST.get('re', '').strip()
         if not re:
-             messages.add_message(request, constants.WARNING,'Por favor, informe o RE para buscar.', extra_tags='bg-yellow-500 text-white p-4 rounded')
+             messages.add_message(request, constants.WARNING,'Por favor, informe o RE para buscar.')
              # Renderiza o form de cadastro vazio novamente, ou redireciona
              return render(request, cadastrar_template, {
                  'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
@@ -333,11 +329,11 @@ def buscar_militar_rpt(request):
 
             # Adiciona mensagens informativas se dados relacionados não forem encontrados
             if not detalhes:
-                messages.info(request, 'Informação: Detalhes da situação atual não encontrados para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
+                messages.info(request, 'Informação: Detalhes da situação atual não encontrados para este RE.')
             if not promocao:
-                 messages.info(request, 'Informação: Dados da última promoção não encontrados para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
+                 messages.info(request, 'Informação: Dados da última promoção não encontrados para este RE.')
             if not imagem:
-                 messages.info(request, 'Informação: Imagem não encontrada para este RE.', extra_tags='bg-blue-500 text-white p-4 rounded')
+                 messages.info(request, 'Informação: Imagem não encontrada para este RE.')
 
 
             # Prepara o contexto para renderizar o formulário de cadastro preenchido
@@ -356,7 +352,7 @@ def buscar_militar_rpt(request):
             return render(request, cadastrar_template, context)
 
         except Cadastro.DoesNotExist:
-            messages.add_message(request, constants.ERROR, f'Cadastro com RE "{re}" não encontrado.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, f'Cadastro com RE "{re}" não encontrado.')
             # Renderiza o form de cadastro vazio novamente
             return render(request, cadastrar_template, {
                  'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
@@ -365,7 +361,7 @@ def buscar_militar_rpt(request):
                  'searched_re': re # Passa o RE pesquisado de volta
              })
         except Cadastro.MultipleObjectsReturned:
-             messages.add_message(request, constants.ERROR, f'Múltiplos cadastros encontrados com RE "{re}". Verifique a base de dados.', extra_tags='bg-red-500 text-white p-4 rounded')
+             messages.add_message(request, constants.ERROR, f'Múltiplos cadastros encontrados com RE "{re}". Verifique a base de dados.')
              return render(request, cadastrar_template, {
                  'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
                  'posto_secao_choices': Cadastro_rpt._meta.get_field('posto_secao_destino').choices,
@@ -373,7 +369,7 @@ def buscar_militar_rpt(request):
                  'searched_re': re
              })
         except Exception as e:
-             messages.add_message(request, constants.ERROR, f'Ocorreu um erro inesperado ao buscar o militar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+             messages.add_message(request, constants.ERROR, f'Ocorreu um erro inesperado ao buscar o militar: {str(e)}')
              # Renderiza o form de cadastro vazio novamente
              return render(request, cadastrar_template, {
                  'sgb_choices': Cadastro_rpt._meta.get_field('sgb_destino').choices,
@@ -429,18 +425,18 @@ def importar_rpt(request):
 
         # --- Validações Iniciais ---
         if not arquivo:
-            messages.error(request, 'Nenhum arquivo selecionado para importação.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, 'Nenhum arquivo selecionado para importação.')
             return redirect(importar_url_name)
 
         try:
             extensao = arquivo.name.split('.')[-1].lower()
         except IndexError:
-             messages.error(request, 'Nome de arquivo inválido ou sem extensão.', extra_tags='bg-red-500 text-white p-4 rounded')
+             messages.error(request, 'Nome de arquivo inválido ou sem extensão.')
              return redirect(importar_url_name)
 
 
         if arquivo.size > 10 * 1024 * 1024: # Aumentado limite para 10MB
-            messages.error(request, 'Arquivo excede o limite de tamanho (máximo 10MB).', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, 'Arquivo excede o limite de tamanho (máximo 10MB).')
             return redirect(importar_url_name)
 
         # --- Leitura do Arquivo ---
@@ -457,11 +453,11 @@ def importar_rpt(request):
             elif extensao in ['xls', 'xlsx']:
                 df = pd.read_excel(arquivo, dtype=str, keep_default_na=False, na_values=[]) # na_values=[] similar a keep_default_na=False
             else:
-                messages.error(request, f'Formato de arquivo "{extensao}" não suportado. Use CSV (separado por ponto e vírgula) ou Excel (XLS, XLSX).', extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.error(request, f'Formato de arquivo "{extensao}" não suportado. Use CSV (separado por ponto e vírgula) ou Excel (XLS, XLSX).')
                 return redirect(importar_url_name)
 
         except Exception as e:
-            messages.error(request, f'Erro ao ler o arquivo: {e}. Verifique se o arquivo está no formato correto, não corrompido, e se a codificação/separador (para CSV) estão corretos.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, f'Erro ao ler o arquivo: {e}. Verifique se o arquivo está no formato correto, não corrompido, e se a codificação/separador (para CSV) estão corretos.')
             return redirect(importar_url_name)
 
         # --- Validação de Colunas ---
@@ -470,7 +466,7 @@ def importar_rpt(request):
 
         if not colunas_obrigatorias.issubset(colunas_arquivo):
             missing = colunas_obrigatorias - colunas_arquivo
-            messages.error(request, f'Colunas obrigatórias faltando no arquivo: {", ".join(sorted(list(missing)))}', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, f'Colunas obrigatórias faltando no arquivo: {", ".join(sorted(list(missing)))}')
             return redirect(importar_url_name)
 
         # --- Função Auxiliar para Conversão de Datas ---
@@ -595,7 +591,7 @@ def importar_rpt(request):
 
         # --- Feedback Final da Importação ---
         if registros_processados > 0:
-            messages.success(request, f'✅ {registros_processados} registro(s) RPT importado(s) com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.success(request, f'✅ {registros_processados} registro(s) RPT importado(s) com sucesso!')
 
         if erros_processamento:
             total_erros = len(erros_processamento)
@@ -606,7 +602,7 @@ def importar_rpt(request):
             else:
                 erros_msg += f'Primeiros {5} erros: {erros_preview} (...e mais {total_erros - 5})'
             # Considerar logar todos os erros para análise posterior
-            messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
+            messages.warning(request, erros_msg)
             # Talvez oferecer download do log de erros?
 
         return redirect(listar_url_name) # Redireciona para a lista após o processo
@@ -638,8 +634,8 @@ def exportar_rpt(request):
         return response
 
     except ValueError as e:
-        messages.error(request, f'Erro na exportação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+        messages.error(request, f'Erro na exportação: {str(e)}')
         return redirect('rpt:listar_rpt')
     except Exception as e:
-        messages.error(request, f'Erro na exportação: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+        messages.error(request, f'Erro na exportação: {str(e)}')
         return redirect('rpt:listar_rpt')
