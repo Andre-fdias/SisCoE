@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% load messages_tag %}
 {% block 'title' %} Consultar Efetivo{% endblock %}
 
 {% block 'head' %}
@@ -16,14 +18,7 @@
     <br>
     <br>
     <div class="container-fluid" id="ver_rpt">
-        {% if messages %}
-        {% for message in messages %}
-            <section class="alert {{message.tags}}">
-                {{message}}
-    
-            </section>
-        {% endfor %}
-    {% endif %}
+{% military_messages %}
         <fieldset>
             <legend>
                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between ">

@@ -341,7 +341,7 @@
                         // if (militar.initial_lp_data) {
                         //     numeroLp.value = militar.initial_lp_data.numero_lp;
                         //     dataUltimoLp.value = militar.initial_lp_data.data_ultimo_lp;
-                        //     dataInicioPeriodo.value = militar.initial_lp_data.data_inicio_periodo;
+                        //     
                         //     diasDescontoLp.value = militar.initial_lp_data.dias_desconto_lp;
                         //     calcularCampos(); // Recalcula após preencher
                         // }
@@ -370,7 +370,7 @@
                         // Limpa os campos de LP
                         numeroLp.value = '';
                         dataUltimoLp.value = '';
-                        dataInicioPeriodo.value = '';
+                        
                         diasDescontoLp.value = '0'; // Volta para o valor padrão
                         numeroProxLpOutput.value = '';
                         proximoLpOutput.value = '';
@@ -454,18 +454,21 @@
             // Função principal de cálculo da LP
             function calcularCampos() {
                 try {
-                    // Garante que os elementos existem e que o formulário está visível/habilitado
                     if (!militarDetailsSection.classList.contains('hidden') && numeroLp.value && dataUltimoLp.value) {
                         const numero = parseInt(numeroLp.value);
                         numeroProxLpOutput.value = numero + 1;
                         
                         const diasDesconto = parseInt(diasDescontoLp.value) || 0;
-                        const dataLp = calcularDataFutura(dataUltimoLp.value, diasDesconto);
+                        
+                        // Cálculo correto baseado apenas na data do último LP
+                        const dataLp = new Date(dataUltimoLp.value);
+                        dataLp.setFullYear(dataLp.getFullYear() + 5);
+                        dataLp.setDate(dataLp.getDate() - diasDesconto);
+                        
                         proximoLpOutput.value = formatarData(dataLp);
                         mesProximoLpOutput.value = dataLp.getMonth() + 1;
                         anoProximoLpOutput.value = dataLp.getFullYear();
                     } else {
-                        // Limpar campos se dados de entrada estiverem incompletos ou formulário oculto
                         numeroProxLpOutput.value = '';
                         proximoLpOutput.value = '';
                         mesProximoLpOutput.value = '';
@@ -488,7 +491,7 @@
             [numeroLp, dataUltimoLp].forEach(element => {
                 // Adiciona o evento 'input' também para reagir a digitação
                 element.addEventListener('input', calcularCampos); 
-                element.addEventListener('change', calcularCampos); // Mantém para seleção de datas e selects
+              
             });
 
             // Funções de alerta (assumindo que 'modal_alerts.html' está incluído e possui JS para showAlert)

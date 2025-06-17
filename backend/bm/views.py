@@ -103,11 +103,11 @@ def cadastrar_bm(request):
                     user=request.user
                 )
 
-            messages.success(request, "Cadastro realizado com sucesso!", extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.success(request, "Cadastro realizado com sucesso!")
             return redirect('bm:ver_bm', pk=cadastro.id)
 
         except Exception as e:
-            messages.error(request, f'Erro ao cadastrar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, f'Erro ao cadastrar: {str(e)}')
             return redirect('bm:cadastrar_bm')
 
 
@@ -140,11 +140,11 @@ def editar_bm(request, pk):
             cadastro.genero = request.POST.get('genero')
             cadastro.save()
 
-            messages.add_message(request, constants.SUCCESS,"Cadastro atualizado com sucesso!", extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.add_message(request, constants.SUCCESS,"Cadastro atualizado com sucesso!")
             return redirect('bm:ver_bm', pk=cadastro.id)
 
         except Exception as e:
-            messages.add_message(request, constants.ERROR, f'Erro ao atualizar: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, f'Erro ao atualizar: {str(e)}')
      
             context = {
                 'cadastro': cadastro,
@@ -188,9 +188,9 @@ def atualizar_foto(request, pk):
                 image=request.FILES['image'],
                 user=request.user
             )
-            messages.add_message(request, constants.SUCCESS, "Foto atualizada com sucesso!", extra_tags='bg-green-500 text-white p-4 rounded')
+            messages.add_message(request, constants.SUCCESS, "Foto atualizada com sucesso!")
         except Exception as e:
-            messages.add_message(request, constants.ERROR, f'Erro ao atualizar foto: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, f'Erro ao atualizar foto: {str(e)}')
      
     return redirect('bm:ver_bm', pk=cadastro.id)
 
@@ -211,19 +211,19 @@ def excluir_bm(request, pk):
         if user is not None:
             try:
                 cadastro.delete()
-                messages.add_message(request, constants.SUCCESS, "Cadastro excluído com sucesso!", extra_tags='bg-green-500 text-white p-4 rounded')
+                messages.add_message(request, constants.SUCCESS, "Cadastro excluído com sucesso!")
                 return redirect('bm:listar_bm')
             except DatabaseError as e:
-                messages.add_message(request, constants.ERROR, f"Erro no banco de dados ao excluir cadastro: {e}", extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.add_message(request, constants.ERROR, f"Erro no banco de dados ao excluir cadastro: {e}")
                 return redirect('bm:detalhes_bm', pk=pk)
             except IntegrityError as e:
-                messages.add_message(request, constants.ERROR, f"Erro de integridade ao excluir cadastro: {e}", extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.add_message(request, constants.ERROR, f"Erro de integridade ao excluir cadastro: {e}")
                 return redirect('bm:detalhes_bm', pk=pk)
             except Exception as e:
-                messages.add_message(request, constants.ERROR, f"Erro inesperado ao excluir cadastro: {e}", extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.add_message(request, constants.ERROR, f"Erro inesperado ao excluir cadastro: {e}")
                 return redirect('bm:detalhes_bm', pk=pk)
         else:
-            messages.add_message(request, constants.ERROR, "Senha incorreta", extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.add_message(request, constants.ERROR, "Senha incorreta")
             return render(request, 'confirmar_exclusao.html', {'cadastro': cadastro})
 
     return render(request, 'confirmar_exclusao.html', {'cadastro': cadastro})
@@ -246,8 +246,7 @@ def importar_bm(request):
             # ========= VALIDAÇÃO INICIAL =========
             # Verificar tamanho do arquivo (5MB máximo)
             if arquivo.size > 5 * 1024 * 1024:
-                messages.error(request, 'Arquivo muito grande (máximo 5MB).', 
-                             extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.error(request, 'Arquivo muito grande (máximo 5MB).')
                 return redirect('bm:importar_bm')
 
             # ========= LEITURA DO ARQUIVO =========
@@ -269,8 +268,7 @@ def importar_bm(request):
                     na_values=[]
                 )
             else:
-                messages.error(request, 'Formato inválido (use CSV ou Excel).', 
-                             extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.error(request, 'Formato inválido (use CSV ou Excel).')
                 return redirect('bm:importar_bm')
 
             # ========= COLUNAS OBRIGATÓRIAS =========
@@ -282,8 +280,7 @@ def importar_bm(request):
             
             # Verificar se todas as colunas obrigatórias existem
             if missing := colunas_obrigatorias - set(df.columns):
-                messages.error(request, f'Colunas faltando: {", ".join(missing)}', 
-                             extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.error(request, f'Colunas faltando: {", ".join(missing)}')
                 return redirect('bm:importar_bm')
 
             # ========= PRÉ-VALIDAÇÃO POR LINHA =========
@@ -305,8 +302,7 @@ def importar_bm(request):
                     
             if erros_pre_validacao:
                 erros_msg = f'Erros críticos: {", ".join(erros_pre_validacao[:3])}... (total: {len(erros_pre_validacao)})'
-                messages.error(request, erros_msg, 
-                              extra_tags='bg-red-500 text-white p-4 rounded')
+                messages.error(request, erros_msg)
                 return redirect('bm:importar_bm')
 
             # ========= TRATAMENTO DE VALORES VAZIOS =========
@@ -402,19 +398,18 @@ def importar_bm(request):
                 msg = f'✅ {registros_processados} registros importados com sucesso!'
                 if registros_ignorados > 0:
                     msg += f' ⚠️ {registros_ignorados} CPFs duplicados ignorados.'
-                messages.success(request, msg, extra_tags='bg-green-500 text-white p-4 rounded')
+                messages.success(request, msg)
 
             if erros_processamento:
                 erros_msg = f'⚠️ {len(erros_processamento)} erro(s): ' + ', '.join(erros_processamento[:3])
                 if len(erros_processamento) > 3:
                     erros_msg += f' (...mais {len(erros_processamento)-3})'
-                messages.warning(request, erros_msg, extra_tags='bg-yellow-500 text-white p-4 rounded')
+                messages.warning(request, erros_msg)
 
             return redirect('bm:listar_bm')
 
         except Exception as e:
-            messages.error(request, f'❌ Falha na importação: {str(e)}', 
-                          extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, f'❌ Falha na importação: {str(e)}')
             return redirect('bm:importar_bm')
     
     return render(request, 'importar_bm.html')

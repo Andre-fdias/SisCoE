@@ -1,6 +1,7 @@
 
 {% extends "base.html" %}
 {% load static %}
+{% load messages_tag %}
 {% block 'title' %} Cadastrar BCM{% endblock %}
 {% block head %}
 
@@ -27,15 +28,21 @@
 </style>
 <div class="container-fluid" id="cad_bcm">
     <fieldset>
-        <legend>
+      <fieldset>
+        <!-- Sistema de Mensagens -->
             {% if messages %}
-            {% for message in messages %}
-                <section class="alert {{ message.tags }}">
-                    {{ message }}
-                </section>
-            {% endfor %}
-             {% endif %}
-        </legend>
+                <div id="django-messages" style="display:none;" 
+                    data-messages='[
+                        {% for message in messages %}
+                            {
+                                "tags": "{{ message.tags }}",
+                                "message": "{{ message|escapejs }}"
+                            }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]'></div>
+            {% endif %}
+            {% include 'modals/modal_alerts.html' %}
+      </fieldset>
         <div id="01" class="row">
             <div class="col-12 highlighted-div bg-lightblue">
                 <div class="row">
@@ -54,6 +61,8 @@
             <br>
         </div>     
     </fieldset>
+{% military_messages %}
+
     <form class="row g-3 needs-validation" novalidate action="{% url 'cadastro_bm_create' %}" method="POST" enctype="multipart/form-data">  {% csrf_token %}
         <fieldset>  
             <div class="row row-bg ">

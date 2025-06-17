@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Mensagens</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos base para as notificações */
+        .notification-container {
+            position: fixed;
+            top: 1.5rem; /* Ajuste a distância do topo conforme necessário */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: 100%;
+            max-width: 400px; /* Largura máxima para centralizar e não ser muito grande */
+            padding: 0 1rem; /* Espaçamento horizontal */
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* Espaço entre as mensagens */
+            pointer-events: none; /* Permite cliques através do container se não houver notificações */
+        }
+
+        .notification-card {
+            background-color: #ffffff; /* Fundo branco para as notificações */
+            border-radius: 0.5rem; /* Bordas arredondadas */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra mais suave */
+            overflow: hidden;
+            transform: translateY(20px) scale(0.95); /* Estado inicial para animação */
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Transição para animação de entrada/saída */
+            pointer-events: auto; /* Permite interação com o card */
+            display: flex;
+            align-items: flex-start; /* Alinha o conteúdo ao topo */
+            border-left: 5px solid; /* Borda lateral para indicar o tipo de mensagem */
+            padding: 1rem;
+            position: relative; /* Para posicionar o botão de fechar */
+        }
+
+        /* Cores da borda lateral baseadas no tipo de mensagem */
+        .notification-card.success { border-color: #28a745; } /* Verde para sucesso */
+        .notification-card.info { border-color: #17a2b8; }    /* Azul ciano para informação */
+        .notification-card.warning { border-color: #ffc107; } /* Laranja para aviso */
+        .notification-card.error { border-color: #dc3545; }   /* Vermelho para erro */
+
+        .notification-card.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .notification-card .icon {
+            flex-shrink: 0;
+            margin-right: 0.75rem;
+            font-size: 1.5rem; /* Tamanho do ícone */
+            line-height: 1; /* Alinhamento vertical do ícone */
+        }
+
+        .notification-card .content {
+            flex-grow: 1;
+        }
+
+        .notification-card .title {
+            font-weight: 600; /* Semibold */
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-card .message {
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .notification-card .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #999;
+            cursor: pointer;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .notification-card .close-btn:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="notification-system" class="notification-container">
+        {% for message in messages %}
+            <div class="notification-card {{ message.tags }}" data-level="{{ message.level }}">
+                <div class="icon">
+                    {% if 'success' in message.tags %}&#10003; {% elif 'danger' in message.tags %}&#9888; {% elif 'warning' in message.tags %}&#33; {% elif 'info' in message.tags %}&#8505; {% else %}&#9679;{% endif %} </div>
+                <div class="content">
+                    <div class="title">
+                        {% if 'success' in message.tags %}Sucesso!
+                        {% elif 'danger' in message.tags %}Erro!
+                        {% elif 'warning' in message.tags %}Aviso!
+                        {% elif 'info' in message.tags %}Informação!
+                        {% else %}Mensagem{% endif %}
+                    </div>
+                    <div class="message">{{ message.text }}</div>
+                </div>
+                <button class="close-btn" aria-label="Fechar notificação">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationSystem = document.getElementById('notification-system');
+            const messages = document.querySelectorAll('.notification-card');
+
+            messages.forEach((msg, index) => {
+                // Exibir a mensagem com um pequeno atraso
+                setTimeout(() => {
+                    msg.classList.add('show');
+
+                    // Auto-destruição programada, exceto para mensagens de erro que permanecem
+                    const messageLevel = msg.getAttribute('data-level');
+                    if (messageLevel !== '40' /* Django ERROR level */) {
+                        setTimeout(() => {
+                            closeNotification(msg);
+                        }, 5000 + (index * 300)); // 5 segundos + atraso progressivo
+                    }
+
+                }, 100 * index); // Pequeno atraso entre a exibição de cada mensagem
+            });
+
+            // Evento para fechar a notificação manualmente ao clicar no botão 'x'
+            notificationSystem.addEventListener('click', function(e) {
+                if (e.target.classList.contains('close-btn')) {
+                    const msg = e.target.closest('.notification-card');
+                    if (msg) {
+                        closeNotification(msg);
+                    }
+                }
+            });
+
+            function closeNotification(element) {
+                element.classList.remove('show');
+                element.classList.add('hide'); // Adiciona uma classe para animar a saída, se desejar
+
+                // Remove o elemento do DOM após a transição
+                setTimeout(() => {
+                    element.remove();
+                    // Opcional: ajustar a posição de outras mensagens se necessário
+                }, 300); // Deve corresponder à duração da transição CSS
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+{% comment %}
+    backend/lp/templates/modals/_editar_lp_modal.html
+    Este modal permite ao usuário editar todos os dados de uma LP,
+    com um design modernizado e inputs mais elegantes.
+    CONTÉM O HTML E O JAVASCRIPT CORRESPONDENTE.
+{% endcomment %}
+
+<div id="editarLpModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden" aria-labelledby="modal-title-lp" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 transition-all duration-300 transform scale-95 opacity-0">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-br from-blue-600 to-blue-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white text-center w-full" id="modal-title-lp">
+                Editar Dados da Licença Prêmio
+            </h2>
+            <button onclick="closeEditarLpModal()" class="text-white hover:text-gray-200 text-2xl absolute right-4 top-4">&times;</button>
+        </div>
+
+        <form method="POST" action="{% url 'lp:editar_lp' pk=lp.pk %}" class="p-6 space-y-4" id="formEditarLP">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="numero_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Número da LP <span class="text-red-500">*</span>
+                    </label>
+                    <select name="numero_lp" id="numero_lp_modal" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm">
+                        {% for num, display in N_CHOICES %}
+                            <option value="{{ num }}" {% if lp.numero_lp == num %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="numeroLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="data_ultimo_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data do Último LP <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="data_ultimo_lp" id="data_ultimo_lp_modal" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.data_ultimo_lp|date:'Y-m-d' }}">
+                    <div id="dataUltimoLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="numero_prox_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Próximo Número da LP
+                    </label>
+                    <select name="numero_prox_lp" id="numero_prox_lp_modal"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm">
+                        <option value="">---------</option> {# Opção para nulo #}
+                        {% for num, display in N_CHOICES %}
+                            <option value="{{ num }}" {% if lp.numero_prox_lp == num %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="numeroProxLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="proximo_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Próximo LP (Data)
+                    </label>
+                    <input type="date" name="proximo_lp" id="proximo_lp_modal"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.proximo_lp|date:'Y-m-d' }}">
+                    <div id="proximoLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="mes_proximo_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Mês do Próximo LP
+                    </label>
+                    <input type="number" name="mes_proximo_lp" id="mes_proximo_lp_modal" min="1" max="12"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.mes_proximo_lp|default:'' }}">
+                    <div id="mesProxLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="ano_proximo_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Ano do Próximo LP
+                    </label>
+                    {# MODIFICADO: Tipo alterado para 'text' e mantido o filtro para formatação #}
+                   <input type="number" name="ano_proximo_lp" id="ano_proximo_lp_modal"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                value="{{ lp.ano_proximo_lp|default:'' }}">
+                    <div id="anoProxLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="dias_desconto_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                        Dias de Desconto LP
+                    </label>
+                    <input type="number" name="dias_desconto_lp" id="dias_desconto_lp_modal" min="0"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.dias_desconto_lp }}">
+                    <div id="diasDescontoLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="bol_g_pm_lp_modal_all" class="block text-sm font-medium text-gray-700 mb-2">
+                        BOL G PM 
+                    </label>
+                    <input type="text" name="bol_g_pm_lp" id="bol_g_pm_lp_modal_all"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           placeholder="Ex: XXX/XXX-XX" value="{{ lp.bol_g_pm_lp|default:'' }}">
+                    <div id="bolGPmLPAllError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="data_publicacao_lp_modal_all" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data de Publicação
+                    </label>
+                    <input type="date" name="data_publicacao_lp" id="data_publicacao_lp_modal_all"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.data_publicacao_lp|date:'Y-m-d' }}">
+                    <div id="dataPublicacaoLPAllError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+
+                <div>
+                    <label for="data_concessao_lp_modal_all" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data de Concessão <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="data_concessao_lp" id="data_concessao_lp_modal_all" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                           value="{{ lp.data_concessao_lp|date:'Y-m-d' }}">
+                    <div id="dataConcessaoLPAllError" class="text-sm text-red-600 mt-1 hidden"></div>
+                </div>
+<div>
+    <label for="situacao_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+        Situação da LP <span class="text-red-500">*</span>
+    </label>
+    <select name="situacao_lp" id="situacao_lp_modal" required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm">
+        {% for choice in lp.get_situacao_lp_choices %}
+            <option value="{{ choice.0 }}" {% if lp.situacao_lp == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+        {% endfor %}
+    </select>
+    <div id="situacaoLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+</div>
+
+<div>
+    <label for="status_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+        Status da LP <span class="text-red-500">*</span>
+    </label>
+    <select name="status_lp" id="status_lp_modal" required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm">
+        {% for choice in lp.StatusLP.choices %}
+            <option value="{{ choice.0 }}" {% if lp.status_lp == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+        {% endfor %}
+    </select>
+    <div id="statusLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+</div>
+
+                <div class="md:col-span-3 flex items-center">
+                    <input type="checkbox" name="lancamento_sipa" id="lancamento_sipa_modal"
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                           {% if lp.lancamento_sipa %}checked{% endif %}>
+                    <label for="lancamento_sipa_modal" class="ml-2 block text-sm font-medium text-gray-700">
+                        Lançamento no SIPA
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-span-full">
+                <label for="observacoes_lp_modal" class="block text-sm font-medium text-gray-700 mb-2">
+                    Observações
+                </label>
+                <textarea name="observacoes" id="observacoes_lp_modal" rows="3"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm"
+                          placeholder="Adicione observações aqui...">{{ lp.observacoes|default:'' }}</textarea>
+                <div id="observacoesLpError" class="text-sm text-red-600 mt-1 hidden"></div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-6">
+                <button type="button" onclick="closeEditarLpModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 font-semibold shadow-sm">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitEditarLP"
+                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-all duration-200 font-semibold shadow-md">
+                    <span id="normalStateEditarLP" class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Salvar
+                    </span>
+                    <span id="loadingStateEditarLP" class="hidden flex items-center">
+                        <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editarLpModal = document.getElementById('editarLpModal');
+        const formEditarLP = document.getElementById('formEditarLP');
+        const submitButtonEditarLP = formEditarLP.querySelector('#submitEditarLP');
+        const normalStateEditarLP = submitButtonEditarLP.querySelector('#normalStateEditarLP');
+        const loadingStateEditarLP = submitButtonEditarLP.querySelector('#loadingStateEditarLP');
+
+        window.openEditarLpModal = function(lpId) {
+            editarLpModal.classList.remove('hidden');
+            setTimeout(() => {
+                editarLpModal.querySelector('.max-w-2xl').classList.remove('scale-95', 'opacity-0');
+                editarLpModal.querySelector('.max-w-2xl').classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        window.closeEditarLpModal = function() {
+            editarLpModal.querySelector('.max-w-2xl').classList.remove('scale-100', 'opacity-100');
+            editarLpModal.querySelector('.max-w-2xl').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                editarLpModal.classList.add('hidden');
+                document.querySelectorAll('.text-red-600').forEach(el => el.classList.add('hidden'));
+            }, 300);
+        };
+
+        formEditarLP.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            normalStateEditarLP.classList.add('hidden');
+            loadingStateEditarLP.classList.remove('hidden');
+            submitButtonEditarLP.disabled = true;
+
+            document.querySelectorAll('.text-red-600').forEach(el => el.classList.add('hidden'));
+
+            try {
+                const formData = new FormData(this);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.alert && data.alert.type === 'success') {
+                    showAlert(data.alert.type, data.alert.title, data.alert.message);
+                    closeEditarLpModal();
+                    if (data.reload_page) {
+                        location.reload(); 
+                    }
+                } else if (data.alert && data.alert.type === 'error') {
+                    showAlert(data.alert.type, data.alert.title, data.alert.message);
+                    if (data.errors) {
+                        for (const fieldName in data.errors) {
+                            const errorDiv = document.getElementById(`${fieldName}Error`);
+                            if (errorDiv) {
+                                errorDiv.textContent = data.errors[fieldName];
+                                errorDiv.classList.remove('hidden');
+                            }
+                        }
+                    }
+                } else {
+                    showAlert('error', 'Erro Desconhecido', 'Ocorreu um erro inesperado.');
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                showAlert('error', 'Erro de Conexão', 'Erro na comunicação com o servidor. Tente novamente.');
+            } finally {
+                normalStateEditarLP.classList.remove('hidden');
+                loadingStateEditarLP.classList.add('hidden');
+                submitButtonEditarLP.disabled = false;
+            }
+        });
+    });
+</script>

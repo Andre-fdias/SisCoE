@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Cadastrar Adicional e LP{% endblock %}
+{% block title %}Cadastrar Adicional{% endblock %}
 
 {% block 'body' %}
 <body class="bg-gray-50">
-    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_efetivo">
+    <div class="md:items-center md:justify-between rounded-lg mt-4 w-full" id="cad_adicional">
     
     <fieldset class="p-4 mb-4 rounded-md w-full">
         <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
@@ -12,7 +12,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex-1 min-w-[200px]">
                         <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">
-                            Cadastrar Adicional e LP
+                            Cadastrar Adicional
                         </h1>
                     </div>
                     
@@ -28,7 +28,6 @@
             </div>
         </fieldset>  
 
-        <!-- Mensagens -->
         {% if messages %}
             <div class="space-y-3 mb-6">
                 {% for message in messages %}
@@ -42,14 +41,12 @@
             </div>
         {% endif %}
 
-        <!-- Busca de Militar -->
         <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 mt-4 border-0">
             <div class="bg-white p-6 rounded-md shadow-inner">
                 <div class="mb-4">
                     <p class="text-gray-700 font-medium">Digite abaixo o RE (sem dígito) do militar que será cadastrado!</p>
                 </div>
                 
-                <!-- Formulário de Busca -->
                 <form method="post" action="{% url 'adicional:buscar_militar' %}" class="mb-6">
                     {% csrf_token %}
                     <div class="space-y-4">
@@ -74,11 +71,9 @@
                     <input type="hidden" name="cadastro_id" value="{{ cadastro.id }}">
                     
                     <div class="space-y-6">
-                        <!-- Dados do Militar -->
                         <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
                             <h3 class="text-xl font-bold text-gray-800 mb-4">Dados do Militar</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Coluna de Dados -->
                                 <div class="space-y-4">
                                     <div class="grid grid-cols-2 gap-4">
                                         <div class="space-y-2">
@@ -108,7 +103,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Coluna da Foto -->
                                 <div class="flex justify-center">
                                     <div class="relative group w-48 h-48">
                                         {% if imagem and imagem.image %}
@@ -131,7 +125,6 @@
                             </div>
                         </div>
 
-                        <!-- Seção Adicional -->
                         <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
                             <h3 class="text-xl font-bold text-gray-800 mb-4">Dados Adicional</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,7 +162,15 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label for="numero_prox_adicional_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Próximo Nº Adicional *</label>
+                                    <label for="dias_desconto_adicional" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Dias de Desconto *</label>
+                                    <input type="number" name="dias_desconto_adicional" id="dias_desconto_adicional" value="0" min="0"
+                                           class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-300 bg-gray-50
+                                                   shadow-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                   transition-all duration-200 text-gray-900 font-medium">
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="numero_prox_adicional_output" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Próximo Nº Adicional</label>
                                     <input type="text" name="numero_prox_adicional_output" id="numero_prox_adicional_output" readonly
                                            class="w-full px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50
                                                    shadow-xs text-gray-900 font-medium">
@@ -235,15 +236,11 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Input hidden para garantir o valor padrão -->
                                 <input type="hidden" name="sexta_parte_hidden" id="sexta_parte_hidden" value="False">
                             </div>
                         </div>
-
-                     
                     </div>
 
-                    <!-- Botões de Ação -->
                     <div class="flex flex-col sm:flex-row gap-4 justify-end mt-6">
                         <button type="submit"
                                 class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md
@@ -272,21 +269,19 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        // Validação do formulário
         document.addEventListener('DOMContentLoaded', function() {
             const adicionalForm = document.getElementById('adicionalForm');
             if (adicionalForm) {
                 adicionalForm.addEventListener('submit', function(e) {
                     const requiredFields = [
-                        'n_bloco_adicional', 'data_ultimo_adicional',
-                        'n_bloco_lp', 'data_ultimo_lp'
+                        'n_bloco_adicional', 'data_ultimo_adicional', 'situacao_adicional'
                     ];
                     
                     let isValid = true;
                     
-                    requiredFields.forEach(field => {
-                        const input = document.getElementById(field);
-                        if (!input.value) {
+                    requiredFields.forEach(fieldId => {
+                        const input = document.getElementById(fieldId);
+                        if (input && !input.value) {
                             input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
                             isValid = false;
                         }
@@ -296,7 +291,6 @@
                         e.preventDefault();
                         alert('Por favor, preencha todos os campos obrigatórios marcados com *');
                         
-                        // Rolagem para o primeiro erro
                         const firstError = document.querySelector('.border-red-500');
                         if (firstError) {
                             firstError.scrollIntoView({
@@ -307,9 +301,11 @@
                     }
                 });
                 
-                // Remover estilos de erro quando o usuário começa a digitar
                 adicionalForm.querySelectorAll('input, select').forEach(input => {
                     input.addEventListener('input', function() {
+                        this.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    });
+                    input.addEventListener('change', function() {
                         this.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
                     });
                 });
@@ -317,8 +313,9 @@
 
             // Elementos do Adicional
             const nBlocoAdicional = document.getElementById('n_bloco_adicional');
-            const numeroProxAdicionalOutput = document.getElementById('numero_prox_adicional_output');
             const dataUltimoAdicional = document.getElementById('data_ultimo_adicional');
+            const diasDescontoAdicional = document.getElementById('dias_desconto_adicional');
+            const numeroProxAdicionalOutput = document.getElementById('numero_prox_adicional_output');
             const proximoAdicionalOutput = document.getElementById('proximo_adicional_output');
             const mesProximoAdicionalOutput = document.getElementById('mes_proximo_adicional_output');
             const anoProximoAdicionalOutput = document.getElementById('ano_proximo_adicional_output');
@@ -326,19 +323,11 @@
             const sextaParteSelect = document.getElementById('sexta_parte');
             const sextaParteHidden = document.getElementById('sexta_parte_hidden');
 
-            // Elementos da LP
-            const nBlocoLp = document.getElementById('n_bloco_lp');
-            const dataUltimoLp = document.getElementById('data_ultimo_lp');
-            const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
-            const proximoLpOutput = document.getElementById('proximo_lp_output');
-            const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
-            const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
-
             // Função para calcular datas futuras (5 anos - dias de desconto)
             function calcularDataFutura(data, diasDesconto = 0) {
-                const dataObj = new Date(data);
-                const diasTotais = (365 * 5) - diasDesconto;
-                dataObj.setDate(dataObj.getDate() + diasTotais);
+                const dataObj = new Date(data + 'T00:00:00'); 
+                dataObj.setFullYear(dataObj.getFullYear() + 5); 
+                dataObj.setDate(dataObj.getDate() - diasDesconto); 
                 return dataObj;
             }
 
@@ -346,48 +335,41 @@
             function controlarSextaParte() {
                 const proximoNumero = parseInt(numeroProxAdicionalOutput.value);
                 
-                if (proximoNumero === 4) {
-                    // Mostra o campo e define como "Sim"
+                if (!isNaN(proximoNumero) && proximoNumero === 4) { 
                     sextaParteContainer.classList.remove('hidden');
                     sextaParteSelect.value = 'True';
                     sextaParteHidden.value = 'True';
                 } else {
-                    // Esconde o campo e garante valor "Não"
                     sextaParteContainer.classList.add('hidden');
                     sextaParteSelect.value = 'False';
                     sextaParteHidden.value = 'False';
                 }
             }
 
-            // Função principal de cálculo
-            function calcularCampos() {
+            // Função principal de cálculo para Adicional
+            function calcularCamposAdicional() {
                 try {
-                    // Cálculos para Adicional
                     if (nBlocoAdicional.value && dataUltimoAdicional.value) {
                         const numeroAdicional = parseInt(nBlocoAdicional.value);
                         numeroProxAdicionalOutput.value = numeroAdicional + 1;
                         
-                        const dataAdicional = calcularDataFutura(dataUltimoAdicional.value);
+                        const diasDesconto = parseInt(diasDescontoAdicional.value) || 0;
+
+                        const dataAdicional = calcularDataFutura(dataUltimoAdicional.value, diasDesconto);
                         proximoAdicionalOutput.value = formatarData(dataAdicional);
                         mesProximoAdicionalOutput.value = dataAdicional.getMonth() + 1;
                         anoProximoAdicionalOutput.value = dataAdicional.getFullYear();
                         
-                        // Atualiza o campo "6ª Parte"
                         controlarSextaParte();
-                    }
-
-                    // Cálculos para LP
-                    if (nBlocoLp.value && dataUltimoLp.value) {
-                        const numeroLp = parseInt(nBlocoLp.value);
-                        numeroProxLpOutput.value = numeroLp + 1;
-                        
-                        const dataLp = calcularDataFutura(dataUltimoLp.value);
-                        proximoLpOutput.value = formatarData(dataLp);
-                        mesProximoLpOutput.value = dataLp.getMonth() + 1;
-                        anoProximoLpOutput.value = dataLp.getFullYear();
+                    } else { 
+                        numeroProxAdicionalOutput.value = '';
+                        proximoAdicionalOutput.value = '';
+                        mesProximoAdicionalOutput.value = '';
+                        anoProximoAdicionalOutput.value = '';
+                        controlarSextaParte(); 
                     }
                 } catch (e) {
-                    console.error("Erro nos cálculos:", e);
+                    console.error("Erro nos cálculos do Adicional:", e);
                 }
             }
 
@@ -399,13 +381,14 @@
                 return `${dia}-${mes}-${ano}`;
             }
 
-            // Event listeners para todos os campos relevantes
-            [nBlocoAdicional, dataUltimoAdicional, nBlocoLp, dataUltimoLp].forEach(element => {
-                element.addEventListener('change', calcularCampos);
+            // Event listeners para todos os campos relevantes para o cálculo do Adicional
+            [nBlocoAdicional, dataUltimoAdicional, diasDescontoAdicional].forEach(element => {
+                element.addEventListener('change', calcularCamposAdicional);
+                element.addEventListener('input', calcularCamposAdicional);
             });
 
             // Calcular ao carregar a página (caso já tenha valores)
-            calcularCampos();
+            calcularCamposAdicional();
         });
     </script>
 </div>

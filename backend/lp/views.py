@@ -16,6 +16,7 @@ from .models import LP, HistoricoLP, N_CHOICES, situacao_choices
 from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem # Importe os modelos necessários
 from django.template.loader import render_to_string
 import logging
+import json # Importar json para serializar as escolhas de status
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def create_historico_lp(lp_instance, user, observacoes_historico=""):
         status_lp=lp_instance.status_lp,
         numero_lp=lp_instance.numero_lp,
         data_ultimo_lp=lp_instance.data_ultimo_lp,
-        data_inicio_periodo=lp_instance.data_inicio_periodo, 
+        
         numero_prox_lp=lp_instance.numero_prox_lp,
         proximo_lp=lp_instance.proximo_lp,
         mes_proximo_lp=lp_instance.mes_proximo_lp,
@@ -317,344 +318,272 @@ def buscar_militar_lp(request):
         }, status=500)
 
 
+
 @login_required
 def ver_lp(request, pk):
     lp = get_object_or_404(LP, pk=pk)
     historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
 
-    # Inicializando variáveis
-    progresso_percentual = 0
-    dias_restantes_periodo = 0
-    dias_decorridos_periodo = 0
-    total_dias_periodo = 0
-    is_apta_concessao = False
-    data_inicio_periodo = None
-    data_fim_periodo = None
+    # Inicializando variáveis para o período aquisitivo da LP
+    progresso_periodo_aquisitivo_percentual = 0
+    dias_restantes_periodo_lp = 0
+    dias_decorridos_periodo_lp = 0
+    total_dias_periodo_lp = 0
+    data_inicio_periodo_lp = None
+    data_fim_periodo_lp = None
 
     # Se temos a data do último LP, podemos calcular o período aquisitivo
     if lp.data_ultimo_lp:
         # O início do período aquisitivo é o dia seguinte ao último LP
-        data_inicio_periodo = lp.data_ultimo_lp + timedelta(days=1)
+        data_inicio_periodo_lp = lp.data_ultimo_lp + timedelta(days=1)
         
         # O fim do período aquisitivo é 5 anos depois do início
-        data_fim_periodo = data_inicio_periodo + relativedelta(years=5) - timedelta(days=1)
+        data_fim_periodo_lp = data_inicio_periodo_lp + relativedelta(years=5) - timedelta(days=1)
         
         hoje = timezone.localdate()
         
         # Calculando o total de dias do período
-        total_dias_periodo = (data_fim_periodo - data_inicio_periodo).days
+        total_dias_periodo_lp = (data_fim_periodo_lp - data_inicio_periodo_lp).days
         
         # Se o período ainda não começou
-        if hoje < data_inicio_periodo:
-            dias_decorridos_periodo = 0
-            dias_restantes_periodo = total_dias_periodo
+        if hoje < data_inicio_periodo_lp:
+            dias_decorridos_periodo_lp = 0
+            dias_restantes_periodo_lp = total_dias_periodo_lp
         
         # Se o período já terminou
-        elif hoje > data_fim_periodo:
-            dias_decorridos_periodo = total_dias_periodo
-            dias_restantes_periodo = 0
-            progresso_percentual = 100
+        elif hoje > data_fim_periodo_lp:
+            dias_decorridos_periodo_lp = total_dias_periodo_lp
+            dias_restantes_periodo_lp = 0
+            progresso_periodo_aquisitivo_percentual = 100
         
         # Se estamos dentro do período
         else:
-            dias_decorridos_periodo = (hoje - data_inicio_periodo).days
-            dias_restantes_periodo = (data_fim_periodo - hoje).days
+            dias_decorridos_periodo_lp = (hoje - data_inicio_periodo_lp).days
+            dias_restantes_periodo_lp = (data_fim_periodo_lp - hoje).days
             
-            if total_dias_periodo > 0:
-                progresso_percentual = (dias_decorridos_periodo / total_dias_periodo) * 100
-        
-        # Verificando se a LP está apta para concessão
-        is_apta_concessao = (
-            lp.status_lp == LP.StatusLP.AGUARDANDO_REQUISITOS and 
-            progresso_percentual >= 100
-        )
+            if total_dias_periodo_lp > 0:
+                progresso_periodo_aquisitivo_percentual = (dias_decorridos_periodo_lp / total_dias_periodo_lp) * 100
 
     context = {
         'lp': lp,
         'historico_lp': historico_lp,
-        'n_choices': N_CHOICES,
-        'situacao_choices': situacao_choices,
-        'status_lp_choices': LP.StatusLP.choices,
-        'progresso_percentual': round(progresso_percentual, 2),
-        'dias_decorridos_periodo': dias_decorridos_periodo,
-        'dias_restantes_periodo': dias_restantes_periodo,
-        'total_dias_periodo': total_dias_periodo,
-        'is_apta_concessao': is_apta_concessao,
-        'data_inicio_periodo': data_inicio_periodo,  # Passando para o template
-        'data_fim_periodo': data_fim_periodo,        # Passando para o template
-        'hoje': timezone.localdate(),
+        'N_CHOICES': N_CHOICES, # Pode ser útil para algum modal
+        'current_year': timezone.now().year,
+        'progresso_periodo_aquisitivo_percentual': round(progresso_periodo_aquisitivo_percentual, 2),
+        'dias_decorridos_periodo_lp': dias_decorridos_periodo_lp,
+        'dias_restantes_periodo_lp': dias_restantes_periodo_lp,
+        'total_dias_periodo_lp': total_dias_periodo_lp,
+        'data_inicio_periodo_lp': data_inicio_periodo_lp,
+        'data_fim_periodo_lp': data_fim_periodo_lp,
+        'StatusLP_choices_json': json.dumps(LP.StatusLP.choices), # Passa as escolhas de status
     }
     return render(request, 'lp/detalhar_lp.html', context)
+
+
 
 
 
 @login_required
 @require_POST
 def editar_concessao_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-    if request.method == 'POST':
-        data_concessao_str = request.POST.get('data_concessao')
-        bol_g_pm_lp = request.POST.get('bol_g_pm_lp')
-        data_publicacao_str = request.POST.get('data_publicacao')
-        
+    try:
+        data = request.POST
+        data_concessao_lp_str = data.get('data_concessao_lp')
+        bol_g_pm_lp = data.get('bol_g_pm_lp')
+        data_publicacao_lp_str = data.get('data_publicacao_lp')
+
+        # Conversão de datas
+        data_concessao_lp = date.fromisoformat(data_concessao_lp_str) if data_concessao_lp_str else None
+        data_publicacao_lp = date.fromisoformat(data_publicacao_lp_str) if data_publicacao_lp_str else None
+
+        # Validações básicas aprimoradas
         errors = {}
-        if not data_concessao_str:
-            errors['data_concessao'] = 'A data de concessão é obrigatória.'
+        if not data_concessao_lp:
+            errors['data_concessao_lp'] = 'A data de concessão é obrigatória.'
+        # O campo 'BOL GPm LP' não é 'required' no HTML, então a validação aqui deve ser opcional ou removida
+        # Se for obrigatório, adicione 'required' no input HTML e mantenha a validação aqui.
+        # if not bol_g_pm_lp:
+        #     errors['bol_g_pm_lp'] = 'O BOL GPm é obrigatório.'
+        # A data de publicação também não é 'required' no HTML, então a validação deve ser opcional
+        # Se for obrigatória, adicione 'required' no input HTML e mantenha a validação aqui.
+        # if not data_publicacao_lp:
+        #     errors['data_publicacao_lp'] = 'A data de publicação é obrigatória.'
         
-        if data_concessao_str:
-            try:
-                data_concessao = datetime.strptime(data_concessao_str, '%Y-%m-%d').date()
-            except ValueError:
-                errors['data_concessao'] = 'Formato de data inválido para Data de Concessão.'
-        else:
-            data_concessao = None
-
-        if data_publicacao_str:
-            try:
-                data_publicacao = datetime.strptime(data_publicacao_str, '%Y-%m-%d').date()
-            except ValueError:
-                errors['data_publicacao'] = 'Formato de data inválido para Data de Publicação.'
-        else:
-            data_publicacao = None
-
-        if data_concessao and data_publicacao and data_publicacao < data_concessao:
-            errors['data_publicacao'] = 'A data de publicação não pode ser anterior à data de concessão.'
-
         if errors:
             if is_ajax:
-                return alert_response('error', 'Erro de Validação!', 'Verifique os dados informados.', errors=errors, status=400)
-            for field, msg in errors.items():
-                messages.error(request, msg)
-            return redirect('lp:ver_lp', pk=lp.id)
+                # Retorna os erros de validação específicos para cada campo, se existirem
+                return alert_response('error', 'Erro de Validação!', 'Por favor, preencha os campos obrigatórios.', 400, errors=errors)
+            messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
+            return redirect('lp:ver_lp', pk=pk)
 
-        try:
-            with transaction.atomic():
-                lp.data_concessao_lp = data_concessao
-                lp.bol_g_pm_lp = bol_g_pm_lp
-                lp.data_publicacao_lp = data_publicacao
-                
-                if lp.data_concessao_lp:
-                    lp.situacao_lp = "Concedido"
-                    lp.status_lp = LP.StatusLP.CONCEDIDA
-                
-                lp.user_updated = request.user
-                lp.save()
-                
-                create_historico_lp(lp, request.user, "Dados de concessão de LP editados.")
-
-                success_msg = 'Dados de concessão da LP atualizados com sucesso!'
-                if is_ajax:
-                    return alert_response('success', 'Sucesso!', success_msg, reload_page=True) 
-                messages.success(request, success_msg)
-                return redirect('lp:ver_lp', pk=lp.id)
-        except Exception as e:
-            error_msg = f'Ocorreu um erro inesperado ao atualizar a LP: {str(e)}'
-            logger.exception(f"Erro em editar_concessao_lp: {str(e)}")
-            if is_ajax:
-                return alert_response('error', 'Erro Interno!', error_msg, status=500)
-            messages.error(request, error_msg)
-
-    if is_ajax:
-        return alert_response('error', 'Erro!', 'Requisição inválida.', status=400)
-    return redirect('lp:ver_lp', pk=lp.id)
-
-
-@login_required
-@require_POST
-def concluir_lp(request, pk):
-    lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
-    if not request.user.check_password(request.POST.get('password')):
-        error_msg = 'Senha incorreta.'
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg}, status=401)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-
-    data_conclusao_str = request.POST.get('data_conclusao')
-    if not data_conclusao_str:
-        error_msg = 'A data de conclusão é obrigatória.'
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg}, status=400)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-    
-    try:
-        data_conclusao = datetime.strptime(data_conclusao_str, '%Y-%m-%d').date()
-    except ValueError:
-        error_msg = 'Formato de data inválido.'
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg}, status=400)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-
-    try:
         with transaction.atomic():
-            lp.situacao_lp = "Concluído"
-            lp.status_lp = LP.StatusLP.CONCLUIDA
-            lp.data_concessao_lp = data_conclusao 
+            lp.data_concessao_lp = data_concessao_lp
+            lp.bol_g_pm_lp = bol_g_pm_lp
+            lp.data_publicacao_lp = data_publicacao_lp
             lp.user_updated = request.user
-            lp.usuario_conclusao = request.user
-            lp.save()
-            
-            create_historico_lp(lp, request.user, f"LP concluída em {data_conclusao.strftime('%d/%m/%Y')}.")
-            
-            success_message = f'LP {lp.numero_lp} concluída com sucesso!'
-            if is_ajax:
-                return JsonResponse({'success': True, 'message': success_message, 'reload_page': True}) 
-            messages.success(request, success_message)
-            return redirect('lp:ver_lp', pk=lp.id)
+            lp.data_atualizacao = timezone.now()
 
-    except Exception as e:
-        error_msg = f'Erro ao concluir a LP: {str(e)}'
-        logger.exception(f"Erro em concluir_lp: {str(e)}")
+            # Lógica de status: se já tem data de concessão e publicação, status vira 'publicado'
+            if lp.data_concessao_lp and lp.data_publicacao_lp:
+                lp.status_lp = LP.StatusLP.PUBLICADO
+            
+            lp.full_clean() # Validação do modelo
+            lp.save()
+
+            # Registrar histórico
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                # Correção: usar request.user.email ou request.user.get_full_name()
+                observacoes_historico=f"Dados de concessão/publicação atualizados por {request.user.get_full_name() or request.user.email}" 
+            )
+
         if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg}, status=500)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
+            return alert_response('success', 'Sucesso!', 'Concessão da LP atualizada com sucesso!', reload_page=True)
+        messages.success(request, 'Concessão da LP atualizada com sucesso!')
+        return redirect('lp:ver_lp', pk=pk)
+
+    except ValidationError as e:
+        if is_ajax:
+            # Envia os detalhes dos erros para o frontend para exibição específica
+            return alert_response('error', 'Erro de Validação', 'Por favor, corrija os erros no formulário.', 400, errors=e.message_dict)
+        messages.error(request, f'Erro de validação: {", ".join(e.messages)}')
+    except Exception as e:
+        logger.exception(f"Erro ao editar concessão da LP {pk}: {e}")
+        if is_ajax:
+            return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao editar a concessão da LP.', 500)
+        messages.error(request, 'Ocorreu um erro inesperado ao editar a concessão da LP. O administrador foi notificado.')
+    
+    return redirect('lp:ver_lp', pk=pk)
+
 
 @login_required
 @require_POST
 def editar_dias_desconto_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
-    dias_desconto_str = request.POST.get('dias_desconto_lp')
-    if not dias_desconto_str:
-        error_msg = 'O número de dias de desconto é obrigatório.'
-        if is_ajax:
-            return alert_response('error', 'Erro!', error_msg, status=400)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
 
     try:
-        dias_desconto = int(dias_desconto_str)
-        if dias_desconto < 0:
-            raise ValueError("O número de dias de desconto não pode ser negativo.")
+        dias_desconto_lp = int(request.POST.get('dias_desconto_lp', 0))
+        
+        if dias_desconto_lp < 0:
+            if is_ajax:
+                return alert_response('error', 'Erro de Validação!', 'Os dias de desconto não podem ser negativos.', 400)
+            messages.error(request, 'Os dias de desconto não podem ser negativos.')
+            return redirect('lp:ver_lp', pk=pk)
+
+        with transaction.atomic():
+            lp.dias_desconto_lp = dias_desconto_lp
+            # Recalcular proximo_lp e mes_proximo_lp/ano_proximo_lp se houver data_ultimo_lp
+            if lp.data_ultimo_lp:
+                # O 'proximo_lp' é a data de fechamento do bloco + 1 dia + os dias de desconto
+                proximo_lp_calculado = lp.data_ultimo_lp + timedelta(days=1) + timedelta(days=lp.dias_desconto_lp)
+                lp.proximo_lp = proximo_lp_calculado
+                lp.mes_proximo_lp = proximo_lp_calculado.month
+                lp.ano_proximo_lp = proximo_lp_calculado.year
+            
+            lp.user_updated = request.user
+            lp.data_atualizacao = timezone.now()
+            lp.full_clean()
+            lp.save()
+
+            # Registrar histórico
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                observacoes_historico=f"Dias de desconto alterados para {dias_desconto_lp} por {request.user.username}"
+            )
+
+        if is_ajax:
+            return alert_response('success', 'Sucesso!', 'Dias de desconto da LP atualizados com sucesso!', reload_page=True)
+        messages.success(request, 'Dias de desconto da LP atualizados com sucesso!')
+        return redirect('lp:ver_lp', pk=pk)
+
     except ValueError as e:
-        error_msg = f'Valor inválido para dias de desconto: {str(e)}'
+        error_msg = f'Erro nos dados numéricos: {str(e)}'
         if is_ajax:
-            return alert_response('error', 'Erro!', error_msg, status=400)
+            return alert_response('error', 'Erro!', error_msg, 400)
         messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-
-    try:
-        with transaction.atomic():
-            lp.dias_desconto_lp = dias_desconto
-            lp.user_updated = request.user
-            lp.save()
-            
-            create_historico_lp(lp, request.user, f"Dias de desconto da LP alterados para {dias_desconto} dias.")
-
-            success_msg = 'Dias de desconto da LP atualizados com sucesso!'
-            if is_ajax:
-                return alert_response('success', 'Sucesso!', success_msg, reload_page=True)
-            messages.success(request, success_msg)
-            return redirect('lp:ver_lp', pk=lp.id)
+    except ValidationError as e:
+        error_msg = f'Erro de validação: {str(e)}'
+        if is_ajax:
+            return alert_response('error', 'Erro!', error_msg, 400)
+        messages.error(request, error_msg)
     except Exception as e:
-        error_msg = f'Ocorreu um erro inesperado ao atualizar os dias de desconto: {str(e)}'
-        logger.exception(f"Erro em editar_dias_desconto_lp: {str(e)}")
+        error_msg = f'Erro inesperado: {str(e)}'
         if is_ajax:
-            return alert_response('error', 'Erro Interno!', error_msg, status=500)
+            return alert_response('error', 'Erro!', error_msg, 500)
         messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-
-@login_required
-@require_POST
-def confirmar_sipa_lp(request, pk):
-    lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
-    password = request.POST.get('password')
-    bol_g_pm_sipa = request.POST.get('bol_g_pm_sipa', '').strip()
-
-    if not request.user.check_password(password):
-        error_msg = 'Senha incorreta.'
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg, 'alert': {'type': 'error', 'title': 'Erro!', 'message': error_msg}}, status=401)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
-
-    try:
-        with transaction.atomic():
-            lp.lancamento_sipa = True
-            lp.user_updated = request.user
-            
-            if bol_g_pm_sipa:
-                lp.bol_g_pm_lp = bol_g_pm_sipa
-
-            if lp.status_lp == LP.StatusLP.CONCEDIDA:
-                lp.status_lp = LP.StatusLP.PENDENTE_SIPA 
-
-            lp.save()
-            
-            create_historico_lp(lp, request.user, f"LP lançada/confirmada no SIPA. BOL GPm: {bol_g_pm_sipa or 'Não informado'}")
-
-            success_msg = f'Lançamento da LP {lp.numero_lp} no SIPA confirmado com sucesso!'
-            if is_ajax:
-                return JsonResponse({'success': True, 'message': success_msg, 'alert': {'type': 'success', 'title': 'Sucesso!', 'message': success_msg}, 'reload_page': True})
-            messages.success(request, success_msg)
-            return redirect('lp:ver_lp', pk=lp.id)
-    except Exception as e:
-        error_msg = f'Erro ao confirmar o lançamento da LP no SIPA: {str(e)}'
-        logger.exception(f"Erro em confirmar_sipa_lp: {str(e)}")
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg, 'alert': {'type': 'error', 'title': 'Erro Interno!', 'message': error_msg}}, status=500)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
+    
+    return redirect('lp:ver_lp', pk=pk)
 
 
 @login_required
 @require_POST
 def excluir_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
-    password = request.POST.get('password')
-
-    if not request.user.check_password(password):
-        error_msg = 'Senha incorreta.'
-        if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg, 'alert': {'type': 'error', 'title': 'Erro!', 'message': error_msg}}, status=401)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=lp.id)
 
     try:
+        password = request.POST.get('password')
+
+        if not password:
+            if is_ajax:
+                return alert_response('error', 'Erro de Validação!', 'A senha é obrigatória para excluir.', 400, errors={'password': 'A senha é obrigatória.'})
+            messages.error(request, 'A senha é obrigatória para excluir.')
+            return redirect('lp:ver_lp', pk=lp.pk)
+
+        user = authenticate(request, username=request.user.username, password=password)
+
+        if user is None or user != request.user:
+            if is_ajax:
+                return alert_response('error', 'Erro de Autenticação!', 'Senha incorreta.', 403, errors={'password': 'Senha incorreta.'})
+            messages.error(request, 'Senha incorreta.')
+            return redirect('lp:ver_lp', pk=lp.pk)
+        
         with transaction.atomic():
-            cadastro_id = lp.cadastro.id 
-            lp_numero = lp.numero_lp
-            
-            HistoricoLP.objects.create(
-                lp=lp, 
-                usuario_alteracao=request.user,
-                situacao_lp="Excluída", 
-                status_lp=LP.StatusLP.CONCLUIDA, 
-                numero_lp=lp.numero_lp,
-                data_ultimo_lp=lp.data_ultimo_lp,
-                data_inicio_periodo=lp.data_inicio_periodo, 
-                data_alteracao=timezone.now(),
-                observacoes_historico=f"LP {lp_numero} excluída por {request.user.username}."
-            )
-            
+            lp_cadastro_id = lp.cadastro.id # Captura o ID do cadastro antes de excluir
             lp.delete()
 
-            success_msg = f'LP {lp_numero} excluída com sucesso.'
-            if is_ajax:
-                redirect_url = reverse('lp:listar_lp') 
-                return JsonResponse({'success': True, 'message': success_msg, 'alert': {'type': 'success', 'title': 'Sucesso!', 'message': success_msg}, 'redirect_url': redirect_url})
-            messages.success(request, success_msg)
-            return redirect('lp:listar_lp') 
-            
-    except Exception as e:
-        error_msg = f'Erro ao excluir a LP: {str(e)}'
-        logger.exception(f"Erro em excluir_lp: {str(e)}")
+            HistoricoLP.objects.create(
+                lp=None, # Define lp como None ou usa um campo que permita null para exclusão
+                observacoes_historico=f"LP (ID {pk}) excluída por {request.user.username}. Militar ID: {lp_cadastro_id}"
+            )
+
         if is_ajax:
-            return JsonResponse({'success': False, 'error': error_msg, 'alert': {'type': 'error', 'title': 'Erro Interno!', 'message': error_msg}}, status=500)
-        messages.error(request, error_msg)
-        return redirect('lp:ver_lp', pk=pk) 
+            return alert_response('success', 'Sucesso!', 'LP excluída com sucesso!', redirect_url=reverse('lp:listar_lp'))
+        messages.success(request, 'LP excluída com sucesso!')
+        return redirect('lp:listar_lp')
+
+    except Exception as e:
+        logger.exception(f"Erro ao excluir LP {pk}: {e}")
+        if is_ajax:
+            return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao excluir a LP.', 500)
+        messages.error(request, 'Ocorreu um erro inesperado ao excluir a LP. O administrador foi notificado.')
+    
+    return redirect('lp:ver_lp', pk=pk)
+
 
 
 @login_required
@@ -665,3 +594,285 @@ def listar_lp(request):
         'N_CHOICES': N_CHOICES 
     }
     return render(request, 'lp/listar_lp.html', context)
+
+
+@login_required
+@require_POST
+def concluir_lp(request, pk):
+    lp = get_object_or_404(LP, pk=pk)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    try:
+        password = request.POST.get('password')
+        # CORREÇÃO: Usar request.user.email em vez de request.user.username
+        user = authenticate(request, username=request.user.email, password=password)
+
+        if not user:
+            return alert_response('error', 'Erro de Autenticação!', 'Senha incorreta. Por favor, tente novamente.', status=403)
+
+        with transaction.atomic():
+            lp.status_lp = LP.StatusLP.CONCLUIDO
+            lp.data_conclusao = timezone.now()
+            lp.usuario_conclusao = request.user
+            lp.user_updated = request.user
+            lp.data_atualizacao = timezone.now()
+
+            lp.full_clean()
+            lp.save()
+
+            # Registrar histórico
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                bol_g_pm_lp=lp.bol_g_pm_lp,
+                data_publicacao_lp=lp.data_publicacao_lp,
+                data_concessao_lp=lp.data_concessao_lp,
+                lancamento_sipa=lp.lancamento_sipa,
+                observacoes_historico=f"LP concluída por {request.user.email}" # Usar email
+            )
+
+        return alert_response('success', 'Sucesso!', 'LP concluída com sucesso!', reload_page=True)
+
+    except ValidationError as e:
+        error_msg = f'Erro de validação: {e.message_dict}'
+        logger.error(f"ValidationError em concluir_lp para LP ID {pk}: {e.message_dict}", exc_info=True)
+        return alert_response('error', 'Erro de Validação!', error_msg, 400, errors=e.message_dict)
+    except Exception as e:
+        error_msg = f'Ocorreu um erro inesperado: {str(e)}. O administrador foi notificado.'
+        logger.exception(f"Erro inesperado em concluir_lp para LP ID {pk}: {e}")
+        return alert_response('error', 'Erro Interno!', error_msg, 500)
+
+    return redirect('lp:ver_lp', pk=pk)
+
+
+@login_required
+def nova_lp(request):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    if not is_ajax:
+        return alert_response('error', 'Erro!', 'Requisição inválida', 400)
+
+    try:
+        data = request.POST
+        cadastro_id = data.get('cadastro_id')
+        numero_lp = data.get('numero_lp')
+        data_ultimo_lp_str = data.get('data_ultimo_lp')
+        
+        if not all([cadastro_id, numero_lp, data_ultimo_lp_str]):
+            return alert_response('error', 'Erro!', 'Dados obrigatórios faltando', 400)
+        
+        cadastro = get_object_or_404(Cadastro, id=cadastro_id)
+        
+        numero_lp = int(numero_lp)
+        data_ultimo_lp = date.fromisoformat(data_ultimo_lp_str)
+        
+        # Calcular próximo LP (5 anos depois)
+        proximo_lp = data_ultimo_lp + timedelta(days=5*365)
+        
+        nova_lp = LP(
+            cadastro=cadastro,
+            numero_lp=numero_lp,
+            data_ultimo_lp=data_ultimo_lp,
+            situacao_lp="Aguardando",
+            numero_prox_lp=numero_lp + 1,
+            proximo_lp=proximo_lp,
+            mes_proximo_lp=proximo_lp.month,
+            ano_proximo_lp=proximo_lp.year,
+            user_created=request.user,
+            status_lp=LP.StatusLP.AGUARDANDO_REQUISITOS
+        )
+        
+        nova_lp.full_clean()
+        nova_lp.save()
+
+        return alert_response('success', 'Sucesso!', 'Nova LP criada com sucesso!')
+        
+    except ValidationError as e:
+        return alert_response('error', 'Erro de Validação', ', '.join(e.messages), 400)
+    except Exception as e:
+        logger.error(f"Erro ao criar LP: {str(e)}", exc_info=True)
+        return alert_response('error', 'Erro Interno', f'Erro ao criar LP: {str(e)}', 500)
+# backend/lp/views.py
+
+@login_required
+@require_POST
+def editar_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    lp = get_object_or_404(LP, pk=pk)
+
+    if not is_ajax:
+        messages.error(request, 'Requisição inválida. Por favor, use o formulário de edição.')
+        return redirect('lp:ver_lp', pk=pk)
+
+    try:
+        data = request.POST
+        
+        # Função auxiliar para conversão segura de valores
+        def to_int(value, default=None):
+            try:
+                return int(value) if value not in [None, ''] else default
+            except (ValueError, TypeError):
+                return default
+
+        def to_date(value, default=None):
+            try:
+                return date.fromisoformat(value) if value not in [None, ''] else default
+            except (ValueError, TypeError):
+                return default
+
+        # Obter e converter dados dos campos do formulário
+        lp.numero_lp = to_int(data.get('numero_lp'))
+        lp.data_ultimo_lp = to_date(data.get('data_ultimo_lp'))
+        lp.numero_prox_lp = to_int(data.get('numero_prox_lp'))
+        lp.proximo_lp = to_date(data.get('proximo_lp'))
+        lp.mes_proximo_lp = to_int(data.get('mes_proximo_lp'))
+        lp.ano_proximo_lp = to_int(data.get('ano_proximo_lp'))
+        lp.dias_desconto_lp = to_int(data.get('dias_desconto_lp'), 0)  # Default para 0
+        lp.bol_g_pm_lp = data.get('bol_g_pm_lp') or None
+        lp.data_publicacao_lp = to_date(data.get('data_publicacao_lp'))
+        lp.data_concessao_lp = to_date(data.get('data_concessao_lp'))
+        lp.lancamento_sipa = data.get('lancamento_sipa') == 'on'
+        lp.observacoes = data.get('observacoes', '')
+        lp.situacao_lp = data.get('situacao_lp')
+        lp.status_lp = data.get('status_lp')
+
+        lp.user_updated = request.user
+        lp.data_atualizacao = timezone.now()
+
+        # Lógica de status: se já tem data de concessão e publicação, status vira 'publicado'
+        if lp.data_concessao_lp and lp.data_publicacao_lp:
+            lp.status_lp = LP.StatusLP.PUBLICADO
+        
+        with transaction.atomic():
+            lp.full_clean()  # Validação do modelo
+            lp.save()
+
+            # Registrar histórico
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                bol_g_pm_lp=lp.bol_g_pm_lp,
+                data_publicacao_lp=lp.data_publicacao_lp,
+                data_concessao_lp=lp.data_concessao_lp,
+                lancamento_sipa=lp.lancamento_sipa,
+                observacoes_historico=f"Dados da LP atualizados por {request.user.get_full_name() or request.user.email}"
+            )
+
+        return alert_response('success', 'Sucesso!', 'LP atualizada com sucesso!', reload_page=True)
+        
+    except ValidationError as e:
+        # Erros de validação do modelo ou campos
+        error_messages = e.message_dict if hasattr(e, 'message_dict') else {'__all__': e.messages}
+        logger.warning(f"Erro de validação ao editar LP {pk}: {error_messages}")
+        return alert_response('error', 'Erro de Validação', 'Por favor, corrija os erros no formulário.', 400, errors=error_messages)
+    except Exception as e:
+        logger.exception(f"Erro inesperado ao editar LP {pk}: {e}")
+        return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao editar a LP.', 500)
+
+@login_required
+@require_POST
+def confirmar_sipa_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    lp = get_object_or_404(LP, pk=pk)
+
+    try:
+        password = request.POST.get('password')
+        
+        if not password:
+            if is_ajax:
+                return alert_response('error', 'Erro de Validação!', 'A senha é obrigatória.', 400, errors={'password': 'A senha é obrigatória.'})
+            messages.error(request, 'A senha é obrigatória.')
+            return redirect('lp:ver_lp', pk=lp.pk)
+
+        user = authenticate(request, username=request.user.username, password=password)
+
+        if user is None or user != request.user:
+            if is_ajax:
+                return alert_response('error', 'Erro de Autenticação!', 'Senha incorreta.', 403, errors={'password': 'Senha incorreta.'})
+            messages.error(request, 'Senha incorreta.')
+            return redirect('lp:ver_lp', pk=lp.pk)
+        
+        with transaction.atomic():
+            lp.lancamento_sipa = True
+            lp.status_lp = 'lancado_sipa' # Altera o status para 'Lançado no SIPA'
+            lp.user_updated = request.user
+            lp.data_atualizacao = timezone.now()
+            lp.full_clean()
+            lp.save()
+
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                observacoes_historico=f"LP confirmada como lançada no SIPA por {request.user.username}"
+            )
+
+        if is_ajax:
+            return alert_response('success', 'Sucesso!', 'Lançamento no SIPA confirmado com sucesso!', reload_page=True)
+        messages.success(request, 'Lançamento no SIPA confirmado com sucesso!')
+        return redirect('lp:ver_lp', pk=lp.pk)
+
+    except ValidationError as e:
+        if is_ajax:
+            return alert_response('error', 'Erro de Validação', ', '.join(e.messages), 400, errors=e.message_dict)
+        messages.error(request, f'Erro de validação: {", ".join(e.messages)}')
+    except Exception as e:
+        logger.exception(f"Erro ao confirmar SIPA para LP {pk}: {e}")
+        if is_ajax:
+            return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao confirmar o lançamento no SIPA.', 500)
+        messages.error(request, 'Ocorreu um erro inesperado ao confirmar o lançamento no SIPA. O administrador foi notificado.')
+    
+    return redirect('lp:ver_lp', pk=pk)
+
+
+
+@login_required
+@require_http_methods(["GET"])
+def carregar_dados_sipa_lp(request, pk):
+    """
+    View para carregar os dados de uma LP em formato JSON para preencher o modal SIPA.
+    """
+    lp = get_object_or_404(LP, pk=pk)
+
+    data = {
+        'dias_desconto_lp': lp.dias_desconto_lp,
+        'data_concessao_lp': lp.data_concessao_lp.strftime('%Y-%m-%d') if lp.data_concessao_lp else '',
+        'numero_lp': lp.numero_lp,
+        'proximo_lp': lp.proximo_lp.strftime('%Y-%m-%d') if lp.proximo_lp else '',
+        'mes_proximo_lp': lp.mes_proximo_lp,
+        'ano_proximo_lp': lp.ano_proximo_lp,
+        'sexta_parte': lp.sexta_parte, # Supondo que você tem este campo no modelo LP
+        'status_lp': lp.status_lp,
+        'lancamento_sipa': lp.lancamento_sipa
+    }
+
+    return JsonResponse(data)
+
+
+

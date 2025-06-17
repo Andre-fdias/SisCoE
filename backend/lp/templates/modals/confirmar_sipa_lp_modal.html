@@ -1,0 +1,50 @@
+<div id="confirmarSipaLpModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+    <div class="bg-gray-100 rounded-lg shadow-xl w-full max-w-md">
+        <div class="flex justify-between items-center p-4 bg-blue-700 rounded-t-lg">
+            <h1 class="text-xl text-white font-medium">Confirmar Lançamento no SIPA</h1>
+            <button type="button" onclick="closeConfirmarSipaLpModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <div class="p-6">
+           <!-- Altere esta linha -->
+<form method="POST" action="{% url 'lp:confirmar_sipa_lp' lp.id %}" id="formConfirmarSipaLp">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data da Concessão:</label>
+                    <input type="date" name="data_concessao" value="{{ lp.data_concessao|date:'Y-m-d' }}"
+                           class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Dias de Desconto:</label>
+                    <input type="number" name="dias_desconto" value="{{ lp.dias_desconto_lp|default:'0' }}" min="0" step="1"
+                           class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
+                </div>
+
+                <div class="mb-6">
+                    <label for="sipaLpPassword" class="block text-sm font-medium text-gray-700 mb-2">Digite sua senha:</label>
+                    <input type="password" name="password" id="sipaLpPasswordInput" required
+                           class="w-full px-3 py-2 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <div id="sipaLpPasswordError" class="text-red-600 text-sm mt-2 hidden"></div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeConfirmarSipaLpModal()"
+                            class="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2 bg-gray-100 text-green-600 rounded-md hover:bg-gray-200
+                                transition-colors duration-200 font-medium shadow-sm
+                                flex items-center justify-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Confirmar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

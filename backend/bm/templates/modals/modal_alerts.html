@@ -1,0 +1,272 @@
+<!-- templates/modals/modal_alerts.html -->
+<div id="alert-modal" class="fixed inset-0 z-[999999] flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-md" id="modal-backdrop"></div>
+    
+    <div id="alert-modal-content" class="relative z-[999999] bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 transition-all duration-300 transform scale-95 opacity-0">
+        <div class="flex flex-col items-center text-center">
+            <div id="alert-icon" class="mb-6">
+                <!-- Ícone será inserido aqui -->
+            </div>
+            <h3 id="alert-title" class="text-2xl font-bold mb-3 text-gray-800"></h3>
+            <p id="alert-message" class="text-gray-600 mb-8 text-lg whitespace-pre-wrap"></p>
+            <button id="alert-confirm" type="button" class="px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2">
+                Entendido
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos específicos para o modal */
+    .alert-success {
+        --color-bg: #f0fdf4;
+        --color-border: #bbf7d0;
+        --color-icon: #22c55e;
+        --color-button: #22c55e;
+        --color-button-hover: #16a34a;
+        --color-button-focus: #15803d;
+    }
+    
+    .alert-error {
+        --color-bg: #fef2f2;
+        --color-border: #fecaca;
+        --color-icon: #ef4444;
+        --color-button: #ef4444;
+        --color-button-hover: #dc2626;
+        --color-button-focus: #b91c1c;
+    }
+    
+    .alert-warning {
+        --color-bg: #fffbeb;
+        --color-border: #fef3c7;
+        --color-icon: #f59e0b;
+        --color-button: #f59e0b;
+        --color-button-hover: #d97706;
+        --color-button-focus: #b45309;
+    }
+    
+    .alert-info {
+        --color-bg: #eff6ff;
+        --color-border: #dbeafe;
+        --color-icon: #3b82f6;
+        --color-button: #3b82f6;
+        --color-button-hover: #2563eb;
+        --color-button-focus: #1d4ed8;
+    }
+    
+    .alert-critical {
+        --color-bg: #fdf4ff;
+        --color-border: #f5d0fe;
+        --color-icon: #d946ef;
+        --color-button: #d946ef;
+        --color-button-hover: #c026d3;
+        --color-button-focus: #a21caf;
+    }
+    
+    .alert-primary {
+        --color-bg: #f0f9ff;
+        --color-border: #bae6fd;
+        --color-icon: #0ea5e9;
+        --color-button: #0ea5e9;
+        --color-button-hover: #0284c7;
+        --color-button-focus: #0369a1;
+    }
+    
+    #alert-modal.show {
+        display: flex;
+        z-index: 999999;
+    }
+    
+    #alert-modal.show #alert-modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+    
+    #alert-modal-content {
+        background: var(--color-bg);
+        border: 2px solid var(--color-border);
+        z-index: 999999;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    #alert-icon svg {
+        color: var(--color-icon);
+        width: 5rem;
+        height: 5rem;
+    }
+    
+    #alert-confirm {
+        background-color: var(--color-button);
+        color: white;
+        position: relative;
+        z-index: 999999;
+    }
+    
+    #alert-confirm:hover {
+        background-color: var(--color-button-hover);
+        transform: translateY(-2px);
+    }
+
+    #alert-confirm:focus {
+        background-color: var(--color-button-focus);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+    }
+
+    /* Garantir que o modal fique acima de tudo */
+    #alert-modal {
+        z-index: 999999;
+    }
+    
+    .modal-open {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Melhorar legibilidade de mensagens longas */
+    #alert-message {
+        max-height: 50vh;
+        overflow-y: auto;
+        word-break: break-word;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertModal = document.getElementById('alert-modal');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalContent = document.getElementById('alert-modal-content');
+        const confirmBtn = document.getElementById('alert-confirm');
+        
+        // Variável para controlar se o modal está aberto
+        let isModalOpen = false;
+
+        // Função para exibir o modal de alerta
+        function showAlert(type, title, message) {
+            if(isModalOpen) return; // Previne múltiplos modais
+            
+            isModalOpen = true;
+            
+            // Bloquear scroll da página
+            document.body.classList.add('modal-open');
+            document.documentElement.style.overflow = 'hidden';
+            
+            // Configurações para cada tipo de alerta
+            const config = {
+                success: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+                },
+                error: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+                },
+                warning: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938-9c-.542 0-1.016.201-1.379.564L12 20.25l4.217-15.686a1.14 1.14 0 00-1.379-.564H6.938z"/></svg>`,
+                },
+                info: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+                },
+                critical: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938-9c-.542 0-1.016.201-1.379.564L12 20.25l4.217-15.686a1.14 1.14 0 00-1.379-.564H6.938z"/></svg>`,
+                },
+                primary: {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+                }
+            }[type] || {
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            };
+            
+            // Aplicar configurações ao modal
+            document.getElementById('alert-icon').innerHTML = config.icon;
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            
+            // Remover classes de tipo existentes e adicionar a nova
+            alertModal.classList.remove('alert-success', 'alert-error', 'alert-warning', 'alert-info', 'alert-critical', 'alert-primary');
+            alertModal.classList.add(`alert-${type}`);
+            
+            // Exibir o modal
+            alertModal.classList.remove('hidden');
+            setTimeout(() => {
+                alertModal.classList.add('show');
+                // Focar no botão para melhor acessibilidade
+                confirmBtn.focus();
+            }, 10);
+        }
+        
+        // Função para fechar o modal
+        function closeAlert() {
+            if(!isModalOpen) return;
+            
+            isModalOpen = false;
+            alertModal.classList.remove('show');
+            
+            // Restaurar scroll da página após a animação
+            setTimeout(() => {
+                alertModal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                document.documentElement.style.overflow = '';
+            }, 300);
+        }
+        
+        // Event listeners para fechar o modal
+        confirmBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeAlert();
+        });
+        
+        // Prevenir que o clique no modal feche
+        modalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Processar mensagens Django
+        const djangoMessagesEl = document.getElementById('django-messages');
+        if (djangoMessagesEl) {
+            try {
+                const messages = JSON.parse(djangoMessagesEl.getAttribute('data-messages'));
+                
+                messages.forEach(msg => {
+                    let type = 'info';
+                    let tags = msg.tags.toLowerCase();
+                    
+                    if (tags.includes('success')) {
+                        type = 'success';
+                    } else if (tags.includes('error') || tags.includes('danger')) {
+                        type = 'error';
+                    } else if (tags.includes('warning')) {
+                        type = 'warning';
+                    } else if (tags.includes('critical')) {
+                        type = 'critical';
+                    } else if (tags.includes('primary')) {
+                        type = 'primary';
+                    }
+                    
+                    let title = '';
+                    switch(type) {
+                        case 'success': title = 'Sucesso!'; break;
+                        case 'error': title = 'Erro!'; break;
+                        case 'warning': title = 'Atenção!'; break;
+                        case 'critical': title = 'Crítico!'; break;
+                        case 'primary': title = 'Informação'; break;
+                        default: title = 'Mensagem';
+                    }
+                    
+                    showAlert(type, title, msg.message);
+                });
+                
+                // Remover o elemento após processar as mensagens
+                djangoMessagesEl.remove(); 
+            } catch (e) {
+                console.error('Erro ao processar mensagens Django:', e);
+            }
+        }
+        
+        // Expor a função showAlert globalmente
+        window.showAlert = showAlert;
+        window.closeAlert = closeAlert;
+    });
+</script>

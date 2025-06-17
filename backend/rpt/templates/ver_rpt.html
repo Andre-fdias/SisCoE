@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% load messages_tag %}
 {% block title %} Consultar RPT Interno{% endblock %}
 
 <style>
@@ -19,7 +21,7 @@
 
 <body class="bg-gray-50">
     <div class="md:items-center md:justify-between rounded-lg mt-42 w-full" id="area-impressao">
-    
+    {% military_messages %}
     <!-- Cabeçalho -->
     <fieldset class="p-4  rounded-md w-full">
         <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg  border-0">

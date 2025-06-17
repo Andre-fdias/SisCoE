@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% load custom_filters %}
+
+{% load messages_tag %}
 {% block 'title' %} Histórico RPT{% endblock %}
 {% block 'head' %}
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css" />
@@ -80,15 +82,7 @@ h3 {
 <br>
 <div class="container-fluid" id="his_mov">
     <fieldset>
-        <legend>
-            {% if messages %}
-            {% for message in messages %}
-                <section class="alert {{ message.tags }}">
-                    {{ message }}
-                </section>
-            {% endfor %}
-            {% endif %}
-        </legend>
+{% military_messages %}
         <div id="01" class="row">
             <div class="col-12 highlighted-div bg-lightblue">
                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between">

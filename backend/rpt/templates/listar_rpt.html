@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% load messages_tag %}
 {% block title %} Consultar RPT{% endblock %}
 
 {% block 'body' %}
@@ -32,15 +34,7 @@
         </fieldset>
 
         <!-- Mensagens -->
-        {% if messages %}
-        <div class="mb-4">
-            {% for message in messages %}
-            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags %}{{ message.tags }}{% endif %}" role="alert">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+ {% military_messages %}
         <!-- Tabela -->
         <fieldset class="p-4 mb-2 rounded-md w-full">
             <fieldset class="bg-gray-100 rounded-md shadow-lg mb-2 border-0">

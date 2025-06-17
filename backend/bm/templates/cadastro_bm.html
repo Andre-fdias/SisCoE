@@ -1,9 +1,10 @@
 
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %} Cadastrar BCM{% endblock %}
 
-
+{% load messages_tag %}
 {% block 'body' %}
 
 
@@ -28,19 +29,11 @@
                 </div>
             </div>
         </fieldset>
-
+{% military_messages %}
 
     <form class="row g-3 needs-validation" novalidate action="{% url 'bm:cadastrar_bm' %}" method="POST" enctype="multipart/form-data">  {% csrf_token %}
         <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
-            <legend  class=" mb-2 rounded-md w-full" >
-                {% if messages %}
-                {% for message in messages %}
-                    <section class="alert {{ message.tags }} p-4 mb-4 rounded-md">
-                        {{ message }}
-                    </section>
-                {% endfor %}
-                {% endif %}
-            </legend>
+
             <div class="space-y-6">
                 <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados Pessoais</h2>
                 <hr class="border-t border-gray-100">
@@ -408,14 +401,14 @@
             </div>
 
             <!-- Coluna 2 - Motivo da Alteração (50%) -->
-            <div class="space-y-4 ms-8">
+            <div class="space-y-4 ms-8 w-full">
                 <h3 class="ms-4 text-xs font-semibold text-gray-500 uppercase tracking-widest">Motivo da Alteração</h3>
                 <div class="grid grid-cols-1 gap-4">
                     <div class="space-y-2">
                         <label class="ms-4 block text-xs font-medium text-gray-500 uppercase tracking-wide mb-8"></label>
-                        <div class="relative w-1/2"> <!-- Alterado para ocupar 1/2 da largura -->
+                        <div class="relative w-full"> <!-- Alterado para ocupar 1/2 da largura -->
                             <select name="alteracao" id="alteracao" 
-                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                    class="w-3/4 pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                            shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                            transition-all duration-200 appearance-none
                                            hover:border-gray-300 text-gray-700 font-medium
@@ -456,17 +449,17 @@ function previewImage(event) {
 </script>
 
 <!-- Motivo da Alteração -->
-<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+<fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm ">
     <div class="space-y-6">
         <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Motivo da Alteração</h2>
         <hr class="border-t border-gray-100">
         
-        <div class="grid grid-cols-1 gap-4">
+        <div class="grid grid-cols-1 gap-4 w-full" >
             <div class="space-y-2">
                 <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Selecione o Motivo</label>
                 <div class="relative">
                     <select name="alteracao" id="alteracao" 
-                            class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                            class="w-2/5 pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                    shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                    transition-all duration-200 appearance-none
                                    hover:border-gray-300 text-gray-700 font-medium
