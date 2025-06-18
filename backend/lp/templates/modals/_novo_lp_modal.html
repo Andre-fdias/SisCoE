@@ -1,3 +1,4 @@
+{% load lp_filters %}
 <div id="novoLPModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 transition-all duration-300">
         <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-800 rounded-t-2xl">
@@ -14,68 +15,45 @@
                     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados da Licença Prêmio</h2>
                     <hr class="border-t border-gray-100">
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="numero_lp" class="block text-sm font-medium text-gray-700">Número da LP *</label>
-                            <select name="numero_lp" id="numero_lp" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                {% for value, label in n_choices %}
-                                    <option value="{{ value }}" {% if initial_data.numero_lp == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                            <div id="error_numero_lp" class="text-red-600 text-sm mt-1"></div>
-                        </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <div>
-                            <label for="data_inicio_periodo" class="block text-sm font-medium text-gray-700">Início do Período Aquisitivo *</label>
-                            <input type="date" name="data_inicio_periodo" id="data_inicio_periodo" required
-                                value="{{ initial_data.data_inicio_periodo|date:'Y-m-d' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">Data de início da contagem dos 5 anos para este bloco.</p>
-                            <div id="error_data_inicio_periodo" class="text-red-600 text-sm mt-1"></div>
-                        </div>
-                    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Próximo Número LP</label>
+        <input type="text" value="{{ lp.numero_prox_lp }}" readonly
+            class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data de Fechamento do Bloco Aquisitivo *</label>
-                            <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
-                                value="{{ initial_data.data_ultimo_lp|date:'Y-m-d' }}"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">Esta é a data em que o bloco de 5 anos se completa.</p>
-                            <div id="error_data_ultimo_lp" class="text-red-600 text-sm mt-1"></div>
-                        </div>
-                        <div>
-                            <label for="dias_desconto_lp" class="block text-sm font-medium text-gray-700">Dias de Desconto (se houver) *</label>
-                            <input type="number" name="dias_desconto_lp" id="dias_desconto_lp" value="{{ initial_data.dias_desconto_lp|default:0 }}" required min="0"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">Dias que não contaram como efetivo exercício e devem ser compensados.</p>
-                            <div id="error_dias_desconto_lp" class="text-red-600 text-sm mt-1"></div>
-                        </div>
-                    </div>
+    <div>
+        <label for="data_inicio_periodo" class="block text-sm font-medium text-gray-700">Início do Período Aquisitivo *</label>
+        <input type="date" name="data_inicio_periodo" id="data_inicio_periodo" required
+            value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|add_days:1|date:'Y-m-d' }}{% elif lp.proximo_lp %}{{ lp.proximo_lp|date:'Y-m-d' }}{% else %}{{ data_inicio_periodo_lp|date:'Y-m-d' }}{% endif %}"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <p class="text-xs text-gray-500 mt-1">Data de início da contagem dos 5 anos para este bloco.</p>
+        <div id="error_data_inicio_periodo" class="text-red-600 text-sm mt-1"></div>
+    </div>
+</div>
 
-                    <!-- Campos de Saída Calculados (para exibição) -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="numero_prox_lp_output" class="block text-sm font-medium text-gray-700">Próximo Número LP</label>
-                            <input type="text" id="numero_prox_lp_output" value="{{ initial_data.numero_prox_lp|default:'N/A' }}" readonly
-                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label for="proximo_lp_output" class="block text-sm font-medium text-gray-700">Previsão Próximo Período</label>
-                            <input type="date" id="proximo_lp_output" value="{{ initial_data.proximo_lp|date:'Y-m-d' }}" readonly
-                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label for="mes_proximo_lp_output" class="block text-sm font-medium text-gray-700">Mês/Ano Próximo LP</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="mes_proximo_lp_output" value="{{ initial_data.mes_proximo_lp|default:'N/A' }}" readonly
-                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-                                <input type="text" id="ano_proximo_lp_output" value="{{ initial_data.ano_proximo_lp|default:'N/A' }}" readonly
-                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-                            </div>
-                        </div>
-                    </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Próximo Número LP</label>
+        <input type="text" value="{{ lp.numero_prox_lp|add:1 }}" readonly {# Alterado aqui #}
+            class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+    </div>
+    <div>
+        <label for="proximo_lp_output" class="block text-sm font-medium text-gray-700">Previsão Próximo Período</label>
+        <input type="date" id="proximo_lp_output" value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|add_days:1826|date:'Y-m-d' }}{% else %}{{ data_fim_periodo_lp|add_days:1|date:'Y-m-d' }}{% endif %}" readonly
+            class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+    </div>
+    <div>
+        <label for="mes_proximo_lp_output" class="block text-sm font-medium text-gray-700">Mês/Ano Próximo LP</label>
+        <div class="flex gap-2">
+            <input type="text" id="mes_proximo_lp_output" value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|add_days:1826|date:'m' }}{% else %}{{ data_fim_periodo_lp|add_days:1|date:'m' }}{% endif %}" readonly
+                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+            <input type="text" id="ano_proximo_lp_output" value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|add_days:1826|date:'Y' }}{% else %}{{ data_fim_periodo_lp|add_days:1|date:'Y' }}{% endif %}" readonly
+                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+        </div>
+    </div>
+</div>
                 </div>
             </fieldset>
 
@@ -202,22 +180,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // é altamente recomendado que esses cálculos sejam feitos no backend e retornados via AJAX.
     // Esta função JS é uma simulação simplificada.
     function updateCalculatedFields() {
-        const dataUltimoLpInput = document.getElementById('data_ultimo_lp');
-        const numeroLpSelect = document.getElementById('numero_lp');
-        const dataInicioPeriodoInput = document.getElementById('data_inicio_periodo'); // Novo campo
+        // Os campos 'data_ultimo_lp' e 'numero_lp' não estão presentes no HTML fornecido no modal
+        // para serem alterados dinamicamente. O 'numero_prox_lp' já é renderizado via Django.
+        // Se 'numero_lp' refere-se ao lp.numero_prox_lp, ele já vem do backend.
+        // Se a intenção é que este campo seja um *input* e não apenas exibição,
+        // a lógica precisaria ser alterada para capturar o valor de um <input> e não de um <select>.
 
-        const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
-        const proximoLpOutput = document.getElementById('proximo_lp_output');
+        // A linha abaixo busca por um elemento com ID 'data_ultimo_lp', que não existe no seu HTML
+        // const dataUltimoLpInput = document.getElementById('data_ultimo_lp');
+        // A linha abaixo busca por um elemento com ID 'numero_lp', que não existe no seu HTML
+        // const numeroLpSelect = document.getElementById('numero_lp');
+        
+        const dataInicioPeriodoInput = document.getElementById('data_inicio_periodo');
+
+        // Esses IDs também não existem no HTML fornecido, eles são 'numero_prox_lp' e 'proximo_lp_output'
+        // const numeroProxLpOutput = document.getElementById('numero_prox_lp_output');
+        // const proximoLpOutput = document.getElementById('proximo_lp_output');
+
         const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
         const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
 
-        let numeroLP = parseInt(numeroLpSelect.value) || 0;
-        let dataUltimoLP = dataUltimoLpInput.value;
-        let dataInicioPeriodo = dataInicioPeriodoInput.value; // Pega o valor do novo campo
+        // Se você quiser que o campo "Próximo Número LP" seja atualizado dinamicamente via JS
+        // (além da atualização inicial via Django), você precisaria de um input para o número base
+        // ou uma forma de obtê-lo. No momento, o valor já é calculado no backend e exibido.
+        // A linha abaixo seria relevante se você tivesse um campo de entrada para o número da LP.
+        // let numeroLP = parseInt(numeroLpSelect.value) || 0; 
 
-        if (dataInicioPeriodo) { // A lógica de cálculo deve começar a partir do `data_inicio_periodo`
+        // O valor lp.numero_prox_lp|add:1 já vem calculado do backend no HTML.
+        // Se a intenção é que o campo 'Próximo Número LP' no bloco "Campos de Saída Calculados"
+        // também seja atualizado via JS com base na 'data_inicio_periodo', ele precisaria de um ID diferente
+        // para não conflitar com o primeiro campo de exibição.
+        // Por enquanto, o foco é na data de previsão.
+        
+        let dataInicioPeriodo = dataInicioPeriodoInput.value;
+
+        if (dataInicioPeriodo) {
             try {
-                const dataBaseCalculo = new Date(dataInicioPeriodo);
+                const dataBaseCalculo = new Date(dataInicioPeriodo + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
                 
                 // Calcula a data de fechamento do bloco base (5 anos a partir do início do período)
                 const dataFechamentoBlocoBase = new Date(dataBaseCalculo);
@@ -228,29 +227,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 const proximoLpDate = new Date(dataFechamentoBlocoBase);
                 proximoLpDate.setDate(proximoLpDate.getDate() + 1);
 
-                numeroProxLpOutput.value = numeroLP + 1;
-                proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0];
-                mesProximoLpOutput.value = proximoLpDate.getMonth() + 1;
-                anoProximoLpOutput.value = proximoLpDate.getFullYear();
+                // No HTML fornecido, 'proximo_lp_output' e 'numero_prox_lp_output' estão no segundo bloco
+                // (Campos de Saída Calculados).
+                // O primeiro "Próximo Número LP" já é renderizado via Django com o valor lp.numero_prox_lp|add:1.
+                // Se você quer que o JS atualize o campo "Próximo Número LP" no segundo bloco,
+                // você precisaria que ele tivesse um ID para ser acessado.
+                // Exemplo: document.getElementById('numero_prox_lp_output_js').value = numeroLP + 1;
+                // E no HTML: <input type="text" id="numero_prox_lp_output_js" ...>
+
+                // Atualizando os campos de data calculados
+                // Verifique se 'proximo_lp_output' e 'mes_proximo_lp_output' existem antes de tentar definir o valor.
+                const proximoLpOutput = document.getElementById('proximo_lp_output');
+                if (proximoLpOutput) {
+                    proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0];
+                }
+                
+                if (mesProximoLpOutput) {
+                    mesProximoLpOutput.value = String(proximoLpDate.getMonth() + 1).padStart(2, '0'); // Garante 2 dígitos
+                }
+                if (anoProximoLpOutput) {
+                    anoProximoLpOutput.value = proximoLpDate.getFullYear();
+                }
+
             } catch (e) {
                 console.error("Erro nos cálculos do front-end:", e);
-                numeroProxLpOutput.value = 'Erro';
-                proximoLpOutput.value = '';
-                mesProximoLpOutput.value = 'Erro';
-                anoProximoLpOutput.value = 'Erro';
+                // numeroProxLpOutput.value = 'Erro'; // Descomente se tiver um ID para este campo
+                if (proximoLpOutput) proximoLpOutput.value = '';
+                if (mesProximoLpOutput) mesProximoLpOutput.value = 'Erro';
+                if (anoProximoLpOutput) anoProximoLpOutput.value = 'Erro';
             }
         } else {
-             numeroProxLpOutput.value = 'N/A';
-             proximoLpOutput.value = '';
-             mesProximoLpOutput.value = 'N/A';
-             anoProximoLpOutput.value = 'N/A';
+            // numeroProxLpOutput.value = 'N/A'; // Descomente se tiver um ID para este campo
+            const proximoLpOutput = document.getElementById('proximo_lp_output');
+            if (proximoLpOutput) proximoLpOutput.value = '';
+            if (mesProximoLpOutput) mesProximoLpOutput.value = 'N/A';
+            if (anoProximoLpOutput) anoProximoLpOutput.value = 'N/A';
         }
     }
     
-    // Disparar atualização se as datas forem alteradas (mesmo que pré-preenchidas)
-    document.getElementById('data_ultimo_lp').addEventListener('change', updateCalculatedFields);
-    document.getElementById('numero_lp').addEventListener('change', updateCalculatedFields);
-    document.getElementById('data_inicio_periodo').addEventListener('change', updateCalculatedFields); // Adicionado listener
-    updateCalculatedFields(); // Chamar uma vez para preencher no carregamento
+    // Disparar atualização se a data de início do período for alterada
+    // Removidas as linhas para 'data_ultimo_lp' e 'numero_lp' pois não são inputs editáveis no HTML fornecido
+    // e o foco é no cálculo a partir da 'data_inicio_periodo'.
+    document.getElementById('data_inicio_periodo').addEventListener('change', updateCalculatedFields);
+    updateCalculatedFields(); // Chamar uma vez para preencher no carregamento inicial, se 'data_inicio_periodo' tiver valor
 });
 </script>

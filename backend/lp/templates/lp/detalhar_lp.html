@@ -296,216 +296,317 @@
             <!-- Licença Prêmio -->
             <div class="p-4 mb-4 rounded-lg w-full max-w-full">
                 <!-- Barra de status -->
-                <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                            </svg>
-                            Informações da Licença Prêmio
-                        </div>
-                    </h3>
                 
-                    <!-- Barra de Progresso Moderna -->
-                    <div class="progress-container bg-gray-50 rounded-xl p-6 mb-4">
-                        <div class="relative w-full mb-2">
-                            <!-- Linha de fundo -->
-                            <div class="progress-bg absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 -translate-y-1/2 z-0 rounded-full"></div>
-                            
-                            <!-- Linha de progresso ativa -->
-                            <div class="progress-active absolute top-1/2 left-0 h-1.5 bg-blue-500 -translate-y-1/2 z-10 rounded-full transition-all duration-500 ease-in-out"
-                                style="width: {{ lp.get_progress_percentage }}%;"></div>
-                            
-                            <!-- Passos -->
-                            <div class="relative flex justify-between z-20">
-                                {% for status_key, status_label in StatusLP_choices %}
-                                <div class="step flex flex-col items-center w-full">
-                                    <div class="progress-indicator w-6 h-6 rounded-full flex items-center justify-center relative
-                                                {% if lp.get_progress_percentage_by_status > forloop.counter0 %}bg-blue-900 text-white
-                                                {% elif lp.status_lp == status_key %}bg-white border-[3px] border-blue-800 text-blue-600
-                                                {% else %}bg-white border border-gray-200 text-gray-500{% endif %}
-                                                {% if status_key == 'apta_concessao' %}ring-2 ring-offset-2 ring-green-500{% endif %}">
-                                        {% if lp.get_progress_percentage_by_status > forloop.counter0 %}
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                        {% else %}
-                                        <span class="text-[10px]">{{ forloop.counter }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="progress-label mt-2 text-xs text-center max-w-[90px] px-1 leading-tight
-                                                {% if lp.get_progress_percentage_by_status >= forloop.counter0 %}text-blue-800 font-medium
-                                                {% else %}text-gray-600{% endif %}
-                                                {% if status_key == 'apta_concessao' %}font-bold text-green-700{% endif %}">
-                                        {{ status_label }}
-                                        {% if status_key == 'apta_concessao' and lp.status_lp == 'apta_concessao' %}
-                                        <span class="animate-pulse">✨</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        
-                        <!-- Mensagem especial para LP apta -->
-                        {% if lp.status_lp == 'apta_concessao' %}
-                        <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="text-green-700 font-medium">Esta LP está apta para concessão!</span>
-                        </div>
+<style>
+    /* Estilos da barra de progresso (adaptados do adicional) */
+    .progress-bar-container {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .progress-track {
+        background-color: #d1d1d1;
+        height: 10px;
+        width: 100%;
+        position: relative;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        background-color: #1a6fc9;
+        height: 100%;
+        width: 0%;
+        border-radius: 5px;
+        transition: width 0.3s ease-in-out;
+    }
+    
+    .progress-steps {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transform: translateY(-50%);
+        padding: 0;
+        list-style: none;
+    }
+    
+    .progress-step {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .step-indicator {
+        background-color: #fff;
+    }
+
+    /* Adicione estas classes para o efeito de brilho se ainda não tiver */
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } /* green-500 */
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .faz-jus-glow {
+        animation: pulse-glow 2s infinite;
+    }
+</style>
+
+<fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            Informações da Licença Prêmio
+        </div>
+    </h3>
+
+    <div class="progress-container bg-gray-50 rounded-xl p-6 mb-4" data-status="{{ lp.status_lp }}">
+        <div class="relative w-full mb-2">
+            <div class="progress-bg absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 -translate-y-1/2 z-0 rounded-full"></div>
+            
+            <div class="progress-active absolute top-1/2 left-0 h-1.5 bg-blue-500 -translate-y-1/2 z-10 rounded-full transition-all duration-500 ease-in-out"
+                style="width: {{ lp.get_progress_percentage }}%;"></div>
+            
+            <div class="relative flex justify-between z-20">
+                {% for status_key, status_label in StatusLP_choices %}
+                <div class="step flex flex-col items-center w-full">
+                    <div class="progress-indicator w-6 h-6 rounded-full flex items-center justify-center relative
+                                {% if lp.get_progress_percentage_by_status > forloop.counter0 %}bg-blue-900 text-white
+                                {% elif lp.status_lp == status_key %}bg-white border-[3px] border-blue-800 text-blue-600
+                                {% else %}bg-white border border-gray-200 text-gray-500{% endif %}
+                                {% if status_key == 'apta_concessao' %}ring-2 ring-offset-2 ring-green-500{% endif %}">
+                        {% if lp.get_progress_percentage_by_status > forloop.counter0 %}
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {% else %}
+                        <span class="text-[10px]">{{ forloop.counter }}</span>
                         {% endif %}
-
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                // Funções para mostrar/ocultar o campo da 6ª parte no modal de LP
-                                window.toggleSextaParteLp = function() {
-                                    const numeroProxLpSelect = document.getElementById('numero_prox_lp_select');
-                                    const sextaParteContainerLp = document.getElementById('sexta_parte_container_lp');
-                                    const sextaParteCheckboxLp = document.getElementById('sexta_parte_lp_checkbox');
-                                    const numeroProx = numeroProxLpSelect ? parseInt(numeroProxLpSelect.value) : null;
-
-                                    if (!isNaN(numeroProx) && numeroProx === 4) {
-                                        sextaParteContainerLp.classList.remove('hidden');
-                                    } else {
-                                        sextaParteContainerLp.classList.add('hidden');
-                                        sextaParteCheckboxLp.checked = false;
-                                    }
-                                }
-
-                                // Função para exibir mensagens de alerta customizadas
-                                window.showAlertMessage = function(message, type) {
-                                    const alertDiv = document.getElementById('customAlert');
-                                    const alertIcon = document.getElementById('customAlertIcon');
-                                    const alertMessage = document.getElementById('customAlertMessage');
-
-                                    alertDiv.classList.remove('alert-success', 'alert-error', 'alert-info');
-                                    alertDiv.classList.add(`alert-${type}`);
-
-                                    let iconSvg = '';
-                                    if (type === 'success') {
-                                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                                    } else if (type === 'error') {
-                                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                                    } else {
-                                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
-                                    }
-                                    alertIcon.innerHTML = iconSvg;
-                                    alertMessage.innerText = message;
-
-                                    alertDiv.classList.remove('hidden');
-                                    setTimeout(() => {
-                                        alertDiv.classList.add('hidden');
-                                    }, 5000);
-                                }
-
-
-                                // Lógica para a barra de progresso (adaptada do adicional)
-                                function atualizarBarraProgresso() {
-                                    let statusChoicesRaw = '';
-                                    try {
-                                        statusChoicesRaw = document.getElementById('lp_status_choices').textContent;
-                                    } catch (e) {
-                                        console.error("Erro ao obter textContent de 'lp_status_choices':", e);
-                                        return;
-                                    }
-                                    
-                                    let statusChoices = [];
-                                    try {
-                                        statusChoices = JSON.parse(statusChoicesRaw);
-                                    } catch (e) {
-                                        console.error("Erro ao analisar JSON de statusChoicesRaw:", e, "\nConteúdo bruto:", statusChoicesRaw);
-                                        return;
-                                    }
-
-                                    const statusOrder = {};
-                                    statusChoices.forEach((item, index) => {
-                                        statusOrder[item[0]] = index;
-                                    });
-
-                                    const statusAtual = "{{ lp.status_lp }}";
-                                    const etapaAtualIndex = statusOrder[statusAtual] || 0;
-                                    const totalEtapas = Object.keys(statusOrder).length;
-                                    
-                                    const progresso = (etapaAtualIndex / (totalEtapas - 1)) * 100;
-                                    document.querySelector('.progress-active').style.width = `${progresso}%`;
-                                    
-                                    if (statusAtual === 'apta_concessao') {
-                                        document.querySelector('.progress-active').classList.add('bg-green-500');
-                                    } else {
-                                        document.querySelector('.progress-active').classList.remove('bg-green-500');
-                                    }
-                                    
-                                    document.querySelectorAll('.step').forEach((step, index) => {
-                                        const indicator = step.querySelector('.progress-indicator');
-                                        const label = step.querySelector('.progress-label');
-                                        
-                                        indicator.className = 'progress-indicator w-6 h-6 rounded-full flex items-center justify-center relative';
-                                        label.className = 'progress-label mt-2 text-xs text-center max-w-[90px] px-1 leading-tight';
-                                        
-                                        const statusKeyAtStep = statusChoices[index][0];
-
-                                        if (etapaAtualIndex > index) {
-                                            indicator.classList.add('bg-blue-900', 'text-white');
-                                            indicator.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                            </svg>`;
-                                            label.classList.add('text-blue-800');
-                                        } else if (etapaAtualIndex === index) {
-                                            indicator.classList.add('bg-white', 'border-[3px]', 'border-blue-800', 'text-blue-600');
-                                            indicator.innerHTML = `<span class="text-[10px]">${index + 1}</span>`;
-                                            label.classList.add('text-blue-800');
-                                        } else {
-                                            indicator.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
-                                            indicator.innerHTML = `<span class="text-[10px]">${index + 1}</span>`;
-                                            label.classList.add('text-gray-600');
-                                        }
-                                        
-                                        if (statusKeyAtStep === 'apta_concessao') {
-                                            indicator.classList.add('ring-2', 'ring-offset-2', 'ring-green-500');
-                                            label.classList.add('font-bold', 'text-green-700');
-                                            if (statusAtual === 'apta_concessao' && etapaAtualIndex === index) {
-                                                 indicator.classList.add('faz-jus-glow');
-                                            }
-                                        }
-                                    });
-                                }
-                            
-                                atualizarBarraProgresso();
-                                
-                                setInterval(function() {
-                                    fetch(window.location.href)
-                                        .then(response => response.text())
-                                        .then(html => {
-                                            const parser = new DOMParser();
-                                            const doc = parser.parseFromString(html, 'text/html');
-                                            const parsedDivStatus = doc.querySelector('div[data-status]'); // Seleciona o div principal com data-status
-                                            const originalStatus = "{{ lp.status_lp }}";
-                                            let novoStatus = null;
-
-                                            if (parsedDivStatus && parsedDivStatus.dataset.status && parsedDivStatus.dataset.status !== originalStatus) {
-                                                novoStatus = parsedDivStatus.dataset.status;
-                                            }
-                                            
-                                            if (novoStatus && novoStatus !== originalStatus) {
-                                                if (novoStatus === 'apta_concessao') {
-                                                    showAlertMessage('O status foi atualizado para Apta para Concessão!', 'success');
-                                                }
-                                                location.reload();
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Erro ao verificar atualização de status:', error);
-                                        });
-                                }, 300000); // 5 minutos em milissegundos
-                            });
-                        </script>
-                        <script id="lp_status_choices" type="application/json">
-                            {{ StatusLP_choices_json|safe }}
-                        </script>
                     </div>
-                </fieldset>
+                    <div class="progress-label mt-2 text-xs text-center max-w-[90px] px-1 leading-tight
+                                {% if lp.get_progress_percentage_by_status >= forloop.counter0 %}text-blue-800 font-medium
+                                {% else %}text-gray-600{% endif %}
+                                {% if status_key == 'apta_concessao' %}font-bold text-green-700{% endif %}">
+                        {{ status_label }}
+                        {% if status_key == 'apta_concessao' and lp.status_lp == 'apta_concessao' %}
+                        <span class="animate-pulse">✨</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if lp.status_lp == 'apta_concessao' %}
+        <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-green-700 font-medium">Esta LP está apta para concessão!</span>
+        </div>
+        {% endif %}
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Funções para mostrar/ocultar o campo da 6ª parte no modal de LP (manter, se usado)
+                window.toggleSextaParteLp = function() {
+                    const numeroProxLpSelect = document.getElementById('numero_prox_lp_select');
+                    const sextaParteContainerLp = document.getElementById('sexta_parte_container_lp');
+                    const sextaParteCheckboxLp = document.getElementById('sexta_parte_lp_checkbox');
+                    const numeroProx = numeroProxLpSelect ? parseInt(numeroProxLpSelect.value) : null;
+
+                    if (!isNaN(numeroProx) && numeroProx === 4) { // Assumindo que 4 é a LP que habilita 6ª parte
+                        sextaParteContainerLp.classList.remove('hidden');
+                    } else {
+                        sextaParteContainerLp.classList.add('hidden');
+                        if(sextaParteCheckboxLp) { // Verificar se o checkbox existe antes de tentar desmarcá-lo
+                            sextaParteCheckboxLp.checked = false;
+                        }
+                    }
+                }
+
+                // Função para exibir mensagens de alerta customizadas (manter, se usado)
+                window.showAlertMessage = function(message, type) {
+                    const alertDiv = document.getElementById('customAlert'); // Certifique-se que você tem este div no seu base.html ou em detalhar_lp.html
+                    if (!alertDiv) {
+                        console.warn("Elemento #customAlert não encontrado. A mensagem de alerta não será exibida.");
+                        alert(message); // Fallback para alert padrão
+                        return;
+                    }
+                    const alertIcon = alertDiv.querySelector('#customAlertIcon');
+                    const alertMessage = alertDiv.querySelector('#customAlertMessage');
+
+                    alertDiv.classList.remove('alert-success', 'alert-error', 'alert-info', 'hidden');
+                    // Remover classes de cor antigas para evitar conflitos
+                    alertDiv.classList.remove('bg-green-100', 'border-green-400', 'text-green-800',
+                                            'bg-red-100', 'border-red-400', 'text-red-800',
+                                            'bg-blue-100', 'border-blue-400', 'text-blue-800');
+
+                    let iconSvg = '';
+                    if (type === 'success') {
+                        alertDiv.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    } else if (type === 'error') {
+                        alertDiv.classList.add('bg-red-100', 'border-red-400', 'text-red-800');
+                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    } else { // info ou default
+                        alertDiv.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-800');
+                        iconSvg = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    }
+                    if (alertIcon) alertIcon.innerHTML = iconSvg;
+                    if (alertMessage) alertMessage.innerText = message;
+
+                    alertDiv.classList.remove('hidden');
+                    setTimeout(() => {
+                        alertDiv.classList.add('hidden');
+                    }, 5000);
+                }
+
+
+                // Lógica para a barra de progresso
+                function atualizarBarraProgresso() {
+                    let statusChoicesRaw = '';
+                    try {
+                        // Certifique-se de que o ID 'lp_status_choices' existe e está corretamente preenchido
+                        const lpStatusChoicesElement = document.getElementById('lp_status_choices');
+                        if (!lpStatusChoicesElement) {
+                            console.error("Elemento 'lp_status_choices' não encontrado. Não é possível atualizar a barra de progresso.");
+                            return;
+                        }
+                        statusChoicesRaw = lpStatusChoicesElement.textContent;
+                    } catch (e) {
+                        console.error("Erro ao obter textContent de 'lp_status_choices':", e);
+                        return;
+                    }
+                    
+                    let statusChoices = [];
+                    try {
+                        statusChoices = JSON.parse(statusChoicesRaw);
+                    } catch (e) {
+                        console.error("Erro ao analisar JSON de statusChoicesRaw:", e, "\nConteúdo bruto:", statusChoicesRaw);
+                        return;
+                    }
+
+                    // A partir daqui, a ordem dos status no JavaScript será a mesma que a ordem
+                    // definida na classe StatusLP em models.py (passada via StatusLP_choices_json).
+                    const statusOrder = {};
+                    statusChoices.forEach((item, index) => {
+                        statusOrder[item[0]] = index; // Mapeia 'key' para 'index' (0-based)
+                    });
+
+                    const statusAtual = "{{ lp.status_lp }}";
+                    const etapaAtualIndex = statusOrder[statusAtual] !== undefined ? statusOrder[statusAtual] : 0; // Garante 0 se não encontrado
+                    const totalEtapas = Object.keys(statusOrder).length;
+                    
+                    let progresso = 0;
+                    if (totalEtapas > 1) {
+                         // Calcula a porcentagem do progresso baseado no índice 0 até o totalEtapas - 1
+                        progresso = (etapaAtualIndex / (totalEtapas - 1)) * 100;
+                    } else if (totalEtapas === 1) {
+                        progresso = 100; // Se houver apenas 1 etapa, sempre 100%
+                    }
+                    
+                    document.querySelector('.progress-active').style.width = `${progresso}%`;
+                    
+                    // Destaque da barra ativa para "apta_concessao"
+                    const progressActiveElement = document.querySelector('.progress-active');
+                    if (progressActiveElement) {
+                        if (statusAtual === 'apta_concessao') {
+                            progressActiveElement.classList.add('bg-green-500');
+                            progressActiveElement.classList.remove('bg-blue-500'); // Garante que a cor azul seja removida
+                        } else {
+                            progressActiveElement.classList.remove('bg-green-500');
+                            progressActiveElement.classList.add('bg-blue-500'); // Volta para azul se não for apta
+                        }
+                    }
+
+                    document.querySelectorAll('.step').forEach((step, index) => {
+                        const indicator = step.querySelector('.progress-indicator');
+                        const label = step.querySelector('.progress-label');
+                        
+                        // Reset classes before applying new ones to avoid stale styles
+                        indicator.className = 'progress-indicator w-6 h-6 rounded-full flex items-center justify-center relative';
+                        label.className = 'progress-label mt-2 text-xs text-center max-w-[90px] px-1 leading-tight';
+                        
+                        const statusKeyAtStep = statusChoices[index] ? statusChoices[index][0] : null;
+
+                        if (etapaAtualIndex > index) {
+                            // Etapa concluída
+                            indicator.classList.add('bg-blue-900', 'text-white');
+                            indicator.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>`;
+                            label.classList.add('text-blue-800', 'font-medium'); // Adicionado font-medium para consistência
+                        } else if (etapaAtualIndex === index) {
+                            // Etapa atual
+                            indicator.classList.add('bg-white', 'border-[3px]', 'border-blue-800', 'text-blue-600');
+                            indicator.innerHTML = `<span class="text-[10px]">${index + 1}</span>`;
+                            label.classList.add('text-blue-800', 'font-medium');
+                        } else {
+                            // Etapas futuras
+                            indicator.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-500');
+                            indicator.innerHTML = `<span class="text-[10px]">${index + 1}</span>`;
+                            label.classList.add('text-gray-600');
+                        }
+                        
+                        // Destaque especial para a etapa 'apta_concessao'
+                        if (statusKeyAtStep === 'apta_concessao') {
+                            indicator.classList.add('ring-2', 'ring-offset-2', 'ring-green-500');
+                            label.classList.add('font-bold', 'text-green-700');
+                            if (statusAtual === 'apta_concessao') { // Aplica glow apenas se o status atual for 'apta_concessao'
+                                indicator.classList.add('faz-jus-glow');
+                            }
+                        }
+                    });
+                }
+            
+                atualizarBarraProgresso();
+                
+                // Monitora mudanças no status da LP periodicamente
+                setInterval(function() {
+                    fetch(window.location.href)
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            // Procura o elemento com o atributo data-status, que agora está no .progress-container
+                            const parsedProgressContainer = doc.querySelector('.progress-container[data-status]'); 
+                            const originalStatus = "{{ lp.status_lp }}";
+                            let novoStatus = null;
+
+                            if (parsedProgressContainer && parsedProgressContainer.dataset.status) {
+                                novoStatus = parsedProgressContainer.dataset.status;
+                            }
+                            
+                            if (novoStatus && novoStatus !== originalStatus) {
+                                if (novoStatus === 'apta_concessao') {
+                                    showAlertMessage('O status foi atualizado para Apta para Concessão!', 'success');
+                                }
+                                // Recarrega a página para que a barra de progresso seja atualizada com novos dados do Django
+                                location.reload(); 
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao verificar atualização de status:', error);
+                            // Pode adicionar um showAlertMessage de erro aqui se desejar
+                        });
+                }, 300000); // 5 minutos em milissegundos (300 * 1000)
+            });
+        </script>
+        <script id="lp_status_choices" type="application/json">
+            {{ StatusLP_choices_json|safe }}
+        </script>
+    </div>
+</fieldset>
                 <!-- Cards de Informações da Licença Prêmio -->
                 <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
                     <!-- Seção Principal de Informações -->
@@ -1160,28 +1261,272 @@
     </div>
 </div>
 {% endif %}
+<div class="flex justify-end mt-8">
+    <button onclick="openConcluirLPModal('{{ lp.pk }}', '{{ lp.cadastro.nome_guerra }}')"
+            class="px-6 py-3 {% if lp.status_lp == 'concluido' %}bg-gray-100 text-green-600 border-2 border-green-500 cursor-not-allowed{% else %}bg-indigo-700 text-white hover:bg-indigo-800{% endif %}
+                    rounded-lg transition-all duration-200 font-medium shadow-md
+                    flex items-center gap-2"
+                    {% if lp.status_lp == 'concluido' %}disabled{% endif %}>
+        {% if lp.status_lp == 'concluido' %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Processo Concluído
+        {% else %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Concluir Processo
+        {% endif %}
+    </button>
+</div>
 
-                        <!-- Botão de Conclusão -->
-                        <div class="flex justify-end mt-8">
-                            <button onclick="openConcluirLPModal('{{ lp.pk }}')"
-                                    class="px-6 py-3 {% if lp.status_lp == 'concluido' %}bg-gray-100 text-green-600 border-2 border-green-500 cursor-not-allowed{% else %}bg-indigo-700 text-white hover:bg-indigo-800{% endif %}
-                                            rounded-lg transition-all duration-200 font-medium shadow-md
-                                            flex items-center gap-2"
-                                            {% if lp.status_lp == 'concluido' %}disabled{% endif %}>
-                                {% if lp.status_lp == 'concluido' %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                    Processo Concluído
-                                {% else %}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                    </svg>
-                                    Concluir Processo
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
+    <!-- Novo botão de Nova LP -->
+    <button onclick="openNovoLPModal('{{ lp.cadastro.id }}')"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
+        <i class="fas fa-plus mr-2"></i> Nova LP
+    </button>
+</div>
+
+<!-- Inclua o modal no final do template -->
+{% include 'modals/_novo_lp_modal.html' with cadastro=lp.cadastro n_choices=n_choices %}
+{% include 'modals/_concluir_lp_modal.html' %}
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const concluirLPModalEl = document.getElementById('concluirLPModal');
+        const formConcluirLP = concluirLPModalEl.querySelector('form');
+        const submitConcluirLPBtn = document.getElementById('submitConcluirLP');
+        const normalStateConcluirLP = document.getElementById('normalStateConcluir'); // Corrigido ID
+        const loadingStateConcluirLP = document.getElementById('loadingStateConcluir'); // Corrigido ID
+        const passwordInputConcluir = document.getElementById('passwordInputConcluir'); // Corrigido ID
+        const passwordErrorConcluir = document.getElementById('passwordErrorConcluir'); // Corrigido ID
+        const dataConclusaoInput = document.getElementById('dataConclusaoInput'); // Adicionado
+        const dataConclusaoError = document.getElementById('dataConclusaoError'); // Adicionado
+
+        // Funções para abrir/fechar o modal de conclusão
+        window.openConcluirLPModal = function(lpPk) {
+            formConcluirLP.action = `{% url 'lp:concluir_lp' pk=lp.pk %}`.replace('{{ lp.pk }}', lpPk);
+            passwordInputConcluir.value = ''; // Limpa o campo de senha
+            passwordErrorConcluir.textContent = ''; // Limpa mensagens de erro
+            passwordInputConcluir.classList.remove('border-red-500'); //
+            dataConclusaoInput.value = ''; // Limpa o campo de data de conclusão
+            dataConclusaoError.textContent = ''; // Limpa mensagens de erro da data
+            concluirLPModalEl.classList.remove('hidden'); //
+            concluirLPModalEl.querySelector('div.transform').classList.remove('scale-95', 'opacity-0'); // Para transição
+            concluirLPModalEl.querySelector('div.transform').classList.add('scale-100', 'opacity-100'); // Para transição
+        };
+
+        window.closeConcluirLPModal = function() {
+            concluirLPModalEl.querySelector('div.transform').classList.remove('scale-100', 'opacity-100'); // Para transição
+            concluirLPModalEl.querySelector('div.transform').classList.add('scale-95', 'opacity-0'); // Para transição
+            setTimeout(() => {
+                concluirLPModalEl.classList.add('hidden');
+            }, 300); // Espera a transição terminar antes de ocultar
+        };
+
+        // Event listener para o formulário de conclusão da LP
+        formConcluirLP.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            passwordErrorConcluir.classList.add('hidden'); //
+            passwordInputConcluir.classList.remove('border-red-500'); //
+            dataConclusaoError.classList.add('hidden'); // Adicionado
+            dataConclusaoInput.classList.remove('border-red-500'); // Adicionado
+
+            normalStateConcluirLP.classList.add('hidden'); //
+            loadingStateConcluirLP.classList.remove('hidden'); //
+            submitConcluirLPBtn.disabled = true; //
+
+            try {
+                const formData = new FormData(formConcluirLP); //
+                
+                const response = await fetch(formConcluirLP.action, { //
+                    method: 'POST', //
+                    body: formData, //
+                    headers: { //
+                        'X-Requested-With': 'XMLHttpRequest', //
+                        'X-CSRFToken': formConcluirLP.querySelector('[name=csrfmiddlewaretoken]').value //
+                    }
+                });
+
+                const data = await response.json(); //
+                
+                if (data.success) { //
+                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
+                    closeConcluirLPModal(); //
+                    // SE A CONCLUSAO FOR BEM SUCEDIDA, ABRE O MODAL DE NOVO LP
+                    // Certifique-se de que 'lp.cadastro.pk' é a variável correta que você quer passar
+                    openNovoLPModal('{{ lp.cadastro.pk }}'); // Passa o ID do cadastro para o novo modal
+                } else { //
+                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
+                    if (data.errors) {
+                        for (const field in data.errors) {
+                            const errorDiv = document.getElementById(`${field}Error`);
+                            const inputField = document.getElementById(field);
+                            if (errorDiv) {
+                                errorDiv.textContent = data.errors[field];
+                                errorDiv.classList.remove('hidden');
+                            }
+                            if (inputField) {
+                                inputField.classList.add('border-red-500');
+                            }
+                        }
+                    } else if (data.alert.message === 'Senha incorreta.' || data.alert.message === 'Senha incorreta para o usuário logado.') { //
+                        passwordErrorConcluir.textContent = data.alert.message; //
+                        passwordErrorConcluir.classList.remove('hidden'); //
+                        passwordInputConcluir.classList.add('border-red-500'); //
+                    }
+                }
+            } catch (error) { //
+                console.error('Erro:', error); //
+                showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.'); //
+            } finally { //
+                normalStateConcluirLP.classList.remove('hidden'); //
+                loadingStateConcluirLP.classList.add('hidden'); //
+                submitConcluirLPBtn.disabled = false; //
+            }
+        });
+
+        // =========================================================
+        // JavaScript para o modal de NOVO LP
+        // Assegure-se de que este script está no template principal (detalhar_lp.html)
+        // e que _novo_lp_modal.html NÃO contenha seu próprio bloco <script>
+
+        const novoLPModal = document.getElementById('novoLPModal'); //
+        const formNovoLP = document.getElementById('formNovoLP'); //
+        const submitNovoLP = formNovoLP.querySelector('#submitNovoLP'); //
+        const normalStateNovoLP = submitNovoLP.querySelector('#normalState'); //
+        const loadingStateNovoLP = submitNovoLP.querySelector('#loadingState'); //
+
+        window.openNovoLPModal = function(cadastroId) { //
+            formNovoLP.reset(); //
+            document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
+            formNovoLP.querySelector('input[name="cadastro_id"]').value = cadastroId; //
+            novoLPModal.classList.remove('hidden'); //
+            novoLPModal.querySelector('div.transition-all').classList.remove('scale-95', 'opacity-0'); // Para transição
+            novoLPModal.querySelector('div.transition-all').classList.add('scale-100', 'opacity-100'); // Para transição
+            updateCalculatedFields(); // Chamar para pré-preencher no carregamento do modal
+        };
+
+        window.closeNovoLPModal = function() { //
+            novoLPModal.querySelector('div.transition-all').classList.remove('scale-100', 'opacity-100'); // Para transição
+            novoLPModal.querySelector('div.transition-all').classList.add('scale-95', 'opacity-0'); // Para transição
+            setTimeout(() => {
+                novoLPModal.classList.add('hidden'); //
+                formNovoLP.reset(); //
+                document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
+            }, 300); // Espera a transição terminar antes de ocultar
+        };
+
+        formNovoLP.addEventListener('submit', async function(e) { //
+            e.preventDefault(); //
+            
+            normalStateNovoLP.classList.add('hidden'); //
+            loadingStateNovoLP.classList.remove('hidden'); //
+            submitNovoLP.disabled = true; //
+            
+            document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
+
+            try {
+                const formData = new FormData(this); //
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; //
+                
+                const response = await fetch(this.action, { //
+                    method: 'POST', //
+                    body: formData, //
+                    headers: { //
+                        'X-Requested-With': 'XMLHttpRequest', //
+                        'X-CSRFToken': csrfToken //
+                    }
+                });
+                
+                const data = await response.json(); //
+                
+                if (response.ok && data.alert && data.alert.type === 'success') { //
+                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
+                    closeNovoLPModal(); //
+                    if (data.redirect_url) { //
+                        window.location.href = data.redirect_url; // Redireciona para a nova LP
+                    } else { //
+                        location.reload(); //
+                    }
+                } else if (data.alert && data.alert.type === 'error') { //
+                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
+                    if (data.errors) { //
+                        for (const field in data.errors) { //
+                            const errorDiv = document.getElementById(`error_${field}`); //
+                            if (errorDiv) { //
+                                errorDiv.textContent = data.errors[field]; //
+                            }
+                        }
+                    }
+                } else { //
+                    showAlert('error', 'Erro Desconhecido!', 'Ocorreu um erro inesperado.'); //
+                }
+            } catch (error) { //
+                console.error('Erro na requisição:', error); //
+                showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.'); //
+            } finally { //
+                normalStateNovoLP.classList.remove('hidden'); //
+                loadingStateNovoLP.classList.add('hidden'); //
+                submitNovoLP.disabled = false; //
+            }
+        });
+
+        // Função de atualização dos campos calculados no front-end
+        window.updateCalculatedFields = function() { // Tornada global
+            const dataInicioPeriodoInput = document.getElementById('data_inicio_periodo'); //
+            const numeroLpSelect = document.getElementById('numero_lp'); //
+
+            const numeroProxLpOutput = document.getElementById('numero_prox_lp_output'); //
+            const proximoLpOutput = document.getElementById('proximo_lp_output'); //
+            const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output'); //
+            const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output'); //
+
+            let numeroLP = parseInt(numeroLpSelect.value) || 0; //
+            let dataInicioPeriodo = dataInicioPeriodoInput.value; //
+
+            if (dataInicioPeriodo) { //
+                try {
+                    const dataBaseCalculo = new Date(dataInicioPeriodo + 'T00:00:00'); // Garante fuso horário
+                    
+                    const dataFechamentoBlocoBase = new Date(dataBaseCalculo); //
+                    dataFechamentoBlocoBase.setFullYear(dataFechamentoBlocoBase.getFullYear() + 5); //
+                    dataFechamentoBlocoBase.setDate(dataFechamentoBlocoBase.getDate() - 1); //
+
+                    const proximoLpDate = new Date(dataFechamentoBlocoBase); //
+                    proximoLpDate.setDate(proximoLpDate.getDate() + 1); //
+
+                    numeroProxLpOutput.value = numeroLP + 1; //
+                    proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0]; //
+                    mesProximoLpOutput.value = (proximoLpDate.getMonth() + 1).toString().padStart(2, '0'); // Formata para 2 dígitos
+                    anoProximoLpOutput.value = proximoLpDate.getFullYear(); //
+                } catch (e) { //
+                    console.error("Erro nos cálculos do front-end:", e); //
+                    numeroProxLpOutput.value = 'Erro'; //
+                    proximoLpOutput.value = ''; //
+                    mesProximoLpOutput.value = 'Erro'; //
+                    anoProximoLpOutput.value = 'Erro'; //
+                }
+            } else { //
+                 numeroProxLpOutput.value = 'N/A'; //
+                 proximoLpOutput.value = ''; //
+                 mesProximoLpOutput.value = 'N/A'; //
+                 anoProximoLpOutput.value = 'N/A'; //
+            }
+        }
+        
+        document.getElementById('data_inicio_periodo').addEventListener('change', updateCalculatedFields); //
+        document.getElementById('numero_lp').addEventListener('change', updateCalculatedFields); //
+        // data_ultimo_lp não precisa mais disparar o cálculo, pois a lógica mudou para data_inicio_periodo
+        // Se houver campos que impactam o cálculo, adicione seus listeners aqui
+        
+        updateCalculatedFields(); // Chamar uma vez para preencher no carregamento inicial da página
+
+    });
+</script>
                 </fieldset>
 
 
@@ -1279,6 +1624,84 @@
                         </table>
                     </div>
                 </fieldset>
+
+                <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.657 0 3 .895 3 2s-1.343 2-3 2-3-.895-3-2 1.343-2 3-2zM21 12c0 1.657-4.03 3-9 3s-9-1.343-9-3 4.03-3 9-3 9 1.343 9 3z"/>
+            </svg>
+            Histórico de Lançamentos
+        </div>
+    </h3>
+
+    {% if historico %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Data da Alteração
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Usuário
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Observações
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Situação (Snapshot)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status (Snapshot)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Nº LP (Snapshot)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Data Último LP (Snapshot)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Próximo LP (Snapshot)
+                        </th>
+                        </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for registro in historico %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.data_alteracao|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.usuario_alteracao.username|default:"Sistema" }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ registro.observacoes_historico|default:"N/A" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.get_situacao_lp_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.get_status_lp_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.numero_lp }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.data_ultimo_lp|date:"d/m/Y"|default:"N/A" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ registro.proximo_lp|date:"d/m/Y"|default:"N/A" }}
+                        </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-600">Nenhum registro de histórico para esta Licença Prêmio.</p>
+    {% endif %}
+</fieldset>
 
                 <!-- Botões Finais -->
 

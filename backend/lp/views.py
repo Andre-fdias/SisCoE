@@ -323,8 +323,19 @@ def buscar_militar_lp(request):
 def ver_lp(request, pk):
     lp = get_object_or_404(LP, pk=pk)
     historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
-
-    # Inicializando variáveis para o período aquisitivo da LP
+    status_lp_choices_json = json.dumps(list(LP.StatusLP.choices))
+    
+    # 1. VERIFICAÇÃO AUTOMÁTICA DE STATUS
+    hoje = timezone.localdate()
+    
+    # Se o status ainda é "aguardando_requisitos" e o período terminou
+    if lp.status_lp == LP.StatusLP.AGUARDANDO_REQUISITOS:
+        if lp.data_fim_periodo_lp and lp.data_fim_periodo_lp <= hoje:
+            # Atualiza o status para "Apta para Concessão"
+            lp.status_lp = LP.StatusLP.APTA_CONCESSAO
+            lp.save()
+    
+    # 2. CÁLCULO DO PERÍODO AQUISITIVO (mantido)
     progresso_periodo_aquisitivo_percentual = 0
     dias_restantes_periodo_lp = 0
     dias_decorridos_periodo_lp = 0
@@ -332,34 +343,21 @@ def ver_lp(request, pk):
     data_inicio_periodo_lp = None
     data_fim_periodo_lp = None
 
-    # Se temos a data do último LP, podemos calcular o período aquisitivo
     if lp.data_ultimo_lp:
-        # O início do período aquisitivo é o dia seguinte ao último LP
         data_inicio_periodo_lp = lp.data_ultimo_lp + timedelta(days=1)
-        
-        # O fim do período aquisitivo é 5 anos depois do início
         data_fim_periodo_lp = data_inicio_periodo_lp + relativedelta(years=5) - timedelta(days=1)
         
-        hoje = timezone.localdate()
-        
-        # Calculando o total de dias do período
-        total_dias_periodo_lp = (data_fim_periodo_lp - data_inicio_periodo_lp).days
-        
-        # Se o período ainda não começou
-        if hoje < data_inicio_periodo_lp:
-            dias_decorridos_periodo_lp = 0
-            dias_restantes_periodo_lp = total_dias_periodo_lp
-        
         # Se o período já terminou
-        elif hoje > data_fim_periodo_lp:
-            dias_decorridos_periodo_lp = total_dias_periodo_lp
+        if hoje > data_fim_periodo_lp:
+            dias_decorridos_periodo_lp = (data_fim_periodo_lp - data_inicio_periodo_lp).days
             dias_restantes_periodo_lp = 0
             progresso_periodo_aquisitivo_percentual = 100
         
         # Se estamos dentro do período
-        else:
+        elif hoje >= data_inicio_periodo_lp:
             dias_decorridos_periodo_lp = (hoje - data_inicio_periodo_lp).days
             dias_restantes_periodo_lp = (data_fim_periodo_lp - hoje).days
+            total_dias_periodo_lp = (data_fim_periodo_lp - data_inicio_periodo_lp).days
             
             if total_dias_periodo_lp > 0:
                 progresso_periodo_aquisitivo_percentual = (dias_decorridos_periodo_lp / total_dias_periodo_lp) * 100
@@ -367,7 +365,7 @@ def ver_lp(request, pk):
     context = {
         'lp': lp,
         'historico_lp': historico_lp,
-        'N_CHOICES': N_CHOICES, # Pode ser útil para algum modal
+        'N_CHOICES': N_CHOICES,
         'current_year': timezone.now().year,
         'progresso_periodo_aquisitivo_percentual': round(progresso_periodo_aquisitivo_percentual, 2),
         'dias_decorridos_periodo_lp': dias_decorridos_periodo_lp,
@@ -375,12 +373,10 @@ def ver_lp(request, pk):
         'total_dias_periodo_lp': total_dias_periodo_lp,
         'data_inicio_periodo_lp': data_inicio_periodo_lp,
         'data_fim_periodo_lp': data_fim_periodo_lp,
-        'StatusLP_choices_json': json.dumps(LP.StatusLP.choices), # Passa as escolhas de status
+        'StatusLP_choices': LP.StatusLP.choices,
+        'StatusLP_choices_json': status_lp_choices_json,
     }
     return render(request, 'lp/detalhar_lp.html', context)
-
-
-
 
 
 @login_required
@@ -596,6 +592,10 @@ def listar_lp(request):
     return render(request, 'lp/listar_lp.html', context)
 
 
+
+
+
+
 @login_required
 @require_POST
 def concluir_lp(request, pk):
@@ -787,6 +787,91 @@ def editar_lp(request, pk):
         logger.exception(f"Erro inesperado ao editar LP {pk}: {e}")
         return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao editar a LP.', 500)
 
+
+@login_required
+@require_POST
+def editar_lp(request, pk):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    lp = get_object_or_404(LP, pk=pk)
+
+    if not is_ajax:
+        messages.error(request, 'Requisição inválida. Por favor, use o formulário de edição.')
+        return redirect('lp:ver_lp', pk=pk)
+
+    try:
+        data = request.POST
+        
+        # Função auxiliar para conversão segura de valores
+        def to_int(value, default=None):
+            try:
+                return int(value) if value not in [None, ''] else default
+            except (ValueError, TypeError):
+                return default
+
+        def to_date(value, default=None):
+            try:
+                return date.fromisoformat(value) if value not in [None, ''] else default
+            except (ValueError, TypeError):
+                return default
+
+        # Obter e converter dados dos campos do formulário
+        lp.numero_lp = to_int(data.get('numero_lp'))
+        lp.data_ultimo_lp = to_date(data.get('data_ultimo_lp'))
+        lp.numero_prox_lp = to_int(data.get('numero_prox_lp'))
+        lp.proximo_lp = to_date(data.get('proximo_lp'))
+        lp.mes_proximo_lp = to_int(data.get('mes_proximo_lp'))
+        lp.ano_proximo_lp = to_int(data.get('ano_proximo_lp'))
+        lp.dias_desconto_lp = to_int(data.get('dias_desconto_lp'), 0)  # Default para 0
+        lp.bol_g_pm_lp = data.get('bol_g_pm_lp') or None
+        lp.data_publicacao_lp = to_date(data.get('data_publicacao_lp'))
+        lp.data_concessao_lp = to_date(data.get('data_concessao_lp'))
+        lp.lancamento_sipa = data.get('lancamento_sipa') == 'on'
+        lp.observacoes = data.get('observacoes', '')
+        lp.situacao_lp = data.get('situacao_lp')
+        lp.status_lp = data.get('status_lp')
+
+        lp.user_updated = request.user
+        lp.data_atualizacao = timezone.now()
+
+        # Lógica de status: se já tem data de concessão e publicação, status vira 'publicado'
+        if lp.data_concessao_lp and lp.data_publicacao_lp:
+            lp.status_lp = LP.StatusLP.PUBLICADO
+        
+        with transaction.atomic():
+            lp.full_clean()  # Validação do modelo
+            lp.save()
+
+            # Registrar histórico
+            HistoricoLP.objects.create(
+                lp=lp,
+                situacao_lp=lp.situacao_lp,
+                status_lp=lp.status_lp,
+                usuario_alteracao=request.user,
+                numero_lp=lp.numero_lp,
+                data_ultimo_lp=lp.data_ultimo_lp,
+                numero_prox_lp=lp.numero_prox_lp,
+                proximo_lp=lp.proximo_lp,
+                mes_proximo_lp=lp.mes_proximo_lp,
+                ano_proximo_lp=lp.ano_proximo_lp,
+                dias_desconto_lp=lp.dias_desconto_lp,
+                bol_g_pm_lp=lp.bol_g_pm_lp,
+                data_publicacao_lp=lp.data_publicacao_lp,
+                data_concessao_lp=lp.data_concessao_lp,
+                lancamento_sipa=lp.lancamento_sipa,
+                observacoes_historico=f"Dados da LP atualizados por {request.user.get_full_name() or request.user.email}"
+            )
+
+        return alert_response('success', 'Sucesso!', 'LP atualizada com sucesso!', reload_page=True)
+        
+    except ValidationError as e:
+        # Erros de validação do modelo ou campos
+        error_messages = e.message_dict if hasattr(e, 'message_dict') else {'__all__': e.messages}
+        logger.warning(f"Erro de validação ao editar LP {pk}: {error_messages}")
+        return alert_response('error', 'Erro de Validação', 'Por favor, corrija os erros no formulário.', 400, errors=error_messages)
+    except Exception as e:
+        logger.exception(f"Erro inesperado ao editar LP {pk}: {e}")
+        return alert_response('error', 'Erro Interno', 'Ocorreu um erro inesperado ao editar a LP.', 500)
+
 @login_required
 @require_POST
 def confirmar_sipa_lp(request, pk):
@@ -801,8 +886,8 @@ def confirmar_sipa_lp(request, pk):
                 return alert_response('error', 'Erro de Validação!', 'A senha é obrigatória.', 400, errors={'password': 'A senha é obrigatória.'})
             messages.error(request, 'A senha é obrigatória.')
             return redirect('lp:ver_lp', pk=lp.pk)
-
-        user = authenticate(request, username=request.user.username, password=password)
+       
+        user = authenticate(request, username=request.user.email, password=password)
 
         if user is None or user != request.user:
             if is_ajax:
@@ -830,7 +915,7 @@ def confirmar_sipa_lp(request, pk):
                 mes_proximo_lp=lp.mes_proximo_lp,
                 ano_proximo_lp=lp.ano_proximo_lp,
                 dias_desconto_lp=lp.dias_desconto_lp,
-                observacoes_historico=f"LP confirmada como lançada no SIPA por {request.user.username}"
+                observacoes_historico=f"LP confirmada como lançada no SIPA por {request.user.email}"
             )
 
         if is_ajax:
@@ -873,6 +958,5 @@ def carregar_dados_sipa_lp(request, pk):
     }
 
     return JsonResponse(data)
-
 
 

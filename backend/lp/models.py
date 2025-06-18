@@ -23,12 +23,10 @@ class LP(models.Model):
     class StatusLP(models.TextChoices):
         AGUARDANDO_REQUISITOS = 'aguardando_requisitos', 'Aguardando Requisitos'
         APTA_CONCESSAO = 'apta_concessao', 'Apta para Concessão'
-        CONCEDIDO = 'concedido', 'Concedido' # Mantido 'concedido' para compatibilidade
-        LANCADO_SIPA = 'lancado_sipa', 'Lançado no SIPA'
-        PUBLICADO = 'publicado', 'Publicado'
+        LANCADO_SIPA = 'lancado_sipa', 'Lançado no SIPA' # Ordem corrigida
+        CONCEDIDO = 'concedido', 'Concedido'             # Ordem corrigida
+        PUBLICADO = 'publicado', 'Publicado'             # Ordem corrigida
         CONCLUIDO = 'concluido', 'Concluído'
-        INDENIZADA = 'indenizada', 'Indenizada' # Adicionei este se você tiver
-        # Adicione outros status conforme a sua necessidade aqui.
 
     cadastro = models.ForeignKey('efetivo.Cadastro', on_delete=models.CASCADE, verbose_name="Cadastro")
     user_created = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='lps_criadas', verbose_name="Criado por")
@@ -39,7 +37,7 @@ class LP(models.Model):
     data_conclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Conclusão")
 
     numero_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Número da LP")
-    data_ultimo_lp = models.DateField(verbose_name="Data do Último LP")
+    data_ultimo_lp = models.DateField(null=True, blank=True, verbose_name="Data do Último LP")
     numero_prox_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Próximo Número da LP", null=True, blank=True)
     proximo_lp = models.DateField(null=True, blank=True, verbose_name="Próximo LP")
     mes_proximo_lp = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Mês do Próximo LP")
@@ -58,12 +56,40 @@ class LP(models.Model):
         default=StatusLP.AGUARDANDO_REQUISITOS,
         verbose_name="Status da LP"
     )
+    _status_order_map = {
+        StatusLP.AGUARDANDO_REQUISITOS: 0,
+        StatusLP.APTA_CONCESSAO: 1,
+        StatusLP.LANCADO_SIPA: 2,
+        StatusLP.CONCEDIDO: 3,
+        StatusLP.PUBLICADO: 4,
+        StatusLP.CONCLUIDO: 5,
+    }
 
+
+    def get_progress_percentage(self):
+        """
+        Retorna a porcentagem de progresso da LP.
+        """
+        current_index = self._status_order_map.get(self.status_lp, 0)
+        total_steps = len(self._status_order_map) # Usar o tamanho do mapa para garantir consistência
+        
+        if total_steps <= 1: 
+            return 100 if current_index == 0 else 0
+        
+        return (current_index / (total_steps - 1)) * 100
+
+    def get_progress_percentage_by_status(self):
+        """
+        Retorna o índice numérico do status atual (baseado em 0).
+        Usado para a lógica de 'maior que forloop.counter0' no template.
+        """
+        return self._status_order_map.get(self.status_lp, 0)
+
+   
     class Meta:
         verbose_name = "Licença Prêmio"
         verbose_name_plural = "Licenças Prêmio"
-        ordering = ['-data_cadastro']
-
+        # ordering = ['sua_ordem_aqui']
     def __str__(self):
         return f"LP {self.numero_lp} - {self.cadastro.nome_de_guerra}"
 
@@ -114,6 +140,13 @@ class LP(models.Model):
             return 0
         
         return (current_index / (len(status_order) - 1)) * 100
+
+    def save(self, *args, **kwargs):
+        # Atualiza o status automaticamente quando o período aquisitivo termina
+        if self.status_lp == self.StatusLP.AGUARDANDO_REQUISITOS:
+            if self.data_fim_periodo_lp and self.data_fim_periodo_lp <= date.today():
+                self.status_lp = self.StatusLP.APTA_CONCESSAO
+        super().save(*args, **kwargs)
 
     @property
     def get_progress_percentage_by_status(self):

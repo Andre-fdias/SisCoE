@@ -18,3 +18,21 @@ def json_message_list(messages):
             'level': message.level,
         })
     return mark_safe(json.dumps(message_list))
+
+from django import template
+from datetime import date, timedelta
+
+@register.filter
+def add_days(value, days):
+    try:
+        return value + timedelta(days=int(days))
+    except (TypeError, ValueError):
+        return value
+    
+
+@register.filter
+def add(value, arg):
+    try:
+        return int(value) + int(arg)
+    except (ValueError, TypeError):
+        return value
