@@ -322,20 +322,33 @@ def buscar_militar_lp(request):
 @login_required
 def ver_lp(request, pk):
     lp = get_object_or_404(LP, pk=pk)
-    historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
-    status_lp_choices_json = json.dumps(list(LP.StatusLP.choices))
     
+    # Histórico da LP específica (alterações nesta LP)
+    historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
+    
+    # Histórico de cadastros de LP para o mesmo militar (apenas LPs concluídas)
+    lps_do_cadastro = LP.objects.filter(cadastro=lp.cadastro)
+    historico_cadastro = HistoricoLP.objects.filter(
+        lp__in=lps_do_cadastro,
+        status_lp='concluido'  # Filtro para status concluído
+    ).order_by('-data_alteracao')
+    
+    status_lp_choices_json = json.dumps(list(LP.StatusLP.choices))
+
     # 1. VERIFICAÇÃO AUTOMÁTICA DE STATUS
     hoje = timezone.localdate()
     
-    # Se o status ainda é "aguardando_requisitos" e o período terminou
     if lp.status_lp == LP.StatusLP.AGUARDANDO_REQUISITOS:
-        if lp.data_fim_periodo_lp and lp.data_fim_periodo_lp <= hoje:
-            # Atualiza o status para "Apta para Concessão"
+        data_fim_periodo_lp_calculated = None
+        if lp.data_ultimo_lp:
+            data_inicio_periodo_lp_calculated = lp.data_ultimo_lp + timedelta(days=1)
+            data_fim_periodo_lp_calculated = data_inicio_periodo_lp_calculated + relativedelta(years=5) - timedelta(days=1)
+
+        if data_fim_periodo_lp_calculated and data_fim_periodo_lp_calculated <= hoje:
             lp.status_lp = LP.StatusLP.APTA_CONCESSAO
             lp.save()
     
-    # 2. CÁLCULO DO PERÍODO AQUISITIVO (mantido)
+    # 2. CÁLCULO DO PERÍODO AQUISITIVO
     progresso_periodo_aquisitivo_percentual = 0
     dias_restantes_periodo_lp = 0
     dias_decorridos_periodo_lp = 0
@@ -347,13 +360,11 @@ def ver_lp(request, pk):
         data_inicio_periodo_lp = lp.data_ultimo_lp + timedelta(days=1)
         data_fim_periodo_lp = data_inicio_periodo_lp + relativedelta(years=5) - timedelta(days=1)
         
-        # Se o período já terminou
         if hoje > data_fim_periodo_lp:
             dias_decorridos_periodo_lp = (data_fim_periodo_lp - data_inicio_periodo_lp).days
             dias_restantes_periodo_lp = 0
             progresso_periodo_aquisitivo_percentual = 100
         
-        # Se estamos dentro do período
         elif hoje >= data_inicio_periodo_lp:
             dias_decorridos_periodo_lp = (hoje - data_inicio_periodo_lp).days
             dias_restantes_periodo_lp = (data_fim_periodo_lp - hoje).days
@@ -362,9 +373,12 @@ def ver_lp(request, pk):
             if total_dias_periodo_lp > 0:
                 progresso_periodo_aquisitivo_percentual = (dias_decorridos_periodo_lp / total_dias_periodo_lp) * 100
 
+    lp_count = LP.objects.filter(cadastro=lp.cadastro).count()
+
     context = {
         'lp': lp,
         'historico_lp': historico_lp,
+        'historico_cadastro': historico_cadastro,
         'N_CHOICES': N_CHOICES,
         'current_year': timezone.now().year,
         'progresso_periodo_aquisitivo_percentual': round(progresso_periodo_aquisitivo_percentual, 2),
@@ -375,6 +389,7 @@ def ver_lp(request, pk):
         'data_fim_periodo_lp': data_fim_periodo_lp,
         'StatusLP_choices': LP.StatusLP.choices,
         'StatusLP_choices_json': status_lp_choices_json,
+        'lp_count': lp_count,
     }
     return render(request, 'lp/detalhar_lp.html', context)
 
