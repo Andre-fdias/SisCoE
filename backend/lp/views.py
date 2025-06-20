@@ -16,7 +16,9 @@ from .models import LP, HistoricoLP, N_CHOICES, situacao_choices
 from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem # Importe os modelos necessários
 from django.template.loader import render_to_string
 import logging
-import json # Importar json para serializar as escolhas de status
+
+import json 
+from django.db.models import Max, Subquery, OuterRef # Importar Max, Subquery, OuterRef
 
 logger = logging.getLogger(__name__)
 
@@ -327,12 +329,27 @@ def ver_lp(request, pk):
     historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
     
     # Histórico de cadastros de LP para o mesmo militar (apenas LPs concluídas)
+    # MODIFICAÇÃO AQUI: Obter apenas o último registro concluído para cada 'numero_lp'
     lps_do_cadastro = LP.objects.filter(cadastro=lp.cadastro)
+    
+    # Subquery para encontrar a `data_alteracao` máxima para cada `numero_lp` concluída.
+    latest_concluded_history_dates = HistoricoLP.objects.filter(
+        lp__in=lps_do_cadastro,
+        status_lp='concluido',
+        numero_lp=OuterRef('numero_lp') # Referencia o `numero_lp` da query externa
+    ).order_by('-data_alteracao').values('pk')[:1] # Pega o PK do mais recente para cada numero_lp
+
     historico_cadastro = HistoricoLP.objects.filter(
         lp__in=lps_do_cadastro,
-        status_lp='concluido'  # Filtro para status concluído
-    ).order_by('-data_alteracao')
-    
+        status_lp='concluido',
+        pk__in=Subquery(latest_concluded_history_dates) # Filtra pelos PKs dos registros mais recentes
+    ).order_by('numero_lp', '-data_alteracao') # Ordena para garantir que a última de cada LP seja a primeira ou para exibição
+
+    # Se você quiser garantir apenas a ÚLTIMA conclusão de CADA LP do militar, esta é a forma mais robusta.
+    # Se 'numero_lp' puder ter o mesmo valor para LPs diferentes (o que não deveria acontecer para o mesmo cadastro),
+    # você precisaria agrupar por `lp_id` e `numero_lp`. Mas presumo que `numero_lp` é único por LP.
+
+
     status_lp_choices_json = json.dumps(list(LP.StatusLP.choices))
 
     # 1. VERIFICAÇÃO AUTOMÁTICA DE STATUS
@@ -611,15 +628,14 @@ def listar_lp(request):
 
 
 
+
 @login_required
 @require_POST
 def concluir_lp(request, pk):
     lp = get_object_or_404(LP, pk=pk)
-    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
     try:
         password = request.POST.get('password')
-        # CORREÇÃO: Usar request.user.email em vez de request.user.username
         user = authenticate(request, username=request.user.email, password=password)
 
         if not user:
@@ -635,12 +651,11 @@ def concluir_lp(request, pk):
             lp.full_clean()
             lp.save()
 
-            # Registrar histórico
             HistoricoLP.objects.create(
                 lp=lp,
+                usuario_alteracao=user,
                 situacao_lp=lp.situacao_lp,
                 status_lp=lp.status_lp,
-                usuario_alteracao=request.user,
                 numero_lp=lp.numero_lp,
                 data_ultimo_lp=lp.data_ultimo_lp,
                 numero_prox_lp=lp.numero_prox_lp,
@@ -652,10 +667,13 @@ def concluir_lp(request, pk):
                 data_publicacao_lp=lp.data_publicacao_lp,
                 data_concessao_lp=lp.data_concessao_lp,
                 lancamento_sipa=lp.lancamento_sipa,
-                observacoes_historico=f"LP concluída por {request.user.email}" # Usar email
+                data_conclusao=lp.data_conclusao,
+                usuario_conclusao=lp.usuario_conclusao,
+                observacoes_historico=f"LP {lp.numero_lp} concluída por {user.get_full_name() or user.username}."
             )
-
-        return alert_response('success', 'Sucesso!', 'LP concluída com sucesso!', reload_page=True)
+        
+        # Removido 'extra_data'. Agora, o frontend usará lp.cadastro.id diretamente do contexto do template.
+        return alert_response('success', 'Sucesso!', 'LP concluída com sucesso!')
 
     except ValidationError as e:
         error_msg = f'Erro de validação: {e.message_dict}'
@@ -670,6 +688,7 @@ def concluir_lp(request, pk):
 
 
 @login_required
+@require_POST
 def nova_lp(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
@@ -690,10 +709,9 @@ def nova_lp(request):
         numero_lp = int(numero_lp)
         data_ultimo_lp = date.fromisoformat(data_ultimo_lp_str)
         
-        # Calcular próximo LP (5 anos depois)
         proximo_lp = data_ultimo_lp + timedelta(days=5*365)
         
-        nova_lp = LP(
+        nova_lp_obj = LP(
             cadastro=cadastro,
             numero_lp=numero_lp,
             data_ultimo_lp=data_ultimo_lp,
@@ -706,17 +724,17 @@ def nova_lp(request):
             status_lp=LP.StatusLP.AGUARDANDO_REQUISITOS
         )
         
-        nova_lp.full_clean()
-        nova_lp.save()
+        nova_lp_obj.full_clean()
+        nova_lp_obj.save()
 
         return alert_response('success', 'Sucesso!', 'Nova LP criada com sucesso!')
         
     except ValidationError as e:
-        return alert_response('error', 'Erro de Validação', ', '.join(e.messages), 400)
+        return alert_response('error', 'Erro de Validação', ', '.join(e.messages), 400, errors=e.message_dict if hasattr(e, 'message_dict') else {'__all__': e.messages})
     except Exception as e:
         logger.error(f"Erro ao criar LP: {str(e)}", exc_info=True)
         return alert_response('error', 'Erro Interno', f'Erro ao criar LP: {str(e)}', 500)
-# backend/lp/views.py
+
 
 @login_required
 @require_POST

@@ -15,46 +15,46 @@
                     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados da Licença Prêmio</h2>
                     <hr class="border-t border-gray-100">
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-        <label for="numero_lp" class="block text-sm font-medium text-gray-700">Número da LP Atual</label>
-        <input type="number" name="numero_lp" id="numero_lp" value="{{ lp.numero_prox_lp }}" required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-        <p class="text-xs text-gray-500 mt-1">Este será o número da LP que está sendo cadastrada.</p>
-        <div id="error_numero_lp" class="text-red-600 text-sm mt-1"></div>
-    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="numero_lp" class="block text-sm font-medium text-gray-700">Número da LP Atual</label>
+                            <input type="number" name="numero_lp" id="numero_lp" value="{{ lp.numero_prox_lp }}" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Este será o número da LP que está sendo cadastrada.</p>
+                            <div id="error_numero_lp" class="text-red-600 text-sm mt-1"></div>
+                        </div>
 
-    <div>
-        <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data do Último LP *</label>
-        <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
-            value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|date:'Y-m-d' }}{% else %}{{ data_fim_periodo_lp|date:'Y-m-d' }}{% endif %}"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-        <p class="text-xs text-gray-500 mt-1">Data final do período aquisitivo do último LP concedido/fechado.</p>
-        <div id="error_data_ultimo_lp" class="text-red-600 text-sm mt-1"></div>
-    </div>
-</div>
+                        <div>
+                            <label for="data_ultimo_lp" class="block text-sm font-medium text-gray-700">Data do Último LP *</label>
+                            <input type="date" name="data_ultimo_lp" id="data_ultimo_lp" required
+                                value="{% if lp.data_concessao_lp %}{{ lp.data_concessao_lp|date:'Y-m-d' }}{% else %}{{ data_fim_periodo_lp|date:'Y-m-d' }}{% endif %}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Data final do período aquisitivo do último LP concedido/fechado.</p>
+                            <div id="error_data_ultimo_lp" class="text-red-600 text-sm mt-1"></div>
+                        </div>
+                    </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Previsão Próximo Número LP</label>
-        <input type="text" id="previsao_numero_prox_lp" value="" readonly
-            class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-    </div>
-    <div>
-        <label for="proximo_lp_output" class="block text-sm font-medium text-gray-700">Previsão Próximo Período</label>
-        <input type="date" id="proximo_lp_output" value="" readonly
-            class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-    </div>
-    <div>
-        <label for="mes_proximo_lp_output" class="block text-sm font-medium text-gray-700">Mês/Ano Próximo LP</label>
-        <div class="flex gap-2">
-            <input type="text" id="mes_proximo_lp_output" value="" readonly
-                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-            <input type="text" id="ano_proximo_lp_output" value="" readonly
-                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
-        </div>
-    </div>
-</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Previsão Próximo Número LP</label>
+                            <input type="text" id="previsao_numero_prox_lp" value="" readonly
+                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="proximo_lp_output" class="block text-sm font-medium text-gray-700">Previsão Próximo Período</label>
+                            <input type="date" id="proximo_lp_output" value="" readonly
+                                class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="mes_proximo_lp_output" class="block text-sm font-medium text-gray-700">Mês/Ano Próximo LP</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="mes_proximo_lp_output" value="" readonly
+                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                                <input type="text" id="ano_proximo_lp_output" value="" readonly
+                                    class="w-full px-3 py-2 bg-gray-200 border border-gray-300 rounded-lg cursor-not-allowed">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </fieldset>
 
@@ -78,138 +78,3 @@
         </form>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const novoLPModal = document.getElementById('novoLPModal');
-    const formNovoLP = document.getElementById('formNovoLP');
-    const submitButton = formNovoLP.querySelector('#submitNovoLP');
-    const normalState = submitButton.querySelector('#normalState');
-    const loadingState = submitButton.querySelector('#loadingState');
-
-    window.openNovoLPModal = function(cadastroId) {
-        formNovoLP.reset();
-        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
-        formNovoLP.querySelector('input[name="cadastro_id"]').value = cadastroId;
-
-        // Trigger update to populate calculated fields on modal open
-        updateCalculatedFields();
-        
-        novoLPModal.classList.remove('hidden');
-    };
-
-    window.closeNovoLPModal = function() {
-        novoLPModal.classList.add('hidden');
-        formNovoLP.reset();
-        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
-    };
-
-    formNovoLP.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        normalState.classList.add('hidden');
-        loadingState.classList.remove('hidden');
-        submitButton.disabled = true;
-        
-        document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
-
-        try {
-            const formData = new FormData(this);
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            const response = await fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok && data.alert && data.alert.type === 'success') {
-                showAlert(data.alert.type, data.alert.title, data.alert.message);
-                closeNovoLPModal();
-                if (data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    location.reload();
-                }
-            } else if (data.alert && data.alert.type === 'error') {
-                showAlert(data.alert.type, data.alert.title, data.alert.message);
-                if (data.errors) {
-                    for (const field in data.errors) {
-                        const errorDiv = document.getElementById(`error_${field}`);
-                        if (errorDiv) {
-                            errorDiv.textContent = data.errors[field];
-                        }
-                    }
-                }
-            } else {
-                showAlert('error', 'Erro Desconhecido!', 'Ocorreu um erro inesperado.');
-            }
-        } catch (error) {
-            console.error('Erro na requisição:', error);
-            showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.');
-        } finally {
-            normalState.classList.remove('hidden');
-            loadingState.classList.add('hidden');
-            submitButton.disabled = false;
-        }
-    });
-
-    function updateCalculatedFields() {
-        const dataUltimoLpInput = document.getElementById('data_ultimo_lp');
-        const numeroLpInput = document.getElementById('numero_lp');
-        const previsaoNumeroProxLpOutput = document.getElementById('previsao_numero_prox_lp');
-        const proximoLpOutput = document.getElementById('proximo_lp_output');
-        const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
-        const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
-
-        let dataUltimoLp = dataUltimoLpInput.value;
-        let numeroLP = parseInt(numeroLpInput.value);
-
-        if (dataUltimoLp && !isNaN(numeroLP)) {
-            try {
-                const dataBaseCalculo = new Date(dataUltimoLp + 'T00:00:00');
-                
-                // Calculate the date 5 years from dataUltimoLp
-                const proximoLpDate = new Date(dataBaseCalculo);
-                proximoLpDate.setFullYear(proximoLpDate.getFullYear() + 5);
-
-                if (previsaoNumeroProxLpOutput) {
-                    previsaoNumeroProxLpOutput.value = numeroLP + 1;
-                }
-                
-                if (proximoLpOutput) {
-                    proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0];
-                }
-                
-                if (mesProximoLpOutput) {
-                    mesProximoLpOutput.value = String(proximoLpDate.getMonth() + 1).padStart(2, '0');
-                }
-                if (anoProximoLpOutput) {
-                    anoProximoLpOutput.value = proximoLpDate.getFullYear();
-                }
-
-            } catch (e) {
-                console.error("Erro nos cálculos do front-end:", e);
-                if (previsaoNumeroProxLpOutput) previsaoNumeroProxLpOutput.value = 'Erro';
-                if (proximoLpOutput) proximoLpOutput.value = '';
-                if (mesProximoLpOutput) mesProximoLpOutput.value = 'Erro';
-                if (anoProximoLpOutput) anoProximoLpOutput.value = 'Erro';
-            }
-        } else {
-            if (previsaoNumeroProxLpOutput) previsaoNumeroProxLpOutput.value = 'N/A';
-            if (proximoLpOutput) proximoLpOutput.value = '';
-            if (mesProximoLpOutput) mesProximoLpOutput.value = 'N/A';
-            if (anoProximoLpOutput) anoProximoLpOutput.value = 'N/A';
-        }
-    }
-    
-    document.getElementById('data_ultimo_lp').addEventListener('change', updateCalculatedFields);
-    document.getElementById('numero_lp').addEventListener('change', updateCalculatedFields);
-    updateCalculatedFields();
-});
-</script>
