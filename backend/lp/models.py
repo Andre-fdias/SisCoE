@@ -157,20 +157,24 @@ class LP(models.Model):
         except ValueError:
             return 0 # Fallback se o status não for encontrado
 
+# ... (restante do seu models.py) ...
+
 class HistoricoLP(models.Model):
-    lp = models.ForeignKey(LP, on_delete=models.CASCADE, verbose_name="Licença Prêmio")
+    lp = models.ForeignKey(LP, on_delete=models.CASCADE, verbose_name="LP")
     usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Usuário da Alteração")
     data_alteracao = models.DateTimeField(auto_now_add=True, verbose_name="Data da Alteração")
     
-    # Campos para registrar o estado da LP no momento da alteração
+    # Adicione este campo para rastrear quem concluiu no registro de histórico
+    usuario_conclusao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                         related_name='historico_lps_concluidas', verbose_name="Concluído por (Histórico)")
+    
+    # ... (outros campos que você já tem no HistoricoLP, como os abaixo) ...
     situacao_lp = models.CharField(max_length=30, choices=situacao_choices, verbose_name="Situação da LP")
-    status_lp = models.CharField(
-        max_length=30,
-        choices=LP.StatusLP.choices,
-        verbose_name="Status da LP"
-    )
+    status_lp = models.CharField(max_length=30, choices=LP.StatusLP.choices, verbose_name="Status da LP")
+    
+    # Campos copiados do modelo LP no momento da alteração
     numero_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Número da LP")
-    data_ultimo_lp = models.DateField(verbose_name="Data do Último LP")
+    data_ultimo_lp = models.DateField(null=True, blank=True, verbose_name="Data do Último LP")
     numero_prox_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Próximo Número da LP", null=True, blank=True)
     proximo_lp = models.DateField(null=True, blank=True, verbose_name="Próximo LP")
     mes_proximo_lp = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Mês do Próximo LP")
@@ -180,10 +184,12 @@ class HistoricoLP(models.Model):
     data_publicacao_lp = models.DateField(null=True, blank=True, verbose_name="Data Publicação LP")
     data_concessao_lp = models.DateField(null=True, blank=True, verbose_name="Data de Concessão da LP")
     lancamento_sipa = models.BooleanField(default=False, verbose_name="Lançamento no SIPA")
-    
-    observacoes_historico = models.TextField(blank=True, verbose_name="Observações do Histórico")
+    data_conclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Conclusão (Histórico)") # Novo ou existente? Verifique
+    observacoes_historico = models.TextField(blank=True, verbose_name="Observações do Histórico") # Exemplo de campo específico de histórico
 
     class Meta:
-        verbose_name = "Histórico de Licença Prêmio"
-        verbose_name_plural = "Históricos de Licenças Prêmio"
-        ordering = ['-data_alteracao'] # Ordena pelo mais recente
+        verbose_name = "Histórico da LP"
+        verbose_name_plural = "Histórico das LPs"
+
+    def __str__(self):
+        return f"Histórico LP {self.lp.numero_lp} ({self.lp.cadastro}) - {self.status_lp} em {self.data_alteracao.strftime('%d/%m/%Y %H:%M')}"

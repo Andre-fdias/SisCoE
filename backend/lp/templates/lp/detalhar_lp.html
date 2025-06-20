@@ -1260,9 +1260,16 @@
         </div>
     </div>
 </div>
+{% comment %}
+    backend/lp/templates/detalhar_lp.html
+    Este é o template principal que inclui os modais e o JavaScript.
+{% endcomment %}
+
 {% endif %}
+
+
 <div class="flex justify-end mt-8">
-    <button onclick="openConcluirLPModal('{{ lp.pk }}', '{{ lp.cadastro.nome_guerra }}')"
+    <button onclick="openConcluirLPModal('{{ lp.pk }}')"
             class="px-6 py-3 {% if lp.status_lp == 'concluido' %}bg-gray-100 text-green-600 border-2 border-green-500 cursor-not-allowed{% else %}bg-indigo-700 text-white hover:bg-indigo-800{% endif %}
                     rounded-lg transition-all duration-200 font-medium shadow-md
                     flex items-center gap-2"
@@ -1281,253 +1288,373 @@
     </button>
 </div>
 
-    <!-- Novo botão de Nova LP -->
-    <button onclick="openNovoLPModal('{{ lp.cadastro.id }}')"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
-        <i class="fas fa-plus mr-2"></i> Nova LP
-    </button>
-</div>
-
-<!-- Inclua o modal no final do template -->
-{% include 'modals/_novo_lp_modal.html' with cadastro=lp.cadastro n_choices=n_choices %}
+{# Inclua os modais. ATENÇÃO: Eles devem conter APENAS HTML agora! #}
+{% include 'modals/_novo_lp_modal.html' with cadastro=lp.cadastro lp=lp data_fim_periodo_lp=data_fim_periodo_lp %}
 {% include 'modals/_concluir_lp_modal.html' %}
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const concluirLPModalEl = document.getElementById('concluirLPModal');
-        const formConcluirLP = concluirLPModalEl.querySelector('form');
-        const submitConcluirLPBtn = document.getElementById('submitConcluirLP');
-        const normalStateConcluirLP = document.getElementById('normalStateConcluir'); // Corrigido ID
-        const loadingStateConcluirLP = document.getElementById('loadingStateConcluir'); // Corrigido ID
-        const passwordInputConcluir = document.getElementById('passwordInputConcluir'); // Corrigido ID
-        const passwordErrorConcluir = document.getElementById('passwordErrorConcluir'); // Corrigido ID
-        const dataConclusaoInput = document.getElementById('dataConclusaoInput'); // Adicionado
-        const dataConclusaoError = document.getElementById('dataConclusaoError'); // Adicionado
+document.addEventListener('DOMContentLoaded', function() {
+    // =========================================================
+    // VARIÁVEIS E FUNÇÕES GLOBAIS AUXILIARES (PARA ALERTS E LIMPEZA DE FORMULÁRIO)
+    // =========================================================
 
-        // Funções para abrir/fechar o modal de conclusão
-        window.openConcluirLPModal = function(lpPk) {
-            formConcluirLP.action = `{% url 'lp:concluir_lp' pk=lp.pk %}`.replace('{{ lp.pk }}', lpPk);
-            passwordInputConcluir.value = ''; // Limpa o campo de senha
-            passwordErrorConcluir.textContent = ''; // Limpa mensagens de erro
-            passwordInputConcluir.classList.remove('border-red-500'); //
-            dataConclusaoInput.value = ''; // Limpa o campo de data de conclusão
-            dataConclusaoError.textContent = ''; // Limpa mensagens de erro da data
-            concluirLPModalEl.classList.remove('hidden'); //
-            concluirLPModalEl.querySelector('div.transform').classList.remove('scale-95', 'opacity-0'); // Para transição
-            concluirLPModalEl.querySelector('div.transform').classList.add('scale-100', 'opacity-100'); // Para transição
-        };
-
-        window.closeConcluirLPModal = function() {
-            concluirLPModalEl.querySelector('div.transform').classList.remove('scale-100', 'opacity-100'); // Para transição
-            concluirLPModalEl.querySelector('div.transform').classList.add('scale-95', 'opacity-0'); // Para transição
+    // Função para exibir alertas (toasts)
+    function showAlert(type, title, message) {
+        hideAllAlerts(); 
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} fixed top-4 right-4 z-[2000] p-4 rounded-md shadow-lg max-w-md transition-all duration-300 transform translate-y-[-20px] opacity-0`;
+        alertDiv.style.backgroundColor = type === 'success' ? '#d1fae5' : '#fee2e2';
+        alertDiv.style.color = type === 'success' ? '#065f46' : '#b91c1c';
+        alertDiv.innerHTML = `
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    ${type === 'success' ? 
+                        '<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : 
+                        '<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'}
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium">${title}</h3>
+                    <div class="mt-1 text-sm">${message}</div>
+                </div>
+                <button class="ml-auto close-alert text-xl leading-none">&times;</button>
+            </div>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        void alertDiv.offsetWidth; // Força o reflow para garantir a transição
+        
+        alertDiv.style.opacity = '1';
+        alertDiv.style.transform = 'translateY(0)';
+        
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translateY(-20px)';
             setTimeout(() => {
-                concluirLPModalEl.classList.add('hidden');
-            }, 300); // Espera a transição terminar antes de ocultar
-        };
-
-        // Event listener para o formulário de conclusão da LP
-        formConcluirLP.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            passwordErrorConcluir.classList.add('hidden'); //
-            passwordInputConcluir.classList.remove('border-red-500'); //
-            dataConclusaoError.classList.add('hidden'); // Adicionado
-            dataConclusaoInput.classList.remove('border-red-500'); // Adicionado
-
-            normalStateConcluirLP.classList.add('hidden'); //
-            loadingStateConcluirLP.classList.remove('hidden'); //
-            submitConcluirLPBtn.disabled = true; //
-
-            try {
-                const formData = new FormData(formConcluirLP); //
-                
-                const response = await fetch(formConcluirLP.action, { //
-                    method: 'POST', //
-                    body: formData, //
-                    headers: { //
-                        'X-Requested-With': 'XMLHttpRequest', //
-                        'X-CSRFToken': formConcluirLP.querySelector('[name=csrfmiddlewaretoken]').value //
-                    }
-                });
-
-                const data = await response.json(); //
-                
-                if (data.success) { //
-                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
-                    closeConcluirLPModal(); //
-                    // SE A CONCLUSAO FOR BEM SUCEDIDA, ABRE O MODAL DE NOVO LP
-                    // Certifique-se de que 'lp.cadastro.pk' é a variável correta que você quer passar
-                    openNovoLPModal('{{ lp.cadastro.pk }}'); // Passa o ID do cadastro para o novo modal
-                } else { //
-                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
-                    if (data.errors) {
-                        for (const field in data.errors) {
-                            const errorDiv = document.getElementById(`${field}Error`);
-                            const inputField = document.getElementById(field);
-                            if (errorDiv) {
-                                errorDiv.textContent = data.errors[field];
-                                errorDiv.classList.remove('hidden');
-                            }
-                            if (inputField) {
-                                inputField.classList.add('border-red-500');
-                            }
-                        }
-                    } else if (data.alert.message === 'Senha incorreta.' || data.alert.message === 'Senha incorreta para o usuário logado.') { //
-                        passwordErrorConcluir.textContent = data.alert.message; //
-                        passwordErrorConcluir.classList.remove('hidden'); //
-                        passwordInputConcluir.classList.add('border-red-500'); //
-                    }
-                }
-            } catch (error) { //
-                console.error('Erro:', error); //
-                showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.'); //
-            } finally { //
-                normalStateConcluirLP.classList.remove('hidden'); //
-                loadingStateConcluirLP.classList.add('hidden'); //
-                submitConcluirLPBtn.disabled = false; //
-            }
+                alertDiv.remove();
+            }, 300);
+        }, 5000); 
+        
+        alertDiv.querySelector('.close-alert').addEventListener('click', () => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 300);
         });
-
-        // =========================================================
-        // JavaScript para o modal de NOVO LP
-        // Assegure-se de que este script está no template principal (detalhar_lp.html)
-        // e que _novo_lp_modal.html NÃO contenha seu próprio bloco <script>
-
-        const novoLPModal = document.getElementById('novoLPModal'); //
-        const formNovoLP = document.getElementById('formNovoLP'); //
-        const submitNovoLP = formNovoLP.querySelector('#submitNovoLP'); //
-        const normalStateNovoLP = submitNovoLP.querySelector('#normalState'); //
-        const loadingStateNovoLP = submitNovoLP.querySelector('#loadingState'); //
-
-        window.openNovoLPModal = function(cadastroId) { //
-            formNovoLP.reset(); //
-            document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
-            formNovoLP.querySelector('input[name="cadastro_id"]').value = cadastroId; //
-            novoLPModal.classList.remove('hidden'); //
-            novoLPModal.querySelector('div.transition-all').classList.remove('scale-95', 'opacity-0'); // Para transição
-            novoLPModal.querySelector('div.transition-all').classList.add('scale-100', 'opacity-100'); // Para transição
-            updateCalculatedFields(); // Chamar para pré-preencher no carregamento do modal
-        };
-
-        window.closeNovoLPModal = function() { //
-            novoLPModal.querySelector('div.transition-all').classList.remove('scale-100', 'opacity-100'); // Para transição
-            novoLPModal.querySelector('div.transition-all').classList.add('scale-95', 'opacity-0'); // Para transição
+    }
+    
+    // Função para esconder todos os alertas
+    function hideAllAlerts() {
+        document.querySelectorAll('.alert').forEach(alert => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-20px)';
             setTimeout(() => {
-                novoLPModal.classList.add('hidden'); //
-                formNovoLP.reset(); //
-                document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
-            }, 300); // Espera a transição terminar antes de ocultar
-        };
+                alert.remove();
+            }, 300);
+        });
+    }
 
-        formNovoLP.addEventListener('submit', async function(e) { //
-            e.preventDefault(); //
-            
-            normalStateNovoLP.classList.add('hidden'); //
-            loadingStateNovoLP.classList.remove('hidden'); //
-            submitNovoLP.disabled = true; //
-            
-            document.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = ''); //
+    // Função para limpar mensagens de erro e bordas de inputs
+    function clearFormErrors(formElement) {
+        formElement.querySelectorAll('[id^="error_"]').forEach(el => el.textContent = '');
+        formElement.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+    }
 
-            try {
-                const formData = new FormData(this); //
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; //
+    // =========================================================
+    // LÓGICA DO MODAL DE CONCLUIR LP
+    // =========================================================
+    const concluirLPModalEl = document.getElementById('concluirLPModal');
+    const formConcluirLP = concluirLPModalEl.querySelector('form');
+    const submitConcluirLPBtn = document.getElementById('submitConcluirLP');
+    const normalStateConcluirLP = document.getElementById('normalStateConcluir');
+    const loadingStateConcluirLP = document.getElementById('loadingStateConcluir');
+    const passwordInputConcluir = document.getElementById('passwordInputConcluir');
+    const passwordErrorConcluir = document.getElementById('passwordErrorConcluir');
+    const dataConclusaoInput = document.getElementById('dataConclusaoInput');
+    const dataConclusaoError = document.getElementById('dataConclusaoError');
+
+    let isSubmittingConcluirLP = false; // Flag para prevenir duplicação
+
+    // Função para abrir o modal de Concluir LP
+    window.openConcluirLPModal = function(lpPk) {
+        formConcluirLP.action = `{% url 'lp:concluir_lp' pk=lp.pk %}`.replace('{{ lp.pk }}', lpPk);
+        formConcluirLP.reset(); 
+        clearFormErrors(formConcluirLP); 
+        concluirLPModalEl.classList.remove('hidden');
+        setTimeout(() => {
+            concluirLPModalEl.querySelector('div.transform').classList.remove('scale-95', 'opacity-0');
+            concluirLPModalEl.querySelector('div.transform').classList.add('scale-100', 'opacity-100');
+        }, 10);
+    };
+
+    // Função para fechar o modal de Concluir LP
+    window.closeConcluirLPModal = function() {
+        concluirLPModalEl.querySelector('div.transform').classList.remove('scale-100', 'opacity-100');
+        concluirLPModalEl.querySelector('div.transform').classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            concluirLPModalEl.classList.add('hidden');
+            isSubmittingConcluirLP = false; 
+        }, 300);
+    };
+
+    // Event listener para a submissão do formulário de conclusão da LP
+    formConcluirLP.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        
+        if (isSubmittingConcluirLP) {
+            console.log("Submissão de Concluir LP já em progresso, ignorando clique duplicado.");
+            return; 
+        }
+        isSubmittingConcluirLP = true;
+
+        clearFormErrors(formConcluirLP); 
+
+        normalStateConcluirLP.classList.add('hidden');
+        loadingStateConcluirLP.classList.remove('hidden');
+        submitConcluirLPBtn.disabled = true;
+
+        try {
+            const formData = new FormData(formConcluirLP);
+            
+            const response = await fetch(formConcluirLP.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formConcluirLP.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                closeConcluirLPModal(); 
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
                 
-                const response = await fetch(this.action, { //
-                    method: 'POST', //
-                    body: formData, //
-                    headers: { //
-                        'X-Requested-With': 'XMLHttpRequest', //
-                        'X-CSRFToken': csrfToken //
-                    }
-                });
-                
-                const data = await response.json(); //
-                
-                if (response.ok && data.alert && data.alert.type === 'success') { //
-                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
-                    closeNovoLPModal(); //
-                    if (data.redirect_url) { //
-                        window.location.href = data.redirect_url; // Redireciona para a nova LP
-                    } else { //
-                        location.reload(); //
-                    }
-                } else if (data.alert && data.alert.type === 'error') { //
-                    showAlert(data.alert.type, data.alert.title, data.alert.message); //
-                    if (data.errors) { //
-                        for (const field in data.errors) { //
-                            const errorDiv = document.getElementById(`error_${field}`); //
-                            if (errorDiv) { //
-                                errorDiv.textContent = data.errors[field]; //
-                            }
+                // Abre o modal de nova LP após a animação de fechamento terminar
+                const cadastroId = '{{ lp.cadastro.id }}'; 
+                setTimeout(() => {
+                    openNovoLPModal(cadastroId); 
+                }, 350); 
+
+            } else {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        const errorDiv = document.getElementById(`${field}Error`);
+                        const inputField = document.getElementById(field);
+                        if (errorDiv) {
+                            errorDiv.textContent = data.errors[field];
+                        }
+                        if (inputField) {
+                            inputField.classList.add('border-red-500');
                         }
                     }
-                } else { //
-                    showAlert('error', 'Erro Desconhecido!', 'Ocorreu um erro inesperado.'); //
+                } else if (data.alert.message && (data.alert.message.includes('Senha incorreta'))) {
+                    passwordErrorConcluir.textContent = data.alert.message;
+                    passwordErrorConcluir.classList.remove('hidden'); // Garante que a mensagem de erro da senha é visível
+                    passwordInputConcluir.classList.add('border-red-500');
                 }
-            } catch (error) { //
-                console.error('Erro na requisição:', error); //
-                showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.'); //
-            } finally { //
-                normalStateNovoLP.classList.remove('hidden'); //
-                loadingStateNovoLP.classList.add('hidden'); //
-                submitNovoLP.disabled = false; //
             }
-        });
+        } catch (error) {
+            console.error('Erro na requisição AJAX para concluir LP:', error);
+            showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.');
+        } finally {
+            normalStateConcluirLP.classList.remove('hidden');
+            loadingStateConcluirLP.classList.add('hidden');
+            submitConcluirLPBtn.disabled = false;
+            isSubmittingConcluirLP = false; 
+        }
+    });
 
-        // Função de atualização dos campos calculados no front-end
-        window.updateCalculatedFields = function() { // Tornada global
-            const dataInicioPeriodoInput = document.getElementById('data_inicio_periodo'); //
-            const numeroLpSelect = document.getElementById('numero_lp'); //
+    // =========================================================
+    // LÓGICA DO MODAL DE NOVO LP
+    // =========================================================
+    const novoLPModal = document.getElementById('novoLPModal');
+    const formNovoLP = document.getElementById('formNovoLP');
+    const submitNovoLP = formNovoLP.querySelector('#submitNovoLP');
+    const normalStateNovoLP = submitNovoLP.querySelector('#normalState');
+    const loadingStateNovoLP = submitNovoLP.querySelector('#loadingState');
 
-            const numeroProxLpOutput = document.getElementById('numero_prox_lp_output'); //
-            const proximoLpOutput = document.getElementById('proximo_lp_output'); //
-            const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output'); //
-            const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output'); //
+    let isSubmittingNovoLP = false; 
 
-            let numeroLP = parseInt(numeroLpSelect.value) || 0; //
-            let dataInicioPeriodo = dataInicioPeriodoInput.value; //
-
-            if (dataInicioPeriodo) { //
-                try {
-                    const dataBaseCalculo = new Date(dataInicioPeriodo + 'T00:00:00'); // Garante fuso horário
-                    
-                    const dataFechamentoBlocoBase = new Date(dataBaseCalculo); //
-                    dataFechamentoBlocoBase.setFullYear(dataFechamentoBlocoBase.getFullYear() + 5); //
-                    dataFechamentoBlocoBase.setDate(dataFechamentoBlocoBase.getDate() - 1); //
-
-                    const proximoLpDate = new Date(dataFechamentoBlocoBase); //
-                    proximoLpDate.setDate(proximoLpDate.getDate() + 1); //
-
-                    numeroProxLpOutput.value = numeroLP + 1; //
-                    proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0]; //
-                    mesProximoLpOutput.value = (proximoLpDate.getMonth() + 1).toString().padStart(2, '0'); // Formata para 2 dígitos
-                    anoProximoLpOutput.value = proximoLpDate.getFullYear(); //
-                } catch (e) { //
-                    console.error("Erro nos cálculos do front-end:", e); //
-                    numeroProxLpOutput.value = 'Erro'; //
-                    proximoLpOutput.value = ''; //
-                    mesProximoLpOutput.value = 'Erro'; //
-                    anoProximoLpOutput.value = 'Erro'; //
-                }
-            } else { //
-                 numeroProxLpOutput.value = 'N/A'; //
-                 proximoLpOutput.value = ''; //
-                 mesProximoLpOutput.value = 'N/A'; //
-                 anoProximoLpOutput.value = 'N/A'; //
-            }
+    // Função para abrir o modal de Nova LP
+    window.openNovoLPModal = function(cadastroId) {
+        formNovoLP.reset(); 
+        clearFormErrors(formNovoLP); 
+        
+        const cadastroIdInput = formNovoLP.querySelector('input[name="cadastro_id"]');
+        if (cadastroIdInput) {
+            cadastroIdInput.value = cadastroId;
+        } else {
+            console.warn("Input 'cadastro_id' não encontrado no formulário da Nova LP.");
         }
         
-        document.getElementById('data_inicio_periodo').addEventListener('change', updateCalculatedFields); //
-        document.getElementById('numero_lp').addEventListener('change', updateCalculatedFields); //
-        // data_ultimo_lp não precisa mais disparar o cálculo, pois a lógica mudou para data_inicio_periodo
-        // Se houver campos que impactam o cálculo, adicione seus listeners aqui
-        
-        updateCalculatedFields(); // Chamar uma vez para preencher no carregamento inicial da página
+        // Inicializa os campos de data e número com os valores do Django
+        const dataUltimoLpInput = document.getElementById('data_ultimo_lp');
+        const numeroLpInput = document.getElementById('numero_lp');
 
+        // Assegura que os valores iniciais dos campos data_ultimo_lp e numero_lp são definidos no JS
+        // para que updateCalculatedFields() funcione corretamente na abertura.
+        // Estes valores vêm do contexto do Django no HTML do modal.
+        // lp.numero_prox_lp e lp.data_concessao_lp/data_fim_periodo_lp são passados via include no Django.
+        dataUltimoLpInput.value = dataUltimoLpInput.defaultValue;
+        numeroLpInput.value = numeroLpInput.defaultValue;
+
+        updateCalculatedFields(); // Atualiza campos calculados ao abrir o modal (data e número)
+
+        novoLPModal.classList.remove('hidden');
+        setTimeout(() => {
+            novoLPModal.querySelector('div.transition-all').classList.remove('scale-95', 'opacity-0');
+            novoLPModal.querySelector('div.transition-all').classList.add('scale-100', 'opacity-100');
+        }, 10);
+    };
+
+    // Função para fechar o modal de Nova LP
+    window.closeNovoLPModal = function() {
+        novoLPModal.querySelector('div.transition-all').classList.remove('scale-100', 'opacity-100');
+        novoLPModal.querySelector('div.transition-all').classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            novoLPModal.classList.add('hidden');
+            isSubmittingNovoLP = false; 
+        }, 300);
+    };
+
+    // Event listener para a submissão do formulário de Nova LP
+    formNovoLP.addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        if (isSubmittingNovoLP) {
+            console.log("Submissão de Nova LP já em progresso, ignorando clique duplicado.");
+            return; 
+        }
+        isSubmittingNovoLP = true;
+        
+        clearFormErrors(formNovoLP); 
+
+        normalStateNovoLP.classList.add('hidden');
+        loadingStateNovoLP.classList.remove('hidden');
+        submitNovoLP.disabled = true;
+        
+        try {
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.alert && data.alert.type === 'success') {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                closeNovoLPModal();
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    location.reload(); // Recarrega a página para mostrar a nova LP
+                }
+            } else {
+                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        const errorDiv = document.getElementById(`error_${field}`);
+                        const inputField = document.getElementById(field);
+                        if (errorDiv) {
+                            errorDiv.textContent = data.errors[field];
+                        }
+                        if (inputField) {
+                            inputField.classList.add('border-red-500');
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Erro na requisição AJAX para criar Nova LP:', error);
+            showAlert('error', 'Erro!', 'Erro na comunicação com o servidor. Tente novamente.');
+        } finally {
+            normalStateNovoLP.classList.remove('hidden');
+            loadingStateNovoLP.classList.add('hidden');
+            submitNovoLP.disabled = false;
+            isSubmittingNovoLP = false; 
+        }
     });
+
+    // =========================================================
+    // FUNÇÕES DE CÁLCULO E LISTENERS DE INPUT PARA NOVO LP
+    // =========================================================
+
+    // Função para atualizar os campos calculados no modal de Nova LP
+    function updateCalculatedFields() {
+        const dataUltimoLpInput = document.getElementById('data_ultimo_lp'); 
+        const numeroLpInput = document.getElementById('numero_lp'); 
+
+        const previsaoNumeroProxLpOutput = document.getElementById('previsao_numero_prox_lp');
+        const proximoLpOutput = document.getElementById('proximo_lp_output');
+        const mesProximoLpOutput = document.getElementById('mes_proximo_lp_output');
+        const anoProximoLpOutput = document.getElementById('ano_proximo_lp_output');
+
+        let dataUltimoLp = dataUltimoLpInput.value;
+        let numeroLP = parseInt(numeroLpInput.value);
+
+        if (dataUltimoLp && !isNaN(numeroLP)) {
+            try {
+                const dataBaseCalculo = new Date(dataUltimoLp + 'T00:00:00'); 
+                const proximoLpDate = new Date(dataBaseCalculo);
+                proximoLpDate.setFullYear(proximoLpDate.getFullYear() + 5);
+
+                if (previsaoNumeroProxLpOutput) {
+                    previsaoNumeroProxLpOutput.value = numeroLP + 1;
+                }
+                
+                if (proximoLpOutput) {
+                    proximoLpOutput.value = proximoLpDate.toISOString().split('T')[0];
+                }
+                
+                if (mesProximoLpOutput) {
+                    mesProximoLpOutput.value = String(proximoLpDate.getMonth() + 1).padStart(2, '0');
+                }
+                if (anoProximoLpOutput) {
+                    anoProximoLpOutput.value = proximoLpDate.getFullYear();
+                }
+
+            } catch (e) {
+                console.error("Erro nos cálculos do front-end:", e);
+                if (previsaoNumeroProxLpOutput) previsaoNumeroProxLpOutput.value = 'Erro';
+                if (proximoLpOutput) proximoLpOutput.value = '';
+                if (mesProximoLpOutput) mesProximoLpOutput.value = 'Erro';
+                if (anoProximoLpOutput) anoProximoLpOutput.value = 'Erro';
+            }
+        } else {
+            if (previsaoNumeroProxLpOutput) previsaoNumeroProxLpOutput.value = 'N/A';
+            if (proximoLpOutput) proximoLpOutput.value = '';
+            if (mesProximoLpOutput) mesProximoLpOutput.value = 'N/A';
+            if (anoProximoLpOutput) anoProximoLpOutput.value = 'N/A';
+        }
+    }
+    
+    // Adicionar listeners para os campos que acionam o cálculo
+    const dataUltimoLpInputNovo = document.getElementById('data_ultimo_lp');
+    const numeroLpInputNovo = document.getElementById('numero_lp');
+
+    if (dataUltimoLpInputNovo) {
+        dataUltimoLpInputNovo.addEventListener('change', updateCalculatedFields);
+    }
+    if (numeroLpInputNovo) {
+        numeroLpInputNovo.addEventListener('change', updateCalculatedFields);
+    }
+    
+    // Chame updateCalculatedFields() na carga inicial para preencher os campos se houver dados preexistentes
+    updateCalculatedFields();
+});
 </script>
-                </fieldset>
+</fieldset>
 
 
                 <!-- Próxima LP -->
@@ -1633,9 +1760,13 @@
             <thead class="bg-blue-100">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Data Alteração</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Usuário</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Usuário Alteração</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Detalhes da LP</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">LP</th> {# Nova coluna #}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Concessão</th> {# Nova coluna #}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Publicação (BOL)</th> {# Nova coluna #}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Data Publicação</th> {# Nova coluna #}
+                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Concluído Por</th> {# Antiga "Detalhes da LP", agora focada #}
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-300">
@@ -1669,38 +1800,50 @@
                         {{ registro.get_status_lp_display }}
                     </td>
 
+                    {# Nova coluna para o Número da LP #}
                     <td class="px-4 py-3 text-sm text-gray-800">
-                        <div class="mb-1">
-                            <span class="font-semibold">LP:</span> {{ registro.numero_lp }}ª 
-                            <span class="ml-2">
-                                <span class="font-semibold">Concessão:</span> {{ registro.data_concessao_lp|date:"d/m/Y"|default:"N/A" }}
-                            </span>
-                        </div>
-                        
-                        <div class="mb-1">
-                            <span class="font-semibold">Publicação:</span> {{ registro.bol_g_pm_lp|default:"N/A" }}
-                            <span class="ml-2">
-                                <span class="font-semibold">Data:</span> {{ registro.data_publicacao_lp|date:"d/m/Y"|default:"N/A" }}
-                            </span>
-                        </div>
-                        
-                        <div>
-                            <span class="font-semibold">Concluído por:</span> 
-                            {% with militar_conclusao=registro.usuario_conclusao.cadastros.last %}
-                                {% if militar_conclusao %}
+                        {{ registro.numero_lp }}ª
+                    </td>
+
+                    {# Nova coluna para a Data de Concessão #}
+                    <td class="px-4 py-3 text-sm text-gray-800">
+                        {{ registro.data_concessao_lp|date:"d/m/Y"|default:"N/A" }}
+                    </td>
+
+                    {# Nova coluna para o Boletim da Publicação #}
+                    <td class="px-4 py-3 text-sm text-gray-800">
+                        {{ registro.bol_g_pm_lp|default:"N/A" }}
+                    </td>
+
+                    {# Nova coluna para a Data da Publicação #}
+                    <td class="px-4 py-3 text-sm text-gray-800">
+                        {{ registro.data_publicacao_lp|date:"d/m/Y"|default:"N/A" }}
+                    </td>
+
+{# Coluna para "Concluído Por" #}
+                    <td class="px-4 py-3 text-sm text-gray-800">
+                        {# Acesse o usuario_conclusao através da LP associada ao registro de histórico #}
+                        {% with militar_conclusao=registro.lp.usuario_conclusao.cadastros.last %}
+                            {% if militar_conclusao %}
+                                <div class="font-medium">
                                     {{ militar_conclusao.ultima_promocao.posto_grad }}
                                     {{ militar_conclusao.re }}-{{ militar_conclusao.dig }}
-                                    {{ registro.usuario_conclusao.last_name }}
-                                {% else %}
-                                    {{ registro.usuario_conclusao.username|default:"Sistema" }}
-                                {% endif %}
-                            {% endwith %}
-                        </div>
+                                    {{ registro.lp.usuario_conclusao.last_name }} {# Use registro.lp.usuario_conclusao #}
+                                </div>
+                                <div class="text-gray-500">
+                                    {{ militar_conclusao.cpf }}
+                                </div>
+                            {% else %}
+                                <div class="font-medium">
+                                    {{ registro.lp.usuario_conclusao.username|default:"Sistema" }} {# Use registro.lp.usuario_conclusao #}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-4 py-3 text-sm text-center text-gray-600">
+                    <td colspan="8" class="px-4 py-3 text-sm text-center text-gray-600"> {# colspan ajustado #}
                         Nenhuma LP concluída encontrada
                     </td>
                 </tr>
