@@ -22,4 +22,12 @@ urlpatterns = [
     path('lista/', views.listar_lp, name='listar_lp'), 
 
     path('<int:pk>/carregar-dados-sipa/', views.carregar_dados_sipa_lp, name='carregar_dados_sipa_lp'),
+
+
+
+   path('fruicao/<int:pk>/', views.detalhar_fruicao, name='detalhar_fruicao'),
+
+
+
+
 ]

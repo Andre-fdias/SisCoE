@@ -1,6 +1,6 @@
 # backend/lp/admin.py
 from django.contrib import admin
-from .models import LP, HistoricoLP # Importe seus modelos LP e HistoricoLP
+from .models import LP, HistoricoLP, LP_fruicao # Importe seus modelos LP e HistoricoLP
 from backend.efetivo.models import Cadastro # Importe Cadastro se for usado aqui para exibir campos relacionados
 
 @admin.register(LP)
@@ -64,3 +64,57 @@ class HistoricoLPAdmin(admin.ModelAdmin):
                        'bol_g_pm_lp', 'data_publicacao_lp', 'data_concessao_lp', 'lancamento_sipa', 
                        'observacoes_historico')
     date_hierarchy = 'data_alteracao'
+
+
+
+@admin.register(LP_fruicao)
+class LPFruicaoAdmin(admin.ModelAdmin):
+    list_display = (
+        'cadastro', 'numero_lp', 'data_concessao_lp', 
+        'tipo_choice', 'tipo_periodo_afastamento', 'data_publicacao_lp'
+    )
+    list_filter = (
+        'tipo_choice', 'tipo_periodo_afastamento',
+        ('data_concessao_lp', admin.DateFieldListFilter),
+        ('data_publicacao_lp', admin.DateFieldListFilter),
+    )
+    search_fields = (
+        'cadastro__nome', 'cadastro__re', 'cadastro__nome_de_guerra',
+        'bol_g_pm_lp', 'lp_concluida__numero_lp'
+    )
+    readonly_fields = (
+        'data_cadastro', 'data_atualizacao', 'user_created', 'user_updated',
+        'cadastro', 'lp_concluida'
+    )
+    date_hierarchy = 'data_cadastro'
+    
+    fieldsets = (
+        (None, {
+            'fields': (
+                'cadastro', 'lp_concluida', 'numero_lp',
+                ('data_concessao_lp', 'data_publicacao_lp'),
+            )
+        }),
+        ('Fruição da LP', {
+            'fields': (
+                'tipo_choice', 'tipo_periodo_afastamento', 'bol_g_pm_lp'
+            ),
+        }),
+        ('Auditoria', {
+            'fields': (
+                'user_created', 'data_cadastro', 
+                'user_updated', 'data_atualizacao'
+            ),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Otimiza as consultas relacionadas
+        return qs.select_related('cadastro', 'lp_concluida')
+    
+    def numero_lp(self, obj):
+        return obj.lp_concluida.numero_lp
+    numero_lp.short_description = 'Nº LP'
+    numero_lp.admin_order_field = 'lp_concluida__numero_lp'
