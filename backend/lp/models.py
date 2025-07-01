@@ -111,6 +111,8 @@ class LP(models.Model):
            self.data_publicacao_lp < self.data_concessao_lp:
             raise ValidationError({'data_publicacao_lp': 'A data de publicação não pode ser anterior à data de concessão.'})
     
+
+
     
     def get_situacao_lp_choices(self):
         return self._meta.get_field('situacao_lp').choices
@@ -193,3 +195,62 @@ class HistoricoLP(models.Model):
 
     def __str__(self):
         return f"Histórico LP {self.lp.numero_lp} ({self.lp.cadastro}) - {self.status_lp} em {self.data_alteracao.strftime('%d/%m/%Y %H:%M')}"
+    
+
+
+
+
+class LP_fruicao(models.Model): # Renomeado de PrevisaoLP para LP_fruicao
+    """
+    Modelo para armazenar informações de fruição de LP, incluindo afastamentos.
+    """
+    cadastro = models.ForeignKey('efetivo.Cadastro', on_delete=models.CASCADE, verbose_name="Cadastro")
+    lp_concluida = models.OneToOneField(LP, on_delete=models.CASCADE, related_name='previsao_associada', verbose_name="LP Concluída Associada")
+    
+    # Campos herdados/copiados da LP original
+    numero_lp = models.PositiveSmallIntegerField(verbose_name="Número da LP Concluída")
+    data_concessao_lp = models.DateField(null=True, blank=True, verbose_name="Data de Concessão da LP") # Alterado de data_ultimo_lp
+    bol_g_pm_lp = models.CharField(max_length=50, null=True, blank=True, verbose_name="BOL G PM")
+    data_publicacao_lp = models.DateField(null=True, blank=True, verbose_name="Data Publicação LP")
+
+    # Nova coluna para indicar a duração do afastamento na fruição
+    dias_CHOICES = [ # Renomeado de TIPO_PERIODO_AFASTAMENTO_CHOICES
+        (15, '15 Dias'),
+        (30, '30 Dias'),
+        (45, '45 Dias'),
+        (60, '60 Dias'),
+        (75, '75 Dias'),
+        (90, '90 Dias'),
+    ]
+    tipo_periodo_afastamento = models.PositiveSmallIntegerField(
+        choices=dias_CHOICES, # Usando o novo nome
+        null=True, blank=True,
+        verbose_name="Tipo de Período de Afastamento"
+    )
+
+    # Novo campo para tipo de escolha
+    TIPO_CHOICE_OPTIONS = [
+        ('fruicao', 'Fruição'),
+        ('pecunia', 'Pecúnia'),
+    ]
+    tipo_choice = models.CharField(
+        max_length=10,
+        choices=TIPO_CHOICE_OPTIONS,
+        null=True, blank=True,
+        verbose_name="Tipo de Escolha"
+    )
+
+    # Campos de auditoria
+    user_created = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='previsoes_criadas', verbose_name="Criado por")
+    data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
+    user_updated = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='previsoes_modificadas', verbose_name="Modificado por")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
+
+    class Meta:
+        verbose_name = "Fruição de LP" # Alterado
+        verbose_name_plural = "Fruições de LPs" # Alterado
+        ordering = ['cadastro', 'numero_lp'] # Ordem para melhor organização
+
+    def __str__(self):
+        return f"Fruição para LP {self.numero_lp} de {self.cadastro.nome_de_guerra}" # Alterado
+

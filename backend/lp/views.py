@@ -993,3 +993,10 @@ def carregar_dados_sipa_lp(request, pk):
     return JsonResponse(data)
 
 
+# backend/lp/views.py
+from django.shortcuts import render, get_object_or_404
+from .models import LP_fruicao
+
+def detalhar_fruicao(request, pk):
+    fruicao = get_object_or_404(LP_fruicao, pk=pk)
+    return render(request, 'fruicao/detalhar_lp_fruicao.html', {'fruicao': fruicao})
