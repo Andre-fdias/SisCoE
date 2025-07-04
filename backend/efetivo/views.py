@@ -43,6 +43,7 @@ from backend.accounts.models import User
 from backend.cursos.models import Curso, Medalha
 from backend.municipios.models import Posto
 from backend.rpt.models import Cadastro_rpt
+from backend.lp.models import LP, LP_fruicao, HistoricoLP # Importe os modelos LP e LP_fruicao do app lp
 
 
 # resposavel pelas etiquetas
@@ -297,13 +298,26 @@ def ver_militar(request, id):
             'promocoes',
             'detalhes_situacao',
             'categorias_efetivo',
-            'cadastro_rpt'
+            'cadastro_rpt',
+            'lp_set'  # Adicionado para otimizar consulta de LPs
         ).get(id=id)
 
         today = timezone.now().date()
         detalhes = cadastro.detalhes_situacao.last()
         promocao = cadastro.promocoes.last()
         categoria_atual = cadastro.categorias_efetivo.filter(ativo=True).first()
+
+        # Buscar LPs concluídas do militar
+        lps_concluidas = cadastro.lp_set.filter(
+            status_lp=LP.StatusLP.CONCLUIDO
+        ).order_by('numero_lp')
+        
+        # Para cada LP, tentar obter a fruição associada
+        for lp in lps_concluidas:
+            try:
+                lp.previsao_associada = LP_fruicao.objects.get(lp_concluida=lp)
+            except LP_fruicao.DoesNotExist:
+                lp.previsao_associada = None
 
         # Processar Restrições
         MENSAGENS_RESTRICOES = {
@@ -423,6 +437,7 @@ def ver_militar(request, id):
             'cadastro_rpt': cadastro_rpt,
             'count_in_section': count_in_section,
             'cursos_especiais': cursos_especiais,
+            'lps_concluidas': lps_concluidas,  # Novo item no contexto
             # Choices
             'situacao_choices': DetalhesSituacao.situacao_choices,
             'sgb_choices': DetalhesSituacao.sgb_choices,
