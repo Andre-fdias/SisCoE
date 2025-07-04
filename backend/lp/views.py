@@ -329,26 +329,19 @@ def ver_lp(request, pk):
     historico_lp = HistoricoLP.objects.filter(lp=lp).order_by('-data_alteracao')
     
     # Histórico de cadastros de LP para o mesmo militar (apenas LPs concluídas)
-    # MODIFICAÇÃO AQUI: Obter apenas o último registro concluído para cada 'numero_lp'
     lps_do_cadastro = LP.objects.filter(cadastro=lp.cadastro)
     
-    # Subquery para encontrar a `data_alteracao` máxima para cada `numero_lp` concluída.
     latest_concluded_history_dates = HistoricoLP.objects.filter(
         lp__in=lps_do_cadastro,
         status_lp='concluido',
-        numero_lp=OuterRef('numero_lp') # Referencia o `numero_lp` da query externa
-    ).order_by('-data_alteracao').values('pk')[:1] # Pega o PK do mais recente para cada numero_lp
+        numero_lp=OuterRef('numero_lp')
+    ).order_by('-data_alteracao').values('pk')[:1]
 
     historico_cadastro = HistoricoLP.objects.filter(
         lp__in=lps_do_cadastro,
         status_lp='concluido',
-        pk__in=Subquery(latest_concluded_history_dates) # Filtra pelos PKs dos registros mais recentes
-    ).order_by('numero_lp', '-data_alteracao') # Ordena para garantir que a última de cada LP seja a primeira ou para exibição
-
-    # Se você quiser garantir apenas a ÚLTIMA conclusão de CADA LP do militar, esta é a forma mais robusta.
-    # Se 'numero_lp' puder ter o mesmo valor para LPs diferentes (o que não deveria acontecer para o mesmo cadastro),
-    # você precisaria agrupar por `lp_id` e `numero_lp`. Mas presumo que `numero_lp` é único por LP.
-
+        pk__in=Subquery(latest_concluded_history_dates)
+    ).order_by('numero_lp', '-data_alteracao')
 
     status_lp_choices_json = json.dumps(list(LP.StatusLP.choices))
 
@@ -392,8 +385,41 @@ def ver_lp(request, pk):
 
     lp_count = LP.objects.filter(cadastro=lp.cadastro).count()
 
+    # Inicializar variáveis para fruição
+    dias_utilizados = 0
+    dias_disponiveis = 90
+    dias_utilizados_percent = 0
+    
+    # Verificar se existe fruição associada
+    if hasattr(lp, 'fruicao'):
+        fruicao = lp.fruicao
+        historico_filtrado = fruicao.historico.filter(
+            data_inicio_afastamento__isnull=False,
+            data_termino_afastamento__isnull=False
+        ).order_by('-data_alteracao')
+        
+        # Obter valores de dias utilizados e disponíveis
+        dias_utilizados = fruicao.dias_utilizados or 0
+        dias_disponiveis = fruicao.dias_disponiveis or 90
+        dias_utilizados_percent = (dias_utilizados / 90) * 100
+    else:
+        # Criar um objeto fictício para manter a compatibilidade com o template
+        class FruicaoStub:
+            pass
+        
+        fruicao = FruicaoStub()
+        setattr(fruicao, 'dias_utilizados', 0)
+        setattr(fruicao, 'dias_disponiveis', 90)
+        setattr(fruicao, 'historico', [])
+        setattr(fruicao, 'numero_lp', lp.numero_lp)
+        setattr(fruicao, 'tipo_periodo_afastamento', '')
+        setattr(fruicao, 'data_concessao_lp', None)
+        setattr(fruicao, 'bol_g_pm_lp', '')
+        setattr(fruicao, 'data_publicacao_lp', None)
+
     context = {
         'lp': lp,
+        'fruicao': fruicao,
         'historico_lp': historico_lp,
         'historico_cadastro': historico_cadastro,
         'N_CHOICES': N_CHOICES,
@@ -407,9 +433,13 @@ def ver_lp(request, pk):
         'StatusLP_choices': LP.StatusLP.choices,
         'StatusLP_choices_json': status_lp_choices_json,
         'lp_count': lp_count,
+        'dias_choices': LP_fruicao.DIAS_CHOICES,
+        'tipo_choice_options': LP_fruicao.TIPO_CHOICES,
+        'dias_utilizados': dias_utilizados,
+        'dias_disponiveis': dias_disponiveis,
+        'dias_utilizados_percent': dias_utilizados_percent,
     }
     return render(request, 'lp/detalhar_lp.html', context)
-
 
 @login_required
 @require_POST
@@ -993,10 +1023,179 @@ def carregar_dados_sipa_lp(request, pk):
     return JsonResponse(data)
 
 
-# backend/lp/views.py
-from django.shortcuts import render, get_object_or_404
-from .models import LP_fruicao
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import LP_fruicao, HistoricoFruicaoLP
 
+@login_required
 def detalhar_fruicao(request, pk):
     fruicao = get_object_or_404(LP_fruicao, pk=pk)
-    return render(request, 'fruicao/detalhar_lp_fruicao.html', {'fruicao': fruicao})
+    historico = fruicao.historico.filter(
+        data_inicio_afastamento__isnull=False,
+        data_termino_afastamento__isnull=False
+    ).order_by('-data_alteracao')
+    
+    context = {
+        'fruicao': fruicao,
+        'historico': historico,
+        'dias_choices': LP_fruicao.DIAS_CHOICES,  # Note a mudança para DIAS_CHOICES
+        'tipo_choices': LP_fruicao.TIPO_CHOICES,  # Note a mudança para TIPO_CHOICES
+    }
+    return render(request, 'lp/detalhar_lp.html', context)
+
+@login_required
+def editar_fruicao(request, pk):
+    fruicao = get_object_or_404(LP_fruicao, pk=pk)
+    
+    if request.method == 'POST':
+        # Mantenha o valor antigo para cálculo de dias
+        old_tipo_periodo = fruicao.tipo_periodo_afastamento
+        
+        # Atualize os campos (usar um Form seria melhor)
+        fruicao.tipo_periodo_afastamento = request.POST.get('tipo_periodo_afastamento')
+        fruicao.tipo_choice = request.POST.get('tipo_choice')
+        fruicao.data_inicio_afastamento = request.POST.get('data_inicio_afastamento')
+        fruicao.data_termino_afastamento = request.POST.get('data_termino_afastamento')
+        fruicao.bol_int = request.POST.get('bol_int')
+        fruicao.data_bol_int = request.POST.get('data_bol_int')
+        fruicao.user_updated = request.user
+        
+        # Converta datas se necessário
+        # (adicione validações como no seu código original)
+        
+        # Lógica de atualização de dias (como no seu código original)
+        if fruicao.tipo_periodo_afastamento != old_tipo_periodo:
+            if old_tipo_periodo:
+                fruicao.dias_disponiveis += old_tipo_periodo
+                fruicao.dias_utilizados -= old_tipo_periodo
+            
+            if fruicao.tipo_periodo_afastamento:
+                if fruicao.dias_disponiveis >= fruicao.tipo_periodo_afastamento:
+                    fruicao.dias_disponiveis -= fruicao.tipo_periodo_afastamento
+                    fruicao.dias_utilizados += fruicao.tipo_periodo_afastamento
+                else:
+                    messages.error(request, "Dias disponíveis insuficientes.")
+                    return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
+        
+        try:
+            fruicao.full_clean()
+            fruicao.save()
+            messages.success(request, "Fruição atualizada com sucesso!")
+        except ValidationError as e:
+            messages.error(request, f"Erro na validação: {e}")
+        
+        return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
+    
+    # Se for GET, retorne um JSON para o modal (ou redirecione)
+    return JsonResponse({
+        'status': 'ok',
+        'data': {
+            'tipo_periodo_afastamento': fruicao.tipo_periodo_afastamento,
+            # ... outros campos
+        }
+    })
+
+@login_required
+def adicionar_afastamento(request, pk):
+    # Alterado para buscar a fruição diretamente
+    fruicao_instance = get_object_or_404(LP_fruicao, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            dias_afastamento = int(request.POST.get('tipo_periodo_afastamento'))
+        except (TypeError, ValueError):
+            dias_afastamento = None
+
+        if dias_afastamento:
+            if fruicao_instance.dias_disponiveis < dias_afastamento:
+                messages.error(request, "Dias disponíveis insuficientes para este afastamento.")
+                return render(request, 'fruicao/_adicionar_afastamento_modal.html', {
+                    'fruicao': fruicao_instance,
+                    'dias_choices': LP_fruicao.DIAS_CHOICES,
+                    'tipo_choice_options': LP_fruicao.TIPO_CHOICES,
+                })
+
+            # Atualiza os campos
+            fruicao_instance.tipo_periodo_afastamento = dias_afastamento
+            fruicao_instance.tipo_choice = request.POST.get('tipo_choice')
+            
+            # Processa as datas
+            data_inicio = request.POST.get('data_inicio_afastamento')
+            data_termino = request.POST.get('data_termino_afastamento')
+            
+            if data_inicio:
+                fruicao_instance.data_inicio_afastamento = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            if data_termino:
+                fruicao_instance.data_termino_afastamento = datetime.strptime(data_termino, '%Y-%m-%d').date()
+
+            # Atualiza dias
+            fruicao_instance.dias_utilizados += dias_afastamento
+            fruicao_instance.dias_disponiveis = 90 - fruicao_instance.dias_utilizados
+            fruicao_instance.user_updated = request.user
+
+            fruicao_instance.save()
+            messages.success(request, "Afastamento adicionado com sucesso!")
+            return redirect('lp:ver_lp', pk=fruicao_instance.lp_concluida.pk)
+
+    return render(request, 'fruicao/_adicionar_afastamento_modal.html', {
+        'fruicao': fruicao_instance,
+        'dias_choices': LP_fruicao.DIAS_CHOICES,
+        'tipo_choice_options': LP_fruicao.TIPO_CHOICES,
+    })
+@login_required
+def remover_afastamento(request, pk, afastamento_id):
+    fruicao = get_object_or_404(LP_fruicao, pk=pk)
+    
+    if request.method == 'POST':
+        # Encontre o registro de histórico específico
+        historico = get_object_or_404(fruicao.historico, pk=afastamento_id)
+        
+        # Devolva os dias ao saldo disponível
+        if historico.tipo_periodo_afastamento:
+            fruicao.dias_disponiveis += historico.tipo_periodo_afastamento
+            fruicao.dias_utilizados -= historico.tipo_periodo_afastamento
+        
+        # Limpe os campos de afastamento
+        fruicao.tipo_periodo_afastamento = None
+        fruicao.data_inicio_afastamento = None
+        fruicao.data_termino_afastamento = None
+        fruicao.user_updated = request.user
+        
+        try:
+            fruicao.full_clean()
+            fruicao.save()
+            
+            # Opcional: você pode querer deletar o registro de histórico também
+            # historico.delete()
+            
+            messages.success(request, "Afastamento removido com sucesso!")
+        except ValidationError as e:
+            messages.error(request, f"Erro ao remover afastamento: {e}")
+    
+    return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
+    fruicao = get_object_or_404(LP_fruicao, pk=pk)
+    registro_historico = get_object_or_404(HistoricoFruicaoLP, pk=afastamento_id, fruicao=fruicao)
+    
+    if request.method == 'POST':
+        try:
+            # Restaura os dias
+            dias_restaurados = registro_historico.tipo_periodo_afastamento or 0
+            fruicao.dias_disponiveis += dias_restaurados
+            fruicao.dias_utilizados -= dias_restaurados
+            fruicao.user_updated = request.user
+            fruicao.save()
+            
+            # Remove o registro do histórico
+            registro_historico.delete()
+            
+            messages.success(request, f'Afastamento removido e {dias_restaurados} dias restaurados.')
+            return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
+        except Exception as e:
+            messages.error(request, f'Erro ao remover afastamento: {str(e)}')
+    
+    context = {
+        'fruicao': fruicao,
+        'registro': registro_historico,
+    }
+    return render(request, 'fruicao/confirmar_remocao_afastamento.html', context)

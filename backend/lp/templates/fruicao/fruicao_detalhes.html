@@ -1,0 +1,374 @@
+<div class="fruicao-section p-4 " x-data="modalData()">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between ms-4 mt-4">
+        <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+             Períodos de Licenças-Prêmio disponíveis para fruição.
+        </div>
+    </h3>
+
+    <div class="p-4 mb-4 w-full max-w-full flex flex-col md:flex-row gap-6">
+        <div class="flex-1">
+            <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300 h-full">
+                <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    Informações da Concessão
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">Número da LP:</span>
+                        <span class="text-lg font-semibold text-blue-900">{{ fruicao.numero_lp }}º LP</span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">Período de Afastamento:</span>
+                        <span class="text-lg font-semibold text-blue-900">
+                            {{ fruicao.tipo_periodo_afastamento }} dias
+                        </span>
+                    </div> 
+
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">Data de Concessão:</span>
+                        <span class="text-lg font-semibold text-blue-900">
+                            {{ fruicao.data_concessao_lp|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">BOL G Pm LP:</span>
+                        <span class="text-lg font-semibold text-blue-900">{{ fruicao.bol_g_pm_lp }}</span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">Data de Publicação:</span>
+                        <span class="text-lg font-semibold text-blue-900">
+                            {{ fruicao.data_publicacao_lp|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="flex-1">
+            <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border h-full
+                {% if fruicao.dias_disponiveis == 0 %}border-red-500
+                {% else %}border-green-500{% endif %}">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Controle de Dias
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
+                        <span class="text-sm text-gray-700">Total Inicial:</span>
+                        <span class="text-lg font-semibold text-blue-900">90 dias</span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300
+                        {% if fruicao.dias_utilizados == 0 %}border-l-4 border-green-500
+                        {% elif fruicao.dias_utilizados == 90 %}border-l-4 border-red-500
+                        {% else %}border-l-4 border-yellow-500{% endif %}">
+                        <span class="text-sm text-gray-700">Dias Utilizados:</span>
+                        <span id="dias-utilizados-text" class="text-lg font-semibold 
+                            {% if fruicao.dias_utilizados == 90 %}text-red-900
+                            {% else %}text-blue-900{% endif %}">
+                            {{ fruicao.dias_utilizados|default:0 }} dias
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300
+                        {% if fruicao.dias_disponiveis == 90 %}border-l-4 border-green-500
+                        {% elif fruicao.dias_disponiveis == 0 %}border-l-4 border-red-500
+                        {% else %}border-l-4 border-green-500{% endif %}">
+                        <span class="text-sm text-gray-700">Dias Disponíveis:</span>
+                        <span id="dias-disponiveis-text" class="text-lg font-semibold 
+                            {% if fruicao.dias_disponiveis == 0 %}text-red-900
+                            {% else %}text-blue-900{% endif %}">
+                            {{ fruicao.dias_disponiveis|default:90 }} dias
+                        </span>
+                    </div>
+                </div>
+                                
+                <div class="mb-6">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-xs font-medium text-blue-700">Progresso de Utilização</span>
+                        <span id="progresso-percent-text" class="text-xs font-medium text-blue-700">{{ fruicao.dias_utilizados_percent|floatformat:0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="h-2 rounded-full transition-all duration-500 ease-out"></div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-1">
+                        {% for i in "12345" %}
+                            <div class="w-1/6 text-center text-xs text-gray-500">
+                                {% widthratio i 1 15 %} dias
+                            </div>
+                        {% endfor %}
+                        <div class="text-center text-xs text-gray-500">90 dias</div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-3">
+                    {% if fruicao.dias_disponiveis > 0 %}
+                    <button type="button" onclick="openModal('adicionarAfastamentoModal')"
+                        class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-plus mr-2"></i> Adicionar Afastamento
+                    </button>
+                    {% endif %}
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+    {# Include the new modal here #}
+    {% include 'fruicao/_adicionar_afastamento_modal.html' %}
+
+
+    <div class="p-4 mb-4 w-full w gap-6">
+        <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7v3m0 0l-3-3m3 3l3-3m-6-3h6"/>
+                </svg>
+                Histórico de Alterações
+            </h3>
+            
+            <div class="overflow-x-auto rounded-lg border border-gray-400 shadow-sm">
+                <table class="min-w-full divide-y divide-gray-400">
+                    <thead class="bg-blue-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Data</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Tipo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Dias</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Início</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Término</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Disponíveis</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Utilizados</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Usuário</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                <tbody class="bg-white divide-y divide-gray-300">
+                    {% for registro in fruicao.historico.all %}
+                        {% if registro.data_inicio_afastamento and registro.data_termino_afastamento %}
+                        <tr class="hover:bg-blue-50">
+                            <td class="px-4 py-3 text-sm text-blue-800 font-medium">{{ registro.data_alteracao|date:"d/m/Y H:i" }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-800">
+                                {{ registro.get_tipo_choice_display }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-800">
+                                {{ registro.tipo_periodo_afastamento|default:"-" }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-800">
+                                {{ registro.data_inicio_afastamento|date:"d/m/Y" }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-800">
+                                {{ registro.data_termino_afastamento|date:"d/m/Y" }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-800">{{ registro.dias_disponiveis }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-800">{{ registro.dias_utilizados }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-800">
+                                {% with militar_conclusao=registro.fruicao.lp_concluida.usuario_conclusao.cadastros.last %}
+                                    {% if militar_conclusao %}
+                                        <div class="font-medium">
+                                            {{ militar_conclusao.ultima_promocao.posto_grad }}
+                                            {{ militar_conclusao.re }}-{{ militar_conclusao.dig }}
+                                            {{ registro.fruicao.lp_concluida.usuario_conclusao.last_name }}
+                                        </div>
+                                        <div class="text-gray-500">
+                                            {{ militar_conclusao.cpf }}
+                                        </div>
+                                    {% else %}
+                                        <div class="font-medium">
+                                            {% if registro.usuario %}
+                                                {{ registro.usuario.username|default:"Sistema" }}
+                                            {% else %}
+                                                Sistema
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                           <td class="px-4 py-3 text-sm text-gray-800 space-x-2">
+                                {% if registro.tipo_periodo_afastamento %}
+                                <button @click="openDeleteModal = true" 
+                                        class="text-red-600 hover:text-red-800" 
+                                        title="Remover afastamento"
+                                        data-id="{{ registro.pk }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                {% endif %}
+                                
+                                <button @click="openEditModal = true" 
+                                        class="text-blue-600 hover:text-blue-800" 
+                                        title="Editar fruição"
+                                        data-id="{{ fruicao.pk }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="px-4 py-3 text-sm text-center text-gray-600">Nenhum registro histórico encontrado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </fieldset>
+    </div>
+      {% include 'fruicao/editar_fruicao.html' %}
+    {% include 'fruicao/confirmar_remocao_afastamento.html' %}
+
+    <script>
+    function modalData() {
+        return {
+            openEditModal: false,
+            openDeleteModal: false,
+            currentId: null,
+            
+            openEdit(id) {
+                this.currentId = id;
+                const form = document.getElementById('editForm');
+                // Certifique-se de que o action do formulário é atualizado corretamente
+                // Usar uma URL base e concatenar o ID é mais seguro
+                // Ex: form.action = `/fruicao/editar/${id}/`; (ajuste conforme suas URLs)
+                form.action = form.action.replace('/0/', `/${id}/`); 
+                this.openEditModal = true;
+            },
+            
+            openDelete(id) {
+                this.currentId = id;
+                const form = document.getElementById('deleteForm');
+                // Similarmente, ajuste a URL base se necessário
+                // Ex: form.action = `/fruicao/remover/${id}/`;
+                form.action = form.action.replace('/0/', `/${id}/`);
+                this.openDeleteModal = true;
+            }
+        }
+    }
+    
+    // Configura os event listeners para os botões Alpine.js
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-id]').forEach(button => {
+            if (button.innerHTML.includes('fa-edit')) {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    // Aqui você pode precisar garantir que Alpine.store('modal') está inicializado
+                    // ou passar diretamente o ID para a função openEdit se não usar store
+                    // Ex: modalData().openEdit(id); se modalData for uma função global
+                    // Ou, se Alpine.js já estiver inicializado no elemento pai:
+                    const scope = Alpine.$data(document.querySelector('[x-data="modalData()"]'));
+                    scope.openEdit(id);
+                });
+            } else if (button.innerHTML.includes('fa-trash-alt')) {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const scope = Alpine.$data(document.querySelector('[x-data="modalData()"]'));
+                    scope.openDelete(id);
+                });
+            }
+        });
+
+        // --- Lógica para a Barra de Progresso com JavaScript ---
+        const progressBar = document.getElementById('progress-bar');
+        const progressoPercentText = document.getElementById('progresso-percent-text');
+        const diasUtilizadosText = document.getElementById('dias-utilizados-text');
+        const diasDisponiveisText = document.getElementById('dias-disponiveis-text');
+        
+        // Obtém a porcentagem inicial e os dias do Django
+        const initialPercentage = parseFloat("{{ fruicao.dias_utilizados_percent|floatformat:2 }}");
+        const initialDiasUtilizados = parseInt("{{ fruicao.dias_utilizados|default:0 }}");
+        const initialDiasDisponiveis = parseInt("{{ fruicao.dias_disponiveis|default:90 }}");
+
+        // Função para atualizar a barra e os textos
+        function updateFruitionUI(utilizados, disponiveis, total = 90) {
+            const percentage = (utilizados / total) * 100;
+            const safePercentage = Math.max(0, Math.min(100, percentage));
+
+            // Atualiza a largura da barra
+            if (progressBar) {
+                progressBar.style.width = safePercentage + '%';
+                // Atualiza a cor da barra baseada na porcentagem
+                progressBar.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
+                if (utilizados <= 30) {
+                    progressBar.classList.add('bg-green-500');
+                } else if (utilizados <= 60) {
+                    progressBar.classList.add('bg-yellow-500');
+                } else {
+                    progressBar.classList.add('bg-red-500');
+                }
+            }
+
+            // Atualiza o texto da porcentagem
+            if (progressoPercentText) {
+                progressoPercentText.innerText = `${safePercentage.toFixed(0)}%`;
+            }
+
+            // Atualiza os textos de Dias Utilizados e Dias Disponíveis
+            if (diasUtilizadosText) {
+                diasUtilizadosText.innerText = `${utilizados} dias`;
+            }
+            if (diasDisponiveisText) {
+                diasDisponiveisText.innerText = `${disponiveis} dias`;
+            }
+        }
+
+        // Chama a função para configurar o estado inicial da barra e textos
+        updateFruitionUI(initialDiasUtilizados, initialDiasDisponiveis);
+
+        // Exemplo: Simular uma atualização de dias (você removeria isso e conectaria à sua lógica de "Adicionar Afastamento")
+        // setTimeout(() => {
+        //     console.log("Simulando atualização para 45 dias utilizados...");
+        //     updateFruitionUI(45, 45); 
+        // }, 3000); // Atualiza após 3 segundos
+        //
+        // setTimeout(() => {
+        //     console.log("Simulando atualização para 80 dias utilizados...");
+        //     updateFruitionUI(80, 10); 
+        // }, 6000); // Atualiza após 6 segundos
+
+        // IMPORTANTE:
+        // Se você for usar AJAX para adicionar afastamentos, você chamaria `updateFruitionUI`
+        // na função de callback de sucesso do seu Fetch/Axios, passando os novos valores de dias.
+        // Exemplo:
+        /*
+        document.getElementById('seuFormDeAfastamento').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            const formData = new FormData(event.target);
+            try {
+                const response = await fetch(event.target.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}' // Não esqueça do CSRF token para Django
+                    }
+                });
+                const data = await response.json(); // Espera que sua view Django retorne JSON com os novos dias
+
+                if (response.ok) {
+                    updateFruitionUI(data.dias_utilizados, data.dias_disponiveis);
+                    // Fechar modal, exibir mensagem de sucesso, etc.
+                    closeModal('adicionarAfastamentoModal'); // Se você tiver uma função global para isso
+                    alert('Afastamento adicionado com sucesso!');
+                } else {
+                    alert('Erro ao adicionar afastamento: ' + (data.message || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                alert('Ocorreu um erro ao comunicar com o servidor.');
+            }
+        });
+        */
+
+    });
+    </script>
+
+</div>

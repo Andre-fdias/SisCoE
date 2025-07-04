@@ -1,5 +1,3 @@
-# backend/lp/models.py
-
 from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
@@ -8,24 +6,30 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-# Definições de escolhas compartilhadas
+# Definições de escolhas compartilhadas (mantidas como estão no seu arquivo)
 N_CHOICES = [(i, f'{i:02d}') for i in range(1, 9)]
 situacao_choices = (
     ("Aguardando", "Aguardando"),
     ("Concedido", "Concedido"),
     ("Concluído", "Concluído"),
 )
+dias_CHOICES = [
+    (15, '15 Dias'), (30, '30 Dias'), (45, '45 Dias'),
+    (60, '60 Dias'), (75, '75 Dias'), (90, '90 Dias'),
+]
+TIPO_CHOICE_OPTIONS = [
+    ('fruicao', 'Fruição'), ('pecunia', 'Pecúnia'),
+]
+
 
 class LP(models.Model):
-    """
-    Modelo para representar a Licença Prêmio (LP) de um servidor.
-    """
+    # ... (O modelo LP permanece inalterado) ...
     class StatusLP(models.TextChoices):
         AGUARDANDO_REQUISITOS = 'aguardando_requisitos', 'Aguardando Requisitos'
         APTA_CONCESSAO = 'apta_concessao', 'Apta para Concessão'
-        LANCADO_SIPA = 'lancado_sipa', 'Lançado no SIPA' # Ordem corrigida
-        CONCEDIDO = 'concedido', 'Concedido'             # Ordem corrigida
-        PUBLICADO = 'publicado', 'Publicado'             # Ordem corrigida
+        LANCADO_SIPA = 'lancado_sipa', 'Lançado no SIPA'
+        CONCEDIDO = 'concedido', 'Concedido'
+        PUBLICADO = 'publicado', 'Publicado'
         CONCLUIDO = 'concluido', 'Concluído'
 
     cadastro = models.ForeignKey('efetivo.Cadastro', on_delete=models.CASCADE, verbose_name="Cadastro")
@@ -71,7 +75,7 @@ class LP(models.Model):
         Retorna a porcentagem de progresso da LP.
         """
         current_index = self._status_order_map.get(self.status_lp, 0)
-        total_steps = len(self._status_order_map) # Usar o tamanho do mapa para garantir consistência
+        total_steps = len(self._status_order_map)
         
         if total_steps <= 1: 
             return 100 if current_index == 0 else 0
@@ -85,10 +89,11 @@ class LP(models.Model):
         """
         return self._status_order_map.get(self.status_lp, 0)
 
-   
+    
     class Meta:
         verbose_name = "Licença Prêmio"
         verbose_name_plural = "Licenças Prêmio"
+        unique_together = ('cadastro', 'numero_lp') # <--- ADICIONE ESTA LINHA
         # ordering = ['sua_ordem_aqui']
     def __str__(self):
         return f"LP {self.numero_lp} - {self.cadastro.nome_de_guerra}"
@@ -125,7 +130,6 @@ class LP(models.Model):
         Retorna None se data_ultimo_lp não estiver definida
         """
         if self.data_ultimo_lp:
-            # 5 anos = 365 * 5 = 1825 dias
             return self.data_ultimo_lp + timedelta(days=1825)
         return None
     
@@ -136,7 +140,7 @@ class LP(models.Model):
         try:
             current_index = status_order.index(self.status_lp)
         except ValueError:
-            current_index = 0 # Fallback se o status não for encontrado
+            current_index = 0
         
         if len(status_order) <= 1:
             return 0
@@ -157,24 +161,21 @@ class LP(models.Model):
         try:
             return status_order.index(self.status_lp)
         except ValueError:
-            return 0 # Fallback se o status não for encontrado
+            return 0
 
-# ... (restante do seu models.py) ...
 
 class HistoricoLP(models.Model):
+    # ... (O modelo HistoricoLP permanece inalterado) ...
     lp = models.ForeignKey(LP, on_delete=models.CASCADE, verbose_name="LP")
     usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Usuário da Alteração")
     data_alteracao = models.DateTimeField(auto_now_add=True, verbose_name="Data da Alteração")
     
-    # Adicione este campo para rastrear quem concluiu no registro de histórico
     usuario_conclusao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='historico_lps_concluidas', verbose_name="Concluído por (Histórico)")
     
-    # ... (outros campos que você já tem no HistoricoLP, como os abaixo) ...
     situacao_lp = models.CharField(max_length=30, choices=situacao_choices, verbose_name="Situação da LP")
     status_lp = models.CharField(max_length=30, choices=LP.StatusLP.choices, verbose_name="Status da LP")
     
-    # Campos copiados do modelo LP no momento da alteração
     numero_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Número da LP")
     data_ultimo_lp = models.DateField(null=True, blank=True, verbose_name="Data do Último LP")
     numero_prox_lp = models.PositiveSmallIntegerField(choices=N_CHOICES, verbose_name="Próximo Número da LP", null=True, blank=True)
@@ -186,8 +187,8 @@ class HistoricoLP(models.Model):
     data_publicacao_lp = models.DateField(null=True, blank=True, verbose_name="Data Publicação LP")
     data_concessao_lp = models.DateField(null=True, blank=True, verbose_name="Data de Concessão da LP")
     lancamento_sipa = models.BooleanField(default=False, verbose_name="Lançamento no SIPA")
-    data_conclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Conclusão (Histórico)") # Novo ou existente? Verifique
-    observacoes_historico = models.TextField(blank=True, verbose_name="Observações do Histórico") # Exemplo de campo específico de histórico
+    data_conclusao = models.DateTimeField(null=True, blank=True, verbose_name="Data de Conclusão (Histórico)")
+    observacoes_historico = models.TextField(blank=True, verbose_name="Observações do Histórico")
 
     class Meta:
         verbose_name = "Histórico da LP"
@@ -198,59 +199,174 @@ class HistoricoLP(models.Model):
     
 
 
-
-
-class LP_fruicao(models.Model): # Renomeado de PrevisaoLP para LP_fruicao
+class LP_fruicao(models.Model):
     """
     Modelo para armazenar informações de fruição de LP, incluindo afastamentos.
     """
+
+    DIAS_CHOICES = [
+        (15, '15 Dias'), (30, '30 Dias'), (45, '45 Dias'),
+        (60, '60 Dias'), (75, '75 Dias'), (90, '90 Dias'),
+    ]
+    TIPO_CHOICES = [
+        ('fruicao', 'Fruição'), ('pecunia', 'Pecúnia'),
+    ]
+
     cadastro = models.ForeignKey('efetivo.Cadastro', on_delete=models.CASCADE, verbose_name="Cadastro")
     lp_concluida = models.OneToOneField(LP, on_delete=models.CASCADE, related_name='previsao_associada', verbose_name="LP Concluída Associada")
     
-    # Campos herdados/copiados da LP original
     numero_lp = models.PositiveSmallIntegerField(verbose_name="Número da LP Concluída")
-    data_concessao_lp = models.DateField(null=True, blank=True, verbose_name="Data de Concessão da LP") # Alterado de data_ultimo_lp
+    data_concessao_lp = models.DateField(null=True, blank=True, verbose_name="Data de Concessão da LP")
     bol_g_pm_lp = models.CharField(max_length=50, null=True, blank=True, verbose_name="BOL G PM")
     data_publicacao_lp = models.DateField(null=True, blank=True, verbose_name="Data Publicação LP")
 
-    # Nova coluna para indicar a duração do afastamento na fruição
-    dias_CHOICES = [ # Renomeado de TIPO_PERIODO_AFASTAMENTO_CHOICES
-        (15, '15 Dias'),
-        (30, '30 Dias'),
-        (45, '45 Dias'),
-        (60, '60 Dias'),
-        (75, '75 Dias'),
-        (90, '90 Dias'),
-    ]
     tipo_periodo_afastamento = models.PositiveSmallIntegerField(
-        choices=dias_CHOICES, # Usando o novo nome
+        choices=DIAS_CHOICES,
         null=True, blank=True,
         verbose_name="Tipo de Período de Afastamento"
     )
 
-    # Novo campo para tipo de escolha
-    TIPO_CHOICE_OPTIONS = [
-        ('fruicao', 'Fruição'),
-        ('pecunia', 'Pecúnia'),
-    ]
     tipo_choice = models.CharField(
         max_length=10,
-        choices=TIPO_CHOICE_OPTIONS,
+        choices=TIPO_CHOICES,
         null=True, blank=True,
         verbose_name="Tipo de Escolha"
     )
 
-    # Campos de auditoria
     user_created = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='previsoes_criadas', verbose_name="Criado por")
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
     user_updated = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='previsoes_modificadas', verbose_name="Modificado por")
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
-
+    dias_disponiveis = models.PositiveSmallIntegerField(default=90, verbose_name="Dias Disponíveis")
+    dias_utilizados = models.PositiveSmallIntegerField(default=0, verbose_name="Dias Utilizados")
+    data_inicio_afastamento = models.DateField(null=True, blank=True, verbose_name="Data de Início do Afastamento")
+    data_termino_afastamento = models.DateField(null=True, blank=True, verbose_name="Data de Término do Afastamento")
+    bol_int = models.CharField(max_length=50, null=True, blank=True, verbose_name="BOL Int")
+    data_bol_int = models.DateField(null=True, blank=True, verbose_name="Data do BOL Int")
+   
     class Meta:
-        verbose_name = "Fruição de LP" # Alterado
-        verbose_name_plural = "Fruições de LPs" # Alterado
-        ordering = ['cadastro', 'numero_lp'] # Ordem para melhor organização
+        verbose_name = "Fruição de LP"
+        verbose_name_plural = "Fruições de LPs"
+        ordering = ['cadastro', 'numero_lp']
 
     def __str__(self):
-        return f"Fruição para LP {self.numero_lp} de {self.cadastro.nome_de_guerra}" # Alterado
+        return f"Fruição para LP {self.numero_lp} de {self.cadastro.nome_de_guerra}"
 
+    def clean(self):
+        if self.data_inicio_afastamento and self.data_termino_afastamento:
+            if self.data_termino_afastamento < self.data_inicio_afastamento:
+                raise ValidationError("A data de término não pode ser anterior à data de início")
+            
+            delta = self.data_termino_afastamento - self.data_inicio_afastamento
+            dias_calculados = delta.days + 1
+            
+            if self.tipo_periodo_afastamento and self.tipo_periodo_afastamento != dias_calculados:
+                raise ValidationError(
+                    f"O período selecionado ({self.tipo_periodo_afastamento} dias) não corresponde "
+                    f"ao intervalo de datas ({dias_calculados} dias)"
+                )
+        
+        if self.dias_utilizados < 0:
+            raise ValidationError("Dias utilizados não podem ser negativos")
+        
+        super().clean()
+
+    # Sobrescrevendo o método save para registrar o histórico de forma inteligente
+    def save(self, *args, **kwargs):
+        # Garante que os dias disponíveis sejam sempre calculados corretamente
+        if self.dias_utilizados > 90:
+            raise ValidationError("Dias utilizados não podem exceder 90 dias")
+        
+        self.dias_disponiveis = 90 - self.dias_utilizados
+        
+        # Verifica se é uma nova instância ou uma atualização
+        is_new = not self.pk
+        old_instance = None
+        
+        if not is_new:
+            old_instance = LP_fruicao.objects.get(pk=self.pk)
+        
+        super().save(*args, **kwargs)
+        
+        # Cria registro de histórico se necessário
+        if is_new:
+            HistoricoFruicaoLP.criar_registro(self)
+        elif old_instance:
+            campos_rastreados = [
+                'tipo_periodo_afastamento', 'dias_disponiveis', 'dias_utilizados',
+                'tipo_choice', 'data_inicio_afastamento', 'data_termino_afastamento',
+                'bol_int', 'data_bol_int'
+            ]
+            
+            if any(getattr(old_instance, campo) != getattr(self, campo) for campo in campos_rastreados):
+                HistoricoFruicaoLP.criar_registro(self)
+
+    @property
+    def dias_utilizados_percent(self):
+        """Retorna a porcentagem de dias utilizados para a barra de progresso"""
+        return (self.dias_utilizados / 90) * 100 if self.dias_utilizados else 0
+
+class HistoricoFruicaoLP(models.Model):
+    # ... (O modelo HistoricoFruicaoLP permanece inalterado, exceto pela classe Meta.ordering) ...
+    fruicao = models.ForeignKey(LP_fruicao, on_delete=models.CASCADE, related_name='historico')
+    data_alteracao = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    
+    # Campos copiados da fruição
+    tipo_periodo_afastamento = models.PositiveSmallIntegerField(
+        choices=LP_fruicao.DIAS_CHOICES, 
+        null=True, 
+        blank=True,
+        verbose_name="Dias de Afastamento"
+    )
+    dias_disponiveis = models.PositiveSmallIntegerField(verbose_name="Dias Disponíveis")
+    dias_utilizados = models.PositiveSmallIntegerField(verbose_name="Dias Utilizados")
+    tipo_choice = models.CharField(
+        max_length=10, 
+        choices=LP_fruicao.TIPO_CHOICES, 
+        null=True, 
+        blank=True,
+        verbose_name="Tipo de Escolha"
+    )
+    
+    data_inicio_afastamento = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name="Data de Início do Afastamento"
+    )
+    data_termino_afastamento = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name="Data de Término do Afastamento"
+    )
+    bol_int = models.CharField(
+        max_length=50, 
+        null=True, 
+        blank=True, 
+        verbose_name="BOL Int"
+    )
+    data_bol_int = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name="Data do BOL Int"
+    )
+    
+    class Meta:
+        ordering = ['-data_alteracao'] # Garante que os registros mais recentes apareçam primeiro
+        verbose_name = "Histórico de Fruição"
+        verbose_name_plural = "Históricos de Fruições"
+    
+    @classmethod
+    def criar_registro(cls, fruicao):
+        return cls.objects.create(
+            fruicao=fruicao,
+            usuario=getattr(fruicao, 'user_updated', None) or getattr(fruicao, 'user_created', None),
+            tipo_periodo_afastamento=fruicao.tipo_periodo_afastamento,
+            dias_disponiveis=fruicao.dias_disponiveis,
+            dias_utilizados=fruicao.dias_utilizados,
+            tipo_choice=fruicao.tipo_choice,
+            data_inicio_afastamento=fruicao.data_inicio_afastamento,
+            data_termino_afastamento=fruicao.data_termino_afastamento,
+            bol_int=fruicao.bol_int,
+            data_bol_int=fruicao.data_bol_int
+        )
