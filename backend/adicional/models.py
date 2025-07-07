@@ -158,6 +158,17 @@ class Cadastro_adicional(models.Model):
                 return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">Vencido</span>')
         return "Data não definida"
 
+    def get_search_result(self):
+        return {
+            'title': f"Adicional {self.numero_adicional} - {self.cadastro.nome}",
+            'fields': {
+                'Número': self.numero_adicional,
+                'BOL GPm': self.bol_g_pm_adicional,
+                'Situação': self.situacao_adicional
+            }
+        }
+
+
     @property
     def tempo_ats_detalhada(self):
         hoje = timezone.now().date()
@@ -348,3 +359,13 @@ class HistoricoCadastro(models.Model):
         return (f"Histórico #{self.id} - "
                 f"Adicional {self.numero_adicional} "
                 f"({self.data_alteracao.strftime('%d/%m/%Y %H:%M')})")
+    
+    def get_search_result(self):
+        return {
+            'title': f"Histórico Adicional {self.numero_adicional} - {self.cadastro.nome}",
+            'fields': {
+                'Número': self.numero_adicional,
+                'Situação': self.situacao_adicional,
+                'Data Alteração': self.data_alteracao.strftime('%d/%m/%Y %H:%M')
+            }
+        }

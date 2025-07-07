@@ -117,6 +117,16 @@ class LP(models.Model):
             raise ValidationError({'data_publicacao_lp': 'A data de publicação não pode ser anterior à data de concessão.'})
     
 
+    def get_search_result(self):
+        return {
+            'title': f"LP {self.numero_lp} - {self.cadastro.nome}",
+            'fields': {
+                'Número LP': self.numero_lp,
+                'BOL GPm LP': self.bol_g_pm_lp,
+                'Situação': self.situacao_lp,
+                'Status': self.get_status_lp_display()
+            }
+        }
 
     
     def get_situacao_lp_choices(self):
@@ -300,11 +310,27 @@ class LP_fruicao(models.Model):
             
             if any(getattr(old_instance, campo) != getattr(self, campo) for campo in campos_rastreados):
                 HistoricoFruicaoLP.criar_registro(self)
-
     @property
     def dias_utilizados_percent(self):
-        """Retorna a porcentagem de dias utilizados para a barra de progresso"""
-        return (self.dias_utilizados / 90) * 100 if self.dias_utilizados else 0
+        """Retorna a porcentagem de dias utilizados para a barra de progresso."""
+        total_dias = 90
+        # Garante que self.dias_utilizados seja um número e evita divisão por zero/None
+        if self.dias_utilizados is not None and self.dias_utilizados > 0:
+            return (self.dias_utilizados / total_dias) * 100
+        return 0 # Retorna 0 se dias_utilizados for None, 0 ou negativo
+
+
+
+
+    def get_search_result(self):
+        return {
+            'title': f"Fruição LP {self.numero_lp} - {self.cadastro.nome}",
+            'fields': {
+                'Dias Utilizados': self.dias_utilizados,
+                'Dias Disponíveis': self.dias_disponiveis,
+                'Início Afastamento': self.data_inicio_afastamento.strftime('%d/%m/%Y') if self.data_inicio_afastamento else '-'
+            }
+        }
 
 class HistoricoFruicaoLP(models.Model):
     # ... (O modelo HistoricoFruicaoLP permanece inalterado, exceto pela classe Meta.ordering) ...

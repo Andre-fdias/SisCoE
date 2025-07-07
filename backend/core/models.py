@@ -118,3 +118,7 @@ def save_user_profile(sender, instance, **kwargs):
         Profile.objects.create(user=instance)
     except Exception as e:
         print(f"Erro ao salvar perfil para o usuário {instance.email}: {e}")
+
+
+
+

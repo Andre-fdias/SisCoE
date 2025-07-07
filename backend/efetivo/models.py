@@ -130,6 +130,18 @@ class Cadastro(models.Model):
     class Meta:
         ordering = ('re',)
 
+    def get_search_result(self):
+        return {
+            'title': f"{self.nome_de_guerra} ({self.re}-{self.dig})",
+            'fields': {
+                'RE': f"{self.re}-{self.dig}",
+                'Nome': self.nome,
+                'CPF': self.cpf,
+                'Email': self.email,
+                'Telefone': self.telefone
+            }
+        }
+
 
 
 class CPF(models.Model):
@@ -465,6 +477,18 @@ class DetalhesSituacao(models.Model):
             return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Férias</span>')
 
 
+    # Adicione ao final da classe DetalhesSituacao
+    def get_search_result(self):
+        return {
+            'title': f"Situação de {self.cadastro.nome_de_guerra}",
+            'fields': {
+                'Situação': self.situacao,
+                'SGB': self.sgb,
+                'Posto/Seção': self.posto_secao,
+                'Função': self.funcao
+            }
+        }
+
 # responsavel pelas promoções de militares
 
 class Promocao(models.Model):
@@ -569,7 +593,17 @@ class Promocao(models.Model):
             models.Index(fields=['cadastro']),
         ]
    
-   
+    def get_search_result(self):
+      return {
+        'title': f"Promoção de {self.cadastro.nome_de_guerra}",
+        'fields': {
+            'Posto/Grad': self.posto_grad,
+            'Última Promoção': self.ultima_promocao.strftime('%d/%m/%Y')
+        }
+    }
+
+
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from backend.efetivo.utils import add_cpf_to_image  # Importe a função
@@ -709,12 +743,33 @@ class CatEfetivo(models.Model):
     @property
     def status(self):
         hoje = date.today()
+        
+        # Se não há data de início, retorna status desconhecido
+        if not self.data_inicio:
+            return "N/A"
+        
+        # Se tem data de término e já passou
         if self.data_termino and self.data_termino < hoje:
             return "ENCERRADO"
-        elif self.data_inicio > hoje:
+        
+        # Se a data de início é no futuro
+        if self.data_inicio > hoje:
             return "AGUARDANDO INÍCIO"
-        else:
-            return "EM VIGOR"
+        
+        # Se está entre as datas ou sem data de término
+        return "EM VIGOR"
+
+    @property
+    def status_badge(self):
+        status = self.status
+        if status == "ENCERRADO":
+            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ENCERRADO</span>')
+        elif status == "AGUARDANDO INÍCIO":
+            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AGUARDANDO INÍCIO</span>')
+        elif status == "EM VIGOR":
+            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">EM VIGOR</span>')
+        else:  # N/A
+            return mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">N/A</span>')
 
     def get_total_dias(self):
         if self.data_inicio and self.data_termino:
@@ -737,15 +792,6 @@ class CatEfetivo(models.Model):
             }
             for campo in restricao_campos
         ]
-    @property
-    def status_badge(self):
-        status = self.status
-        if status == "ENCERRADO":
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ENCERRADO</span>')
-        elif status == "AGUARDANDO INÍCIO":
-            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AGUARDANDO INÍCIO</span>')
-        else:
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">EM VIGOR</span>')
 
     @property
     def tipo_badge(self):
@@ -802,6 +848,16 @@ class CatEfetivo(models.Model):
             self.criar_registro_historico()
 
 
+    def get_search_result(self):
+        return {
+            'title': f"{self.get_tipo_display()} - {self.cadastro.nome_de_guerra}",
+            'fields': {
+                'Tipo': self.get_tipo_display(),
+                'Início': self.data_inicio.strftime('%d/%m/%Y'),
+                'Término': self.data_termino.strftime('%d/%m/%Y') if self.data_termino else '-',
+                'Status': self.status
+            }
+        }
 
     @property
     def restricoes_selecionadas(self):
@@ -1211,23 +1267,21 @@ class HistoricoCatEfetivo(models.Model):
             return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
 
     @property
-    def status(self):
+    def status_info(self):
         hoje = date.today()
-
-        # Condição 1: Se o afastamento tem data de término e essa data já passou
+        if not self.data_inicio:
+            return "N/A"
+            
         if self.data_termino and self.data_termino < hoje:
             return "ENCERRADO"
-        # Condição 2: Se o afastamento tem data de início no futuro
         elif self.data_inicio > hoje:
             return "AGUARDANDO INÍCIO"
-        # Condição 3: Se o afastamento já começou (data_inicio <= hoje) e
-        #             ou não tem data de término (None) ou a data de término é hoje ou no futuro
         elif self.data_inicio <= hoje and (self.data_termino is None or self.data_termino >= hoje):
             return "EM VIGOR"
-        # Condição 4: Para qualquer outro caso (ex: data_inicio futura, sem data_termino)
         else:
-            return "N/A" # Ou algum status padrão para casos não cobertos
-
+            return "N/A"
+        
+        
     def get_total_dias(self):
         if self.data_inicio and self.data_termino:
             # Calcula a diferença em dias. Adicionamos +1 para incluir o dia de início e o dia de término.
@@ -1261,3 +1315,14 @@ class HistoricoCatEfetivo(models.Model):
             models.Index(fields=['data_registro']),
             models.Index(fields=['tipo']),
         ]
+
+        # Adicione ao final da classe HistoricoCatEfetivo
+    def get_search_result(self):
+        return {
+            'title': f"Histórico Categoria - {self.cat_efetivo.cadastro.nome_de_guerra}",
+            'fields': {
+                'Tipo': self.get_tipo_display(),
+                'Data Registro': self.data_registro.strftime('%d/%m/%Y %H:%M'),
+                'Status': self.status_info
+            }
+        }

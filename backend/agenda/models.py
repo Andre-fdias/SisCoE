@@ -25,6 +25,16 @@ class Lembrete(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+
+    def get_search_result(self):
+        return {
+            'title': self.titulo,
+            'fields': {
+                'Descrição': Truncator(self.descricao).chars(100),
+                'Data': self.data.strftime('%d/%m/%Y %H:%M')
+            }
+        }
 
 class Tarefa(models.Model):
     """
@@ -57,3 +67,15 @@ class Tarefa(models.Model):
 
         if self.data_fim < self.data_inicio:
             raise ValidationError(_('A data de término não pode ser anterior à data de início.'))
+        
+
+    # Adicione ao final da classe Tarefa
+    def get_search_result(self):
+        return {
+            'title': self.titulo,
+            'fields': {
+                'Descrição': Truncator(self.descricao).chars(100),
+                'Início': self.data_inicio.strftime('%d/%m/%Y %H:%M'),
+                'Fim': self.data_fim.strftime('%d/%m/%Y %H:%M')
+            }
+        }

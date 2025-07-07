@@ -158,7 +158,17 @@ class Cadastro_bm(models.Model):
         delta = relativedelta(hoje, self.apresentacao_na_unidade)
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
-    
+    def get_search_result(self):
+        return {
+            'title': f"{self.nome_de_guerra} ({self.situacao})",
+            'fields': {
+                'Nome': self.nome,
+                'CPF': self.cpf,
+                'SGB': self.sgb,
+                'Posto/Seção': self.posto_secao
+            }
+        }
+
     
     @property
     def status(self):
@@ -184,3 +194,12 @@ class Imagem_bm(models.Model):
     def __str__(self):
         return f'Imagem de {self.cadastro.nome_de_guerra}'
     
+    def get_search_result(self):
+        return {
+            'title': f"Imagem de {self.cadastro.nome_de_guerra}",
+            'fields': {
+                'Cadastro': str(self.cadastro),
+                'Data Criação': self.create_at.strftime('%d/%m/%Y %H:%M')
+            }
+        }
+        

@@ -1,4 +1,4 @@
-<div class="fruicao-section p-4 " x-data="modalData()">
+<div class="fruicao-section p-4" x-data="modalData()">
     <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between ms-4 mt-4">
         <div class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,12 +24,7 @@
                         <span class="text-lg font-semibold text-blue-900">{{ fruicao.numero_lp }}º LP</span>
                     </div>
                     
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
-                        <span class="text-sm text-gray-700">Período de Afastamento:</span>
-                        <span class="text-lg font-semibold text-blue-900">
-                            {{ fruicao.tipo_periodo_afastamento }} dias
-                        </span>
-                    </div> 
+ 
 
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border-l-4 border-blue-400">
                         <span class="text-sm text-gray-700">Data de Concessão:</span>
@@ -95,24 +90,33 @@
                     </div>
                 </div>
                                 
-                <div class="mb-6">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-xs font-medium text-blue-700">Progresso de Utilização</span>
-                        <span id="progresso-percent-text" class="text-xs font-medium text-blue-700">{{ fruicao.dias_utilizados_percent|floatformat:0 }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="progress-bar" class="h-2 rounded-full transition-all duration-500 ease-out"></div>
-                    </div>
-                    
-                    <div class="flex justify-between mt-1">
-                        {% for i in "12345" %}
-                            <div class="w-1/6 text-center text-xs text-gray-500">
-                                {% widthratio i 1 15 %} dias
-                            </div>
-                        {% endfor %}
-                        <div class="text-center text-xs text-gray-500">90 dias</div>
-                    </div>
+  <!-- BARRA DE PROGRESSO CORRIGIDA -->
+            <div class="mb-6">
+                <div class="flex justify-between mb-1">
+                    <span class="text-xs font-medium text-blue-700">Progresso de Utilização</span>
+                    <span id="progresso-percent-text" class="text-xs font-medium text-blue-700">
+                        {{ fruicao.dias_utilizados|default:0 }} dias ({{ fruicao.dias_utilizados_percent|floatformat:0 }}%)
+                    </span>
                 </div>
+                
+                <div class="w-full bg-gray-200 rounded-full h-2">
+<div id="progress-bar" class="h-2 rounded-full transition-all duration-500 ease-out
+    {% if fruicao.dias_utilizados_percent <= 33 %}bg-green-500
+    {% elif fruicao.dias_utilizados_percent <= 66 %}bg-yellow-500
+    {% else %}bg-red-500{% endif %}">
+</div>
+                </div>
+                
+                <div class="flex justify-between mt-1">
+                    {% for i in "12345" %}
+                        {% widthratio i 1 15 as dias %}
+                        <div class="w-1/6 text-center text-xs text-gray-500">
+                            {{ dias }} dias
+                        </div>
+                    {% endfor %}
+                    <div class="text-center text-xs text-gray-500">90 dias</div>
+                </div>
+            </div>
                 
                 <div class="flex flex-wrap gap-3">
                     {% if fruicao.dias_disponiveis > 0 %}
@@ -154,10 +158,10 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase">Ações</th>
                         </tr>
                     </thead>
-                <tbody class="bg-white divide-y divide-gray-300">
-                    {% for registro in fruicao.historico.all %}
-                        {% if registro.data_inicio_afastamento and registro.data_termino_afastamento %}
-                        <tr class="hover:bg-blue-50">
+                    <tbody class="bg-white divide-y divide-gray-300">
+                        {% for registro in fruicao.historico.all %}
+                            {% if registro.data_inicio_afastamento and registro.data_termino_afastamento %}
+                            <tr class="hover:bg-blue-50">
                             <td class="px-4 py-3 text-sm text-blue-800 font-medium">{{ registro.data_alteracao|date:"d/m/Y H:i" }}</td>
                             <td class="px-4 py-3 text-sm text-gray-800">
                                 {{ registro.get_tipo_choice_display }}
@@ -195,21 +199,11 @@
                                     {% endif %}
                                 {% endwith %}
                             </td>
-                           <td class="px-4 py-3 text-sm text-gray-800 space-x-2">
-                                {% if registro.tipo_periodo_afastamento %}
-                                <button @click="openDeleteModal = true" 
+                            <td class="px-4 py-3 text-sm text-gray-800 space-x-2">
+                                <button @click="openDelete({{ registro.pk }})" 
                                         class="text-red-600 hover:text-red-800" 
                                         title="Remover afastamento"
-                                        data-id="{{ registro.pk }}">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                                {% endif %}
-                                
-                                <button @click="openEditModal = true" 
-                                        class="text-blue-600 hover:text-blue-800" 
-                                        title="Editar fruição"
-                                        data-id="{{ fruicao.pk }}">
-                                    <i class="fas fa-edit"></i>
+                                        data-id="{{ registro.pk }}"> <i class="fas fa-trash-alt"></i>
                                 </button>
                             </td>
                         </tr>
@@ -227,147 +221,165 @@
       {% include 'fruicao/editar_fruicao.html' %}
     {% include 'fruicao/confirmar_remocao_afastamento.html' %}
 
+    
+    {# Adicione esta tag script para passar os dados iniciais do Django para o JavaScript #}
+    <script type="application/json" id="fruicao_initial_data">
+        {{ fruicao_json_data|json_script:"fruicao_data" }}
+    </script>
+
     <script>
     function modalData() {
         return {
-            openEditModal: false,
             openDeleteModal: false,
             currentId: null,
+            registroData: null,
             
-            openEdit(id) {
+            async openDelete(id) {
                 this.currentId = id;
-                const form = document.getElementById('editForm');
-                // Certifique-se de que o action do formulário é atualizado corretamente
-                // Usar uma URL base e concatenar o ID é mais seguro
-                // Ex: form.action = `/fruicao/editar/${id}/`; (ajuste conforme suas URLs)
-                form.action = form.action.replace('/0/', `/${id}/`); 
-                this.openEditModal = true;
+                
+                try {
+                    // Busca os dados do registro
+                    const response = await fetch(`{% url 'lp:get_afastamento_data' 0 %}`.replace('/0/', `/${id}/`));
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.registroData = data.registro;
+                        this.openDeleteModal = true;
+                    } else {
+                        alert('Erro ao carregar dados do afastamento');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro ao carregar dados do afastamento');
+                }
             },
             
-            openDelete(id) {
-                this.currentId = id;
-                const form = document.getElementById('deleteForm');
-                // Similarmente, ajuste a URL base se necessário
-                // Ex: form.action = `/fruicao/remover/${id}/`;
-                form.action = form.action.replace('/0/', `/${id}/`);
-                this.openDeleteModal = true;
-            }
-        }
-    }
-    
-    // Configura os event listeners para os botões Alpine.js
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-id]').forEach(button => {
-            if (button.innerHTML.includes('fa-edit')) {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    // Aqui você pode precisar garantir que Alpine.store('modal') está inicializado
-                    // ou passar diretamente o ID para a função openEdit se não usar store
-                    // Ex: modalData().openEdit(id); se modalData for uma função global
-                    // Ou, se Alpine.js já estiver inicializado no elemento pai:
-                    const scope = Alpine.$data(document.querySelector('[x-data="modalData()"]'));
-                    scope.openEdit(id);
-                });
-            } else if (button.innerHTML.includes('fa-trash-alt')) {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    const scope = Alpine.$data(document.querySelector('[x-data="modalData()"]'));
-                    scope.openDelete(id);
-                });
-            }
-        });
-
-        // --- Lógica para a Barra de Progresso com JavaScript ---
-        const progressBar = document.getElementById('progress-bar');
-        const progressoPercentText = document.getElementById('progresso-percent-text');
-        const diasUtilizadosText = document.getElementById('dias-utilizados-text');
-        const diasDisponiveisText = document.getElementById('dias-disponiveis-text');
-        
-        // Obtém a porcentagem inicial e os dias do Django
-        const initialPercentage = parseFloat("{{ fruicao.dias_utilizados_percent|floatformat:2 }}");
-        const initialDiasUtilizados = parseInt("{{ fruicao.dias_utilizados|default:0 }}");
-        const initialDiasDisponiveis = parseInt("{{ fruicao.dias_disponiveis|default:90 }}");
-
-        // Função para atualizar a barra e os textos
-        function updateFruitionUI(utilizados, disponiveis, total = 90) {
-            const percentage = (utilizados / total) * 100;
-            const safePercentage = Math.max(0, Math.min(100, percentage));
-
-            // Atualiza a largura da barra
-            if (progressBar) {
-                progressBar.style.width = safePercentage + '%';
-                // Atualiza a cor da barra baseada na porcentagem
+            async confirmDelete() {
+                if (!this.currentId) return;
+                
+                try {
+                    const url = `{% url 'lp:remover_afastamento' fruicao.pk 0 %}`
+                        .replace('/0/', `/${this.currentId}/`);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Atualiza a UI com os novos valores
+                        this.updateFruitionUI(
+                            data.dias_utilizados,
+                            data.dias_disponiveis,
+                            data.dias_utilizados_percent
+                        );
+                        
+                        // Seleciona a linha corretamente e a remove
+                        const row = document.querySelector(`button[data-id="${this.currentId}"]`).closest('tr');
+                        if (row) row.remove();
+                        
+                        this.openDeleteModal = false;
+                        alert(data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro na comunicação com o servidor');
+                }
+            },
+            
+            updateFruitionUI(utilizados, disponiveis, percent) {
+                // 1. Atualiza a barra de progresso
+                const progressBar = document.getElementById('progress-bar');
+                const progressoPercentText = document.getElementById('progresso-percent-text');
+                
+                // Garante que percent é um número
+                percent = Math.round(Number(percent));
+                
+                // Atualiza a largura da barra
+                progressBar.style.width = `${percent}%`;
+                
+                // Atualiza a cor da barra
                 progressBar.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
-                if (utilizados <= 30) {
+                if (percent <= 33) {
                     progressBar.classList.add('bg-green-500');
-                } else if (utilizados <= 60) {
+                } else if (percent <= 66) {
                     progressBar.classList.add('bg-yellow-500');
                 } else {
                     progressBar.classList.add('bg-red-500');
                 }
-            }
-
+                
             // Atualiza o texto da porcentagem
-            if (progressoPercentText) {
-                progressoPercentText.innerText = `${safePercentage.toFixed(0)}%`;
-            }
-
-            // Atualiza os textos de Dias Utilizados e Dias Disponíveis
-            if (diasUtilizadosText) {
-                diasUtilizadosText.innerText = `${utilizados} dias`;
-            }
-            if (diasDisponiveisText) {
-                diasDisponiveisText.innerText = `${disponiveis} dias`;
+            progressoPercentText.textContent = `${utilizados} dias (${percent}%)`;
+                
+                // 2. Atualiza os contadores de dias
+                const diasUtilizadosText = document.getElementById('dias-utilizados-text');
+                const diasDisponiveisText = document.getElementById('dias-disponiveis-text');
+                
+                diasUtilizadosText.textContent = `${utilizados} dias`;
+                diasDisponiveisText.textContent = `${disponiveis} dias`;
+                
+                // 3. Atualiza as cores dos cards
+                const utilizadosCard = diasUtilizadosText.closest('.flex');
+                const disponiveisCard = diasDisponiveisText.closest('.flex');
+                
+                // Atualiza card de dias utilizados
+                utilizadosCard.classList.remove('border-green-500', 'border-yellow-500', 'border-red-500');
+                if (utilizados === 0) {
+                    utilizadosCard.classList.add('border-green-500');
+                    diasUtilizadosText.classList.remove('text-red-900', 'text-blue-900');
+                    diasUtilizadosText.classList.add('text-blue-900'); // Ou cor padrão, se 0 for bom
+                } else if (utilizados === 90) {
+                    utilizadosCard.classList.add('border-red-500');
+                    diasUtilizadosText.classList.remove('text-blue-900');
+                    diasUtilizadosText.classList.add('text-red-900');
+                } else {
+                    utilizadosCard.classList.add('border-yellow-500');
+                    diasUtilizadosText.classList.remove('text-red-900');
+                    diasUtilizadosText.classList.add('text-blue-900'); // Cor padrão para utilizado > 0 e < 90
+                }
+                
+                // Atualiza card de dias disponíveis
+                disponiveisCard.classList.remove('border-green-500', 'border-red-500');
+                if (disponiveis === 90) {
+                    disponiveisCard.classList.add('border-green-500');
+                    diasDisponiveisText.classList.remove('text-red-900', 'text-blue-900');
+                    diasDisponiveisText.classList.add('text-blue-900'); // Ou cor padrão, se 90 for bom
+                } else if (disponiveis === 0) {
+                    disponiveisCard.classList.add('border-red-500');
+                    diasDisponiveisText.classList.remove('text-blue-900');
+                    diasDisponiveisText.classList.add('text-red-900');
+                } else {
+                    disponiveisCard.classList.add('border-green-500'); // Cor padrão para disponível > 0 e < 90
+                    diasDisponiveisText.classList.remove('text-red-900');
+                    diasDisponiveisText.classList.add('text-blue-900');
+                }
             }
         }
+    }
 
-        // Chama a função para configurar o estado inicial da barra e textos
-        updateFruitionUI(initialDiasUtilizados, initialDiasDisponiveis);
-
-        // Exemplo: Simular uma atualização de dias (você removeria isso e conectaria à sua lógica de "Adicionar Afastamento")
-        // setTimeout(() => {
-        //     console.log("Simulando atualização para 45 dias utilizados...");
-        //     updateFruitionUI(45, 45); 
-        // }, 3000); // Atualiza após 3 segundos
-        //
-        // setTimeout(() => {
-        //     console.log("Simulando atualização para 80 dias utilizados...");
-        //     updateFruitionUI(80, 10); 
-        // }, 6000); // Atualiza após 6 segundos
-
-        // IMPORTANTE:
-        // Se você for usar AJAX para adicionar afastamentos, você chamaria `updateFruitionUI`
-        // na função de callback de sucesso do seu Fetch/Axios, passando os novos valores de dias.
-        // Exemplo:
-        /*
-        document.getElementById('seuFormDeAfastamento').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Impede o envio padrão do formulário
-            const formData = new FormData(event.target);
-            try {
-                const response = await fetch(event.target.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}' // Não esqueça do CSRF token para Django
-                    }
-                });
-                const data = await response.json(); // Espera que sua view Django retorne JSON com os novos dias
-
-                if (response.ok) {
-                    updateFruitionUI(data.dias_utilizados, data.dias_disponiveis);
-                    // Fechar modal, exibir mensagem de sucesso, etc.
-                    closeModal('adicionarAfastamentoModal'); // Se você tiver uma função global para isso
-                    alert('Afastamento adicionado com sucesso!');
-                } else {
-                    alert('Erro ao adicionar afastamento: ' + (data.message || 'Erro desconhecido'));
-                }
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                alert('Ocorreu um erro ao comunicar com o servidor.');
-            }
-        });
-        */
-
+    // Inicializa a barra de progresso e os contadores ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        // Pega os dados iniciais do script tag
+        const initialDataElement = document.getElementById('fruicao_initial_data');
+        if (initialDataElement) {
+            const data = JSON.parse(initialDataElement.textContent);
+            // Cria uma instância temporária de modalData para chamar updateFruitionUI
+            const tempModal = modalData();
+            tempModal.updateFruitionUI(
+                data.dias_utilizados || 0,
+                data.dias_disponiveis || 90,
+                data.dias_utilizados_percent || 0
+            );
+        } else {
+            console.error("Elemento 'fruicao_initial_data' não encontrado. A barra de progresso pode não ser inicializada.");
+        }
     });
     </script>
 

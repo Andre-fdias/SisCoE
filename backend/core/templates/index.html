@@ -215,17 +215,18 @@
                             </div>
             
                             <!-- Indicadores -->
-                            {% if imagens_carrossel %}
-                            <div class="absolute z-30 flex -translate-x-1/2 bottom-4 left-1/2 space-x-2 rtl:space-x-reverse">
-                                {% for imagem in imagens_carrossel %}
-                                <button type="button"
-                                        class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 {% if forloop.first %}bg-white{% endif %}"
-                                        aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
-                                        aria-label="Slide {{ forloop.counter }}"
-                                        data-carousel-slide-to="{{ forloop.counter0 }}"></button>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                      {% if imagens_carrossel %}
+                        <div class="absolute z-30 flex -translate-x-1/2 bottom-4 left-1/2 space-x-2 rtl:space-x-reverse">
+                            {# Altere a linha abaixo para fatiar as primeiras 5 imagens #}
+                            {% for imagem in imagens_carrossel|slice:":5" %}
+                            <button type="button"
+                                    class="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 {% if forloop.first %}bg-white{% endif %}"
+                                    aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-label="Slide {{ forloop.counter }}"
+                                    data-carousel-slide-to="{{ forloop.counter0 }}"></button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
             
                             <!-- Botões de navegação -->
                             {% if imagens_carrossel|length > 1 %}

@@ -22,5 +22,6 @@ urlpatterns = [
     path('fruicao/<int:pk>/', views.detalhar_fruicao, name='detalhar_fruicao'),
     path('fruicao/<int:pk>/editar/', views.editar_fruicao, name='editar_fruicao'),
     path('fruicao/<int:pk>/adicionar-afastamento/', views.adicionar_afastamento, name='adicionar_afastamento'),
-    path('fruicao/<int:pk>/remover-afastamento/<int:afastamento_id>/', views.remover_afastamento, name='remover_afastamento'),
+    path('fruicao/get_afastamento_data/<int:afastamento_id>/', views.get_afastamento_data, name='get_afastamento_data'),
+    path('fruicao/remover_afastamento/<int:pk>/<int:afastamento_id>/', views.remover_afastamento, name='remover_afastamento'),
 ]

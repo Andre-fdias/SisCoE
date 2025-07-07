@@ -189,6 +189,21 @@ class Cadastro_rpt(models.Model):
 
     def get_alteracao_choices(self):
         return self._meta.get_field('alteracao').choices
+    
+
+
+    # Adicione ao final da classe Cadastro_rpt
+    def get_search_result(self):
+        return {
+            'title': f"RPT {self.cadastro.nome_de_guerra}",
+            'fields': {
+                'Status': self.status,
+                'SGB Destino': self.sgb_destino,
+                'Posto/Seção Destino': self.posto_secao_destino,
+                'Data Pedido': self.data_pedido.strftime('%d/%m/%Y')
+            }
+        }
+
 
 class HistoricoRpt(models.Model):
     data_pedido = models.DateField(blank=False, null=False)

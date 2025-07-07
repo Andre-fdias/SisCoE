@@ -3,7 +3,7 @@ from .views import (
     index, capa, dashboard, 
     profile_list, profile_detail, 
     profile_create, profile_update,
-    CalendarioView, dashboard_view,
+    CalendarioView, dashboard_view, global_search_view
 )
 
 app_name = 'core'
@@ -17,4 +17,7 @@ urlpatterns = [
     path('profiles/create/', profile_create, name='profile_create'),
     path('profiles/<int:pk>/update/', profile_update, name='profile_update'),
     path('calendario/', CalendarioView.as_view(), name='calendario'),
+    path('search/', global_search_view, name='global_search'),
+
+
 ]

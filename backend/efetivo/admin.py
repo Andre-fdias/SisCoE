@@ -187,14 +187,19 @@ class ImagemAdmin(admin.ModelAdmin):
 class HistoricoCatEfetivoInline(admin.TabularInline):
     model = HistoricoCatEfetivo
     extra = 0
-    readonly_fields = ('data_registro', 'usuario_alteracao', 'tipo_badge', 'status')
-    fields = ('data_registro', 'usuario_alteracao', 'tipo_badge', 'status')
+    readonly_fields = ('data_registro', 'usuario_alteracao', 'tipo_badge', 'status_info_badge')
+    fields = ('data_registro', 'usuario_alteracao', 'tipo_badge', 'status_info_badge')
     can_delete = False
     
     def tipo_badge(self, obj):
         return obj.tipo_badge
     tipo_badge.short_description = 'Tipo'
     tipo_badge.allow_tags = True
+    
+    def status_info_badge(self, obj):
+        return obj.status_info_badge
+    status_info_badge.short_description = 'Status'
+    status_info_badge.allow_tags = True
 
 @admin.register(CatEfetivo)
 class CatEfetivoAdmin(admin.ModelAdmin):
@@ -239,17 +244,27 @@ class CatEfetivoAdmin(admin.ModelAdmin):
 
 @admin.register(HistoricoCatEfetivo)
 class HistoricoCatEfetivoAdmin(admin.ModelAdmin):
-    list_display = ('cat_efetivo_link', 'data_registro', 'usuario_alteracao', 'tipo_badge', 'status')
+    list_display = ('cat_efetivo_link', 'data_registro', 'usuario_alteracao', 'tipo_badge', 'status_info_badge')
     list_filter = ('tipo', 'data_registro')
     search_fields = ('cat_efetivo__cadastro__re', 'cat_efetivo__cadastro__nome_de_guerra')
     list_per_page = 25
-    readonly_fields = ('tipo_badge', 'status', 'restricoes_selecionadas_siglas')
+    readonly_fields = ('tipo_badge', 'status_info_badge', 'restricoes_selecionadas_siglas')
     
     def cat_efetivo_link(self, obj):
         url = reverse('admin:efetivo_catefetivo_change', args=[obj.cat_efetivo.id])
         return mark_safe(f'<a href="{url}">{obj.cat_efetivo}</a>')
     cat_efetivo_link.short_description = 'Categoria de Efetivo'
     cat_efetivo_link.admin_order_field = 'cat_efetivo__id'
+    
+    def tipo_badge(self, obj):
+        return obj.tipo_badge
+    tipo_badge.short_description = 'Tipo'
+    tipo_badge.allow_tags = True
+    
+    def status_info_badge(self, obj):
+        return obj.status_info_badge
+    status_info_badge.short_description = 'Status'
+    status_info_badge.allow_tags = True
 
 # ======================
 # ADMIN PARA HISTÓRICOS

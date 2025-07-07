@@ -377,17 +377,36 @@
    
 </fieldset>
 
-{# Botão de Toggle (agora só aparece quando status é "concluido") #}
+{# Botão de Toggle - Versão Melhorada #}
 {% if lp.status_lp == "concluido" %}
-<div class="mb-4">
-    <button id="toggleLpDetails" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-        Mostrar Detalhes da Licença Prêmio
+<div class="mb-6 flex justify-start">
+    <button id="toggleLpDetails" 
+            class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold rounded-xl shadow-lg 
+                   hover:from-blue-700 hover:to-blue-900 transform hover:scale-[1.02] transition-all duration-300 
+                   focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-70 flex items-center gap-3
+                   group relative overflow-hidden">
+        <!-- Efeito de brilho no hover -->
+        <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+        
+        <!-- Ícone animado -->
+        <div class="relative w-6 h-6 flex items-center justify-center">
+            <i class="fas fa-chevron-down absolute transition-all duration-300 transform group-[[aria-expanded=true]]:-translate-y-full group-[[aria-expanded=true]]:opacity-0"></i>
+            <i class="fas fa-chevron-up absolute transition-all duration-300 transform translate-y-full opacity-0 group-[[aria-expanded=true]]:translate-y-0 group-[[aria-expanded=true]]:opacity-100"></i>
+        </div>
+        
+        <span id="toggleText">Clique aqui para mostrar detalhes da Concessão</span>
     </button>
 </div>
 {% endif %}
 
-{# Conteúdo - Exibido normalmente quando não é "concluido", oculto quando é "concluido" #}
-<div id="lpDetailsContent" {% if lp.status_lp == "concluido" %}style="display: none;"{% endif %}>
+{# Conteúdo com transição suave #}
+<div id="lpDetailsContent" 
+     {% if lp.status_lp == "concluido" %} 
+         class="transition-all duration-500 ease-in-out overflow-hidden max-h-0"
+     {% else %}
+         class="transition-all duration-500 ease-in-out"
+     {% endif %}>
+
 
 <fieldset class="bg-gray-50 mb-4 rounded-2xl shadow-lg p-6 border border-gray-300">
     <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-between">
@@ -1693,17 +1712,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('DOMContentLoaded', function() {
         const toggleButton = document.getElementById('toggleLpDetails');
         const lpDetailsContent = document.getElementById('lpDetailsContent');
+        const toggleText = document.getElementById('toggleText');
 
-        // Set initial text for the button
-        toggleButton.textContent = 'Mostrar Detalhes da Licença Prêmio';
+        // Configuração inicial
+        if (lpDetailsContent.style.display === 'none') {
+            toggleButton.setAttribute('aria-expanded', 'false');
+            toggleText.textContent = 'Clique aqui para mostrar detalhes da Concessão';
+        } else {
+            toggleButton.setAttribute('aria-expanded', 'true');
+            toggleText.textContent = 'Esconder Detalhes da Licença Prêmio';
+        }
 
         toggleButton.addEventListener('click', function() {
-            if (lpDetailsContent.style.display === 'none') {
-                lpDetailsContent.style.display = 'block';
-                toggleButton.textContent = 'Esconder Detalhes da Licença Prêmio';
+            const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
+            
+            if (isExpanded) {
+                // Ocultar conteúdo
+                lpDetailsContent.style.maxHeight = '0';
+                lpDetailsContent.style.opacity = '0';
+                toggleButton.setAttribute('aria-expanded', 'false');
+                toggleText.textContent = 'Mostrar Detalhes da Licença Prêmio';
             } else {
-                lpDetailsContent.style.display = 'none';
-                toggleButton.textContent = 'Mostrar Detalhes da Licença Prêmio';
+                // Mostrar conteúdo
+                lpDetailsContent.style.maxHeight = lpDetailsContent.scrollHeight + 'px';
+                lpDetailsContent.style.opacity = '1';
+                toggleButton.setAttribute('aria-expanded', 'true');
+                toggleText.textContent = 'Esconder Detalhes da Licença Prêmio';
             }
         });
     });

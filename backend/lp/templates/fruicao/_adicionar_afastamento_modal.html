@@ -35,9 +35,7 @@
                     </label>
                     <select name="tipo_periodo_afastamento" id="tipo_periodo_afastamento"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors duration-200 bg-gray-50 text-gray-800 shadow-sm" required>
-                        {% for dias, label in dias_choices %}
-                        <option value="{{ dias }}">{{ label }}</option>
-                        {% endfor %}
+                        {# Estas opções serão controladas via JavaScript #}
                     </select>
                 </div>
                 
@@ -123,9 +121,33 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        const tipoChoiceSelect = document.getElementById('tipo_choice');
         const diasAfastamentoSelect = document.getElementById('tipo_periodo_afastamento');
         const dataInicioInput = document.getElementById('data_inicio_afastamento');
         const dataTerminoInput = document.getElementById('data_termino_afastamento');
+
+        // Armazena as opções originais de dias de afastamento
+        const originalDiasChoices = `{% for dias, label in dias_choices %}<option value="{{ dias }}">{{ label }}</option>{% endfor %}`;
+
+        function updateDiasAfastamentoOptions() {
+            const selectedTipo = tipoChoiceSelect.value;
+            diasAfastamentoSelect.innerHTML = ''; // Limpa as opções atuais
+
+            if (selectedTipo === 'pecunia') {
+                const option = document.createElement('option');
+                option.value = '30';
+                option.textContent = '30 Dias';
+                diasAfastamentoSelect.appendChild(option);
+                diasAfastamentoSelect.value = '30'; // Seleciona automaticamente 30 dias
+                diasAfastamentoSelect.setAttribute('readonly', 'readonly'); // Impede edição
+                diasAfastamentoSelect.classList.add('opacity-75', 'cursor-not-allowed'); // Estilo de desabilitado
+            } else {
+                diasAfastamentoSelect.innerHTML = originalDiasChoices; // Restaura as opções originais
+                diasAfastamentoSelect.removeAttribute('readonly'); // Permite edição
+                diasAfastamentoSelect.classList.remove('opacity-75', 'cursor-not-allowed'); // Remove estilo de desabilitado
+            }
+            calcularDataTermino(); // Recalcula a data de término após a mudança das opções
+        }
 
         function calcularDataTermino() {
             const dias = parseInt(diasAfastamentoSelect.value);
@@ -150,10 +172,12 @@
         }
 
         // Adiciona listeners para recalcular quando os campos mudam
+        tipoChoiceSelect.addEventListener('change', updateDiasAfastamentoOptions);
         diasAfastamentoSelect.addEventListener('change', calcularDataTermino);
         dataInicioInput.addEventListener('change', calcularDataTermino);
         
-        // Inicializa o cálculo se já houver valores (ex: se o formulário for re-renderizado com dados)
+        // Inicializa o cálculo e as opções ao carregar a página
+        updateDiasAfastamentoOptions(); // Garante que as opções iniciais estejam corretas
         calcularDataTermino();
 
         // Loading state for the submit button

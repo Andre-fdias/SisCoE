@@ -132,3 +132,35 @@ class UserActionLog(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.action} - {self.timestamp}"
+    
+
+class SearchableUserActionLog(UserActionLog):
+    class Meta:
+        proxy = True
+        
+    def get_search_result(self):
+        return {
+            'title': f"{self.user.email} - {self.action}",
+            'fields': {
+                'Usuário': self.user.email,
+                'Ação': self.action,
+                'Data': self.timestamp.strftime('%d/%m/%Y %H:%M'),
+                'IP': self.ip_address
+            }
+        }
+    
+
+# accounts/models.py
+class SearchableUser(User):
+    class Meta:
+        proxy = True
+        
+    def get_search_result(self):
+        # Usando email como identificador principal
+        return {
+            'title': f"{self.get_full_name() or self.email}",
+            'fields': {
+                'Nome': self.get_full_name() or '-',
+                'Email': self.email
+            }
+        }
