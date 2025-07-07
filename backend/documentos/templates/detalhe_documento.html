@@ -242,18 +242,7 @@
                 </svg>
                 Ver Galeria
             </a>
-            <a href="{% url 'documentos:editar_documento' documento.pk %}"
-               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br
-                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
-                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
-                <i class="fas fa-edit mr-2"></i>Editar
-            </a>
-            <button onclick="openModal('modalArquivos')"
-                    class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:bg-gradient-to-br
-                           focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50
-                           font-medium rounded-lg text-center transition-all duration-200 ease-out">
-                <i class="fas fa-paperclip mr-2"></i>Arquivos
-            </button>
+          
             <a href="{% url 'documentos:listar_documentos' %}"
                class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:bg-gradient-to-br
                       focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50
@@ -603,6 +592,89 @@
     </div>
   </div>
 
+        <fieldset class="   rounded-md w-full" >
+        <div class="bg-gray-100  rounded-2xl shadow-2xl p-8 transition-all duration-300 animate-fade-in">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex-1 space-y-2">
+                    <p class="text-xs text-gray-500 font-medium text-center md:text-left">
+                        Sistema de Registro de Pedidos de Transferência - RPT
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button onclick="openDocumentoDeleteModal()"
+                            class="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-red-400 text-white 
+                                font-semibold rounded-xl shadow-sm hover:shadow-md
+                                transition-all duration-200 hover:scale-[1.02]
+                                flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Excluir
+                    </button>
+            <a href="{% url 'documentos:editar_documento' documento.pk %}"
+               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br
+                      focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50
+                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-edit mr-2"></i>Editar
+            </a>
+            <button onclick="openModal('modalArquivos')"
+                    class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:bg-gradient-to-br
+                           focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50
+                           font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-paperclip mr-2"></i>Arquivos
+            </button>
+            <a href="{% url 'documentos:listar_documentos' %}"
+               class="flex-grow sm:flex-none flex items-center justify-center px-4 py-2 text-sm text-white bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:bg-gradient-to-br
+                      focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50
+                      font-medium rounded-lg text-center transition-all duration-200 ease-out">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar
+            </a>
+            
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+
+    <div id="deleteDocumentoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <form method="POST" action="{% url 'documentos:excluir_documento' documento.id %}" id="deleteDocumentoForm">
+                {% csrf_token %}
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-lg">
+                    <h1 class="text-xl text-white font-medium">Confirmar Exclusão do Documento</h1>
+                    <button type="button" onclick="closeDocumentoDeleteModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 mb-4">Você está prestes a excluir o documento:</p>
+                    <p class="text-indigo-900 font-bold text-lg mb-6">{{ documento.assunto }} (ID: {{ documento.id }})</p>
+                    
+                    <div class="mb-4">
+                        <label for="documentoPasswordInput" class="block text-sm font-medium text-gray-700 mb-2">Digite sua senha:</label>
+                        <input type="password" 
+                               name="password" 
+                               id="documentoPasswordInput"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                               required>
+                        <div id="documentoPasswordError" class="text-red-500 text-sm mt-2 hidden"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 p-4 bg-gray-50 rounded-b-lg border-t border-gray-200">
+                    <button type="button" onclick="closeDocumentoDeleteModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 
+                                   transition-colors duration-200 font-medium">
+                        Confirmar Exclusão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
 </div>
 
 <!-- Scripts organizados por funcionalidade -->
@@ -866,6 +938,17 @@
         document.getElementById(modalId).classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
+           // Funções para o Modal de Exclusão de Documento
+        function openDocumentoDeleteModal() {
+            document.getElementById('deleteDocumentoModal').classList.remove('hidden');
+            document.getElementById('documentoPasswordInput').focus();
+        }
+
+        function closeDocumentoDeleteModal() {
+            document.getElementById('deleteDocumentoModal').classList.add('hidden');
+            document.getElementById('documentoPasswordError').classList.add('hidden');
+            document.getElementById('documentoPasswordInput').value = ''; // Limpar campo da senha
+        }
     
     /**************************************************
      * FUNÇÕES PARA NOTIFICAÇÕES

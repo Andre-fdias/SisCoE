@@ -74,72 +74,60 @@ def detalhe_documento(request, pk):
         'descricao_html': descricao_html
     })
 
+
+
+@login_required
 def criar_documento(request):
     """
-    Permite a criação de um novo documento e o upload de múltiplos arquivos associados.
-    Realiza validações básicas dos campos obrigatórios e converte as datas.
+    Cria um novo documento e associa múltiplos arquivos a ele.
     """
-    tipos = Documento.TIPO_CHOICES
-
     if request.method == 'POST':
-        try:
-            data_publicacao_str = request.POST.get('data_publicacao')
-            data_documento_str = request.POST.get('data_documento')
-            numero_documento = request.POST.get('numero_documento')
-            assunto = request.POST.get('assunto')
-            descricao = request.POST.get('descricao', '')
-            assinada_por = request.POST.get('assinada_por', '')
-            arquivos = request.FILES.getlist('arquivos[]')
-            tipo = request.POST.get('tipo')
-            tipos_arquivos = request.POST.getlist('tipo[]')
-
-            # Validação básica dos campos obrigatórios
-            if not all([data_publicacao_str, data_documento_str, numero_documento, assunto, tipo]):
-                messages.add_message(request, constants.ERROR, 'Preencha todos os campos obrigatórios.', extra_tags='bg-red-500 text-white p-4 rounded')
-                return render(request, 'criar_documento.html', {'tipos': tipos})
-
-            # Converter datas
-            try:
-                data_publicacao = parse_datetime(f"{data_publicacao_str}T00:00:00")
-                data_documento = parse_datetime(f"{data_documento_str}T00:00:00")
-            except (ValueError, TypeError) as e:
-                messages.add_message(request, constants.ERROR, 'Datas inválidas.', extra_tags='bg-red-500 text-white p-4 rounded')
-                return render(request, 'criar_documento.html', {'tipos': tipos})
-
-            # Criar documento
-            documento = Documento(
-                data_publicacao=data_publicacao,
-                data_documento=data_documento,
-                numero_documento=numero_documento,
-                assunto=assunto,
-                descricao=descricao,
-                assinada_por=assinada_por,
-                tipo=tipo,
-                usuario=request.user
-            )
+        form = DocumentoForm(request.POST)
+        if form.is_valid():
+            documento = form.save(commit=False)
+            documento.usuario = request.user
             documento.save()
 
-            # Processar arquivos (se houver)
-            if arquivos:
-                # Se não houver tipos suficientes, usar 'OUTRO' como padrão
-                tipos_arquivos = tipos_arquivos if len(tipos_arquivos) == len(arquivos) else ['OUTRO'] * len(arquivos)
+            arquivos = request.FILES.getlist('arquivos[]')
+            tipos_arquivos = request.POST.getlist('tipo[]')
 
-                for arquivo, tipo_arquivo in zip(arquivos, tipos_arquivos):
+            if arquivos:
+                # Lógica para tratar o tipo de arquivo quando múltiplos são selecionados em um único input
+                tipos_arquivos_para_uso = []
+                if len(tipos_arquivos) == 1 and len(arquivos) > 1:
+                    # Se apenas um tipo foi selecionado (para um input 'multiple'), aplique-o a todos os arquivos
+                    selected_type = tipos_arquivos[0]
+                    tipos_arquivos_para_uso = [selected_type] * len(arquivos)
+                elif len(tipos_arquivos) == len(arquivos):
+                    # Se há um tipo para cada arquivo (campos de upload individuais)
+                    tipos_arquivos_para_uso = tipos_arquivos
+                else:
+                    # Fallback para 'OUTRO' se a contagem não corresponder por algum motivo inesperado
+                    tipos_arquivos_para_uso = ['OUTRO'] * len(arquivos)
+
+                for i, arquivo in enumerate(arquivos):
+                    tipo_arquivo = tipos_arquivos_para_uso[i]
                     Arquivo.objects.create(
                         documento=documento,
                         arquivo=arquivo,
                         tipo=tipo_arquivo
                     )
-
-            messages.add_message(request, constants.SUCCESS, 'Documento criado com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
+            
+            messages.add_message(request, constants.SUCCESS, 'Documento e arquivos criados com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
             return redirect('documentos:listar_documentos')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.add_message(request, constants.ERROR, f'Erro no campo "{field}": {error}', extra_tags='bg-red-500 text-white p-4 rounded')
+    else:
+        form = DocumentoForm()
 
-        except Exception as e:
-            logger.error(f"Erro ao salvar documento: {e}")
-            messages.add_message(request, constants.ERROR, f'Erro ao salvar documento: {str(e)}', extra_tags='bg-red-500 text-white p-4 rounded')
-            return render(request, 'criar_documento.html', {'tipos': tipos})
+    context = {
+        'form': form,
+        'tipos': Documento.TIPO_CHOICES,
+    }
+    return render(request, 'criar_documento.html', context)
 
-    return render(request, 'criar_documento.html', {'tipos': tipos})
 
 def editar_documento(request, pk):
     """
@@ -302,6 +290,8 @@ def excluir_documento(request, pk):
         messages.add_message(request, constants.SUCCESS, 'Documento excluído com sucesso.', extra_tags='bg-green-500 text-white p-4 rounded')
         return redirect('documentos:listar_documentos')
     return render(request, 'listar_documentos.html', {'documento': documento})
+
+
 
 def carrossel_noticias(request):
     """

@@ -175,19 +175,15 @@
         </fieldset>
 
          <!-- Mensagens de alerta -->
-<fieldset class="rounded-md">
-    {% if messages %}
-        <div id="django-messages" style="display:none;" data-messages='[
+        {% if messages %}
+        <div class="mb-4">
             {% for message in messages %}
-                {
-                    "tags": "{{ message.tags|upper }}",
-                    "message": "{{ message|escapejs }}"
-                }{% if not forloop.last %},{% endif %}
+            <div class="p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                {{ message }}
+            </div>
             {% endfor %}
-        ]'></div>
-    {% endif %}
-    {% include 'modals/modal_alerts.html' %}
-</fieldset>
+        </div>
+        {% endif %}
 
         <!-- Perfil do Militar -->
      
@@ -1690,6 +1686,5 @@
                 }
             });
             </script>
-            
         
  {% endblock %}

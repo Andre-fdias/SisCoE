@@ -343,6 +343,19 @@ class Medalha(models.Model):
         ordering = ['-data_publicacao_lp'] # Ordenação padrão
 
 
+    # Adicione ao final da classe Medalha
+    def get_search_result(self):
+        return {
+            'title': f"{self.honraria} - {self.cadastro.nome}",
+            'fields': {
+                'Honraria': self.honraria,
+                'BOL GPm LP': self.bol_g_pm_lp,
+                'Publicação': self.data_publicacao_lp.strftime('%d/%m/%Y') if self.data_publicacao_lp else '-'
+            }
+        }
+
+
+
 class Curso(models.Model):
 
     CURSOS_CHOICES = (
@@ -431,6 +444,16 @@ class Curso(models.Model):
         #     self.outro_curso = None
         super().save(*args, **kwargs)
 
+    # Adicione ao final da classe Curso
+    def get_search_result(self):
+        return {
+            'title': f"{self.curso} - {self.cadastro.nome}",
+            'fields': {
+                'Curso': self.curso,
+                'BOL Publicação': self.bol_publicacao,
+                'Publicação': self.data_publicacao.strftime('%d/%m/%Y') if self.data_publicacao else '-'
+            }
+        }
  
     # Mapeamento de tags para os cursos
     CURSOS_TAGS = {

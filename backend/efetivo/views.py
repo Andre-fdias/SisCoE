@@ -1158,6 +1158,8 @@ def get_image_path(file):
 def pagina_buscar_militar(request):
     return render(request, 'buscar_militar.html')
 
+
+
 def gerar_etiqueta_pdf(request):
     if request.method == 'GET':
         return render(request, 'buscar_militar.html')
@@ -1248,7 +1250,6 @@ def gerar_etiqueta_pdf(request):
         ))
 
         # --- Carregar imagens ---
- # --- Carregar imagens ---
         try:
             # Logo como marca d'água central (3x4 ocupando toda altura)
             logo_img = Image('backend/core/static/img/logo.png', 
@@ -1268,6 +1269,18 @@ def gerar_etiqueta_pdf(request):
         except Exception as e:
             context['error_message'] = f"Erro ao carregar imagens: {str(e)}"
             return render(request, 'buscar_militar.html', context, status=500)
+
+        # ===== Obter imagem do militar =====
+        user_image = None
+        if cadastro.imagens.exists():
+            try:
+                ultima_imagem = cadastro.imagens.last()
+                # Usar caminho absoluto da imagem
+                image_path = ultima_imagem.image.path
+                user_image = Image(image_path, width=25*mm, height=30*mm)
+            except Exception as img_error:
+                print(f"Erro ao carregar imagem do militar: {str(img_error)}")
+        # ===== FIM DA SEÇÃO DE IMAGEM DO MILITAR =====
 
         # --- Elementos da etiqueta ---
         elements = []
@@ -1292,10 +1305,14 @@ def gerar_etiqueta_pdf(request):
         
         elements.append(header_table)
 
+        # ===== Conteúdo Principal com Foto =====
+        content_data = []
 
-        # Conteúdo principal
-        elements.append(Paragraph(cadastro.nome.upper() if cadastro.nome else '', styles['MilitaryName']))
-        elements.append(Spacer(1, 1*mm))
+        # Coluna de texto (esquerda)
+        text_content = [
+            Paragraph(cadastro.nome.upper() if cadastro.nome else '', styles['MilitaryName']),
+            Spacer(1, 1*mm),
+        ]
 
         last_promotion = cadastro.promocoes.order_by('-data_alteracao').first()
         if last_promotion and last_promotion.posto_grad:
@@ -1303,21 +1320,117 @@ def gerar_etiqueta_pdf(request):
         else:
             rank_war_name = cadastro.nome_de_guerra.upper() if cadastro.nome_de_guerra else ''
         
-        elements.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
-        elements.append(Spacer(1, 1*mm))
+        text_content.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
+        text_content.append(Spacer(1, 1*mm))
 
         re_text = f"{cadastro.re or ''}-{cadastro.dig or ''}" if cadastro.dig else f"{cadastro.re or ''}"
-        elements.append(Paragraph(re_text, styles['MilitaryRE']))
-        elements.append(Spacer(1, 3*mm))
+        text_content.append(Paragraph(re_text, styles['MilitaryRE']))
+        text_content.append(Spacer(1, 3*mm))
 
         last_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
         if last_situacao:
             if last_situacao.funcao:
-                elements.append(Paragraph(last_situacao.funcao.upper(), styles['MilitaryDetail']))
+                text_content.append(Paragraph(last_situacao.funcao.upper(), styles['MilitaryDetail']))
             if last_situacao.sgb:
-                elements.append(Paragraph(last_situacao.sgb.upper(), styles['MilitaryDetail']))
+                text_content.append(Paragraph(last_situacao.sgb.upper(), styles['MilitaryDetail']))
             if last_situacao.posto_secao:
-                elements.append(Paragraph(last_situacao.posto_secao.upper(), styles['MilitaryDetail']))
+                text_content.append(Paragraph(last_situacao.posto_secao.upper(), styles['MilitaryDetail']))
+
+         # Coluna de imagem (esquerda) - INVERTIDA A POSIÇÃO AQUI
+        image_content = []
+        if user_image:
+            # Definir cores de borda por patente
+            border_color = colors.HexColor('#1a365d')  # Azul padrão
+            
+            # Listas de patentes
+            officer_ranks = ["Cel PM", "Ten Cel PM", "Maj PM", "CAP PM", 
+                             "1º Ten PM", "1º Ten QAPM", "2º Ten PM", 
+                             "2º Ten QAPM", "Asp OF PM"]
+            
+            nco_ranks = ["Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM"]
+            
+            if last_promotion and last_promotion.posto_grad in officer_ranks:
+                border_color = colors.HexColor('#d4af37')  # Dourado para oficiais
+            elif last_promotion and last_promotion.posto_grad in nco_ranks:
+                border_color = colors.HexColor('#c0c0c0')  # Prata para sargentos
+
+            # Criar tabela para a imagem com borda
+            img_table = Table([[user_image]], 
+                               colWidths=[25*mm],
+                               rowHeights=[30*mm])
+            
+            img_table.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('LINEABOVE', (0,0), (-1,-1), 1, border_color),
+                ('LINEBELOW', (0,0), (-1,-1), 1, border_color),
+                ('LINEBEFORE', (0,0), (-1,-1), 1, border_color),
+                ('LINEAFTER', (0,0), (-1,-1), 1, border_color),
+                ('BOX', (0,0), (-1,-1), 1, border_color),
+            ]))
+            
+            image_content.append(img_table)
+        else:
+            # Placeholder para quando não há imagem
+            no_image_text = Paragraph("SEM IMAGEM", styles['MilitaryDetail'])
+            no_image_table = Table([[no_image_text]], 
+                                    colWidths=[25*mm],
+                                    rowHeights=[30*mm])
+            no_image_table.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('GRID', (0,0), (-1,-1), 1, colors.lightgrey),
+            ]))
+            image_content.append(no_image_table)
+
+        # Coluna de texto (direita) - INVERTIDA A POSIÇÃO AQUI
+        text_content = [
+            Paragraph(cadastro.nome.upper() if cadastro.nome else '', styles['MilitaryName']),
+            Spacer(1, 1*mm),
+        ]
+
+        last_promotion = cadastro.promocoes.order_by('-data_alteracao').first()
+        if last_promotion and last_promotion.posto_grad:
+            rank_war_name = f"{last_promotion.posto_grad.upper()} {cadastro.nome_de_guerra.upper() if cadastro.nome_de_guerra else ''}"
+        else:
+            rank_war_name = cadastro.nome_de_guerra.upper() if cadastro.nome_de_guerra else ''
+        
+        text_content.append(Paragraph(rank_war_name.strip(), styles['MilitaryRankWarName']))
+        text_content.append(Spacer(1, 1*mm))
+
+        re_text = f"{cadastro.re or ''}-{cadastro.dig or ''}" if cadastro.dig else f"{cadastro.re or ''}"
+        text_content.append(Paragraph(re_text, styles['MilitaryRE']))
+        text_content.append(Spacer(1, 3*mm))
+
+        last_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        if last_situacao:
+            if last_situacao.funcao:
+                text_content.append(Paragraph(last_situacao.funcao.upper(), styles['MilitaryDetail']))
+            if last_situacao.sgb:
+                text_content.append(Paragraph(last_situacao.sgb.upper(), styles['MilitaryDetail']))
+            if last_situacao.posto_secao:
+                text_content.append(Paragraph(last_situacao.posto_secao.upper(), styles['MilitaryDetail']))
+
+        # Juntar conteúdo em uma tabela de 2 colunas - ORDEM INVERTIDA AQUI
+        content_data.append([
+            image_content, # Imagem agora na primeira coluna (esquerda)
+            text_content   # Texto agora na segunda coluna (direita)
+        ])
+        
+        content_table = Table(content_data, 
+                               colWidths=[10*mm, ETIQUETA_WIDTH - 30*mm]) # Larguras ajustadas
+        
+        content_table.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('ALIGN', (0,0), (0,0), 'CENTER'), # Alinha a imagem ao centro da sua coluna
+            ('ALIGN', (1,0), (1,0), 'LEFT'),  # Alinha o texto à esquerda da sua coluna
+            ('LEFTPADDING', (0,0), (0,0), 15*mm),  # Ajusta padding da imagem
+            ('RIGHTPADDING', (0,0), (0,0), 1*mm), # Ajusta padding do texto
+            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ]))
+        
+        elements.append(content_table)
+        # ===== FIM DO CONTEÚDO PRINCIPAL =====
 
         # --- Função para desenhar o layout completo ---
         def draw_page(canvas, doc):
@@ -1367,7 +1480,64 @@ def gerar_etiqueta_pdf(request):
             
             # Cantos decorados
             TAMANHO_CANTO = 5*mm
-            # (código dos cantos mantido igual)
+            
+            # Canto superior esquerdo
+            canvas.setStrokeColor(AZUL_ESCURO)
+            canvas.setLineWidth(0.5*mm)
+            canvas.line(
+                x_pos - 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm - TAMANHO_CANTO,
+                x_pos - 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm
+            )
+            canvas.line(
+                x_pos - 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm,
+                x_pos - 0.6*mm + TAMANHO_CANTO,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm
+            )
+            
+            # Canto superior direito
+            canvas.line(
+                x_pos + ETIQUETA_WIDTH + 0.6*mm - TAMANHO_CANTO,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm,
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm
+            )
+            canvas.line(
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm,
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos + ETIQUETA_HEIGHT + 0.6*mm - TAMANHO_CANTO
+            )
+            
+            # Canto inferior esquerdo
+            canvas.line(
+                x_pos - 0.6*mm,
+                y_pos - 0.6*mm,
+                x_pos - 0.6*mm,
+                y_pos - 0.6*mm + TAMANHO_CANTO
+            )
+            canvas.line(
+                x_pos - 0.6*mm,
+                y_pos - 0.6*mm,
+                x_pos - 0.6*mm + TAMANHO_CANTO,
+                y_pos - 0.6*mm
+            )
+            
+            # Canto inferior direito
+            canvas.line(
+                x_pos + ETIQUETA_WIDTH + 0.6*mm - TAMANHO_CANTO,
+                y_pos - 0.6*mm,
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos - 0.6*mm
+            )
+            canvas.line(
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos - 0.6*mm,
+                x_pos + ETIQUETA_WIDTH + 0.6*mm,
+                y_pos - 0.6*mm + TAMANHO_CANTO
+            )
             
             canvas.restoreState()
 
@@ -1383,11 +1553,10 @@ def gerar_etiqueta_pdf(request):
         return response
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         context['error_message'] = f"Erro ao gerar etiqueta: {str(e)}"
         return render(request, 'buscar_militar.html', context, status=500)
-    
-
-    # backend/efetivo/views.py
 
 
 # backend/efetivo/views.py (ou onde suas views estão)

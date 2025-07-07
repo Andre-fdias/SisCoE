@@ -59,6 +59,18 @@ class Documento(models.Model):
             return f"{total_anexos} anexos ({tipos_anexos})"
 
 
+    # Adicione ao final da classe Documento
+    def get_search_result(self):
+        return {
+            'title': f"{self.assunto} - {self.numero_documento}",
+            'fields': {
+                'Assunto': self.assunto,
+                'Tipo': self.tipo,
+                'Data Documento': self.data_documento.strftime('%d/%m/%Y'),
+                'Assinado por': self.assinada_por
+            }
+        }
+
 class Arquivo(models.Model):
     TIPO_CHOICES = (
         ('PDF', 'PDF'),
@@ -88,3 +100,14 @@ class Arquivo(models.Model):
             'mp3': 'audio/mpeg',
             'wav': 'audio/wav',
         }.get(ext, f'{self.tipo}/{ext}')
+    
+    # Adicione ao final da classe Arquivo
+    def get_search_result(self):
+        return {
+            'title': f"Arquivo para {self.documento.assunto}",
+            'fields': {
+                'Documento': self.documento.assunto,
+                'Tipo': self.tipo,
+                'Extensão': self.extension
+            }
+        }

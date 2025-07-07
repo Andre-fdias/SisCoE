@@ -333,13 +333,13 @@ def ver_lp(request, pk):
     
     latest_concluded_history_dates = HistoricoLP.objects.filter(
         lp__in=lps_do_cadastro,
-        status_lp='concluido',
+        status_lp='concluido', # Corrigido para a string do status
         numero_lp=OuterRef('numero_lp')
     ).order_by('-data_alteracao').values('pk')[:1]
 
     historico_cadastro = HistoricoLP.objects.filter(
         lp__in=lps_do_cadastro,
-        status_lp='concluido',
+        status_lp='concluido', # Corrigido para a string do status
         pk__in=Subquery(latest_concluded_history_dates)
     ).order_by('numero_lp', '-data_alteracao')
 
@@ -357,6 +357,13 @@ def ver_lp(request, pk):
         if data_fim_periodo_lp_calculated and data_fim_periodo_lp_calculated <= hoje:
             lp.status_lp = LP.StatusLP.APTA_CONCESSAO
             lp.save()
+            # Opcional: Adicionar ao histórico que o status foi atualizado automaticamente
+            # HistoricoLP.objects.create(
+            #     lp=lp,
+            #     tipo_alteracao='status_automatico',
+            #     status_lp=LP.StatusLP.APTA_CONCESSAO,
+            #     observacoes='Status atualizado automaticamente para Apta à Concessão.'
+            # )
     
     # 2. CÁLCULO DO PERÍODO AQUISITIVO
     progresso_periodo_aquisitivo_percentual = 0
@@ -385,41 +392,70 @@ def ver_lp(request, pk):
 
     lp_count = LP.objects.filter(cadastro=lp.cadastro).count()
 
-    # Inicializar variáveis para fruição
-    dias_utilizados = 0
-    dias_disponiveis = 90
-    dias_utilizados_percent = 0
-    
-    # Verificar se existe fruição associada
+    # --- Seção de Fruição ---
+    fruicao_data_for_js = {} # Dicionário para passar para o JavaScript via json_script
+
     if hasattr(lp, 'fruicao'):
-        fruicao = lp.fruicao
-        historico_filtrado = fruicao.historico.filter(
+        fruicao_obj = lp.fruicao
+        historico_fruicao_filtrado = fruicao_obj.historico.filter(
             data_inicio_afastamento__isnull=False,
             data_termino_afastamento__isnull=False
         ).order_by('-data_alteracao')
         
-        # Obter valores de dias utilizados e disponíveis
-        dias_utilizados = fruicao.dias_utilizados or 0
-        dias_disponiveis = fruicao.dias_disponiveis or 90
-        dias_utilizados_percent = (dias_utilizados / 90) * 100
+        dias_utilizados = fruicao_obj.dias_utilizados or 0
+        dias_disponiveis = fruicao_obj.dias_disponiveis or 90
+        dias_utilizados_percent = (dias_utilizados / 90) * 100 if 90 > 0 else 0
+
+        # Preenche o dicionário para o JavaScript
+        fruicao_data_for_js = {
+            'dias_utilizados': dias_utilizados,
+            'dias_disponiveis': dias_disponiveis,
+            'dias_utilizados_percent': round(dias_utilizados_percent, 2),
+            'numero_lp': fruicao_obj.numero_lp,
+            'tipo_periodo_afastamento': fruicao_obj.tipo_periodo_afastamento,
+            'data_concessao_lp': fruicao_obj.data_concessao_lp.strftime('%Y-%m-%d') if fruicao_obj.data_concessao_lp else None,
+            'bol_g_pm_lp': fruicao_obj.bol_g_pm_lp,
+            'data_publicacao_lp': fruicao_obj.data_publicacao_lp.strftime('%Y-%m-%d') if fruicao_obj.data_publicacao_lp else None,
+            # Se você usar o `historico` do objeto `fruicao` no template que usa `fruicao.historico.all`,
+            # precisará manter a variável `fruicao` no contexto.
+            # Caso contrário, apenas `fruicao_data_for_js` é necessário para o JS.
+        }
     else:
-        # Criar um objeto fictício para manter a compatibilidade com o template
+        # Se não há objeto fruicao, inicialize os dados com valores padrão para o JS
+        dias_utilizados = 0
+        dias_disponiveis = 90
+        dias_utilizados_percent = 0
+
+        fruicao_data_for_js = {
+            'dias_utilizados': dias_utilizados,
+            'dias_disponiveis': dias_disponiveis,
+            'dias_utilizados_percent': round(dias_utilizados_percent, 2),
+            'numero_lp': lp.numero_lp, # Usa o numero_lp do objeto LP principal
+            'tipo_periodo_afastamento': '',
+            'data_concessao_lp': None,
+            'bol_g_pm_lp': '',
+            'data_publicacao_lp': None,
+        }
+        # Para o template que espera `fruicao.historico`, crie um mock
         class FruicaoStub:
-            pass
+            def __init__(self, lp_obj):
+                self.dias_utilizados = 0
+                self.dias_disponiveis = 90
+                self.historico = [] # Uma lista vazia para simular QuerySet vazio
+                self.numero_lp = lp_obj.numero_lp
+                self.tipo_periodo_afastamento = ''
+                self.data_concessao_lp = None
+                self.bol_g_pm_lp = ''
+                self.data_publicacao_lp = None
+                # Adicione outros atributos que o template possa esperar do objeto `fruicao`
         
-        fruicao = FruicaoStub()
-        setattr(fruicao, 'dias_utilizados', 0)
-        setattr(fruicao, 'dias_disponiveis', 90)
-        setattr(fruicao, 'historico', [])
-        setattr(fruicao, 'numero_lp', lp.numero_lp)
-        setattr(fruicao, 'tipo_periodo_afastamento', '')
-        setattr(fruicao, 'data_concessao_lp', None)
-        setattr(fruicao, 'bol_g_pm_lp', '')
-        setattr(fruicao, 'data_publicacao_lp', None)
+        fruicao_obj = FruicaoStub(lp)
+        historico_fruicao_filtrado = [] # Garante que o template não itere sobre None
 
     context = {
         'lp': lp,
-        'fruicao': fruicao,
+        'fruicao': fruicao_obj, # Passa a instância (real ou mock) de fruicao para o template HTML
+        'fruicao_json_data': fruicao_data_for_js, # Passa o dicionário para o json_script
         'historico_lp': historico_lp,
         'historico_cadastro': historico_cadastro,
         'N_CHOICES': N_CHOICES,
@@ -435,11 +471,13 @@ def ver_lp(request, pk):
         'lp_count': lp_count,
         'dias_choices': LP_fruicao.DIAS_CHOICES,
         'tipo_choice_options': LP_fruicao.TIPO_CHOICES,
-        'dias_utilizados': dias_utilizados,
-        'dias_disponiveis': dias_disponiveis,
-        'dias_utilizados_percent': dias_utilizados_percent,
+        'dias_utilizados': dias_utilizados, # Mantenha para uso direto no template se necessário
+        'dias_disponiveis': dias_disponiveis, # Mantenha para uso direto no template se necessário
+        'dias_utilizados_percent': dias_utilizados_percent, # Mantenha para uso direto no template se necessário
+        'historico_fruicao_filtrado': historico_fruicao_filtrado, # Passa o histórico filtrado
     }
     return render(request, 'lp/detalhar_lp.html', context)
+
 
 @login_required
 @require_POST
@@ -1143,59 +1181,64 @@ def adicionar_afastamento(request, pk):
         'dias_choices': LP_fruicao.DIAS_CHOICES,
         'tipo_choice_options': LP_fruicao.TIPO_CHOICES,
     })
+
+
+@login_required
+def get_afastamento_data(request, afastamento_id):
+    registro = get_object_or_404(HistoricoFruicaoLP, pk=afastamento_id)
+    
+    data = {
+        'success': True,
+        'registro': {
+            'tipo_periodo_afastamento': registro.tipo_periodo_afastamento,
+            'data_inicio_afastamento': registro.data_inicio_afastamento.strftime("%d/%m/%Y") if registro.data_inicio_afastamento else None,
+            'data_termino_afastamento': registro.data_termino_afastamento.strftime("%d/%m/%Y") if registro.data_termino_afastamento else None,
+        }
+    }
+    
+    return JsonResponse(data)
+
 @login_required
 def remover_afastamento(request, pk, afastamento_id):
     fruicao = get_object_or_404(LP_fruicao, pk=pk)
-    
-    if request.method == 'POST':
-        # Encontre o registro de histórico específico
-        historico = get_object_or_404(fruicao.historico, pk=afastamento_id)
-        
-        # Devolva os dias ao saldo disponível
-        if historico.tipo_periodo_afastamento:
-            fruicao.dias_disponiveis += historico.tipo_periodo_afastamento
-            fruicao.dias_utilizados -= historico.tipo_periodo_afastamento
-        
-        # Limpe os campos de afastamento
-        fruicao.tipo_periodo_afastamento = None
-        fruicao.data_inicio_afastamento = None
-        fruicao.data_termino_afastamento = None
-        fruicao.user_updated = request.user
-        
-        try:
-            fruicao.full_clean()
-            fruicao.save()
-            
-            # Opcional: você pode querer deletar o registro de histórico também
-            # historico.delete()
-            
-            messages.success(request, "Afastamento removido com sucesso!")
-        except ValidationError as e:
-            messages.error(request, f"Erro ao remover afastamento: {e}")
-    
-    return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
-    fruicao = get_object_or_404(LP_fruicao, pk=pk)
-    registro_historico = get_object_or_404(HistoricoFruicaoLP, pk=afastamento_id, fruicao=fruicao)
+    registro = get_object_or_404(fruicao.historico, pk=afastamento_id)
     
     if request.method == 'POST':
         try:
-            # Restaura os dias
-            dias_restaurados = registro_historico.tipo_periodo_afastamento or 0
+            # Restaurar dias
+            dias_restaurados = registro.tipo_periodo_afastamento or 0
             fruicao.dias_disponiveis += dias_restaurados
             fruicao.dias_utilizados -= dias_restaurados
-            fruicao.user_updated = request.user
+            
+            # Garantir que não fique negativo
+            fruicao.dias_utilizados = max(0, fruicao.dias_utilizados)
+            
+            # Não precisamos setar o percentual, pois ele é uma propriedade calculada
+            # Salvar alterações
             fruicao.save()
             
-            # Remove o registro do histórico
-            registro_historico.delete()
+            # Excluir registro histórico
+            registro.delete()
             
-            messages.success(request, f'Afastamento removido e {dias_restaurados} dias restaurados.')
-            return redirect('lp:detalhar_fruicao', pk=fruicao.pk)
+            # Calcular o percentual para retornar na resposta
+            total_dias = 90
+            dias_utilizados_percent = (fruicao.dias_utilizados / total_dias) * 100
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Afastamento removido com sucesso!',
+                'dias_utilizados': fruicao.dias_utilizados,
+                'dias_disponiveis': fruicao.dias_disponiveis,
+                'dias_utilizados_percent': dias_utilizados_percent
+            })
+            
         except Exception as e:
-            messages.error(request, f'Erro ao remover afastamento: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao remover afastamento: {str(e)}'
+            }, status=500)
     
-    context = {
-        'fruicao': fruicao,
-        'registro': registro_historico,
-    }
-    return render(request, 'fruicao/confirmar_remocao_afastamento.html', context)
+    return JsonResponse({
+        'success': False,
+        'message': 'Método não permitido'
+    }, status=405)

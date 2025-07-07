@@ -20,17 +20,62 @@
         </a>
       </div>
 
-      <!-- Barra de Pesquisa (Desktop) -->
-      <div class="hidden lg:flex items-center ml-10 flex-1 max-w-md">
-        <div class="relative w-full">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
-            </svg>
-          </div>
-          <input type="text" class="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5" placeholder="Pesquisar...">
-        </div>
-      </div>
+<!-- BARRA DE PESQUISA DESKTOP -->
+<div class="hidden lg:flex items-center ml-10 flex-1 max-w-md">
+  <form action="{% url 'core:global_search' %}" method="GET" class="relative w-full">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+    <input 
+        type="text" 
+        name="q" 
+        class="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5" 
+        placeholder="Pesquisar..."
+        value="{{ request.GET.q }}"
+        aria-label="Pesquisa global"
+        required>
+  </form>
+</div>
+
+<!-- BARRA DE PESQUISA MOBILE -->
+<div id="mobileSearch" class="lg:hidden hidden absolute top-16 left-0 right-0 bg-gray-900 p-4 z-40 border-b border-gray-800">
+  <form action="{% url 'core:global_search' %}" method="GET" class="relative">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+      <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+    <input 
+        type="text" 
+        name="q"
+        class="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5" 
+        placeholder="Pesquisar..."
+        value="{{ request.GET.q }}"
+        aria-label="Pesquisa global"
+        required>
+    <button type="button" onclick="toggleMobileSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<!-- ADICIONE ESTE SCRIPT NO FINAL DO NAV.HTML -->
+<script>
+  function toggleMobileSearch() {
+    const mobileSearch = document.getElementById('mobileSearch');
+    mobileSearch.classList.toggle('hidden');
+  }
+
+  // Ativar pesquisa mobile pelo botão existente
+  document.getElementById('toggleSidebarMobileSearch').addEventListener('click', function(e) {
+    e.preventDefault();
+    toggleMobileSearch();
+  });
+</script>
 
       <!-- Botões Direitos -->
       <div class="flex items-center space-x-4">

@@ -183,6 +183,19 @@ class Posto(models.Model):
     def __str__(self):
         return f'{self.posto_atendimento} - {self.cidade_posto}' 
 
+
+    def get_search_result(self):
+        return {
+            'title': f"{self.posto_atendimento} - {self.cidade_posto}",
+            'fields': {
+                'Posto/Seção': self.posto_secao,
+                'Cidade': self.cidade_posto,
+                'Tipo': self.op_adm
+            }
+        }
+
+
+
 class Contato(models.Model):
     posto = models.OneToOneField(
         Posto, 
@@ -204,6 +217,17 @@ class Contato(models.Model):
 
     def __str__(self):
         return f'Contato {self.posto.posto_atendimento}'
+
+    def get_search_result(self):
+        return {
+            'title': f"Contato {self.posto.posto_atendimento}",
+            'fields': {
+                'Telefone': self.telefone,
+                'Endereço': f"{self.rua}, {self.numero} - {self.bairro}",
+                'Cidade': self.cidade
+            }
+        }
+
 
 class Pessoal(models.Model):
     posto = models.ForeignKey(Posto, on_delete=models.CASCADE, related_name='pessoal')
@@ -227,6 +251,16 @@ class Pessoal(models.Model):
             self.tenqo + self.tenqa + 
             self.st_sgt + self.cb_sd
         )
+    
+    def get_search_result(self):
+        return {
+            'title': f"{self.municipio}",
+            'fields': {
+                'Município': self.get_nome_municipio(),
+                'Descrição': Truncator(self.descricao).chars(100) if self.descricao else '-'
+            }
+        }
+
 
 class Cidade(models.Model):
 
@@ -352,7 +386,20 @@ class Cidade(models.Model):
         """Retorna o nome de exibição do município"""
         return dict(self.municipio_choices).get(self.municipio, self.municipio)
 
-
+    # Adicione ao final da classe Pessoal
+    def get_search_result(self):
+        return {
+            'title': f"Pessoal {self.posto.posto_atendimento}",
+            'fields': {
+                'Cel': self.cel,
+                'Ten Cel': self.ten_cel,
+                'Maj': self.maj,
+                'Cap': self.cap,
+                'Total': self.total
+            }
+        }
+    
+    
     class HistoricoPessoal(models.Model):
             data_referencia = models.DateField()
             total_cel = models.IntegerField()

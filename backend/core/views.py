@@ -73,8 +73,9 @@ def index(request):
                      'Cmt do 3º SGB', 'Cmt do 4º SGB', 'Cmt do 5º SGB']
     }
 
-    imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')[:2]
+    imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')
 
+    # CORREÇÃO AQUI: Usar 'nasc__month' em vez de 'data_nascimento__month'
     aniversariantes = Cadastro.objects.filter(
         nasc__month=mes_atual
     ).order_by('nasc__day').prefetch_related(
@@ -473,3 +474,21 @@ class CalendarioView(TemplateView):
         context['eventos_fixos'] = todos_eventos  # Para a tabela
         
         return context
+    
+
+
+# backend/core/views.py
+from django.shortcuts import render
+from .search import GlobalSearch
+
+def global_search_view(request):
+    query = request.GET.get('q', '').strip()
+    results = []
+    
+    if query:
+        results = GlobalSearch.search(query)
+    
+    return render(request, 'global_search/results.html', {
+        'query': query,
+        'results': results
+    })
