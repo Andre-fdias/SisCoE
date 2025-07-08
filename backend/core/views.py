@@ -479,16 +479,25 @@ class CalendarioView(TemplateView):
 
 # backend/core/views.py
 from django.shortcuts import render
-from .search import GlobalSearch
+from django.contrib.auth.decorators import login_required
+from .search import GlobalSearch # Importe a classe GlobalSearch
 
+@login_required
 def global_search_view(request):
-    query = request.GET.get('q', '').strip()
+    """
+    View para realizar a busca global no sistema.
+    Recebe um termo de busca via parâmetro 'q' na URL e retorna os resultados.
+    """
+    query = request.GET.get('q', '').strip() # Obtém o termo de busca da URL, remove espaços
     results = []
-    
+
     if query:
+        # Chama o método de busca da classe GlobalSearch
         results = GlobalSearch.search(query)
     
-    return render(request, 'global_search/results.html', {
+    context = {
         'query': query,
-        'results': results
-    })
+        'results': results,
+    }
+    return render(request, 'global_search/results.html', context)
+
