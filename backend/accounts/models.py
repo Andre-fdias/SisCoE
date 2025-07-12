@@ -36,6 +36,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=False,
         help_text=_('Designates that this user has all permissions without explicitly assigning them.'),
     )
+    is_staff = models.BooleanField(default=False)
+    login_history = models.JSONField(default=list) 
+
 
     objects = UserManager()
 
@@ -91,35 +94,50 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     
     def update_login_history(self, ip, computer_name, login_time=None, logout_time=None):
+        history = self.login_history
+        
+        # Converte o login_time de string ISO para datetime se for uma string
+        if isinstance(login_time, str):
+            login_time = datetime.fromisoformat(login_time)
+        
+        # Converte o logout_time de string ISO para datetime se for uma string
+        if isinstance(logout_time, str):
+            logout_time = datetime.fromisoformat(logout_time)
+
         if login_time:
-            self.login_history.append({
-                'login_time': login_time.isoformat(),
+            history.append({
+                'login_time': login_time.isoformat() if login_time else None,
                 'ip': ip,
                 'computer_name': computer_name,
                 'logout_time': None,
             })
-        if logout_time:
-            self.login_history[-1]['logout_time'] = logout_time.isoformat()
+        elif logout_time:
+            # Encontra a última entrada de login sem logout e a atualiza
+            for entry in reversed(history):
+                if entry.get('logout_time') is None:
+                    entry['logout_time'] = logout_time.isoformat()
+                    break
+        self.login_history = history
         self.save()
 
-
-    def get_login_duration(self, login_time, logout_time):
-        if login_time and logout_time:
-            login_dt = datetime.fromisoformat(login_time)
-            logout_dt = datetime.fromisoformat(logout_time)
-            duration = logout_dt - login_dt
-            total_seconds = int(duration.total_seconds())
-            hours, remainder = divmod(total_seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            return f'{hours:02}:{minutes:02}:{seconds:02}'
-        return None
-
-    def format_datetime(self, dt_str):
-        if dt_str:
-            dt = datetime.fromisoformat(dt_str)
-            return dt.strftime('%d/%m/%Y - %H:%M:%S')
-        return None
+    def get_login_duration(self, login_time_str, logout_time_str):
+        if login_time_str and logout_time_str:
+            login_time = datetime.fromisoformat(login_time_str)
+            logout_time = datetime.fromisoformat(logout_time_str)
+            duration = logout_time - login_time
+            # Formata a duração para ser mais legível
+            days, seconds = duration.days, duration.seconds
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            seconds = seconds % 60
+            return f"{days}d {hours:02}h {minutes:02}m {seconds:02}s"
+        return "N/A"
     
+    def format_datetime(self, datetime_str):
+        if datetime_str:
+            dt_object = datetime.fromisoformat(datetime_str)
+            return dt_object.strftime("%d/%m/%Y %H:%M:%S")
+        return "N/A"
 
 
 

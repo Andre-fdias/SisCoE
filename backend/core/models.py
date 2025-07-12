@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from backend.efetivo.models import Cadastro  # Importe a model Cadastro
 from django.db import connection
 from django.conf import settings
-
+from django.core.exceptions import ValidationError
 
 class Profile(models.Model):
     posto_grad_choices = (
@@ -100,25 +100,64 @@ class Profile(models.Model):
             return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Sd PM 2ºCL</span>')
 
 
+    def clean(self):
+        super().clean()
+        # Garantir que o CPF do perfil seja igual ao do cadastro
+        if self.cadastro and self.cpf != self.cadastro.cpf:
+            raise ValidationError("O CPF do perfil deve ser igual ao CPF do cadastro associado.")
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    def save(self, *args, **kwargs):
+        # Se não tem cadastro associado mas tem CPF, tenta vincular
+        if not self.cadastro and self.cpf:
+            try:
+                cadastro = Cadastro.objects.get(cpf=self.cpf)
+                self.cadastro = cadastro
+            except Cadastro.DoesNotExist:
+                # Cria um novo cadastro se não existir
+                cadastro = Cadastro.objects.create(cpf=self.cpf)
+                self.cadastro = cadastro
+            except Cadastro.MultipleObjectsReturned:
+                # Pega o primeiro se houver múltiplos (deveria ser único)
+                cadastro = Cadastro.objects.filter(cpf=self.cpf).first()
+                self.cadastro = cadastro
+        
+        # Sincroniza o CPF se houver cadastro associado
+        if self.cadastro:
+            self.cpf = self.cadastro.cpf
+            
+        super().save(*args, **kwargs)
+
+
+# Receivers corrigidos
+@receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         try:
-            if 'core_profile' in connection.introspection.table_names():
-                Profile.objects.create(user=instance)
+            profile = Profile.objects.create(user=instance)
+            
+            # Tenta vincular automaticamente pelo CPF se existir
+            if profile.cpf:
+                try:
+                    cadastro = Cadastro.objects.get(cpf=profile.cpf)
+                    profile.cadastro = cadastro
+                    profile.save()
+                except Cadastro.DoesNotExist:
+                    # Cria novo cadastro se não existir
+                    cadastro = Cadastro.objects.create(cpf=profile.cpf)
+                    profile.cadastro = cadastro
+                    profile.save()
         except Exception as e:
-            print(f"Erro ao criar perfil para o usuário {instance.email}: {e}")
+            print(f"Erro ao criar perfil: {e}")
 
+
+            
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     try:
-        instance.profile.save()
-    except Profile.DoesNotExist:
-        Profile.objects.create(user=instance)
+        if hasattr(instance, 'profile'):
+            instance.profile.save()
+        else:
+            # Se não existir, cria um novo perfil
+            Profile.objects.create(user=instance)
     except Exception as e:
         print(f"Erro ao salvar perfil para o usuário {instance.email}: {e}")
-
-
-
-

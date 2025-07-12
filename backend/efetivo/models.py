@@ -427,6 +427,7 @@ class DetalhesSituacao(models.Model):
             models.Index(fields=['situacao', 'posto_secao']),
             models.Index(fields=['cadastro']),
             ]
+        ordering = ['-data_alteracao']  # Ordena do mais recente para o mais antigo
     
     @property
     def status(self):

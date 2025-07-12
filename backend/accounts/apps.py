@@ -7,4 +7,3 @@ class AccountsConfig(AppConfig):
 
     def ready(self):
      import backend.accounts.signals
-

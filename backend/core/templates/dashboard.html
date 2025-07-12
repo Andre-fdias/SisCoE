@@ -159,7 +159,7 @@
 </div>
 
   <!-- Gráfico de Distribuição por SGB (3/8) -->
-  <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-3">
+<div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-3">
     <div class="flex justify-between items-center mb-6">
       <h3 class="text-xl font-bold text-gray-800">Distribuição por SGB</h3>
       <div class="flex items-center space-x-4">
@@ -175,6 +175,101 @@
     </div>
     <div id="sgbChart" class="h-80"></div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script>
+    // Dados dinâmicos dos modelos
+    const sgbData = {
+      {% for sgb in sgb_data %} {# Alterado de sgb_distribution para sgb_data, conforme seu contexto #}
+        '{{ sgb.name }}': { {# Usar sgb.name para as categorias do gráfico #}
+          fixado: {{ sgb.fx }},   {# Usar sgb.fx #}
+          existente: {{ sgb.ex }}  {# Usar sgb.ex #}
+        },
+      {% endfor %}
+    };
+  
+    // Configuração do Gráfico de SGB (ApexCharts)
+    const sgbOptions = {
+      chart: {
+        type: 'bar', // Tipo de gráfico de barras
+        height: '100%',
+        toolbar: {show: false},
+        fontFamily: 'Inter, sans-serif'
+      },
+      colors: ['#3B82F6', '#10B981'],
+      plotOptions: {
+        bar: {
+          horizontal: true, // Define o gráfico como barras horizontais
+          borderRadius: 8,
+          columnWidth: '45%', // Isso pode não ser aplicável diretamente em horizontal, mas pode ajustar 'barHeight'
+          dataLabels: {position: 'top'}
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        style: {fontSize: '12px', colors: ["#1F2937"]},
+        offsetX: 40, // Ajuste para posicionar os rótulos nas barras horizontais
+        formatter: function(val) {
+          return val + "";
+        }
+      },
+      xaxis: {
+        categories: Object.keys(sgbData), // As chaves (nomes do SGB) serão as categorias no eixo Y
+        axisBorder: {show: false},
+        axisTicks: {show: false},
+        labels: {style: {colors: '#6B7280', fontSize: '14px'}}
+      },
+      yaxis: { // O eixo Y agora representa os valores
+        labels: {
+          style: {colors: '#6B7280', fontSize: '14px'},
+          formatter: function(val) {
+            return Math.floor(val);
+          }
+        },
+        title: {text: 'Número de Militares', style: {color: '#6B7280', fontSize: '14px'}},
+        min: 0,
+        tickAmount: 5
+      },
+      grid: {
+        borderColor: '#F3F4F6',
+        strokeDashArray: 4,
+        xaxis: { // As linhas da grade agora devem estar no eixo X para barras horizontais
+          lines: {
+            show: true
+          }
+        }
+      },
+      tooltip: {
+        y: {
+          formatter: function(val) {
+            return val + " militares";
+          }
+        },
+        style: {fontSize: '14px'}
+      },
+      legend: {
+        show: true, // Manter a legenda para diferenciar Fixado e Existente
+        position: 'top',
+        horizontalAlign: 'right'
+      }
+    };
+  
+    // Inicialização do Gráfico de SGB
+    new ApexCharts(document.querySelector("#sgbChart"), {
+      ...sgbOptions,
+      series: [
+        {
+          name: 'Fixado',
+          data: Object.values(sgbData).map(item => item.fixado)
+        },
+        {
+          name: 'Existente',
+          data: Object.values(sgbData).map(item => item.existente)
+        }
+      ]
+    }).render();
+  </script>
 
   <!-- Últimas Movimentações -->
   <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">

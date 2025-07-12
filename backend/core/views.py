@@ -23,6 +23,14 @@ def capa(request):
 
 
 
+from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.conf import settings
+from django.db import connection
+from django.contrib import messages
+from django.utils import timezone
+
 
 
 @login_required
@@ -30,7 +38,37 @@ def index(request):
     hoje = datetime.now()
     mes_atual = hoje.month
 
-    print("\n=== INÍCIO DA VIEW ===")
+    # Garante que o usuário tem um perfil
+    try:
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        profile = Profile.objects.create(user=request.user)
+        messages.info(request, 'Perfil criado automaticamente', extra_tags='bg-blue-500 text-white p-4 rounded')
+
+    # Se o perfil tem CPF mas não tem cadastro, tenta vincular
+    if profile.cpf and not profile.cadastro:
+        try:
+            cadastro = Cadastro.objects.get(cpf=profile.cpf)
+            profile.cadastro = cadastro
+            profile.save()
+            messages.success(request, 'Cadastro vinculado automaticamente pelo CPF', extra_tags='bg-green-500 text-white p-4 rounded')
+        except Cadastro.DoesNotExist:
+            # CORREÇÃO: Usar 'nasc' em vez de 'data_nascimento'
+            cadastro = Cadastro.objects.create(
+                cpf=profile.cpf,
+                nome_completo=request.user.get_full_name() or f"Usuário {request.user.id}",
+                nasc=datetime.now().date()  # Campo correto é 'nasc'
+            )
+            profile.cadastro = cadastro
+            profile.save()
+            messages.warning(request, 'Cadastro temporário criado automaticamente', extra_tags='bg-yellow-500 text-white p-4 rounded')
+        except Cadastro.MultipleObjectsReturned:
+            cadastro = Cadastro.objects.filter(cpf=profile.cpf).first()
+            profile.cadastro = cadastro
+            profile.save()
+            messages.warning(request, 'Múltiplos cadastros encontrados. Vinculando ao primeiro', extra_tags='bg-yellow-500 text-white p-4 rounded')
+
+    cadastro_do_usuario = profile.cadastro
 
     FUNCAO_CHOICES_MAP = {
         'Comandante': 'CMT_GB',
@@ -46,9 +84,7 @@ def index(request):
 
     def get_ocupante_por_funcao(funcao_nome):
         try:
-            print(f"Buscando função: {funcao_nome}")
             funcao_valor = FUNCAO_CHOICES_MAP.get(funcao_nome)
-            print(f"Valor da função: {funcao_valor}")
             queryset = Cadastro.objects.filter(
                 detalhes_situacao__funcao=funcao_valor,
                 detalhes_situacao__situacao='Efetivo'
@@ -56,12 +92,9 @@ def index(request):
             ocupante = queryset.first()
             if ocupante:
                 ocupante.latest_promocao = ocupante.promocoes.order_by('-data_alteracao').first()
-                print(f"  {funcao_nome}: {ocupante.nome_de_guerra}, Última Promoção: {ocupante.latest_promocao}") # Debug
-                if ocupante.latest_promocao:
-                    print(f"    Posto/Graduação: {ocupante.latest_promocao.posto_grad}") # Debug
             return ocupante
         except Exception as e:
-            print(f"Erro ao buscar {funcao_nome}: {str(e)}")
+            logger.error(f"Erro ao buscar {funcao_nome}: {str(e)}")
             return None
 
     comandante = get_ocupante_por_funcao('Comandante')
@@ -75,7 +108,7 @@ def index(request):
 
     imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')
 
-    # CORREÇÃO AQUI: Usar 'nasc__month' em vez de 'data_nascimento__month'
+    # CORREÇÃO: Usar 'nasc' em vez de 'data_nascimento'
     aniversariantes = Cadastro.objects.filter(
         nasc__month=mes_atual
     ).order_by('nasc__day').prefetch_related(
@@ -84,8 +117,12 @@ def index(request):
 
     for funcionario in aniversariantes:
         try:
-           funcionario.posto_grad_recente = funcionario.promocoes.order_by('-data_alteracao').first().posto_grad if funcionario.promocoes.exists() else None
-        except Promocao.DoesNotExist:
+            if funcionario.promocoes.exists():
+                funcionario.posto_grad_recente = funcionario.promocoes.order_by('-data_alteracao').first().posto_grad
+            else:
+                funcionario.posto_grad_recente = None
+        except Exception as e:
+            logger.error(f"Erro ao obter promoção: {str(e)}")
             funcionario.posto_grad_recente = None
 
     documentos = Documento.objects.all().order_by('-data_criacao')[:100]
@@ -119,12 +156,10 @@ def index(request):
         'subcomandante': subcomandante,
         'chefes': chefes,
         'imagens_carrossel': imagens_carrossel,
+        'cadastro': cadastro_do_usuario,
     }
-    print("=== FIM DA VIEW ===")
+    
     return render(request, 'index.html', context)
-
-
-
 
 @login_required
 def dashboard(request):

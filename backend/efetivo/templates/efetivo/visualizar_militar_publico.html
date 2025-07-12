@@ -1,0 +1,1264 @@
+
+{% load static %}
+{% load efetivo_filters %}
+{% load cat_efetivo_tags %}
+
+
+{% block 'head' %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+  
+  
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+    <link rel="mask-icon" href="https://demo.themesberg.com/windster/safari-pinned-tab.svg" color="#5bbad5">
+    
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="theme-color" content="#ffffff">
+    
+    <link rel="canonical" href="https://themesberg.com/product/tailwind-css/dashboard-windster">
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
+    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
+  
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+
+  
+    <title>Meu Perfil</title>
+
+<style>
+    :root {
+        --primary: #4f46e5; /* Indigo */
+        --primary-light: #6366f1;
+        --primary-dark: #4338ca;
+        --secondary: #d1d5db; /* Light Gray for dark background */
+        --light: #1f2937; /* Dark background for cards */
+        --dark: #f9fafb; /* Light text for dark background */
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1); /* Darker shadow */
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify-content: center;
+        background-color: #0f172a; /* Fundo mais escuro para contraste */
+        color: var(--dark); /* Texto claro */
+    }
+
+    /* Novo contêiner principal com 80% de largura */
+    .main-container {
+        width: 80%;
+        max-width: 1800px;
+        margin: 0 auto;
+    }
+
+    .military-detail-container {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+        width: 280px;
+        background: #111827; /* Fundo mais escuro para a sidebar */
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 10;
+        color: var(--dark); /* Texto claro */
+        flex-shrink: 0; /* Impede que a sidebar encolha */
+    }
+
+    .profile-summary {
+        padding: 0 1.5rem 1.5rem;
+        border-bottom: 1px solid #374151; /* Borda mais escura */
+        text-align: center;
+    }
+
+    .profile-image-container {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 1rem;
+        border: 4px solid var(--primary-light);
+    }
+
+    .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .nav-menu {
+        padding: 1.5rem 0;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        margin: 0.25rem 0;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-left: 4px solid transparent;
+        color: var(--secondary); /* Cor do texto padrão do item */
+    }
+
+    .nav-item:hover {
+        background-color: #374151; /* Fundo ao passar o mouse */
+    }
+
+    .nav-item.active {
+        background-color: #374151; /* Fundo ativo */
+        border-left-color: var(--primary);
+        color: var(--primary); /* Cor primária para texto ativo */
+    }
+
+    .nav-item.active .nav-icon {
+        color: var(--primary);
+    }
+
+    .nav-icon {
+        width: 24px;
+        margin-right: 12px;
+        color: var(--secondary);
+    }
+
+    .nav-label {
+        font-weight: 500;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        padding: 2rem;
+        width: 100%;
+    }
+
+    .header-card {
+        background: var(--light); /* Fundo do card */
+        border-radius: 0.75rem;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--dark); /* Texto claro */
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .header-subtitle {
+        color: var(--secondary);
+        font-size: 1rem;
+    }
+
+    /* Section Cards */
+    .section-card {
+        background: var(--light); /* Fundo do card */
+        border-radius: 0.75rem;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: none;
+        color: var(--dark); /* Texto claro */
+    }
+
+    .section-card.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #374151; /* Borda mais escura */
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 0.75rem;
+        color: var(--primary);
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        padding: 1rem;
+        background-color: #374151; /* Fundo do item de informação */
+        border-radius: 0.5rem;
+    }
+
+    .info-label {
+        font-size: 0.875rem;
+        color: var(--secondary);
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+
+    .info-label i {
+        margin-right: 0.5rem;
+        width: 16px;
+        color: var(--primary-light);
+    }
+
+    .info-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--dark);
+        word-break: break-word;
+    }
+
+    /* Status */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-pill.bg-green-100 { /* Apenas para a classe de cor, não o bg total */
+        background-color: rgba(16, 185, 129, 0.2); /* Mais transparência */
+        color: var(--success);
+    }
+
+    .status-pill.bg-yellow-100 {
+        background-color: rgba(245, 158, 11, 0.2);
+        color: var(--warning);
+    }
+
+    .status-pill.bg-red-100 {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+    }
+
+    /* Tables */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .custom-table th {
+        background-color: #374151; /* Fundo do cabeçalho da tabela */
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--secondary);
+        border-bottom: 1px solid #4b5563; /* Borda mais escura */
+    }
+
+    .custom-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #4b5563; /* Borda mais escura */
+        color: var(--dark);
+    }
+
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tr:hover {
+        background-color: #374151; /* Fundo ao passar o mouse na linha */
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        color: white;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4), 0 2px 4px -1px rgba(79, 70, 229, 0.2); /* Sombra mais visível no tema escuro */
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    .btn i {
+        margin-right: 0.5rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+        .main-container {
+            width: 90%;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .military-detail-container {
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+            padding: 1rem 0;
+            height: auto;
+        }
+        
+        .nav-menu {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+            justify-content: center; /* Centralizar itens no mobile */
+        }
+        
+        .nav-item {
+            flex: 1;
+            min-width: 140px;
+            margin: 0.25rem;
+            border-left: none;
+            border-bottom: 3px solid transparent;
+            justify-content: center;
+            padding: 0.75rem;
+        }
+        
+        .nav-item.active {
+            border-bottom-color: var(--primary);
+            border-left: none;
+        }
+
+        .main-content {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .main-container {
+            width: 100%;
+            padding: 0 10px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .nav-item {
+            min-width: 120px;
+        }
+    }
+
+    /* Utilitários */
+    .no-data {
+        text-align: center;
+        padding: 2rem;
+        color: var(--secondary);
+        font-style: italic;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .mb-4 {
+        margin-bottom: 1rem;
+    }
+
+    .mt-4 {
+        margin-top: 1rem;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    /* Tailwind-like classes for the new LP section (adjusted for dark mode) */
+    .bg-white { background-color: #1f2937; /* Darker background for card */ }
+    .rounded-xl { border-radius: 0.75rem; }
+    .shadow-md { box-shadow: var(--card-shadow); }
+    .p-6 { padding: 1.5rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .items-center { align-items: center; }
+    .text-lg { font-size: 1.125rem; }
+    .font-semibold { font-weight: 600; }
+    .text-indigo-900 { color: var(--dark); /* Light text */ }
+    .bg-green-100 { background-color: rgba(16, 185, 129, 0.2); }
+    .text-green-800 { color: var(--success); }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .rounded-full { border-radius: 9999px; }
+    .mr-2 { margin-right: 0.5rem; }
+    .overflow-x-auto { overflow-x: auto; }
+    .border { border-width: 1px; }
+    .border-gray-200 { border-color: #374151; /* Darker border */ }
+    .min-w-full { min-width: 100%; }
+    .bg-blue-50 { background-color: #374151; /* Darker background for table header */ }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .text-left { text-align: left; }
+    .text-xs { font-size: 0.75rem; }
+    .font-medium { font-weight: 500; }
+    .text-blue-700 { color: var(--secondary); /* Lighter text for headers */ }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; }
+    .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #4b5563; /* Darker divider */ }
+    .hover\:bg-blue-50:hover { background-color: #4b5563; /* Darker hover for table rows */ }
+    .transition-colors { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+    .whitespace-nowrap { white-space: nowrap; }
+    .h-8 { height: 2rem; }
+    .w-8 { width: 2rem; }
+    .text-white { color: #fff; }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-green-600 { background-color: #059669; }
+    .bg-purple-600 { background-color: #7c3aed; }
+    .bg-red-600 { background-color: #dc2626; }
+    .bg-yellow-600 { background-color: #d97706; }
+    .bg-indigo-600 { background-color: #4f46e5; }
+    .bg-pink-600 { background-color: #db2777; }
+    .bg-teal-600 { background-color: #0d9488; }
+    .bg-gray-400 { background-color: #9ca3af; }
+    .ml-2 { margin-left: 0.5rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-gray-900 { color: var(--dark); /* Light text */ }
+    .flex-col { flex-direction: column; }
+    .text-gray-500 { color: var(--secondary); }
+    .mr-1 { margin-right: 0.25rem; }
+    .flex-shrink-0 { flex-shrink: 0; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .max-w-\[120px\] { max-width: 120px; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
+    .h-4 { height: 1rem; }
+    .w-px { width: 1px; }
+    .text-red-600 { color: var(--danger); }
+    .text-blue-600 { color: var(--primary-light); }
+    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+    .h-3 { height: 0.75rem; }
+    .w-3 { width: 0.75rem; }
+    .text-red-800 { color: var(--danger); }
+    .text-indigo-600 { color: var(--primary-light); }
+    .hover\:text-indigo-900:hover { color: var(--primary); }
+    .justify-end { justify-content: flex-end; }
+    .colspan-5 { grid-column: span 5 / span 5; } /* custom class for colspan */
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    .h-12 { height: 3rem; }
+    .w-12 { width: 3rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .text-gray-700 { color: var(--secondary); } /* Adjusted for dark mode */
+
+    /* New styles for Promotion History table */
+    .table-container {
+        overflow-x: auto;
+        border-radius: 0.5rem;
+        border: 1px solid #374151; /* Darker border */
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background-color: #374151; /* Darker background for table header */
+    }
+
+    .data-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--secondary);
+        border-bottom: 1px solid #4b5563; /* Darker border */
+    }
+
+    .data-table tbody {
+        background-color: #1f2937; /* Darker background for table body */
+        color: var(--dark); /* Light text */
+        divide-y: #4b5563; /* Darker divider */
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #4b5563; /* Darker border */
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover {
+        background-color: #374151; /* Darker hover for table rows */
+    }
+
+    .bg-blue-900 { background-color: #1e3a8a; } /* Adjusted for dark mode */
+    .bg-opacity-30 { opacity: 0.3; }
+    .border-blue-800 { border-color: #1e40af; } /* Adjusted for dark mode */
+    .text-blue-300 { color: #93c5fd; } /* Adjusted for dark mode */
+    .text-gray-300 { color: #d1d5db; } /* Adjusted for dark mode */
+    .text-gray-400 { color: #9ca3af; } /* Adjusted for dark mode */
+
+    /* Specific styles for the new tables */
+    .text-gray-800 { color: var(--dark); } /* Adjusted for dark mode */
+    .text-blue-600 { color: var(--primary-light); }
+    .text-green-600 { color: var(--success); }
+    .bg-blue-100 { background-color: rgba(79, 70, 229, 0.2); } /* Adjusted for dark mode */
+    .text-blue-800 { color: var(--primary-light); } /* Adjusted for dark mode */
+    .hover\:bg-gray-50:hover { background-color: #374151; } /* Adjusted for dark mode */
+    .text-red-800 { color: var(--danger); }
+</style>
+{% endblock 'head' %}
+
+{% block content %}
+
+<body>
+    <div class="main-container"> <div class="military-detail-container">
+            <aside class="sidebar">
+            <div class="profile-summary">
+            <div class="profile-image-container">
+                {% if cadastro.imagens.first %}
+                    <img src="{{ cadastro.imagens.first.image.url }}" alt="Foto do Militar" class="profile-image">
+                {% else %}
+                    <div class="bg-gray-700 border-2 border-dashed rounded-full w-full h-full flex items-center justify-center text-gray-500">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                {% endif %}
+            </div>
+                <h2 class="font-bold text-lg">{{ cadastro.nome_de_guerra}}</h2>
+                <p class="text-gray-400">{{ cadastro.promocoes.last.grad|safe }}</p>
+                <p class="text-gray-500 text-sm mt-1">RE: {{ cadastro.re }}-{{ cadastro.dig }}</p>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" data-section="personal">
+                    <i class="fas fa-user nav-icon"></i>
+                    <span class="nav-label">Informações Pessoais</span>
+                </div>
+                
+                <div class="nav-item" data-section="military">
+                    <i class="fas fa-shield-alt nav-icon"></i>
+                    <span class="nav-label">Situação Militar</span>
+                </div>
+                
+                <div class="nav-item" data-section="promotion">
+                    <i class="fas fa-star nav-icon"></i>
+                    <span class="nav-label">Promoção</span>
+                </div>
+                
+                <div class="nav-item" data-section="category">
+                    <i class="fas fa-clipboard-list nav-icon"></i>
+                    <span class="nav-label">Categoria</span>
+                </div>
+                
+                <div class="nav-item" data-section="restrictions">
+                    <i class="fas fa-ban nav-icon"></i>
+                    <span class="nav-label">Restrições</span>
+                </div>
+                
+                <div class="nav-item" data-section="lps">
+                    <i class="fas fa-calendar-alt nav-icon"></i>
+                    <span class="nav-label">LPs Concluídas</span>
+                </div>
+                
+                <div class="nav-item" data-section="medals">
+                    <i class="fas fa-medal nav-icon"></i>
+                    <span class="nav-label">Medalhas</span>
+                </div>
+                
+                <div class="nav-item" data-section="courses">
+                    <i class="fas fa-graduation-cap nav-icon"></i>
+                    <span class="nav-label">Cursos</span>
+                </div>
+                
+                <div class="nav-item" data-section="special">
+                    <i class="fas fa-award nav-icon"></i>
+                    <span class="nav-label">Cursos Especiais</span>
+                </div>
+                
+                <div class="nav-item" data-section="rpt">
+                    <i class="fas fa-briefcase nav-icon"></i>
+                    <span class="nav-label">Dados RPT</span>
+                </div>
+            </nav>
+            </aside>
+
+        <main class="main-content">
+            <div class="header-card **max-w-xl mx-auto**">
+                <h1 class="header-title">Detalhes do Militar</h1>
+                <p class="header-subtitle">Visualize todas as informações de forma organizada</p>
+            </div>
+
+            <section id="personal-section" class="section-card active **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-user"></i> Informações Pessoais</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-id-card"></i> Nome Completo</div>
+                        <div class="info-value">{{ cadastro.nome|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-id-badge"></i> CPF</div>
+                        <div class="info-value">{{ cadastro.cpf|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-address-card"></i> RG</div>
+                        <div class="info-value">{{ cadastro.rg|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-fingerprint"></i> Identidade Funcional</div>
+                        <div class="info-value">{{ cadastro.re }}-{{ cadastro.dig }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-venus-mars"></i> Gênero</div>
+                        <div class="info-value">{{ cadastro.get_genero_display|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-birthday-cake"></i> Data de Nascimento</div>
+                        <div class="info-value">{{ cadastro.nasc|date:"d/m/Y"|default:"-" }}</div>
+                    </div>
+                    
+
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-envelope"></i> Email Pessoal</div>
+                        <div class="info-value">{{ cadastro.email|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-mobile-alt"></i> Telefone Celular</div>
+                        <div class="info-value">{{ cadastro.telefone|default:"-" }}</div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section id="military-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-shield-alt"></i> Situação Militar</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-tasks"></i> Situação</div>
+                        {# Usa a propriedade 'status' do modelo, que retorna o badge HTML #}
+                        <div class="info-value">{{ ultima_situacao.status|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-map-marker-alt"></i> SGB</div>
+                        <div class="info-value">{{ ultima_situacao.sgb|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-building"></i> Posto/Seção Destino</div>
+                        <div class="info-value">{{ ultima_situacao.posto_secao|default:"-" }}</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-exchange-alt"></i> Está Adido</div>
+                        <div class="info-value">{{ ultima_situacao.esta_adido|default:"-" }}</div>
+                    </div>        
+
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-briefcase"></i> Função</div>
+                        <div class="info-value">{{ ultima_situacao.funcao|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-user-tie"></i> Op/Adm</div>
+                        <div class="info-value">{{ ultima_situacao.op_adm|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-bolt"></i> Prontidão</div>
+                        {# Usa a propriedade 'prontidao_badge' do modelo #}
+                        <div class="info-value">{{ ultima_situacao.prontidao_badge|safe }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-history"></i> Última Alteração</div>
+                        <div class="info-value">{{ ultima_situacao.modified|date:"d/m/Y"|default:"-" }}</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-8 mt-6"> {# Added mt-6 for spacing #}
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                </svg>
+                                Histórico de Movimentações
+                            </h2>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                {{ historico_detalhes_situacao|length }} registro{{ historico_detalhes_situacao|length|pluralize }}
+                            </span>
+                        </div>
+
+                       <div class="table-container">
+                            <table id="dataTableDetalhes" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Situação</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SGB</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Seção</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Apresentação</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+
+                                </thead>
+                                <tbody>
+                                    {% for detalhe in historico_detalhes_situacao %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="font-medium text-center">
+                                            {% if detalhe.situacao == "Efetivo" %}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    {{ detalhe.situacao }}
+                                                </span>
+                                            {% elif detalhe.situacao == "Exonerado a Pedido" %}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Exonerado
+                                                </span>
+                                            {% elif detalhe.situacao == "Exonerado Ex-Ofício" %} {# Adicionado para cobrir este caso #}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    Exonerado Ex-Ofício
+                                                </span>
+                                            {% elif detalhe.situacao == "Reserva a Pedido" %} {# Adicionado #}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                                    Reserva a Pedido
+                                                </span>
+                                            {% elif detalhe.situacao == "Transferido" %} {# Adicionado #}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    Transferido
+                                                </span>
+                                            {% elif detalhe.situacao == "Mov. Interna" %} {# Adicionado #}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-600 text-white"> {# Exemplo de cor para Mov. Interna #}
+                                                    Mov. Interna
+                                                </span>
+                                            {% else %} {# Default para qualquer outro caso #}
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    {{ detalhe.situacao }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ detalhe.sgb }}</td>
+                                        <td class="text-center">{{ detalhe.posto_secao }}</td>
+                                        <td class="text-center">{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
+                                        <td class="text-center">
+                                            {% if detalhe.saida_da_unidade %}
+                                                {{ detalhe.saida_da_unidade|date:"d/m/Y" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ detalhe.data_alteracao|date:"d/m/Y H:i" }}</td>
+                                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                            {% with militar_cadastro=request.user.cadastros.last %}
+                                                {% if militar_cadastro %}
+                                                    <div class="font-medium">
+                                                        {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                                        {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                                        {{ request.user.last_name }}
+                                                    </div>
+                                                    <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                                {% else %}
+                                                    <div class="font-medium">Dados do usuário não disponíveis</div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="py-4 px-4 text-center text-gray-500">
+                                            Nenhuma movimentação encontrada.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+            </section>
+
+            <section id="promotion-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-star"></i> Promoção</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-chevron-up"></i> Posto/Graduação</div>
+                        <div class="info-value">{{ cadastro.promocoes.last.grad|safe }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-layer-group"></i> Quadro</div>
+                        <div class="info-value">{{ promocao.get_quadro_display|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-users"></i> Grupo</div>
+                        <div class="info-value">{{ promocao.get_grupo_display|default:"-" }}</div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-calendar-day"></i> Data de Promoção</div>
+                        <div class="info-value">{{ promocao.ultima_promocao|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-8 mt-6"> {# Added mt-6 for spacing #}
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                </svg>
+                                Histórico de Promoções
+                            </h2>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                                {{ promocoes|length }} registro{{ promocoes|length|pluralize }}
+                            </span>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table id="dataTablePromocoes" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Grad</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quadro</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Última Promoção</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
+                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                                       
+                                </thead>
+                                <tbody>
+                                    {% for promocao in promocoes %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="font-medium text-gray-900 text-center">{{ promocao.posto_grad }}</td>
+                                        <td class="text-center">{{ promocao.quadro }}</td>
+                                        <td class="text-center">{{ promocao.grupo }}</td>
+                                        <td class="text-center">{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
+                                        <td class="text-center">{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
+                                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                            {% with militar_cadastro=request.user.cadastros.last %}
+                                                {% if militar_cadastro %}
+                                                    <div class="font-medium">
+                                                        {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                                        {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                                        {{ request.user.last_name }}
+                                                    </div>
+                                                    <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                                {% else %}
+                                                    <div class="font-medium">Dados do usuário não disponíveis</div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="py-4 px-4 text-center text-gray-500">
+                                            Nenhuma promoção encontrada.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+               
+                </div>
+            </section>
+
+            <section id="category-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Categoria de Efetivo</h2>
+                {% if categoria_atual %}
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-tag"></i> Tipo</div>
+                            <div class="info-value">
+                                <span class="status-pill {{ categoria_atual.status_display.classe }}">
+                                    <i class="fas {{ categoria_atual.status_display.icone }} mr-1"></i>
+                                    {{ categoria_atual.status_display.texto }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-play-circle"></i> Data Início</div>
+                            <div class="info-value">{{ categoria_atual.data_inicio|date:"d/m/Y"|default:"-" }}</div>
+                        </div>
+                        
+                        {% if categoria_atual.data_termino %}
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-stop-circle"></i> Data Término</div>
+                            <div class="info-value">{{ categoria_atual.data_termino|date:"d/m/Y"|default:"-" }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="info-item col-span-full">
+                            <div class="info-label"><i class="fas fa-align-left"></i> Detalhes</div>
+                            <div class="info-value">{{ categoria_atual.detalhes|default:"-" }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhuma categoria de efetivo ativa encontrada</p>
+                {% endif %}
+            </section>
+
+            <section id="restrictions-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-ban"></i> Restrições Aplicáveis</h2>
+                {% if restricoes_aplicaveis %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for restricao in restricoes_aplicaveis %}
+                            <div class="bg-blue-900 bg-opacity-30 p-4 rounded-lg border border-blue-800">
+                                <h3 class="font-semibold text-blue-300">{{ restricao.nome }} ({{ restricao.sigla }})</h3>
+                                <p class="mt-2 text-gray-300">{{ restricao.mensagem }}</p>
+                                {% if restricao.regra %}
+                                    <p class="mt-2 text-sm text-gray-400">Regra: {{ restricao.regra }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhuma restrição registrada para este militar</p>
+                {% endif %}
+            </section>
+
+            <section id="lps-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-calendar-alt"></i> LPs Concluídas</h2>
+                <fieldset class="bg-white rounded-xl shadow-md p-6 mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-indigo-900">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full mr-2">LP</span>
+                            Histórico de Licenças Prêmio Concluídas
+                        </h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full">
+                            <thead class="bg-blue-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">LP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Bol G PM</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Dias</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-blue-700 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for lp in lps_concluidas %}
+                                <tr class="hover:bg-blue-50 transition-colors">
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full text-white
+                                                {% if lp.numero_lp == 1 %}bg-blue-600
+                                                {% elif lp.numero_lp == 2 %}bg-green-600
+                                                {% elif lp.numero_lp == 3 %}bg-purple-600
+                                                {% elif lp.numero_lp == 4 %}bg-red-600
+                                                {% elif lp.numero_lp == 5 %}bg-yellow-600
+                                                {% elif lp.numero_lp == 6 %}bg-indigo-600
+                                                {% elif lp.numero_lp == 7 %}bg-pink-600
+                                                {% elif lp.numero_lp == 8 %}bg-teal-600
+                                                {% else %}bg-gray-400{% endif %}">
+                                                {{ lp.numero_lp }}
+                                            </span>
+                                            <span class="ml-2 text-sm font-medium text-gray-900"></span>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center">
+                                                <svg class="h-4 w-4 text-gray-500 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                                                </svg>
+                                                <span class="text-sm text-gray-900 truncate max-w-[120px]">
+                                                    {{ lp.bol_g_pm_lp|default:"-" }}
+                                                </span>
+                                            </div>
+                                            
+                                            <div class="flex items-center mb-1">
+                                                <svg class="h-4 w-4 text-gray-500 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                                <span class="text-sm text-gray-900 truncate max-w-[120px]">
+                                                    {{ lp.data_concessao_lp|date:"d/m/Y"|default:"-" }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs text-gray-500">Disponíveis</span>
+                                                {% if lp.previsao_associada %}
+                                                    <span class="text-sm font-medium 
+                                                        {% if lp.previsao_associada.dias_disponiveis == 0 %}text-red-600
+                                                        {% else %}text-green-600{% endif %}">
+                                                        {{ lp.previsao_associada.dias_disponiveis|default:"0" }} dias
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-sm font-medium text-gray-500">
+                                                        -
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="h-4 w-px bg-gray-200"></div>
+                                            
+                                            <div class="flex flex-col">
+                                                <span class="text-xs text-gray-500">Utilizados</span>
+                                                {% if lp.previsao_associada %}
+                                                    <span class="text-sm font-medium 
+                                                        {% if lp.previsao_associada.dias_utilizados == 90 %}text-red-600
+                                                        {% else %}text-blue-600{% endif %}">
+                                                        {{ lp.previsao_associada.dias_utilizados|default:"0" }} dias
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-sm font-medium text-gray-500">
+                                                        -
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        {% if lp.previsao_associada and lp.previsao_associada.dias_disponiveis != 0 %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Disponível
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Concluído
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{% url 'lp:ver_lp' lp.pk %}" class="text-indigo-600 hover:text-indigo-900 flex items-center justify-end">
+                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                    
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="px-4 py-4 text-center text-sm text-gray-500">
+                                        <div class="flex flex-col items-center justify-center py-6">
+                                            <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <p class="mt-2 text-sm font-medium text-gray-700">Nenhuma LP concluída encontrada</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+            </section>
+
+            <section id="medals-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-medal"></i> Medalhas</h2>
+                {% if medalhas_do_militar %}
+                    <div class="overflow-x-auto rounded-lg border border-gray-700">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Honraria</th>
+                                    <th>Data Publicação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for medalha in medalhas_do_militar %}
+                                    <tr>
+                                        <td>{{ medalha.get_honraria_display }}</td>
+                                        <td>{{ medalha.data_publicacao_lp|date:"d/m/Y" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhuma medalha registrada</p>
+                {% endif %}
+            </section>
+
+            <section id="courses-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Cursos</h2>
+                {% if cursos_do_militar %}
+                    <div class="overflow-x-auto rounded-lg border border-gray-700">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Data Publicação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curso in cursos_do_militar %}
+                                    <tr>
+                                        <td>{{ curso.get_curso_display }}</td>
+                                        <td>{{ curso.data_publicacao|date:"d/m/Y" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhum curso registrado</p>
+                {% endif %}
+            </section>
+
+            <section id="special-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-award"></i> Cursos Especiais (Op/Adm)</h2>
+                {% if cursos_especiais %}
+                    <div class="bg-blue-900 bg-opacity-30 p-6 rounded-lg">
+                        <ul class="space-y-3">
+                            {% for curso in cursos_especiais %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-blue-500 mt-1 mr-2"></i>
+                                    <span>{{ curso }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhum curso especial aplicável</p>
+                {% endif %}
+            </section>
+
+            <section id="rpt-section" class="section-card **max-w-xl mx-auto**">
+                <h2 class="section-title"><i class="fas fa-briefcase"></i> Dados RPT</h2>
+                {% if cadastro_rpt %}
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-building"></i> Posto/Seção Destino RPT</div>
+                            <div class="info-value">{{ cadastro_rpt.get_posto_secao_destino_display|default:"-" }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-info-circle"></i> Status RPT</div>
+                            <div class="info-value">{{ cadastro_rpt.get_status_display|default:"-" }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-list-ol"></i> Contagem na Seção</div>
+                            <div class="info-value">{{ count_in_section|default:"-" }} (Aguardando)</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-calendar-check"></i> Data de Apresentação</div>
+                            <div class="info-value">{{ cadastro_rpt.data_apresentacao|date:"d/m/Y"|default:"-" }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label"><i class="fas fa-clock"></i> Dias RPT</div>
+                            <div class="info-value">{{ cadastro_rpt.dias_rpt|default:"-" }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="no-data">Nenhum dado de RPT registrado</p>
+                {% endif %}
+            </section>
+
+            <div class="text-center mt-8">
+                <a href="javascript:history.back()" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </main>
+    </div>
+     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ativar navegação por abas
+            const navItems = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('.section-card');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remover classe ativa de todos os itens
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    // Adicionar classe ativa ao item clicado
+                    this.classList.add('active');
+                    
+                    // Obter a seção alvo
+                    const targetSection = this.getAttribute('data-section');
+                    
+                    // Esconder todas as seções
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Mostrar a seção alvo
+                    document.getElementById(`${targetSection}-section`).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+{% endblock %}
