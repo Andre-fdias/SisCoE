@@ -28,12 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # apps de terceiros
-    'import_export', # Adicione esta linha
+    'import_export',
     'django_extensions',
     'widget_tweaks',
     'compressor',
     'django_seed',
-     'fontawesomefree',
+    'fontawesomefree',
+
      
     # minhas apps
     'backend.core',
@@ -234,3 +235,5 @@ LOGGING = {
 CSRF_COOKIE_HTTPONLY = False  # Permite que JavaScript leia o CSRF token
 CSRF_COOKIE_SECURE = False    # Em desenvolvimento pode ser False
 CSRF_COOKIE_SAMESITE = 'Lax'  # Ou 'None' se estiver usando CORS
+
+

@@ -1817,6 +1817,8 @@ def excluir_historico_promocao(request, promocao_id):
 @login_required
 @require_http_methods(["POST"])
 def excluir_historico_detalhe_situacao(request, detalhe_id):
+
+    
     cadastro_id = None # Initialize cadastro_id to None for safe fallback
     try:
         # Use HistoricoDetalhesSituacao model for get_object_or_404
@@ -1835,3 +1837,226 @@ def excluir_historico_detalhe_situacao(request, detalhe_id):
     else:
         # Fallback if cadastro_id could not be determined
         return redirect('efetivo:listar_militar')
+    
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Prefetch
+
+# Importações de modelos
+from backend.core.models import Profile
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+@login_required
+def visualizar_militar_publico(request, id):
+    try:
+        # Obter o perfil do usuário logado
+        user_profile = Profile.objects.get(user=request.user)
+        
+        # Se o perfil não tem cadastro, redireciona com erro
+        if not user_profile.cadastro:
+            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('home')
+        
+        # Verificar se o ID solicitado pertence ao cadastro do usuário
+        if user_profile.cadastro.id != id:
+            messages.error(request, 'Acesso não autorizado: você só pode visualizar seu próprio perfil.', extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('home')
+        
+        # Obter o cadastro principal com related objects
+        cadastro = Cadastro.objects.select_related('user').prefetch_related(
+            Prefetch('imagens'),
+            Prefetch('promocoes', queryset=Promocao.objects.order_by('-data_alteracao')),
+            Prefetch('detalhes_situacao', queryset=DetalhesSituacao.objects.order_by('-apresentacao_na_unidade')),
+            Prefetch('categorias_efetivo', queryset=CatEfetivo.objects.filter(ativo=True)),
+            Prefetch('cadastro_rpt'),
+            Prefetch('lp_set', queryset=LP.objects.filter(status_lp=LP.StatusLP.CONCLUIDO).order_by('numero_lp'))
+        ).get(id=id)
+
+        today = timezone.now().date()
+        detalhes = cadastro.detalhes_situacao.first()  # Mais recente
+        promocao = cadastro.promocoes.order_by('-data_alteracao').first()
+        categoria_atual = cadastro.categorias_efetivo.first()  # Ativa
+        promocoes = Promocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
+        historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
+       # Obter a última situação ativa (não histórica)
+        ultima_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+    
+
+ # Buscar LPs concluídas do militar
+        lps_concluidas = cadastro.lp_set.all()
+        
+        # Para cada LP, tentar obter a fruição associada
+        for lp in lps_concluidas:
+            try:
+                lp.previsao_associada = LP_fruicao.objects.get(lp_concluida=lp)
+            except LP_fruicao.DoesNotExist:
+                lp.previsao_associada = None
+
+        # Processar Restrições
+        MENSAGENS_RESTRICOES = {
+            'BS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'CI': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'DV': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'EF': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio. As OPM estabelecerão plano de exercícios físicos compatíveis.',
+            'FO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'IS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'LP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MC': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'MG': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'OU': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'PO': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'PQ': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SA': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SE': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SH': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SM': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'SP': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
+            'AU': 'Deverá ser empregado somente em atividades administrativas.',
+            'EP': 'Deverá ser empregado somente em atividades administrativas.',
+            'ES': 'Deverá ser empregado somente em atividades administrativas.',
+            'LR': 'Deverá ser empregado somente em atividades administrativas.',
+            'PT': 'Deverá ser empregado somente em atividades administrativas.',
+            'VP': 'Deverá ser empregado somente em atividades administrativas.',
+            'SN': 'Deverá ser escalado para trabalhar durante o dia em qualquer atividade.',
+            'SG': 'Deverá ser empregado, preferencialmente, na atividade de policiamento ostensivo, ou, caso não seja possível, em atividades administrativas e de apoio.',
+            'UA': 'Deverá ser desarmado e empregado em atividades administrativas. Pode requerer processo administrativo para verificar condições de permanência no serviço ativo.',
+            'UU': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
+            'CC': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público. Cabelos penteados com gel/rede obrigatoriamente.',
+            'CB': 'Deverá ser escalado em atividades administrativas ou de apoio, com uniforme de treinamento físico (B-5.1), sem atendimento ao público.',
+            'UB': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'UC': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'US': 'Deverá calçar sandálias de borracha na cor preta, sem estampas, e ser escalado em atividades administrativas ou de apoio.',
+            'DG': 'Deverá ser empregado no policiamento ostensivo.',
+            'EM': 'Deverá ser empregado no policiamento ostensivo.',
+            'LS': 'Deverá ser empregado no policiamento ostensivo.',
+            'MP': 'Deverá ser empregado no policiamento ostensivo.',
+            'SB': 'Deverá ser empregado no policiamento ostensivo.',
+            'SI': 'Deverá ser empregado no policiamento ostensivo.',
+            'ST': 'Deverá ser empregado no policiamento ostensivo.'
+        }
+
+        restricoes_aplicaveis = []
+        if categoria_atual and categoria_atual.tipo == 'RESTRICAO':
+            # Obter todos os campos de restrição dinamicamente
+            campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
+                               if field.name.startswith('restricao_')]
+            
+            for campo in campos_restricao:
+                if getattr(categoria_atual, campo):
+                    sigla = campo.split('_')[-1].upper()
+                    if sigla in MENSAGENS_RESTRICOES:
+                        nome_display = next((choice[1] for choice in CatEfetivo._meta.get_field(campo).choices 
+                                           if choice[0] == sigla), sigla)
+                        restricoes_aplicaveis.append({
+                            'sigla': sigla,
+                            'nome': nome_display,
+                            'mensagem': MENSAGENS_RESTRICOES[sigla],
+                            'regra': RestricaoHelper.get_regra_principal(sigla)
+                        })
+
+        # Status da Categoria
+        categoria_status = {}
+        if categoria_atual:
+            if categoria_atual.tipo != 'ATIVO' and categoria_atual.data_termino and categoria_atual.data_termino < today:
+                categoria_status = {
+                    'texto': f"{categoria_atual.get_tipo_display()} (Expirado)",
+                    'classe': 'bg-red-100 text-red-800',
+                    'icone': 'fa-exclamation-triangle'
+                }
+            elif categoria_atual.tipo != 'ATIVO':
+                categoria_status = {
+                    'texto': f"{categoria_atual.get_tipo_display()} (Até {categoria_atual.data_termino.strftime('%d/%m/%Y') if categoria_atual.data_termino else 'Indefinido'})",
+                    'classe': 'bg-yellow-100 text-yellow-800',
+                    'icone': 'fa-info-circle'
+                }
+            else:
+                categoria_status = {
+                    'texto': categoria_atual.get_tipo_display(),
+                    'classe': 'bg-green-100 text-green-800',
+                    'icone': 'fa-check-circle'
+                }
+            categoria_atual.status_display = categoria_status
+
+        # Lógica para cursos especiais
+        cursos_especiais = []
+        if detalhes and detalhes.op_adm:
+            tag_desejada = 'Administrativo' if detalhes.op_adm == 'Administrativo' else 'Operacional'
+            
+            cursos_filtrados = []
+            for curso in Curso.objects.filter(cadastro=cadastro):
+                curso_tag = Curso.CURSOS_TAGS.get(curso.curso)
+                if curso_tag == tag_desejada:
+                    cursos_filtrados.append({
+                        'nome': curso.get_curso_display(),
+                        'data': curso.data_publicacao
+                    })
+            
+            # Ordenar por data e remover duplicatas
+            cursos_filtrados = sorted(cursos_filtrados, key=lambda x: x['data'], reverse=True)
+            cursos_especiais = list({curso['nome']: curso for curso in cursos_filtrados}.values())
+
+        # Dados relacionados
+        medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
+        cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
+        
+        # Dados RPT
+        cadastro_rpt = cadastro.cadastro_rpt.first()
+        count_in_section = Cadastro_rpt.objects.filter(
+            posto_secao_destino=cadastro_rpt.posto_secao_destino,
+            status='Aguardando'
+        ).count() if cadastro_rpt else 0
+
+        context = {
+            'cadastro': cadastro,
+            'detalhes': detalhes,
+            'promocao': promocao,
+            'today': today,
+            'categoria_atual': categoria_atual,
+            'restricoes_aplicaveis': restricoes_aplicaveis,
+            'medalhas_do_militar': medalhas_do_militar,
+            'cursos_do_militar': cursos_do_militar,
+            'cadastro_rpt': cadastro_rpt,
+            'count_in_section': count_in_section,
+            'cursos_especiais': cursos_especiais,
+            'lps_concluidas': lps_concluidas,
+            'promocoes': promocoes, # ADICIONE ESTA LINHA
+            'historico_detalhes_situacao': historico_detalhes_situacao, # ADICIONE ESTA LINHA
+            'ultima_situacao': ultima_situacao,  # Passa explicitamente a última situação
+            # Choices
+            'situacao_choices': DetalhesSituacao.situacao_choices,
+            'sgb_choices': DetalhesSituacao.sgb_choices,
+            'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
+            'esta_adido_choices': DetalhesSituacao.esta_adido_choices,
+            'funcao_choices': DetalhesSituacao.funcao_choices,
+            'op_adm_choices': DetalhesSituacao.op_adm_choices,
+            'prontidao_choices': DetalhesSituacao.prontidao_choices,
+            'posto_grad_choices': Promocao.posto_grad_choices,
+            'quadro_choices': Promocao.quadro_choices,
+            'grupo_choices': Promocao.grupo_choices,
+            'genero_choices': Cadastro.genero_choices,
+            'alteracao_choices': Cadastro.alteracao_choices,
+            'categoria_choices': CatEfetivo.TIPO_CHOICES,
+        }
+
+        return render(request, 'efetivo/visualizar_militar_publico.html', context)
+
+    except Profile.DoesNotExist:
+        messages.error(request, 'Perfil não configurado', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('core:index')
+    except Cadastro.DoesNotExist:
+        messages.error(request, 'Cadastro não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('core:index')
+    except Exception as e:
+        logger.error(f"Erro ao acessar perfil público: {str(e)}", exc_info=True)
+        messages.error(request, 'Erro interno ao carregar os dados', extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('core:index')

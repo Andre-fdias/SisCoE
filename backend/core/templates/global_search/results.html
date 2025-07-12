@@ -61,36 +61,20 @@
     .card {
         transition: all 0.3s ease;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        border-left-width: 4px;
         overflow: hidden;
         position: relative;
         display: flex;
         flex-direction: column;
+        border-left: 4px solid;
     }
     
     .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #8b5cf6, #6366f1);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .card:hover::before {
-        opacity: 1;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
     }
     
     .badge {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
         letter-spacing: 0.5px;
         flex-shrink: 0;
     }
@@ -126,29 +110,31 @@
         overflow: hidden;
     }
     
-    .grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
+    /* Novo layout de card em linha completa */
+    .card-row {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        min-height: 140px;
     }
     
-    @media (max-width: 640px) {
-        .grid-container {
-            grid-template-columns: 1fr;
-        }
+    .card-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding: 1.25rem;
     }
     
-    /* Novos estilos para evitar quebras */
     .card-header-container {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 0.75rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
     
     .card-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         color: #1e293b;
         display: -webkit-box;
@@ -161,33 +147,43 @@
     }
     
     .fields-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        max-height: 150px;
-        overflow-y: auto;
-        padding-right: 4px;
-    }
-    
-    .fields-container::-webkit-scrollbar {
-        width: 4px;
-    }
-    
-    .fields-container::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
-        border-radius: 2px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 1.5rem;
+        margin-bottom: 0.5rem;
+        flex-grow: 1;
     }
     
     .field-item {
         display: flex;
         flex-direction: column;
+        min-width: 180px;
+        flex: 1 0 calc(25% - 1.5rem);
+    }
+    
+    .card-footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: auto;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .app-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.25rem 0.75rem;
+        border-bottom-left-radius: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 </style>
 </head>
 <body class="bg-gray-50">
 
-<div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8 mt-12">
+<div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8 ">
     <div class="rounded-lg w-full mb-8">
         <fieldset class="p-0 rounded-md w-full">
             <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
@@ -208,39 +204,42 @@
     </div>
         
     {% if results %}
-    <div class="grid-container">
+    <div class="space-y-4">
         {% for result in results %}
-        <div class="card bg-white rounded-xl p-5 border border-gray-100"
-             style="border-left: 4px solid {{ result.app_color }};">
-            <div class="card-header-container">
-                <h3 class="card-title">
-                    <a href="{{ result.url }}" class="text-primary-700 hover:text-primary-800 hover:underline">
-                        {{ result.title }}
-                    </a>
-                </h3>
-                <span class="badge bg-primary-50 text-primary-800 px-2.5 py-1 rounded-full uppercase whitespace-nowrap">
-                    {{ result.app|slice:":3"|upper }}
-                </span>
+        <div class="card bg-white rounded-lg border border-gray-100 card-row"
+             style="border-left-color: {{ result.app_color }};">
+            <div class="app-badge" style="background-color: {{ result.app_color }}; color: white;">
+                {{ result.app|upper }}
             </div>
             
-            {% if result.fields %}
-            <div class="fields-container">
-                {% for name, value in result.fields.items %}
-                <div class="field-item">
-                    <span class="field-label truncate" title="{{ name }}">{{ name }}:</span>
-                    <span class="field-value" title="{{ value }}">{{ value|default:"-" }}</span>
+            <div class="card-content">
+                <div class="card-header-container">
+                    <h3 class="card-title">
+                        <a href="{{ result.url }}" class="text-primary-700 hover:text-primary-800 hover:underline">
+                            {{ result.title }}
+                        </a>
+                    </h3>
                 </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            
-            <div class="mt-auto pt-2 text-right">
-                <a href="{{ result.url }}" class="btn-primary text-white text-sm font-medium rounded-lg py-2 px-4 inline-flex items-center">
-                    Ver detalhes
-                    <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                    </svg>
-                </a>
+                
+                {% if result.fields %}
+                <div class="fields-container">
+                    {% for name, value in result.fields.items %}
+                    <div class="field-item">
+                        <span class="field-label truncate" title="{{ name }}">{{ name }}:</span>
+                        <span class="field-value" title="{{ value }}">{{ value|default:"-" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="card-footer">
+                    <a href="{{ result.url }}" class="btn-primary text-white text-sm font-medium rounded-lg py-2 px-4 inline-flex items-center">
+                        Ver detalhes
+                        <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
         {% endfor %}

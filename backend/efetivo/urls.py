@@ -11,7 +11,9 @@ urlpatterns = [
     path('lista_militares/', views.ListaMilitaresView.as_view(), name='lista_militares'),
     path('ver_militar/<int:id>/', views.ver_militar, name="ver_militar"),
     path('excluir_militar/<int:id>/', views.excluir_militar, name='excluir_militar'),
-    
+      # Rota para o perfil público de um militar específico (com ID)
+    path('publico/<int:id>/', views.visualizar_militar_publico, name='visualizar_militar_publico'),
+
     # --- Edição de Dados Específicos de Militares ---
     path('editar_posto_graduacao/<int:id>/', views.editar_posto_graduacao, name='editar_posto_graduacao'),
     path('editar_dados_pessoais_contatos/<int:id>/', views.editar_dados_pessoais_contatos, name='editar_dados_pessoais_contatos'),

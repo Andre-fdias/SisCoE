@@ -36,5 +36,5 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('email',)
     filter_horizontal = ('groups', 'user_permissions',)
 
-# Registrar o modelo User no admin
+# Registrar o modelo User no admin (APENAS UMA VEZ)
 admin.site.register(User, UserAdmin)
