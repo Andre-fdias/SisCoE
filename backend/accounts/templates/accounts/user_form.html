@@ -51,27 +51,74 @@
             {% endif %}
 
             <!-- Campos do formulário -->
-            {% for field in form.visible_fields %}
-              <div class="space-y-2">
-                <label class="text-sm font-medium text-gray-300 block">{{ field.label }}</label>
-                {% render_field field class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
-                
-                {% if field.help_text %}
-                  <span class="text-xs text-gray-500">{{ field.help_text }}</span>
-                {% endif %}
-                
-                {% for error in field.errors %}
-                  <span class="text-sm text-red-400">{{ error }}</span>
-                {% endfor %}
-              </div>
-            {% endfor %}
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-300 block">Email</label>
+              {% if form.initial.email %}
+                <input type="email" value="{{ form.initial.email }}" 
+                       class="bg-gray-800 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+                       readonly>
+                <input type="hidden" name="email" value="{{ form.initial.email }}">
+              {% else %}
+                {% render_field form.email class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+              {% endif %}
+              {% for error in form.email.errors %}
+                <span class="text-sm text-red-400">{{ error }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-300 block">Primeiro Nome</label>
+              {% if form.initial.first_name %}
+                <input type="text" value="{{ form.initial.first_name }}" 
+                       class="bg-gray-800 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+                       readonly>
+                <input type="hidden" name="first_name" value="{{ form.initial.first_name }}">
+              {% else %}
+                {% render_field form.first_name class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+              {% endif %}
+              {% for error in form.first_name.errors %}
+                <span class="text-sm text-red-400">{{ error }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-300 block">Sobrenome/Nome de Guerra</label>
+              {% if form.initial.last_name %}
+                <input type="text" value="{{ form.initial.last_name }}" 
+                       class="bg-gray-800 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+                       readonly>
+                <input type="hidden" name="last_name" value="{{ form.initial.last_name }}">
+              {% else %}
+                {% render_field form.last_name class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+              {% endif %}
+              {% for error in form.last_name.errors %}
+                <span class="text-sm text-red-400">{{ error }}</span>
+              {% endfor %}
+            </div>
+
+            <!-- Campos de senha (sempre editáveis) -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-300 block">Senha</label>
+              {% render_field form.password1 class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+              {% for error in form.password1.errors %}
+                <span class="text-sm text-red-400">{{ error }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-300 block">Confirmação de Senha</label>
+              {% render_field form.password2 class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" %}
+              {% for error in form.password2.errors %}
+                <span class="text-sm text-red-400">{{ error }}</span>
+              {% endfor %}
+            </div>
 
             <!-- Botões -->
             <div class="flex flex-col sm:flex-row gap-4 pt-8">
               <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-center">
                 Salvar
               </button>
-              <a href="{{ object.get_absolute_url }}" class="w-full sm:w-auto px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors font-medium text-center border border-gray-600">
+              <a href="{% url 'login' %}" class="w-full sm:w-auto px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors font-medium text-center border border-gray-600">
                 Cancelar
               </a>
             </div>

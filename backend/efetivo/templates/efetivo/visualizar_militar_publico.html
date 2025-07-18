@@ -1,1003 +1,1323 @@
-
 {% load static %}
 {% load efetivo_filters %}
 {% load cat_efetivo_tags %}
 
-
-{% block 'head' %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil Militar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{% static 'img\favicon.ico' %}">
-  
-  
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="icon" href="{% static 'img\favicon.ico' %}">
-    <link rel="mask-icon" href="https://demo.themesberg.com/windster/safari-pinned-tab.svg" color="#5bbad5">
-    
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="theme-color" content="#ffffff">
-    
-    <link rel="canonical" href="https://themesberg.com/product/tailwind-css/dashboard-windster">
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
-    <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
-  
-    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-
-  
-    <title>Meu Perfil</title>
-
-<style>
-    :root {
-        --primary: #4f46e5; /* Indigo */
-        --primary-light: #6366f1;
-        --primary-dark: #4338ca;
-        --secondary: #d1d5db; /* Light Gray for dark background */
-        --light: #1f2937; /* Dark background for cards */
-        --dark: #f9fafb; /* Light text for dark background */
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1); /* Darker shadow */
-    }
-
-    body {
-        font-family: 'Inter', sans-serif;
-        display: flex;
-        justify-content: center;
-        background-color: #0f172a; /* Fundo mais escuro para contraste */
-        color: var(--dark); /* Texto claro */
-    }
-
-    /* Novo contêiner principal com 80% de largura */
-    .main-container {
-        width: 80%;
-        max-width: 1800px;
-        margin: 0 auto;
-    }
-
-    .military-detail-container {
-        display: flex;
-        min-height: 100vh;
-        width: 100%;
-    }
-
-    /* Sidebar Navigation */
-    .sidebar {
-        width: 280px;
-        background: #111827; /* Fundo mais escuro para a sidebar */
-        box-shadow: var(--card-shadow);
-        padding: 1.5rem 0;
-        position: sticky;
-        top: 0;
-        height: 100vh;
-        overflow-y: auto;
-        z-index: 10;
-        color: var(--dark); /* Texto claro */
-        flex-shrink: 0; /* Impede que a sidebar encolha */
-    }
-
-    .profile-summary {
-        padding: 0 1.5rem 1.5rem;
-        border-bottom: 1px solid #374151; /* Borda mais escura */
-        text-align: center;
-    }
-
-    .profile-image-container {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin: 0 auto 1rem;
-        border: 4px solid var(--primary-light);
-    }
-
-    .profile-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .nav-menu {
-        padding: 1.5rem 0;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1.5rem;
-        margin: 0.25rem 0;
-        cursor: pointer;
-        transition: all 0.2s;
-        border-left: 4px solid transparent;
-        color: var(--secondary); /* Cor do texto padrão do item */
-    }
-
-    .nav-item:hover {
-        background-color: #374151; /* Fundo ao passar o mouse */
-    }
-
-    .nav-item.active {
-        background-color: #374151; /* Fundo ativo */
-        border-left-color: var(--primary);
-        color: var(--primary); /* Cor primária para texto ativo */
-    }
-
-    .nav-item.active .nav-icon {
-        color: var(--primary);
-    }
-
-    .nav-icon {
-        width: 24px;
-        margin-right: 12px;
-        color: var(--secondary);
-    }
-
-    .nav-label {
-        font-weight: 500;
-    }
-
-    /* Main Content */
-    .main-content {
-        flex: 1;
-        padding: 2rem;
-        width: 100%;
-    }
-
-    .header-card {
-        background: var(--light); /* Fundo do card */
-        border-radius: 0.75rem;
-        box-shadow: var(--card-shadow);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        color: var(--dark); /* Texto claro */
-    }
-
-    .header-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--dark);
-        margin-bottom: 0.5rem;
-    }
-
-    .header-subtitle {
-        color: var(--secondary);
-        font-size: 1rem;
-    }
-
-    /* Section Cards */
-    .section-card {
-        background: var(--light); /* Fundo do card */
-        border-radius: 0.75rem;
-        box-shadow: var(--card-shadow);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        display: none;
-        color: var(--dark); /* Texto claro */
-    }
-
-    .section-card.active {
-        display: block;
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--dark);
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #374151; /* Borda mais escura */
-        display: flex;
-        align-items: center;
-    }
-
-    .section-title i {
-        margin-right: 0.75rem;
-        color: var(--primary);
-    }
-
-    /* Info Grid */
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.25rem;
-    }
-
-    .info-item {
-        padding: 1rem;
-        background-color: #374151; /* Fundo do item de informação */
-        border-radius: 0.5rem;
-    }
-
-    .info-label {
-        font-size: 0.875rem;
-        color: var(--secondary);
-        margin-bottom: 0.25rem;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-    }
-
-    .info-label i {
-        margin-right: 0.5rem;
-        width: 16px;
-        color: var(--primary-light);
-    }
-
-    .info-value {
-        font-size: 1rem;
-        font-weight: 500;
-        color: var(--dark);
-        word-break: break-word;
-    }
-
-    /* Status */
-    .status-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.35rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .status-pill.bg-green-100 { /* Apenas para a classe de cor, não o bg total */
-        background-color: rgba(16, 185, 129, 0.2); /* Mais transparência */
-        color: var(--success);
-    }
-
-    .status-pill.bg-yellow-100 {
-        background-color: rgba(245, 158, 11, 0.2);
-        color: var(--warning);
-    }
-
-    .status-pill.bg-red-100 {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: var(--danger);
-    }
-
-    /* Tables */
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .custom-table th {
-        background-color: #374151; /* Fundo do cabeçalho da tabela */
-        padding: 0.75rem 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: var(--secondary);
-        border-bottom: 1px solid #4b5563; /* Borda mais escura */
-    }
-
-    .custom-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #4b5563; /* Borda mais escura */
-        color: var(--dark);
-    }
-
-    .custom-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .custom-table tr:hover {
-        background-color: #374151; /* Fundo ao passar o mouse na linha */
-    }
-
-    /* Buttons */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.5rem;
-        font-weight: 500;
-        transition: all 0.2s;
-        cursor: pointer;
-        text-decoration: none;
-    }
-
-    .btn-primary {
-        background-color: var(--primary);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4), 0 2px 4px -1px rgba(79, 70, 229, 0.2); /* Sombra mais visível no tema escuro */
-    }
-
-    .btn-primary:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-2px);
-    }
-
-    .btn i {
-        margin-right: 0.5rem;
-    }
-
-    /* Responsividade */
-    @media (max-width: 1200px) {
-        .main-container {
-            width: 90%;
-        }
-    }
-
-    @media (max-width: 1024px) {
-        .military-detail-container {
-            flex-direction: column;
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .main_bg {
+            background: url('bg.png');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
         }
         
-        .sidebar {
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+        
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+       
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                backdrop-filter: none;
+            }
+            
+            .main_bg {
+                animation: none;
+            }
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: auto;
-            position: relative;
-            padding: 1rem 0;
-            height: auto;
-        }
-        
-        .nav-menu {
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
-            flex-wrap: wrap;
-            padding: 0.5rem;
-            justify-content: center; /* Centralizar itens no mobile */
-        }
-        
-        .nav-item {
-            flex: 1;
-            min-width: 140px;
-            margin: 0.25rem;
-            border-left: none;
-            border-bottom: 3px solid transparent;
             justify-content: center;
-            padding: 0.75rem;
+            align-items: center;
+            z-index: 1000;
         }
-        
-        .nav-item.active {
-            border-bottom-color: var(--primary);
-            border-left: none;
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
         }
 
-        .main-content {
-            padding: 1rem;
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
         }
-    }
-
-    @media (max-width: 768px) {
-        .main-container {
-            width: 100%;
-            padding: 0 10px;
+        .modal-rules-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+            text-align: left;
         }
-    }
+        .modal-rules-list li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-icon-success {
+            color: green;
+            margin-right: 0.5rem;
+        }
+        .modal-close-btn {
+            background-color: #3B82F6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            border: none;
+        }
 
-    @media (max-width: 640px) {
+        /* Estilos para as tabs */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+
+
+        .tab-button:hover:not(.active) {
+            border-bottom-color: #93C5FD;
+        }
+
+        .tab-content {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Estilos para seções */
+        .section-card {
+            @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+        }
+
+        .section-title {
+            @apply text-xl font-bold mb-4 flex items-center;
+        }
+
         .info-grid {
-            grid-template-columns: 1fr;
+            @apply grid grid-cols-1 md:grid-cols-2 gap-4;
         }
-        
-        .nav-item {
-            min-width: 120px;
+
+        .info-item {
+            @apply p-3 bg-gray-50 rounded-lg;
         }
-    }
 
-    /* Utilitários */
-    .no-data {
-        text-align: center;
-        padding: 2rem;
-        color: var(--secondary);
-        font-style: italic;
-    }
 
-    .text-center {
-        text-align: center;
-    }
+        .badge-count {
+            @apply bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded;
+        }
 
-    .mb-4 {
-        margin-bottom: 1rem;
-    }
 
-    .mt-4 {
-        margin-top: 1rem;
-    }
+        .status-pill {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
 
-    .hidden {
-        display: none;
-    }
+        /* Dark mode toggle */
+        .toggle-checkbox:checked {
+            @apply right-0 border-green-400;
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            @apply bg-green-400;
+            background-color: #68D391;
+        }
+ 
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
 
-    /* Tailwind-like classes for the new LP section (adjusted for dark mode) */
-    .bg-white { background-color: #1f2937; /* Darker background for card */ }
-    .rounded-xl { border-radius: 0.75rem; }
-    .shadow-md { box-shadow: var(--card-shadow); }
-    .p-6 { padding: 1.5rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .flex { display: flex; }
-    .justify-between { justify-content: space-between; }
-    .items-center { align-items: center; }
-    .text-lg { font-size: 1.125rem; }
-    .font-semibold { font-weight: 600; }
-    .text-indigo-900 { color: var(--dark); /* Light text */ }
-    .bg-green-100 { background-color: rgba(16, 185, 129, 0.2); }
-    .text-green-800 { color: var(--success); }
-    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-    .rounded-full { border-radius: 9999px; }
-    .mr-2 { margin-right: 0.5rem; }
-    .overflow-x-auto { overflow-x: auto; }
-    .border { border-width: 1px; }
-    .border-gray-200 { border-color: #374151; /* Darker border */ }
-    .min-w-full { min-width: 100%; }
-    .bg-blue-50 { background-color: #374151; /* Darker background for table header */ }
-    .px-4 { padding-left: 1rem; padding-right: 1rem; }
-    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-    .text-left { text-align: left; }
-    .text-xs { font-size: 0.75rem; }
-    .font-medium { font-weight: 500; }
-    .text-blue-700 { color: var(--secondary); /* Lighter text for headers */ }
-    .uppercase { text-transform: uppercase; }
-    .tracking-wider { letter-spacing: 0.05em; }
-    .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; }
-    .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #4b5563; /* Darker divider */ }
-    .hover\:bg-blue-50:hover { background-color: #4b5563; /* Darker hover for table rows */ }
-    .transition-colors { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .whitespace-nowrap { white-space: nowrap; }
-    .h-8 { height: 2rem; }
-    .w-8 { width: 2rem; }
-    .text-white { color: #fff; }
-    .bg-blue-600 { background-color: #2563eb; }
-    .bg-green-600 { background-color: #059669; }
-    .bg-purple-600 { background-color: #7c3aed; }
-    .bg-red-600 { background-color: #dc2626; }
-    .bg-yellow-600 { background-color: #d97706; }
-    .bg-indigo-600 { background-color: #4f46e5; }
-    .bg-pink-600 { background-color: #db2777; }
-    .bg-teal-600 { background-color: #0d9488; }
-    .bg-gray-400 { background-color: #9ca3af; }
-    .ml-2 { margin-left: 0.5rem; }
-    .text-sm { font-size: 0.875rem; }
-    .text-gray-900 { color: var(--dark); /* Light text */ }
-    .flex-col { flex-direction: column; }
-    .text-gray-500 { color: var(--secondary); }
-    .mr-1 { margin-right: 0.25rem; }
-    .flex-shrink-0 { flex-shrink: 0; }
-    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .max-w-\[120px\] { max-width: 120px; }
-    .mb-1 { margin-bottom: 0.25rem; }
-    .space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.5rem; }
-    .h-4 { height: 1rem; }
-    .w-px { width: 1px; }
-    .text-red-600 { color: var(--danger); }
-    .text-blue-600 { color: var(--primary-light); }
-    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
-    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
-    .h-3 { height: 0.75rem; }
-    .w-3 { width: 0.75rem; }
-    .text-red-800 { color: var(--danger); }
-    .text-indigo-600 { color: var(--primary-light); }
-    .hover\:text-indigo-900:hover { color: var(--primary); }
-    .justify-end { justify-content: flex-end; }
-    .colspan-5 { grid-column: span 5 / span 5; } /* custom class for colspan */
-    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-    .h-12 { height: 3rem; }
-    .w-12 { width: 3rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .text-gray-700 { color: var(--secondary); } /* Adjusted for dark mode */
+    <!-- Dark mode toggle button 
+    <div class="fixed top-4 right-4 z-50">
+        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+            <input type="checkbox" name="toggle" id="toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+            <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+        </div>
+        <label for="toggle" class="text-xs text-gray-700 dark:text-gray-300">Dark Mode</label>
+    </div>-->
 
-    /* New styles for Promotion History table */
-    .table-container {
-        overflow-x: auto;
-        border-radius: 0.5rem;
-        border: 1px solid #374151; /* Darker border */
-    }
+    <div class="mt-4 relative grid grid-cols-1 md:grid-cols-3 auto-rows-min gap-4 w-full md:w-11/12 lg:w-5/6 p-4 md:p-6 glass-card rounded-lg shadow-lg h-fit">
+<header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
+    <div class="flex items-center w-full">
+        <figure class="mr-2">
+            <img src="{% static 'img\logo-siscoe- (2).png' %}" alt="logo" class="w-200 h-20 rounded-full">
+        </figure>
+        <div class="flex-grow text-center">
+            <span class="text-2xl font-bold uppercase">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+        </div>
+        <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+            <a href="{% url 'core:index' %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+            </a>
 
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+            <button id="darkModeToggle"
+                    class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
 
-    .data-table thead {
-        background-color: #374151; /* Darker background for table header */
-    }
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                const sunIcon = document.getElementById('sunIcon');
+                const moonIcon = document.getElementById('moonIcon');
+                const body = document.body;
 
-    .data-table th {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: var(--secondary);
-        border-bottom: 1px solid #4b5563; /* Darker border */
-    }
+                // Remove qualquer classe de cor de fundo inicial que possa conflitar
+                body.classList.remove('bg-gray-200', 'bg-gray-900'); 
+                
+                // Verifica se há preferência salva
+                const savedMode = localStorage.getItem('darkMode');
+                
+                // Aplica o modo inicial
+                if (savedMode === 'dark') {
+                    enableDarkMode();
+                } else {
+                    // Define o modo padrão como light se não houver preferência salva
+                    disableDarkMode(); 
+                }
 
-    .data-table tbody {
-        background-color: #1f2937; /* Darker background for table body */
-        color: var(--dark); /* Light text */
-        divide-y: #4b5563; /* Darker divider */
-    }
+                // Alterna entre modos
+                darkModeToggle.addEventListener('click', function() {
+                    if (body.classList.contains('dark-mode')) { // Usa 'dark-mode' como marcador
+                        disableDarkMode();
+                    } else {
+                        enableDarkMode();
+                    }
+                });
 
-    .data-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #4b5563; /* Darker border */
-    }
+                function enableDarkMode() {
+                    body.classList.add('dark-mode'); // Adiciona um marcador 'dark-mode'
+                    body.classList.remove('bg-gray-200'); // Remove o fundo claro
+                    body.classList.add('bg-gray-900');    // Adiciona o fundo escuro
+                    localStorage.setItem('darkMode', 'dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
 
-    .data-table tr:last-child td {
-        border-bottom: none;
-    }
+                function disableDarkMode() {
+                    body.classList.remove('dark-mode'); // Remove o marcador 'dark-mode'
+                    body.classList.remove('bg-gray-900'); // Remove o fundo escuro
+                    body.classList.add('bg-gray-200');    // Adiciona o fundo claro
+                    localStorage.setItem('darkMode', 'light');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            });
+        </script>
 
-    .data-table tr:hover {
-        background-color: #374151; /* Darker hover for table rows */
-    }
+    </div>
+</header>
 
-    .bg-blue-900 { background-color: #1e3a8a; } /* Adjusted for dark mode */
-    .bg-opacity-30 { opacity: 0.3; }
-    .border-blue-800 { border-color: #1e40af; } /* Adjusted for dark mode */
-    .text-blue-300 { color: #93c5fd; } /* Adjusted for dark mode */
-    .text-gray-300 { color: #d1d5db; } /* Adjusted for dark mode */
-    .text-gray-400 { color: #9ca3af; } /* Adjusted for dark mode */
+         <!-- Imagem de Perfil -->
 
-    /* Specific styles for the new tables */
-    .text-gray-800 { color: var(--dark); } /* Adjusted for dark mode */
-    .text-blue-600 { color: var(--primary-light); }
-    .text-green-600 { color: var(--success); }
-    .bg-blue-100 { background-color: rgba(79, 70, 229, 0.2); } /* Adjusted for dark mode */
-    .text-blue-800 { color: var(--primary-light); } /* Adjusted for dark mode */
-    .hover\:bg-gray-50:hover { background-color: #374151; } /* Adjusted for dark mode */
-    .text-red-800 { color: var(--danger); }
-</style>
-{% endblock 'head' %}
-
-{% block content %}
-
-<body>
-    <div class="main-container"> <div class="military-detail-container">
-            <aside class="sidebar">
-            <div class="profile-summary">
-            <div class="profile-image-container">
-                {% if cadastro.imagens.first %}
-                    <img src="{{ cadastro.imagens.first.image.url }}" alt="Foto do Militar" class="profile-image">
-                {% else %}
-                    <div class="bg-gray-700 border-2 border-dashed rounded-full w-full h-full flex items-center justify-center text-gray-500">
-                        <i class="fas fa-user fa-2x"></i>
+        <!-- Container Principal com tamanho padrão -->
+        <div class="w-full mx-auto relative" >
+        <!-- Card de Perfil -->
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden relative z-10 h-full">
+            <!-- Seção Visual (Cabeçalho + Foto) ocupando 70% -->
+            <div class="h-[70%] bg-gradient-to-b from-gray-900 to-blue-900 relative">
+            <!-- Overlay de textura -->
+            <div class="absolute inset-0 bg-gray-800 opacity-50 mix-blend-lighten"></div>
+            
+            <!-- Container da Foto 3x4 -->
+            <div class="absolute -bottom-1/4 left-1/2 transform -translate-x-1/2 rounded-lg">
+                <div class="profile relative rounded-lg" style="width: 360px; height: 480px;"> <!-- Proporção 3x4 -->
+                <label for="imageUploadInput" class="cursor-pointer block h-full">
+                    <figure class="relative h-full rounded-lg">
+                    {% with cadastro.imagens.first as imagem %}
+                    {% if imagem %}
+                        <img id="profileImage" 
+                            src="{{ imagem.image.url }}" 
+                            alt="Foto do Militar" 
+                            class="w-full h-full object-cover border-4 border-white rounded-lg shadow-xl"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% else %}
+                        <img id="profileImage" 
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234b5563' d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.078 1.182 8.25 3.129zM12 12a6 6 0 100-12 6 6 0 000 12z'/%3E%3C/svg%3E" 
+                            alt="Foto Padrão" 
+                            class="w-full h-full object-cover border-4 border-white shadow-xl bg-gray-200"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <!-- Overlay hover -->
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="text-white text-sm font-medium">Alterar Foto</span>
                     </div>
-                {% endif %}
+                    
+                    <!-- Botão da câmera -->
+                    {% if request.user == cadastro.user or request.user.is_superuser %}
+                        <div class="absolute bottom-2 right-2">
+                            <button onclick="showImageRules()" 
+                                    class="group relative p-2 rounded-full cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl">
+                                <!-- Fundo gradiente com animação -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full opacity-100 group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300"></div>
+                                
+                                <!-- Efeito de brilho no hover -->
+                                <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white mix-blend-overlay"></div>
+                                
+                                <!-- Borda sutil -->
+                                <div class="absolute inset-0 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"></div>
+                                
+                                <!-- Ícone centralizado -->
+                                <div class="relative z-10 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-200"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Tooltip (opcional) -->
+                                <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    Alterar Foto
+                                </span>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </figure>
+                </label>
+                </div>
             </div>
-                <h2 class="font-bold text-lg">{{ cadastro.nome_de_guerra}}</h2>
-                <p class="text-gray-400">{{ cadastro.promocoes.last.grad|safe }}</p>
-                <p class="text-gray-500 text-sm mt-1">RE: {{ cadastro.re }}-{{ cadastro.dig }}</p>
-            </div>
-
-            <nav class="nav-menu">
-                <div class="nav-item active" data-section="personal">
-                    <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-label">Informações Pessoais</span>
-                </div>
-                
-                <div class="nav-item" data-section="military">
-                    <i class="fas fa-shield-alt nav-icon"></i>
-                    <span class="nav-label">Situação Militar</span>
-                </div>
-                
-                <div class="nav-item" data-section="promotion">
-                    <i class="fas fa-star nav-icon"></i>
-                    <span class="nav-label">Promoção</span>
-                </div>
-                
-                <div class="nav-item" data-section="category">
-                    <i class="fas fa-clipboard-list nav-icon"></i>
-                    <span class="nav-label">Categoria</span>
-                </div>
-                
-                <div class="nav-item" data-section="restrictions">
-                    <i class="fas fa-ban nav-icon"></i>
-                    <span class="nav-label">Restrições</span>
-                </div>
-                
-                <div class="nav-item" data-section="lps">
-                    <i class="fas fa-calendar-alt nav-icon"></i>
-                    <span class="nav-label">LPs Concluídas</span>
-                </div>
-                
-                <div class="nav-item" data-section="medals">
-                    <i class="fas fa-medal nav-icon"></i>
-                    <span class="nav-label">Medalhas</span>
-                </div>
-                
-                <div class="nav-item" data-section="courses">
-                    <i class="fas fa-graduation-cap nav-icon"></i>
-                    <span class="nav-label">Cursos</span>
-                </div>
-                
-                <div class="nav-item" data-section="special">
-                    <i class="fas fa-award nav-icon"></i>
-                    <span class="nav-label">Cursos Especiais</span>
-                </div>
-                
-                <div class="nav-item" data-section="rpt">
-                    <i class="fas fa-briefcase nav-icon"></i>
-                    <span class="nav-label">Dados RPT</span>
-                </div>
-            </nav>
-            </aside>
-
-        <main class="main-content">
-            <div class="header-card **max-w-xl mx-auto**">
-                <h1 class="header-title">Detalhes do Militar</h1>
-                <p class="header-subtitle">Visualize todas as informações de forma organizada</p>
             </div>
 
-            <section id="personal-section" class="section-card active **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-user"></i> Informações Pessoais</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-id-card"></i> Nome Completo</div>
-                        <div class="info-value">{{ cadastro.nome|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-id-badge"></i> CPF</div>
-                        <div class="info-value">{{ cadastro.cpf|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-address-card"></i> RG</div>
-                        <div class="info-value">{{ cadastro.rg|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-fingerprint"></i> Identidade Funcional</div>
-                        <div class="info-value">{{ cadastro.re }}-{{ cadastro.dig }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-venus-mars"></i> Gênero</div>
-                        <div class="info-value">{{ cadastro.get_genero_display|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-birthday-cake"></i> Data de Nascimento</div>
-                        <div class="info-value">{{ cadastro.nasc|date:"d/m/Y"|default:"-" }}</div>
-                    </div>
-                    
+            <!-- Informações do Usuário (30% restante) -->
+            <div class="h-[30%] pt-16 pb-6 px-6 text-center flex flex-col justify-center">
+            <h2 class="text-2xl font-bold text-gray-800">{{ cadastro.nome_completo }}</h2>
+            <p class="text-gray-600 text-sm mt-1">@{{ cadastro.user.username|default:"militar" }}</p>
+            
+            <!-- Estatísticas -->
+            <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex-grow text-center">
+                            <span class="text-sm font-bold uppercase dark:text-white">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+                        </div>
+            </div>
+            </div>
+        </div>
 
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-envelope"></i> Email Pessoal</div>
-                        <div class="info-value">{{ cadastro.email|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-mobile-alt"></i> Telefone Celular</div>
-                        <div class="info-value">{{ cadastro.telefone|default:"-" }}</div>
-                    </div>
+        <!-- Efeito de sombra -->
+        <div class="absolute inset-x-0 bottom-0 h-20 transform scale-x-75 scale-y-125 -translate-y-4">
+            <div class="h-full w-full bg-gradient-to-t from-black opacity-10 rounded-b-xl blur"></div>
+        </div>
+        </div>
 
+        <!-- Modal de regras -->
+        <div id="imageRulesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4 shadow-xl">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Regras para Foto Militar</h3>
+                <ul class="text-gray-700 mb-4 list-disc pl-5 space-y-2">
+                    <li>Tamanho máximo: <strong>2MB</strong></li>
+                    <li>Formato: <strong>3x4 (retrato)</strong></li>
+                    <li>Uniforme: <strong>Fardado obrigatoriamente</strong></li>
+                    <li>Fundo: <strong>Branco ou neutro</strong></li>
+                    <li>Expressão: <strong>Rosto visível e sério</strong></li>
+                </ul>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="hideImageRules()" 
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                        Cancelar
+                    </button>
+                    <button onclick="acceptRulesAndOpenFileInput()" 
+                            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        Entendi, Prosseguir
+                    </button>
                 </div>
-            </section>
+            </div>
+        </div>
 
-            <section id="military-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-shield-alt"></i> Situação Militar</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-tasks"></i> Situação</div>
-                        {# Usa a propriedade 'status' do modelo, que retorna o badge HTML #}
-                        <div class="info-value">{{ ultima_situacao.status|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-map-marker-alt"></i> SGB</div>
-                        <div class="info-value">{{ ultima_situacao.sgb|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-building"></i> Posto/Seção Destino</div>
-                        <div class="info-value">{{ ultima_situacao.posto_secao|default:"-" }}</div>
-                    </div>
-
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-exchange-alt"></i> Está Adido</div>
-                        <div class="info-value">{{ ultima_situacao.esta_adido|default:"-" }}</div>
-                    </div>        
-
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-briefcase"></i> Função</div>
-                        <div class="info-value">{{ ultima_situacao.funcao|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-user-tie"></i> Op/Adm</div>
-                        <div class="info-value">{{ ultima_situacao.op_adm|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-bolt"></i> Prontidão</div>
-                        {# Usa a propriedade 'prontidao_badge' do modelo #}
-                        <div class="info-value">{{ ultima_situacao.prontidao_badge|safe }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-history"></i> Última Alteração</div>
-                        <div class="info-value">{{ ultima_situacao.modified|date:"d/m/Y"|default:"-" }}</div>
-                    </div>
-                </div>
+         <script>
+                // Mostra o modal com as regras
+                function showImageRules() {
+                    document.getElementById('imageRulesModal').classList.remove('hidden');
+                }
                 
-                <div class="grid grid-cols-1 gap-8 mt-6"> {# Added mt-6 for spacing #}
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                                </svg>
-                                Histórico de Movimentações
-                            </h2>
-                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                                {{ historico_detalhes_situacao|length }} registro{{ historico_detalhes_situacao|length|pluralize }}
-                            </span>
-                        </div>
-
-                       <div class="table-container">
-                            <table id="dataTableDetalhes" class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Situação</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SGB</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Seção</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Apresentação</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
-
-                                </thead>
-                                <tbody>
-                                    {% for detalhe in historico_detalhes_situacao %}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="font-medium text-center">
-                                            {% if detalhe.situacao == "Efetivo" %}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    {{ detalhe.situacao }}
-                                                </span>
-                                            {% elif detalhe.situacao == "Exonerado a Pedido" %}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    Exonerado
-                                                </span>
-                                            {% elif detalhe.situacao == "Exonerado Ex-Ofício" %} {# Adicionado para cobrir este caso #}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    Exonerado Ex-Ofício
-                                                </span>
-                                            {% elif detalhe.situacao == "Reserva a Pedido" %} {# Adicionado #}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                                                    Reserva a Pedido
-                                                </span>
-                                            {% elif detalhe.situacao == "Transferido" %} {# Adicionado #}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                    Transferido
-                                                </span>
-                                            {% elif detalhe.situacao == "Mov. Interna" %} {# Adicionado #}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-600 text-white"> {# Exemplo de cor para Mov. Interna #}
-                                                    Mov. Interna
-                                                </span>
-                                            {% else %} {# Default para qualquer outro caso #}
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                    {{ detalhe.situacao }}
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-center">{{ detalhe.sgb }}</td>
-                                        <td class="text-center">{{ detalhe.posto_secao }}</td>
-                                        <td class="text-center">{{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}</td>
-                                        <td class="text-center">
-                                            {% if detalhe.saida_da_unidade %}
-                                                {{ detalhe.saida_da_unidade|date:"d/m/Y" }}
-                                            {% else %}
-                                                -
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-center">{{ detalhe.data_alteracao|date:"d/m/Y H:i" }}</td>
-                                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
-                                            {% with militar_cadastro=request.user.cadastros.last %}
-                                                {% if militar_cadastro %}
-                                                    <div class="font-medium">
-                                                        {{ militar_cadastro.ultima_promocao.posto_grad }}
-                                                        {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
-                                                        {{ request.user.last_name }}
-                                                    </div>
-                                                    <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
-                                                {% else %}
-                                                    <div class="font-medium">Dados do usuário não disponíveis</div>
-                                                {% endif %}
-                                            {% endwith %}
-                                        </td>
-
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="py-4 px-4 text-center text-gray-500">
-                                            Nenhuma movimentação encontrada.
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-            </section>
-
-            <section id="promotion-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-star"></i> Promoção</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-chevron-up"></i> Posto/Graduação</div>
-                        <div class="info-value">{{ cadastro.promocoes.last.grad|safe }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-layer-group"></i> Quadro</div>
-                        <div class="info-value">{{ promocao.get_quadro_display|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-users"></i> Grupo</div>
-                        <div class="info-value">{{ promocao.get_grupo_display|default:"-" }}</div>
-                    </div>
-                    
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-calendar-day"></i> Data de Promoção</div>
-                        <div class="info-value">{{ promocao.ultima_promocao|date:"d/m/Y" }}</div>
-                    </div>
-                </div>
+                // Esconde o modal
+                function hideImageRules() {
+                    document.getElementById('imageRulesModal').classList.add('hidden');
+                }
                 
-                <div class="grid grid-cols-1 gap-8 mt-6"> {# Added mt-6 for spacing #}
-                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-gray-800 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                                </svg>
-                                Histórico de Promoções
-                            </h2>
-                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                                {{ promocoes|length }} registro{{ promocoes|length|pluralize }}
-                            </span>
-                        </div>
+                // Aceita as regras e abre o seletor de arquivos
+                function acceptRulesAndOpenFileInput() {
+                    document.getElementById('imageRulesModal').classList.add('hidden');
+                    document.getElementById('imageUploadInput').click();
+                }
+                
+                // Função para lidar com o upload da imagem
+                function handleImageUpload(event) {
+                    const input = event.target;
+                    const file = input.files[0];
+                    
+                    if (!file) return;
+                    
+                    // Validações
+                    if (file.size > 2 * 1024 * 1024) { // 2MB
+                        alert('A imagem deve ter no máximo 2MB');
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Verificação de proporção
+                    const img = new Image();
+                    img.onload = function() {
+                        const width = this.width;
+                        const height = this.height;
+                        const ratio = width / height;
                         
-                        <div class="table-container">
-                            <table id="dataTablePromocoes" class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Grad</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quadro</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Última Promoção</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
-                                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
-                                       
-                                </thead>
-                                <tbody>
-                                    {% for promocao in promocoes %}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="font-medium text-gray-900 text-center">{{ promocao.posto_grad }}</td>
-                                        <td class="text-center">{{ promocao.quadro }}</td>
-                                        <td class="text-center">{{ promocao.grupo }}</td>
-                                        <td class="text-center">{{ promocao.ultima_promocao|date:"d/m/Y" }}</td>
-                                        <td class="text-center">{{ promocao.data_alteracao|date:"d/m/Y" }}</td>
-                                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
-                                            {% with militar_cadastro=request.user.cadastros.last %}
-                                                {% if militar_cadastro %}
-                                                    <div class="font-medium">
-                                                        {{ militar_cadastro.ultima_promocao.posto_grad }}
-                                                        {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
-                                                        {{ request.user.last_name }}
-                                                    </div>
-                                                    <div class="text-gray-500">{{ militar_cadastro.cpf }}</div>
-                                                {% else %}
-                                                    <div class="font-medium">Dados do usuário não disponíveis</div>
-                                                {% endif %}
-                                            {% endwith %}
-                                        </td>
+                        // Proporção 3x4 tem ratio de 0.75 (3/4) com margem de 10%
+                        if (Math.abs(ratio - 0.75) > 0.1) {
+                            alert('A imagem deve estar no padrão 3x4 (retrato)');
+                            input.value = '';
+                            return;
+                        }
+                        
+                        // Mostra preview
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('profileImage').src = e.target.result;
+                            
+                            // Envia o formulário automaticamente
+                            const form = document.getElementById('imageForm');
+                            const formData = new FormData(form);
+                            
+                            fetch(form.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                                }
+                            }).then(response => {
+                                if (response.ok) {
+                                    window.location.reload();
+                                }
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    };
+                    img.src = URL.createObjectURL(file);
+                }
+        </script>
+   
+        <!-- Informações Pessoais -->
+        <section class="bg-white rounded-xl shadow-sm p-6">
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Informações Pessoais
+                    </h2>
+                    <span class="text-xs text-gray-500">Dados cadastrais</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome Completo</p>
+                        <p class="text-sm font-medium text-gray-800 mt-1">{{ cadastro.nome }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Nome de Guerra</p>
+                        <p class="text-sm font-medium text-gray-800 mt-1">{{ cadastro.nome_de_guerra }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</p>
+                        <p class="text-sm font-medium text-gray-800 mt-1">{{ cadastro.cpf }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">RG</p>
+                        <p class="text-sm font-medium text-gray-800 mt-1">{{ cadastro.rg }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Gênero</p>
+                        <p class="text-sm font-medium text-gray-800 mt-1">{{ cadastro.get_genero_display }}</p>
+                    </div>
 
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="py-4 px-4 text-center text-gray-500">
-                                            Nenhuma promoção encontrada.
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <div class="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Averbação Militar</p>
+                            <div class="flex items-center mt-1">
+                                <span class="text-sm font-medium text-gray-800 mr-2">{{ cadastro.tempo_para_averbar_militar }} dias</span>
+                            </div>
+                        </div>
+                        <button onclick="openModal('averbacaoMilitarModal')" class="text-gray-500 hover:text-blue-600 transition-colors" title="Editar Averbação Militar">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Averbação INSS</p>
+                            <div class="flex items-center mt-1">
+                                <span class="text-sm font-medium text-gray-800 mr-2">{{ cadastro.tempo_para_averbar_inss }} dias</span>
+                            </div>
+                        </div>
+                        <button onclick="openModal('averbacaoInssModal')" class="text-gray-500 hover:text-blue-600 transition-colors" title="Editar Averbação INSS">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-address-book w-5 h-5 mr-2 text-blue-500"></i>
+                        Contatos
+                    </h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="w-full flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 mr-3">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-medium text-gray-500">Email</p>
+                            <p class="text-sm font-medium text-gray-800 truncate">{{ cadastro.email|default:"-" }}</p>
+                        </div>
+                        <div class="flex space-x-1 ml-2">
+                            <button onclick="copyToClipboard('{{ cadastro.email }}')" 
+                                    class="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                                    title="Copiar email">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <a href="mailto:{{ cadastro.email|default:'#' }}" 
+                            class="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                            title="Enviar email">
+                                <i class="fas fa-paper-plane"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 mr-3">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-500">Telefone</p>
+                            <p class="text-sm font-medium text-gray-800 phone-number">{{ cadastro.telefone|default:"-" }}</p>
+                        </div>
+                        <div class="flex space-x-1 ml-2">
+                            <button onclick="copyToClipboard(this.closest('.phone-number').textContent)" 
+                                    class="p-1 text-gray-500 hover:text-green-600 transition-colors"
+                                    title="Copiar telefone">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button onclick="openModal('telefoneModal')" class="p-1 text-gray-500 hover:text-green-600 transition-colors" title="Editar Telefone">
+                                <i class="fas fa-pen"></i>
+                            </button>
                         </div>
                     </div>
 
-               
-                </div>
-            </section>
+                    <script>
+                        // Função para formatar números de telefone
+                        function formatPhoneNumber(phone) {
+                            if (!phone) return '-';
+                            
+                            // Remove tudo que não é dígito
+                            const cleaned = ('' + phone).replace(/\D/g, '');
+                            
+                            // Verifica se tem o tamanho certo para um telefone brasileiro
+                            if (cleaned.length === 11) {
+                                return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                            } else if (cleaned.length === 10) {
+                                return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                            } else {
+                                return phone; // Retorna o original se não for possível formatar
+                            }
+                        }
 
-            <section id="category-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Categoria de Efetivo</h2>
-                {% if categoria_atual %}
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-tag"></i> Tipo</div>
-                            <div class="info-value">
-                                <span class="status-pill {{ categoria_atual.status_display.classe }}">
-                                    <i class="fas {{ categoria_atual.status_display.icone }} mr-1"></i>
-                                    {{ categoria_atual.status_display.texto }}
+                        // Aplica a formatação a todos os elementos com a classe phone-number
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const phoneElements = document.querySelectorAll('.phone-number');
+                            phoneElements.forEach(el => {
+                                if (el.textContent !== '-') {
+                                    el.textContent = formatPhoneNumber(el.textContent);
+                                }
+                            });
+                        });
+                    </script>
+                </div>
+            </div>
+
+            <!-- Modal Averbação Militar -->
+            <div id="averbacaoMilitarModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Editar Averbação Militar</h3>
+                    <form action="{% url 'efetivo:editar_averbacao_militar' cadastro.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="tempo_para_averbar_militar" class="block text-sm font-medium text-gray-700">Dias para Averbar Militar</label>
+                            <input type="number" id="tempo_para_averbar_militar" name="tempo_para_averbar_militar" 
+                                value="{{ cadastro.tempo_para_averbar_militar|default:'0' }}" 
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" onclick="closeModal('averbacaoMilitarModal')" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Averbação INSS -->
+            <div id="averbacaoInssModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Editar Averbação INSS</h3>
+                    <form action="{% url 'efetivo:editar_averbacao_inss' cadastro.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="tempo_para_averbar_inss" class="block text-sm font-medium text-gray-700">Dias para Averbar INSS</label>
+                            <input type="number" id="tempo_para_averbar_inss" name="tempo_para_averbar_inss" 
+                                value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}" 
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" onclick="closeModal('averbacaoInssModal')" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Telefone -->
+            <div id="telefoneModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Editar Telefone</h3>
+                    <form action="{% url 'efetivo:editar_telefone' cadastro.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="telefoneInput" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Telefone</label>
+                            <input type="tel" id="telefoneInput" name="telefone" 
+                                value="{{ cadastro.telefone|default:'' }}"
+                                placeholder="(xx) xxxxx-xxxx"
+                                class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                        shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                        transition-all duration-200 placeholder-gray-400
+                                        hover:border-gray-300 text-gray-700 font-medium"
+                                oninput="formatTelefone(this)" maxlength="15">
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" onclick="closeModal('telefoneModal')" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                // Função de formatação de telefone (idêntica ao seu exemplo)
+                function formatTelefone(input) {
+                    let value = input.value.replace(/\D/g, '');
+                    value = value.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d)(\d{4})$/, '$1-$2');
+                    input.value = value;
+                }
+
+                // Aplica a formatação quando o modal é aberto
+                function openModal(modalId) {
+                    const modal = document.getElementById(modalId);
+                    modal.classList.remove('hidden');
+                    
+                    if (modalId === 'telefoneModal') {
+                        const phoneInput = document.getElementById('telefoneInput');
+                        // Formata o valor inicial se existir
+                        if (phoneInput.value) {
+                            phoneInput.value = phoneInput.value.replace(/\D/g, '');
+                            formatTelefone(phoneInput);
+                        }
+                    }
+                }
+            </script>
+
+            <script>
+                    // Função para copiar texto para área de transferência
+                    function copyToClipboard(text) {
+                        if (!text || text === '-') return;
+                        
+                        navigator.clipboard.writeText(text).then(function() {
+                            alert('Copiado para a área de transferência: ' + text);
+                        }, function(err) {
+                            console.error('Erro ao copiar: ', err);
+                        });
+                    }
+
+                    // Funções para abrir e fechar modais
+                    function openModal(modalId) {
+                        document.getElementById(modalId).classList.remove('hidden');
+                    }
+
+                    function closeModal(modalId) {
+                        document.getElementById(modalId).classList.add('hidden');
+                    }
+
+                    // Fechar modal ao clicar fora dele
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const modals = document.querySelectorAll('[id$="Modal"]');
+                        modals.forEach(modal => {
+                            modal.addEventListener('click', function(e) {
+                                if (e.target === this) {
+                                    closeModal(this.id);
+                                }
+                            });
+                        });
+                    });
+            </script>            
+        </section>
+
+
+        <!-- Datas Importantes -->
+        <section class="glass-card rounded-lg p-6 shadow-md">
+
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                Datas Importantes
+                </h2>
+                <span class="text-xs text-gray-500">Cronologia militar</span>
+            </div>
+            <div class="relative">
+                <div class="absolute left-4 top-0 h-full w-0.5 bg-gray-300"></div> {# Changed bg-gray-200 to bg-gray-300 for slightly more contrast #}
+                
+                <div class="space-y-6">
+                    <div class="relative pl-10">
+                        <div class="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700"> {# Unified circle background and icon color #}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"> {# Changed bg-gray-50 to bg-white, added shadow-sm #}
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Nascimento</h3>
+                                    <p class="text-sm text-gray-600">{{ cadastro.nasc|date:"d/m/Y" }}</p> {# Changed text-gray-500 to text-gray-600 #}
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800"> {# Unified badge color #}
+                                    {{ cadastro.idade_detalhada }}
                                 </span>
                             </div>
                         </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-play-circle"></i> Data Início</div>
-                            <div class="info-value">{{ categoria_atual.data_inicio|date:"d/m/Y"|default:"-" }}</div>
-                        </div>
-                        
-                        {% if categoria_atual.data_termino %}
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-stop-circle"></i> Data Término</div>
-                            <div class="info-value">{{ categoria_atual.data_termino|date:"d/m/Y"|default:"-" }}</div>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="info-item col-span-full">
-                            <div class="info-label"><i class="fas fa-align-left"></i> Detalhes</div>
-                            <div class="info-value">{{ categoria_atual.detalhes|default:"-" }}</div>
-                        </div>
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhuma categoria de efetivo ativa encontrada</p>
-                {% endif %}
-            </section>
-
-            <section id="restrictions-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-ban"></i> Restrições Aplicáveis</h2>
-                {% if restricoes_aplicaveis %}
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {% for restricao in restricoes_aplicaveis %}
-                            <div class="bg-blue-900 bg-opacity-30 p-4 rounded-lg border border-blue-800">
-                                <h3 class="font-semibold text-blue-300">{{ restricao.nome }} ({{ restricao.sigla }})</h3>
-                                <p class="mt-2 text-gray-300">{{ restricao.mensagem }}</p>
-                                {% if restricao.regra %}
-                                    <p class="mt-2 text-sm text-gray-400">Regra: {{ restricao.regra }}</p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhuma restrição registrada para este militar</p>
-                {% endif %}
-            </section>
-
-            <section id="lps-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-calendar-alt"></i> LPs Concluídas</h2>
-                <fieldset class="bg-white rounded-xl shadow-md p-6 mb-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-indigo-900">
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full mr-2">LP</span>
-                            Histórico de Licenças Prêmio Concluídas
-                        </h3>
                     </div>
                     
-                    <div class="overflow-x-auto rounded-lg border border-gray-200">
-                        <table class="min-w-full">
-                            <thead class="bg-blue-50">
+                    <div class="relative pl-10">
+                        <div class="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700"> {# Unified circle background and icon color #}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"> {# Changed bg-gray-50 to bg-white, added shadow-sm #}
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Matrícula</h3>
+                                    <p class="text-sm text-gray-600">{{ cadastro.matricula|date:"d/m/Y" }}</p> {# Changed text-gray-500 to text-gray-600 #}
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800"> {# Unified badge color #}
+                                    {{ cadastro.matricula_detalhada }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative pl-10">
+                        <div class="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700"> {# Unified circle background and icon color #}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"> {# Changed bg-gray-50 to bg-white, added shadow-sm #}
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Admissão</h3>
+                                    <p class="text-sm text-gray-600">{{ cadastro.admissao|date:"d/m/Y" }}</p> {# Changed text-gray-500 to text-gray-600 #}
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800"> {# Unified badge color #}
+                                    {{ cadastro.admissao_detalhada }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative pl-10">
+                        <div class="absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700"> {# Unified circle background and icon color #}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm"> {# Changed bg-gray-50 to bg-white, added shadow-sm #}
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Previsão Inatividade</h3>
+                                    <p class="text-sm text-gray-600">{{ cadastro.previsao_de_inatividade|date:"d/m/Y" }}</p> {# Changed text-gray-500 to text-gray-600 #}
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800"> {# Unified badge color #}
+                                    {{ cadastro.previsao_de_inatividade_detalhada }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Situação Militar -->
+        <section class="glass-card rounded-lg p-6 shadow-md">
+            <div class="mb-8">
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Situação Militar
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Situação</p>
+                        <p class="text-sm font-medium" id="situacao">{{ detalhes.situacao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">SGB</p>
+                        <p class="text-sm font-medium" id="sgb">{{ detalhes.sgb }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-sm mr-1"></i>Posto/Seção</p>
+                        <p class="text-sm font-medium" id="postoSecao">{{ detalhes.posto_secao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Adido</p>
+                        <p class="text-sm font-medium" id="adido">{{ detalhes.esta_adido }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Função</p>
+                        <p class="text-sm font-medium" id="funcao">{{ detalhes.funcao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Prontidão</p>
+                        <p class="text-sm font-medium" id="prontidao">{{ detalhes.prontidao_badge|safe }}</p>
+                    </div>
+                </div>
+                <div class="info-value mt-8">
+                    <p class="text-sm text-gray-500">Status Atual</p>
+                    <span class="status-pill {{ categoria_atual.status_display.classe }}">
+                        <i class="fas {{ categoria_atual.status_display.icone }} mr-1"></i>
+                        {{ categoria_atual.status_display.texto }}
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Promoção
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Posto/Graduação</p>
+                        <p class="text-sm font-medium" id="postoGraduacao">{{ promocao.grad|safe }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Quadro</p>
+                        <p class="text-sm font-medium" id="quadro">{{ promocao.get_quadro_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Grupo</p>
+                        <p class="text-sm font-medium" id="grupo">{{ promocao.get_grupo_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Última Promoção</p>
+                        <p class="text-sm font-medium" id="ultimaPromocao">{{ promocao.ultima_promocao|date:'d/m/Y' }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- area de detalhamento -->     
+        <section class="glass-card rounded-lg p-8 shadow-md col-span-1 md:col-span-2">
+            <div class="tabs mb-8">
+                <ul class="flex relative pb-2 border-b border-gray-200 overflow-x-auto">
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button active" data-tab="personal">
+                        <i class="fas fa-user mr-2"></i>
+                        <span class="text-base font-medium">Status </span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="military">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        <span class="text-base font-medium">Movimentações</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="promotion">
+                        <i class="fas fa-star mr-2"></i>
+                        <span class="text-base font-medium">Promoção</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="restrictions">
+                        <i class="fas fa-ban mr-2"></i>
+                        <span class="text-base font-medium">Afastamentos</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="lps">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span class="text-base font-medium">LPs</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="medals">
+                        <i class="fas fa-medal mr-2"></i>
+                        <span class="text-base font-medium">Medalhas</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="courses">
+                        <i class="fas fa-graduation-cap mr-2"></i>
+                        <span class="text-base font-medium">Cursos</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="rpt">
+                        <i class="fas fa-briefcase mr-2"></i>
+                        <span class="text-base font-medium">RPT</span>
+                    </li>
+                </ul>
+            </div>
+
+        <!-- Conteúdo das abas -->
+
+            <!-- area de Status -->   
+            <div class="tab-content active" id="personal-tab">
+                <div class="bg-gray-100 rounded-lg p-4 mb-4 ">
+                    <div class="flex flex-col space-y-3">
+                        <!-- Status Display -->
+                        <div class="flex items-center justify-between gap-4 p-2 bg-white rounded-lg shadow-sm">
+                            <span class="text-indigo-700 font-medium flex items-center">
+                                <i class="fas fa-info-circle mr-2"></i> Status Atual:
+                            </span>
+                            <span class="text-gray-800 font-semibold">
+                                {% if categoria_atual %}
+                                    <span class="px-3 py-1.5 rounded-full text-sm font-semibold {{ categoria_atual.status_display.classe }} flex items-center">
+                                        <i class="fas {{ categoria_atual.status_display.icone }} mr-2"></i>
+                                        {{ categoria_atual.status_display.texto }}
+                                    </span>
+                                {% else %}
+                                    <span class="bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-semibold flex items-center">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        ATIVO
+                                    </span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <!-- Categorias Ativas -->
+                        {% for categoria in cadastro.categorias_efetivo.all %}
+                            {% if categoria.data_termino|date:'Y-m-d' > today|date:'Y-m-d' or not categoria.data_termino %}
+                            <div class="flex flex-col p-3 bg-white rounded-lg shadow-sm">
+                                <div class="flex items-center justify-between gap-4 mb-1">
+                                    <span class="text-indigo-700 font-medium flex items-center">
+                                        <i class="fas fa-tag mr-2"></i> Tipo:
+                                    </span>
+                                    <span class="text-gray-800 font-semibold">
+                                        {{ categoria.get_tipo_display }}
+                                        {% if categoria.data_termino %}
+                                            <span class="text-xs text-gray-500 ml-1">
+                                                (até {{ categoria.data_termino|date:"d/m/Y" }})
+                                            </span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                    <div>
+                                        <p class="text-xs text-gray-500">Data Início</p>
+                                        <p class="text-sm font-medium">{{ categoria.data_inicio|date:'d/m/Y' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Data Término</p>
+                                        <p class="text-sm font-medium">{{ categoria.data_termino|date:'d/m/Y'|default:'-' }}</p>
+                                    </div>
+                                </div>
+                
+                                <div class="mt-2 bg-gray-50 p-2 rounded">
+                                    {% if categoria.tipo == 'RESTRICAO' and categoria.restricoes_selecionadas %}
+                                        <span class="text-xs font-medium text-gray-600">Restrições ativas:</span>
+                                        <div class="flex flex-wrap gap-1 mt-1">
+                                            {% for restricao in categoria.restricoes_selecionadas %}
+                                            <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                                {{ restricao }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% elif categoria.tipo == 'LSV' %}
+                                        <div class="text-xs space-y-1">
+                                            <div class="flex items-center">
+                                                <span class="font-medium text-gray-600 mr-2">Boletim:</span>
+                                                <span>{{ categoria.boletim_concessao_lsv|default:"-" }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="font-medium text-gray-600 mr-2">Data Boletim:</span>
+                                                <span>{{ categoria.data_boletim_lsv|date:"d/m/Y"|default:"-" }}</span>
+                                            </div>
+                                        </div>
+                                    {% elif categoria.tipo == 'FERIAS' %}
+                                        <div class="text-xs">
+                                            <span class="font-medium text-gray-600">Período de férias</span>
+                                        </div>
+                                    {% elif categoria.tipo == 'LP' %}
+                                        <div class="text-xs">
+                                            <span class="font-medium text-gray-600">Licença Prêmio</span>
+                                        </div>
+                                    {% endif %}
+                
+                                    {% if categoria.detalhes %}
+                                        <div class="mt-2 text-xs">
+                                            <span class="font-medium text-gray-600">Detalhes:</span>
+                                            <p class="text-gray-700">{{ categoria.detalhes }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        
+
+                    </div>
+                    
+
+                </div>
+            </div>
+
+
+            <!-- area de Movimentações -->   
+            <div class="tab-content hidden" id="military-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-exchange-alt mr-2 text-blue-500"></i>
+                            Histórico de Movimentações
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ historico_detalhes_situacao|length }} registro{{ historico_detalhes_situacao|length|pluralize }}
+                        </span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table id="movimentacoesTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                            <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">LP</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Bol G PM</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Dias</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-blue-700 uppercase tracking-wider">Ações</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Situação</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SGB</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Seção</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Apresentação</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for detalhe in historico_detalhes_situacao %}
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm">
+                                        {% if detalhe.situacao == "Efetivo" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                {{ detalhe.situacao }}
+                                            </span>
+                                        {% elif detalhe.situacao == "Exonerado a Pedido" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                Exonerado
+                                            </span>
+                                        {% elif detalhe.situacao == "Exonerado Ex-Ofício" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                Exonerado Ex-Ofício
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                {{ detalhe.situacao }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ detalhe.sgb }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ detalhe.posto_secao }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ detalhe.apresentacao_na_unidade|date:"d/m/Y" }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {% if detalhe.saida_da_unidade %}
+                                            {{ detalhe.saida_da_unidade|date:"d/m/Y" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ detalhe.data_alteracao|date:"d/m/Y H:i" }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm">
+                                        {% with militar_cadastro=request.user.cadastros.last %}
+                                            {% if militar_cadastro %}
+                                                <div class="font-medium text-gray-900">
+                                                    {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                                    {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                                    {{ request.user.last_name }}
+                                                </div>
+                                                <div class="text-xs text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                            {% else %}
+                                                <div class="text-sm text-gray-500">Dados não disponíveis</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="px-4 py-4 text-center text-sm text-gray-500">
+                                        Nenhuma movimentação encontrada.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- area de Promoções -->   
+            <div class="tab-content hidden" id="promotion-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-star mr-2 text-blue-500"></i>
+                            Histórico de Promoções
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ promocoes|length }} registro{{ promocoes|length|pluralize }}
+                        </span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table id="promocoesTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Posto/Grad</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quadro</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Promoção</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alterado em</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for promocao in promocoes %}
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium text-gray-900">
+                                        {{ promocao.grad|safe }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ promocao.quadro }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ promocao.grupo }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ promocao.ultima_promocao|date:"d/m/Y" }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                        {{ promocao.data_alteracao|date:"d/m/Y" }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm">
+                                        {% with militar_cadastro=request.user.cadastros.last %}
+                                            {% if militar_cadastro %}
+                                                <div class="font-medium text-gray-900">
+                                                    {{ militar_cadastro.ultima_promocao.posto_grad }}
+                                                    {{ militar_cadastro.re }}-{{ militar_cadastro.dig }}
+                                                    {{ request.user.last_name }}
+                                                </div>
+                                                <div class="text-xs text-gray-500">{{ militar_cadastro.cpf }}</div>
+                                            {% else %}
+                                                <div class="text-sm text-gray-500">Dados não disponíveis</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                                        Nenhuma promoção encontrada.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- area de Afastamentos -->   
+            <div class="tab-content hidden" id="restrictions-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-history mr-2 text-blue-500"></i> {# Ícone de histórico #}
+                            Histórico de Categorias {# Novo título da aba #}
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ historico_categorias_militar|length }} registro{{ historico_categorias_militar|length|pluralize }}
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Dias</th>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Restrições Aplicadas</th>
+                                    <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    {# A coluna "Ações" foi removida #}
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for historico in historico_categorias_militar %}
+                                <tr class="hover:bg-gray-50">
+                                
+                                    <td class="py-4 px-4 whitespace-nowrap text-sm font-medium text-center">
+                                        {{ historico.tipo_badge|safe }}
+                                    </td>
+                                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                        {% if historico.data_inicio and historico.data_termino %}
+                                            {{ historico.data_inicio|date:"d/m/Y" }} - {{ historico.data_termino|date:"d/m/Y" }}
+                                        {% elif historico.data_inicio %}
+                                            A partir de {{ historico.data_inicio|date:"d/m/Y" }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                        {% if historico.get_total_dias > 0 %}
+                                            {{ historico.get_total_dias }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                                        {{ historico.restricoes_selecionadas_siglas }}
+                                    </td>
+
+                                    <td class="py-4 px-4 text-sm text-center">
+                                        {% if historico.status_info == "EM VIGOR" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                {{ historico.status_info }}
+                                            </span>
+                                        {% elif historico.status_info == "ENCERRADO" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                {{ historico.status_info }}
+                                            </span>
+                                        {% elif historico.status_info == "AGUARDANDO INÍCIO" %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                {{ historico.status_info }}
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                {{ historico.status_info }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="py-4 px-4 text-center text-gray-500">
+                                        Nenhum histórico de categoria encontrado.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- area de LPs -->   
+            <div class="tab-content hidden" id="lps-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>
+                            LPs Concluídas
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ lps_concluidas|length }} registro{{ lps_concluidas|length|pluralize }}
+                        </span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table id="lpsTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bol G PM</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dias</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 {% for lp in lps_concluidas %}
-                                <tr class="hover:bg-blue-50 transition-colors">
+                                <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <span class="inline-flex items-center justify-center h-8 w-8 rounded-full text-white
@@ -1012,12 +1332,12 @@
                                                 {% else %}bg-gray-400{% endif %}">
                                                 {{ lp.numero_lp }}
                                             </span>
-                                            <span class="ml-2 text-sm font-medium text-gray-900"></span>
                                         </div>
                                     </td>
-
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex flex-col">
+                                            <!-- Linha 1: Concessão -->
+
                                             <div class="flex items-center">
                                                 <svg class="h-4 w-4 text-gray-500 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
@@ -1027,6 +1347,7 @@
                                                 </span>
                                             </div>
                                             
+                                            <!-- Linha 2: Publicação -->
                                             <div class="flex items-center mb-1">
                                                 <svg class="h-4 w-4 text-gray-500 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -1037,228 +1358,374 @@
                                             </div>
                                         </div>
                                     </td>
-
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center space-x-2">
                                             <div class="flex flex-col">
                                                 <span class="text-xs text-gray-500">Disponíveis</span>
                                                 {% if lp.previsao_associada %}
-                                                    <span class="text-sm font-medium 
-                                                        {% if lp.previsao_associada.dias_disponiveis == 0 %}text-red-600
-                                                        {% else %}text-green-600{% endif %}">
+                                                    <span class="text-sm font-medium {% if lp.previsao_associada.dias_disponiveis == 0 %}text-red-600{% else %}text-green-600{% endif %}">
                                                         {{ lp.previsao_associada.dias_disponiveis|default:"0" }} dias
                                                     </span>
                                                 {% else %}
-                                                    <span class="text-sm font-medium text-gray-500">
-                                                        -
-                                                    </span>
+                                                    <span class="text-sm font-medium text-gray-500">-</span>
                                                 {% endif %}
                                             </div>
-                                            
                                             <div class="h-4 w-px bg-gray-200"></div>
-                                            
                                             <div class="flex flex-col">
                                                 <span class="text-xs text-gray-500">Utilizados</span>
                                                 {% if lp.previsao_associada %}
-                                                    <span class="text-sm font-medium 
-                                                        {% if lp.previsao_associada.dias_utilizados == 90 %}text-red-600
-                                                        {% else %}text-blue-600{% endif %}">
+                                                    <span class="text-sm font-medium {% if lp.previsao_associada.dias_utilizados == 90 %}text-red-600{% else %}text-blue-600{% endif %}">
                                                         {{ lp.previsao_associada.dias_utilizados|default:"0" }} dias
                                                     </span>
                                                 {% else %}
-                                                    <span class="text-sm font-medium text-gray-500">
-                                                        -
-                                                    </span>
+                                                    <span class="text-sm font-medium text-gray-500">-</span>
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </td>
-
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         {% if lp.previsao_associada and lp.previsao_associada.dias_disponiveis != 0 %}
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                                </svg>
                                                 Disponível
                                             </span>
                                         {% else %}
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                                </svg>
                                                 Concluído
                                             </span>
                                         {% endif %}
                                     </td>
 
-                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{% url 'lp:ver_lp' lp.pk %}" class="text-indigo-600 hover:text-indigo-900 flex items-center justify-end">
-                                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
-                                    
-                                        </a>
-                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
                                     <td colspan="5" class="px-4 py-4 text-center text-sm text-gray-500">
-                                        <div class="flex flex-col items-center justify-center py-6">
-                                            <svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            <p class="mt-2 text-sm font-medium text-gray-700">Nenhuma LP concluída encontrada</p>
-                                        </div>
+                                        Nenhuma LP concluída encontrada
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </fieldset>
-            </section>
-
-            <section id="medals-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-medal"></i> Medalhas</h2>
-                {% if medalhas_do_militar %}
-                    <div class="overflow-x-auto rounded-lg border border-gray-700">
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Honraria</th>
-                                    <th>Data Publicação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for medalha in medalhas_do_militar %}
-                                    <tr>
-                                        <td>{{ medalha.get_honraria_display }}</td>
-                                        <td>{{ medalha.data_publicacao_lp|date:"d/m/Y" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhuma medalha registrada</p>
-                {% endif %}
-            </section>
-
-            <section id="courses-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Cursos</h2>
-                {% if cursos_do_militar %}
-                    <div class="overflow-x-auto rounded-lg border border-gray-700">
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Curso</th>
-                                    <th>Data Publicação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for curso in cursos_do_militar %}
-                                    <tr>
-                                        <td>{{ curso.get_curso_display }}</td>
-                                        <td>{{ curso.data_publicacao|date:"d/m/Y" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhum curso registrado</p>
-                {% endif %}
-            </section>
-
-            <section id="special-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-award"></i> Cursos Especiais (Op/Adm)</h2>
-                {% if cursos_especiais %}
-                    <div class="bg-blue-900 bg-opacity-30 p-6 rounded-lg">
-                        <ul class="space-y-3">
-                            {% for curso in cursos_especiais %}
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-blue-500 mt-1 mr-2"></i>
-                                    <span>{{ curso }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhum curso especial aplicável</p>
-                {% endif %}
-            </section>
-
-            <section id="rpt-section" class="section-card **max-w-xl mx-auto**">
-                <h2 class="section-title"><i class="fas fa-briefcase"></i> Dados RPT</h2>
-                {% if cadastro_rpt %}
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-building"></i> Posto/Seção Destino RPT</div>
-                            <div class="info-value">{{ cadastro_rpt.get_posto_secao_destino_display|default:"-" }}</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-info-circle"></i> Status RPT</div>
-                            <div class="info-value">{{ cadastro_rpt.get_status_display|default:"-" }}</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-list-ol"></i> Contagem na Seção</div>
-                            <div class="info-value">{{ count_in_section|default:"-" }} (Aguardando)</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-calendar-check"></i> Data de Apresentação</div>
-                            <div class="info-value">{{ cadastro_rpt.data_apresentacao|date:"d/m/Y"|default:"-" }}</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label"><i class="fas fa-clock"></i> Dias RPT</div>
-                            <div class="info-value">{{ cadastro_rpt.dias_rpt|default:"-" }}</div>
-                        </div>
-                    </div>
-                {% else %}
-                    <p class="no-data">Nenhum dado de RPT registrado</p>
-                {% endif %}
-            </section>
-
-            <div class="text-center mt-8">
-                <a href="javascript:history.back()" class="btn btn-primary">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </a>
+                </div>
             </div>
-        </main>
-    </div>
-     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ativar navegação por abas
-            const navItems = document.querySelectorAll('.nav-item');
-            const sections = document.querySelectorAll('.section-card');
-            
-            navItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    // Remover classe ativa de todos os itens
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    // Adicionar classe ativa ao item clicado
-                    this.classList.add('active');
+
+            <!-- area de Medalhas -->   
+            <div class="tab-content hidden" id="medals-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-medal mr-2 text-blue-500"></i>
+                            Medalhas
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ medalhas_do_militar|length }} registro{{ medalhas_do_militar|length|pluralize }}
+                        </span>
+                    </div>
                     
-                    // Obter a seção alvo
-                    const targetSection = this.getAttribute('data-section');
+                    {% if medalhas_do_militar %}
+                        <div class="overflow-x-auto">
+                            <table id="medalsTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Honraria</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Publicação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for medalha in medalhas_do_militar %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ medalha.get_honraria_display }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            {{ medalha.data_publicacao_lp|date:"d/m/Y" }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">Nenhuma medalha registrada</p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+             <!-- area de Cursos -->             
+            <div class="tab-content hidden" id="courses-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>
+                            Cursos
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ cursos_do_militar|length }} registro{{ cursos_do_militar|length|pluralize }}
+                        </span>
+                    </div>
                     
-                    // Esconder todas as seções
-                    sections.forEach(section => {
-                        section.classList.remove('active');
-                    });
-                    
-                    // Mostrar a seção alvo
-                    document.getElementById(`${targetSection}-section`).classList.add('active');
-                });
+                    {% if cursos_do_militar %}
+                        <div class="overflow-x-auto">
+                            <table id="coursesTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Publicação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for curso in cursos_do_militar %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ curso.get_curso_display }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            {{ curso.data_publicacao|date:"d/m/Y" }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">Nenhum curso registrado</p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            <!-- area de RPT-->             
+            <div class="tab-content hidden" id="rpt-tab">
+                <div class="space-y-6"> <!-- Adicionado espaço vertical entre os cards -->
+
+                    <!-- Card RPT-Interno -->
+                    <fieldset class="w-full rounded-2xl bg-gray-100 p-2 border border-gray-200">
+                        <div class="flex flex-col h-full bg-white rounded-xl shadow-md p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-indigo-900 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    RPT-Interno
+                                </h3>
+                                {% if cadastro_rpt %}
+                                <span class="text-xs font-medium px-2 py-1 rounded 
+                                    {% if cadastro_rpt.status == 'Aguardando' %}bg-yellow-100 text-yellow-800
+                                    {% elif cadastro_rpt.status == 'Mov. serviço' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ cadastro_rpt.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <hr class="my-4 border-gray-200">
+                            
+                            {% if cadastro_rpt %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Coluna 1 -->
+                                <div class="space-y-4">
+                                    <div class="flex items-start gap-3">
+                                        <div>
+                                            <p class="text-sm text-gray-500 mb-1">
+                                                <svg class="inline-flex w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                                </svg>
+                                                Status
+                                            </p>
+                                            <p class="text-sm font-medium text-gray-800 ml-6">{{ cadastro_rpt.pedido_status }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Data do Pedido</p>
+                                            <p class="font-medium text-gray-800">{{ cadastro_rpt.data_pedido|date:"d/m/Y" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna 2 -->
+                                <div class="space-y-4">
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Destino Solicitado</p>
+                                            <p class="font-medium text-gray-800">
+                                                {{ cadastro_rpt.sgb_destino }} - {{ cadastro_rpt.posto_secao_destino }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start gap-3">
+                                        <svg class="flex-shrink-0 w-5 h-5 text-indigo-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Tempo de Espera</p>
+                                            <p class="font-medium text-gray-800">{{ cadastro_rpt.tempo_pedido_detalhada }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção Adicional -->
+                            <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-500">Documento de Solicitação</p>
+                                        <p class="font-medium">{{ cadastro_rpt.doc_solicitacao|default:"-" }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500">Posição na Fila</p>
+                                        <p class="font-medium">
+                                            {{ count_in_section|default:"N/A" }}
+                                            <span class="text-xs text-gray-500">({{ count_in_section|default:"0" }} na mesma seção)</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-6">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h4 class="mt-2 text-sm font-medium text-gray-700">Nenhum RPT registrado</h4>
+                                <p class="mt-1 text-sm text-gray-500">Este militar não possui pedidos de RPT-Interno ativos</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </section>
+
+        
+
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Configuração e Inicialização do Simple-DataTables ---
+        const commonConfig = {
+            perPage: 10,
+            perPageSelect: [5, 10, 15, 20, 25],
+            labels: {
+                placeholder: "Pesquisar...",
+                perPage: "{select} por página",
+                noRows: "Nenhum registro",
+                info: "Mostrando {start}-{end} de {rows}",
+                noResults: "Nenhum resultado",
+                loading: "Carregando...",
+                infoFiltered: "(filtrado de {rowsTotal})",
+                previous: "Anterior",
+                next: "Próximo",
+                first: "Primeiro",
+                last: "Último"
+            },
+            classes: {
+                wrapper: "p-3",
+                active: "bg-blue-50 text-blue-600",
+                disabled: "opacity-50",
+                selector: "px-2 py-1 border rounded",
+                table: "w-full divide-y divide-gray-200",
+                thead: "",
+                th: "px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider",
+                tbody: "bg-white divide-y divide-gray-200",
+                tr: "hover:bg-gray-50",
+                td: "px-4 py-3 whitespace-nowrap text-center text-sm",
+            }
+        };
+
+        // Mapeia IDs das tabelas para suas instâncias Simple-DataTables
+        const dataTableInstances = {};
+
+        function initializeDataTable(tableId) {
+            const tableElement = document.getElementById(tableId);
+            if (tableElement && !dataTableInstances[tableId]) {
+                dataTableInstances[tableId] = new simpleDatatables.DataTable(`#${tableId}`, commonConfig);
+            }
+        }
+
+        // Inicializa todas as tabelas
+        initializeDataTable('movimentacoesTable');
+        initializeDataTable('promocoesTable');
+        initializeDataTable('lpsTable');
+        initializeDataTable('medalsTable');
+        initializeDataTable('coursesTable');
+
+        // --- Funcionalidade de Troca de Abas ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove classe ativa de todos os botões e conteúdos
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.add('hidden'));
+
+                // Adiciona classe ativa ao botão clicado
+                this.classList.add('active');
+
+                // Mostra o conteúdo correspondente
+                const tabId = this.getAttribute('data-tab');
+                const targetContent = document.getElementById(`${tabId}-tab`);
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+
+                    // Redesenha a tabela Simple-DataTables quando a aba é mostrada
+                    // Isso é útil para tabelas que podem estar em abas inicialmente ocultas
+                    const tableIdForTab = {
+                        'military': 'movimentacoesTable',
+                        'promotion': 'promocoesTable',
+                        'lps': 'lpsTable',
+                        'medals': 'medalsTable',
+                        'courses': 'coursesTable'
+                    };
+                    const currentTableId = tableIdForTab[tabId];
+                    if (currentTableId && dataTableInstances[currentTableId]) {
+                        dataTableInstances[currentTableId].update();
+                    }
+                }
             });
         });
-    </script>
+
+        // --- Funcionalidade de Upload de Imagem com Modal ---
+        const profileImageLabel = document.querySelector('label[for="imageUploadInput"]');
+        const imageUploadInput = document.getElementById('imageUploadInput');
+        const profileImage = document.getElementById('profileImage');
+        const imageRulesModal = document.getElementById('imageRulesModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        if (profileImageLabel && imageUploadInput && profileImage && imageRulesModal && closeModalBtn) {
+            profileImageLabel.addEventListener('click', function() {
+                imageRulesModal.classList.remove('hidden'); // Mostra o modal
+            });
+
+            closeModalBtn.addEventListener('click', function() {
+                imageRulesModal.classList.add('hidden'); // Oculta o modal
+                imageUploadInput.click(); // Dispara o input de arquivo após fechar o modal
+            });
+
+            imageUploadInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        profileImage.src = event.target.result;
+                        // Aqui você pode adicionar código para enviar a imagem para o servidor
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
 </body>
-{% endblock %}
+
+</html> 

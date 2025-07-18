@@ -94,7 +94,7 @@
               <p class="text-sm font-medium text-gray-300">Olá, {{ request.user.profile.posto_grad }} {{ request.user.last_name }}</p>
             </div>
             <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-400 hover:border-blue-500 transition-all">
-              {% if request.user.profile.image %}
+              {% if profile.cadastro %}
                 <img src="{{ request.user.profile.image.url }}" alt="Profile" class="w-full h-full object-cover">
               {% else %}
                 <div class="bg-gray-600 w-full h-full flex items-center justify-center">
@@ -134,3 +134,5 @@
     </div>
   </div>
 </nav>
+
+

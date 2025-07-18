@@ -37,7 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text=_('Designates that this user has all permissions without explicitly assigning them.'),
     )
     is_staff = models.BooleanField(default=False)
-    login_history = models.JSONField(default=list) 
+    # login_history = models.JSONField(default=list) # This is a duplicate, can be removed.
 
 
     objects = UserManager()
@@ -80,7 +80,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         Sends an email to this User.
         '''
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
 
 
     

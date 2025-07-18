@@ -6,7 +6,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from .tokens import account_activation_token
 from .models import UserActionLog
-from .utils import get_client_ip, get_computer_name  # Atualize esta linha
+from .utils import get_client_ip, get_computer_name
 
 def send_mail_to_user(request, user):
     current_site = get_current_site(request)
@@ -32,15 +32,16 @@ def log_user_action(user, action, request=None):
     )
 
 
-from .models import UserActionLog
-from .utils import get_client_ip, get_computer_name
+# This part is a duplicate and can be removed, keeping only the first definition.
+# from .models import UserActionLog
+# from .utils import get_client_ip, get_computer_name
 
-def log_user_action(user, action, request=None):
-    ip_address = get_client_ip(request) if request else None
-    computer_name = get_computer_name(ip_address) if ip_address else None
-    UserActionLog.objects.create(
-        user=user,
-        action=action,
-        ip_address=ip_address,
-        computer_name=computer_name
-    )
+# def log_user_action(user, action, request=None):
+#     ip_address = get_client_ip(request) if request else None
+#     computer_name = get_computer_name(ip_address) if ip_address else None
+#     UserActionLog.objects.create(
+#         user=user,
+#         action=action,
+#         ip_address=ip_address,
+#         computer_name=computer_name
+#     )

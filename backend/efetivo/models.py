@@ -605,9 +605,10 @@ class Promocao(models.Model):
 
 
 
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from backend.efetivo.utils import add_cpf_to_image  # Importe a função
+# from backend.efetivo.utils import add_cpf_to_image # Certifique-se de que isso está importado se for usado
 
 class Imagem(models.Model):
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='imagens')
@@ -615,10 +616,12 @@ class Imagem(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    class Meta:
+        # Adicione esta linha para ordenar as imagens pela data de criação (mais recente primeiro)
+        ordering = ['-create_at'] 
+
     def __str__(self):
         return f'Imagem de {self.cadastro.nome_de_guerra}'
-
-
 
 class HistoricoPromocao(models.Model):
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE)

@@ -43,26 +43,34 @@ class Profile(models.Model):
         Cadastro,
         on_delete=models.CASCADE,
         verbose_name='cadastro',
-        null=True,  # Permitir valores nulos temporariamente
+        null=True,
         blank=True
     )
-    re = models.CharField(max_length=6, blank=False, null=False, unique=True)
-    dig = models.CharField(max_length=1, blank=False, null=False)
-    posto_grad = models.CharField(max_length=100, choices=posto_grad_choices)
-    image = models.ImageField(upload_to='img/fotos_perfil/usuario')
-    cpf = models.CharField(max_length=14, blank=False, null=False, unique=True)
-    tipo = models.CharField(max_length=15, choices=tipo_choices, blank=False, null=False)
+    re = models.CharField(max_length=6, blank=True, null=True)
+    dig = models.CharField(max_length=1, blank=True, null=True)
+    posto_grad = models.CharField(max_length=100, choices=posto_grad_choices, blank=True, null=True)
+    cpf = models.CharField(max_length=14, blank=True, null=True, unique=True)
+    tipo = models.CharField(max_length=15, choices=tipo_choices, blank=True, null=True)
+
     class Meta:
         ordering = ('user__first_name',)
         verbose_name = 'perfil'
         verbose_name_plural = 'perfis'
 
+    def __str__(self):
+        return f'{self.user.get_full_name()} - {self.re}-{self.dig}'
+
     @property
     def full_name(self):
-        return f' {self.user.last_name}'.strip()
-
-    def __str__(self):
-        return self.full_name
+        return f'{self.user.first_name} {self.user.last_name}'.strip()
+    
+    @property
+    def image(self):
+        """Retorna a imagem do cadastro associado ou None"""
+        if self.cadastro and hasattr(self.cadastro, 'imagens'):
+            imagem = self.cadastro.imagens.filter(is_profile=True).first()
+            return imagem.image if imagem else None
+        return None
 
     @property
     def grad(self):
@@ -100,11 +108,22 @@ class Profile(models.Model):
             return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Sd PM 2ºCL</span>')
 
 
-    def clean(self):
-        super().clean()
-        # Garantir que o CPF do perfil seja igual ao do cadastro
-        if self.cadastro and self.cpf != self.cadastro.cpf:
-            raise ValidationError("O CPF do perfil deve ser igual ao CPF do cadastro associado.")
+    def sync_with_cadastro(self):
+        """Sincroniza os dados com o cadastro do efetivo"""
+        if self.cadastro:
+            self.re = self.cadastro.re
+            self.dig = self.cadastro.dig
+            self.cpf = self.cadastro.cpf
+            
+            # Sincroniza o posto/grad com a última promoção
+            ultima_promocao = self.cadastro.promocoes.order_by('-ultima_promocao').first()
+            if ultima_promocao:
+                self.posto_grad = ultima_promocao.posto_grad
+            
+            # Sincroniza o tipo (administrativo/operacional) com os detalhes de situação
+            detalhes_situacao = self.cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+            if detalhes_situacao and detalhes_situacao.op_adm:
+                self.tipo = detalhes_situacao.op_adm.lower()
 
     def save(self, *args, **kwargs):
         # Se não tem cadastro associado mas tem CPF, tenta vincular
@@ -113,51 +132,55 @@ class Profile(models.Model):
                 cadastro = Cadastro.objects.get(cpf=self.cpf)
                 self.cadastro = cadastro
             except Cadastro.DoesNotExist:
-                # Cria um novo cadastro se não existir
-                cadastro = Cadastro.objects.create(cpf=self.cpf)
-                self.cadastro = cadastro
-            except Cadastro.MultipleObjectsReturned:
-                # Pega o primeiro se houver múltiplos (deveria ser único)
-                cadastro = Cadastro.objects.filter(cpf=self.cpf).first()
-                self.cadastro = cadastro
+                pass
         
-        # Sincroniza o CPF se houver cadastro associado
+        # Se tem cadastro, sincroniza os dados
         if self.cadastro:
-            self.cpf = self.cadastro.cpf
-            
+            self.sync_with_cadastro()
+        
         super().save(*args, **kwargs)
 
+    def clean(self):
+        super().clean()
+        if self.cadastro and self.cpf != self.cadastro.cpf:
+            raise ValidationError("O CPF do perfil deve ser igual ao CPF do cadastro associado.")
 
-# Receivers corrigidos
+# core/models.py
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         try:
-            profile = Profile.objects.create(user=instance)
+            # Tenta encontrar um cadastro pelo email (se o email do usuário for igual ao do cadastro)
+            cadastro = Cadastro.objects.filter(email=instance.email).first()
             
-            # Tenta vincular automaticamente pelo CPF se existir
-            if profile.cpf:
-                try:
-                    cadastro = Cadastro.objects.get(cpf=profile.cpf)
-                    profile.cadastro = cadastro
-                    profile.save()
-                except Cadastro.DoesNotExist:
-                    # Cria novo cadastro se não existir
-                    cadastro = Cadastro.objects.create(cpf=profile.cpf)
-                    profile.cadastro = cadastro
-                    profile.save()
+            # Se não encontrar pelo email, tenta pelo nome (pode ser menos preciso)
+            if not cadastro:
+                # Remove sufixos comuns de email para tentar casar com o nome
+                email_prefix = instance.email.split('@')[0]
+                cadastro = Cadastro.objects.filter(
+                    models.Q(nome__icontains=email_prefix) | 
+                    models.Q(nome_de_guerra__icontains=email_prefix)
+                ).first()
+            
+            # Cria o perfil com ou sem cadastro associado
+            profile = Profile.objects.create(user=instance, cadastro=cadastro)
+            
+            # Se encontrou um cadastro, sincroniza os dados
+            if cadastro:
+                profile.sync_with_cadastro()
+                profile.save()
+                
+                # Atualiza também o nome do usuário
+                instance.first_name = cadastro.nome_de_guerra
+                instance.save()
+                
         except Exception as e:
             print(f"Erro ao criar perfil: {e}")
 
-
-            
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     try:
         if hasattr(instance, 'profile'):
             instance.profile.save()
-        else:
-            # Se não existir, cria um novo perfil
-            Profile.objects.create(user=instance)
     except Exception as e:
         print(f"Erro ao salvar perfil para o usuário {instance.email}: {e}")

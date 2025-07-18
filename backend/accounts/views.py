@@ -9,21 +9,25 @@ from django.contrib.auth.views import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from backend.accounts.services import send_mail_to_user
+from backend.accounts.services import send_mail_to_user, log_user_action # Ensure log_user_action is imported
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem  # Ajuste a importaÃ§Ã£o conforme necessÃ¡rio
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 import socket
-from .models import User
+from .models import User, UserActionLog # Ensure UserActionLog is imported
 from .forms import CustomUserForm
 from django.utils import timezone
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from datetime import datetime
 from django.utils.timezone import make_naive, is_aware
-from .utils import get_client_ip, get_computer_name  # Atualize esta linha
+from .utils import get_client_ip, get_computer_name
+import logging
+logger = logging.getLogger(__name__)
+
 
 
 def my_logout(request):
@@ -35,22 +39,79 @@ def my_logout(request):
     logout(request)
     return redirect('core:capa')
 
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'first_name', 'last_name')
 
+
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.contrib.auth import get_user_model
+from django.shortcuts import render, redirect
+from .forms import CustomUserForm
+# from .services import log_user_action # Already imported at the top
+import random
+import string
 
 def signup(request):
-    '''
-    Cadastra Usuário.
-    '''
-    template_name = 'registration/registration_form.html'
-    form = CustomUserForm(request.POST or None)
+    logger.info("Entrou na view signup.")
+    signup_data = request.session.get('signup_data', None)
+    
+    if not signup_data:
+        logger.warning("signup_data não encontrado na sessão. Redirecionando para verificar_cpf.")
+        return redirect('verificar_cpf')
 
     if request.method == 'POST':
+        logger.info("Requisição POST recebida em signup.")
+        form = CustomUserForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            send_mail_to_user(request=request, user=user)
-            return redirect('login')
-
-    return render(request, template_name)
+            logger.info("Formulário de CustomUser é válido.")
+            try:
+                # Salva o usuário e obtém a senha gerada
+                user, password = form.save() 
+                logger.info(f"Usuário {user.email} salvo com sucesso.")
+                
+                # Envia o email com a senha
+                current_site = get_current_site(request)
+                subject = 'Sua conta foi criada'
+                message = render_to_string('email/account_created_email.html', {
+                    'user': user,
+                    'password': password,
+                    'domain': current_site.domain,
+                })
+                user.email_user(subject, message)
+                logger.info(f"Email enviado para {user.email}.")
+                
+                # Log da ação
+                log_user_action(user, "Conta criada com senha gerada automaticamente", request)
+                logger.info("Ação de criação de conta logada.")
+                
+                # Limpa a sessão
+                if 'signup_data' in request.session:
+                    del request.session['signup_data']
+                    logger.info("signup_data removido da sessão.")
+                
+                logger.info("Redirecionando para a página de login.")
+                return redirect('login') 
+            
+            except Exception as e:
+                logger.error(f"Erro ao criar conta ou enviar email: {str(e)}", exc_info=True)
+                form.add_error(None, f"Erro ao enviar email: {str(e)}")
+        else:
+            logger.warning(f"Formulário de CustomUser inválido. Erros: {form.errors}")
+            # Se o formulário não é válido, ele vai renderizar a página novamente com os erros
+    else:
+        logger.info("Requisição GET recebida em signup. Pré-preenchendo formulário.")
+        initial = {
+            'email': signup_data['email'],
+            'first_name': signup_data['first_name'],
+            'last_name': signup_data['last_name']
+        }
+        form = CustomUserForm(initial=initial)
+    
+    logger.info("Renderizando registration_form.html.")
+    return render(request, 'registration/registration_form.html', {'form': form})
 
 
 class MyPasswordResetConfirm(PasswordResetConfirmView):
@@ -91,44 +152,41 @@ class MyPasswordResetDone(PasswordResetDoneView):
 User = get_user_model()
 
 def verificar_cpf(request):
-    '''
-    Verifica se o CPF está cadastrado e se o usuário é ativo.
-    '''
     template_name = 'registration/verificacao_cpf.html'
     message = None
 
     if request.method == 'POST':
         cpf = request.POST.get('cpf')
         try:
-            # Verifica se o CPF está cadastrado na model Cadastro
+            # Verifica se o CPF está cadastrado
             cadastro = Cadastro.objects.get(cpf=cpf)
-            print(f"Cadastro encontrado: {cadastro}")
             
-            # Verifica se o usuário é ativo na model DetalhesSituacao
-            detalhes_situacao = DetalhesSituacao.objects.get(cadastro=cadastro)
-            print(f"Detalhes da situação encontrados: {detalhes_situacao}")
-            print(f"Situação: {detalhes_situacao.situacao}")
+            # Verifica se o usuário é ativo
+            detalhes_situacao = DetalhesSituacao.objects.filter(
+                cadastro=cadastro
+            ).order_by('-data_alteracao').first()
             
-            if detalhes_situacao.situacao == 'ATIVO':
-                # Verifica se o usuário já está cadastrado na model User
-                if User.objects.filter(email=cadastro.email).exists():
+            if detalhes_situacao and detalhes_situacao.situacao == 'Efetivo':
+                # Verifica se o usuário já está cadastrado
+                if get_user_model().objects.filter(email=cadastro.email).exists():
                     message = 'Usuário já cadastrado. Por favor, faça login.'
                 else:
-                    print("Redirecionando para a página de cadastro...")
-                    return redirect('signup')  # Redireciona para a página de cadastro
+                    # Armazena os dados na sessão para o signup
+                    request.session['signup_data'] = {
+                        'email': cadastro.email,
+                        'first_name': cadastro.nome.split()[0], # Assuming first name is the first part
+                        'last_name': cadastro.nome_de_guerra,
+                        'cpf': cadastro.cpf
+                    }
+                    return redirect('signup')
             else:
                 message = 'Você não é um funcionário ativo. Por favor, procure o setor de RH.'
         except Cadastro.DoesNotExist:
             message = 'CPF não encontrado. Por favor, procure o setor de RH.'
-        except DetalhesSituacao.DoesNotExist:
-            message = 'Detalhes da situação não encontrados. Por favor, procure o setor de RH.'
         except Exception as e:
             message = f"Ocorreu um erro: {e}"
-            print(f"Erro: {e}")
 
     return render(request, template_name, {'message': message})
-
-
 
 @login_required
 def user_list(request):
@@ -149,12 +207,27 @@ def user_detail(request, pk):
 
 def user_create(request):
     template_name = 'accounts/user_form.html'
-    form = CustomUserForm(request.POST or None)
+    
     if request.method == 'POST':
+        form = CustomUserForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Here you can add logic to send the password by email
             log_user_action(request.user, f"Created user {user.email}", request)
             return redirect('user_detail', pk=user.pk)
+    else:
+        # Verifica se veio da verificação de CPF
+        if 'signup_data' in request.session:
+            signup_data = request.session.pop('signup_data') # Pop to remove it after use
+            initial = {
+                'email': signup_data['email'],
+                'first_name': signup_data['first_name'],
+                'last_name': signup_data['last_name']
+            }
+            form = CustomUserForm(initial=initial)
+        else:
+            form = CustomUserForm()
+    
     context = {'form': form}
     return render(request, template_name, context)
 
@@ -178,8 +251,7 @@ def user_update(request, pk):
     return render(request, template_name, context)
 
 
-
-from .services import log_user_action
+# from .services import log_user_action # Already imported at the top
 
 def login_view(request):
     form = AuthenticationForm(request, data=request.POST or None)
@@ -240,8 +312,9 @@ def access_history(request):
         logout_time = timezone.localtime(logout_time) if logout_time else None
         
         duration = user.get_login_duration(login_time_str, logout_time_str)
-        formatted_login_time = user.format_datetime(login_time.isoformat()) if login_time else None
-        formatted_logout_time = user.format_datetime(logout_time.isoformat()) if logout_time else None
+        # Ensure format_datetime handles None gracefully, or only call it if time exists
+        formatted_login_time = user.format_datetime(login_time.isoformat()) if login_time else "N/A"
+        formatted_logout_time = user.format_datetime(logout_time.isoformat()) if logout_time else "N/A"
         
         login_history.append({
             'login_time': formatted_login_time,
@@ -249,7 +322,7 @@ def access_history(request):
             'computer_name': entry.get('computer_name'),
             'logout_time': formatted_logout_time,
             'duration': duration,
-            'is_online': user.is_online,
+            'is_online': user.is_online, # This seems to apply to the current user's online status, not past entries
         })
     return render(request, 'accounts/access_history.html', {'login_history': login_history})
 
@@ -271,12 +344,18 @@ def all_user_action_history(request):
         action_logs = action_logs.filter(user__email=selected_user)
 
     if start_date:
-        start_date = timezone.make_aware(parse_datetime(start_date))
-        action_logs = action_logs.filter(timestamp__gte=start_date)
+        # Make sure the start_date is parsed as datetime and then made timezone aware
+        start_date_obj = parse_datetime(start_date)
+        if start_date_obj and not is_aware(start_date_obj):
+            start_date_obj = timezone.make_aware(start_date_obj)
+        action_logs = action_logs.filter(timestamp__gte=start_date_obj)
 
     if end_date:
-        end_date = timezone.make_aware(parse_datetime(end_date))
-        action_logs = action_logs.filter(timestamp__lte=end_date)
+        # Make sure the end_date is parsed as datetime and then made timezone aware
+        end_date_obj = parse_datetime(end_date)
+        if end_date_obj and not is_aware(end_date_obj):
+            end_date_obj = timezone.make_aware(end_date_obj)
+        action_logs = action_logs.filter(timestamp__lte=end_date_obj)
 
     action_logs = action_logs.order_by('-timestamp')
 
@@ -284,13 +363,12 @@ def all_user_action_history(request):
         'action_logs': action_logs,
         'users': users,
         'selected_user': selected_user,
-        'start_date': start_date,
-        'end_date': end_date,
+        'start_date': start_date, # Pass back for form pre-filling
+        'end_date': end_date,     # Pass back for form pre-filling
     })
 
 
-
-from .models import UserActionLog
+# from .models import UserActionLog # Already imported at the top
 
 @login_required
 def user_action_history(request, pk):
