@@ -1,0 +1,974 @@
+{% load static %}
+{% load efetivo_filters %}
+{% load cat_efetivo_tags %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil Militar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .main_bg {
+            background: url('bg.png');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+        }
+        
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+        
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+       
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                backdrop-filter: none;
+            }
+            
+            .main_bg {
+                animation: none;
+            }
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .modal-rules-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .modal-rules-list li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-icon-success {
+            color: green;
+            margin-right: 0.5rem;
+        }
+        .modal-close-btn {
+            background-color: #3B82F6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Estilos para as tabs */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+
+
+        .tab-button:hover:not(.active) {
+            border-bottom-color: #93C5FD;
+        }
+
+        .tab-content {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Estilos para seções */
+        .section-card {
+            @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+        }
+
+        .section-title {
+            @apply text-xl font-bold mb-4 flex items-center;
+        }
+
+        .info-grid {
+            @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+        }
+
+        .info-item {
+            @apply p-3 bg-gray-50 rounded-lg;
+        }
+
+
+        .badge-count {
+            @apply bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded;
+        }
+
+
+        .status-pill {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
+
+        /* Dark mode toggle */
+        .toggle-checkbox:checked {
+            @apply right-0 border-green-400;
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            @apply bg-green-400;
+            background-color: #68D391;
+        }
+ 
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+
+    <!-- Dark mode toggle button 
+    <div class="fixed top-4 right-4 z-50">
+        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+            <input type="checkbox" name="toggle" id="toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+            <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+        </div>
+        <label for="toggle" class="text-xs text-gray-700 dark:text-gray-300">Dark Mode</label>
+    </div>-->
+
+    <div class="mt-4 relative grid grid-cols-1 md:grid-cols-3 auto-rows-min gap-4 w-full md:w-11/12 lg:w-5/6 p-4 md:p-6 glass-card rounded-lg shadow-lg h-fit">
+<header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
+    <div class="flex items-center w-full">
+        <figure class="mr-2">
+            <img src="{% static 'img\logo-siscoe- (2).png' %}" alt="logo" class="w-200 h-20 rounded-full">
+        </figure>
+        <div class="flex-grow text-center">
+            <span class="text-2xl font-bold uppercase">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+        </div>
+        <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+            <a href="{% url 'core:index' %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Voltar
+            </a>
+
+            <button id="darkModeToggle"
+                    class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                const sunIcon = document.getElementById('sunIcon');
+                const moonIcon = document.getElementById('moonIcon');
+                const body = document.body;
+
+                // Remove qualquer classe de cor de fundo inicial que possa conflitar
+                body.classList.remove('bg-gray-200', 'bg-gray-900'); 
+                
+                // Verifica se há preferência salva
+                const savedMode = localStorage.getItem('darkMode');
+                
+                // Aplica o modo inicial
+                if (savedMode === 'dark') {
+                    enableDarkMode();
+                } else {
+                    // Define o modo padrão como light se não houver preferência salva
+                    disableDarkMode(); 
+                }
+
+                // Alterna entre modos
+                darkModeToggle.addEventListener('click', function() {
+                    if (body.classList.contains('dark-mode')) { // Usa 'dark-mode' como marcador
+                        disableDarkMode();
+                    } else {
+                        enableDarkMode();
+                    }
+                });
+
+                function enableDarkMode() {
+                    body.classList.add('dark-mode'); // Adiciona um marcador 'dark-mode'
+                    body.classList.remove('bg-gray-200'); // Remove o fundo claro
+                    body.classList.add('bg-gray-900');    // Adiciona o fundo escuro
+                    localStorage.setItem('darkMode', 'dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
+
+                function disableDarkMode() {
+                    body.classList.remove('dark-mode'); // Remove o marcador 'dark-mode'
+                    body.classList.remove('bg-gray-900'); // Remove o fundo escuro
+                    body.classList.add('bg-gray-200');    // Adiciona o fundo claro
+                    localStorage.setItem('darkMode', 'light');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            });
+        </script>
+
+    </div>
+</header>
+
+         <!-- Imagem de Perfil -->
+
+        <!-- Container Principal com tamanho padrão -->
+        <div class="w-full mx-auto relative" >
+        <!-- Card de Perfil -->
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden relative z-10 h-full">
+            <!-- Seção Visual (Cabeçalho + Foto) ocupando 70% -->
+            <div class="h-[70%] bg-gradient-to-b from-gray-900 to-blue-900 relative">
+            <!-- Overlay de textura -->
+            <div class="absolute inset-0 bg-gray-800 opacity-50 mix-blend-lighten"></div>
+            
+            <!-- Container da Foto 3x4 -->
+            <div class="absolute -bottom-1/4 left-1/2 transform -translate-x-1/2 rounded-lg">
+                <div class="profile relative rounded-lg" style="width: 360px; height: 480px;"> <!-- Proporção 3x4 -->
+                <label for="imageUploadInput" class="cursor-pointer block h-full">
+                    <figure class="relative h-full rounded-lg">
+                    {% with cadastro.imagens.first as imagem %}
+                    {% if imagem %}
+                        <img id="profileImage" 
+                            src="{{ imagem.image.url }}" 
+                            alt="Foto do Militar" 
+                            class="w-full h-full object-cover border-4 border-white rounded-lg shadow-xl"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% else %}
+                        <img id="profileImage" 
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234b5563' d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.078 1.182 8.25 3.129zM12 12a6 6 0 100-12 6 6 0 000 12z'/%3E%3C/svg%3E" 
+                            alt="Foto Padrão" 
+                            class="w-full h-full object-cover border-4 border-white shadow-xl bg-gray-200"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <!-- Overlay hover -->
+                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="text-white text-sm font-medium">Alterar Foto</span>
+                    </div>
+                    
+                    <!-- Botão da câmera -->
+                    {% if request.user == cadastro.user or request.user.is_superuser %}
+                        <div class="absolute bottom-2 right-2">
+                            <button onclick="showImageRules()" 
+                                    class="group relative p-2 rounded-full cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl">
+                                <!-- Fundo gradiente com animação -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full opacity-100 group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300"></div>
+                                
+                                <!-- Efeito de brilho no hover -->
+                                <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white mix-blend-overlay"></div>
+                                
+                                <!-- Borda sutil -->
+                                <div class="absolute inset-0 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"></div>
+                                
+                                <!-- Ícone centralizado -->
+                                <div class="relative z-10 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-200"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Tooltip (opcional) -->
+                                <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    Alterar Foto
+                                </span>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </figure>
+                </label>
+                </div>
+            </div>
+            </div>
+
+            <!-- Informações do Usuário (30% restante) -->
+            <div class="h-[30%] pt-16 pb-6 px-6 text-center flex flex-col justify-center">
+            <h2 class="text-2xl font-bold text-gray-800">{{ cadastro.nome_completo }}</h2>
+            <p class="text-gray-600 text-sm mt-1">@{{ cadastro.user.username|default:"militar" }}</p>
+            
+            <!-- Estatísticas -->
+            <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex-grow text-center">
+                            <span class="text-sm font-bold uppercase dark:text-white">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+                        </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Efeito de sombra -->
+        <div class="absolute inset-x-0 bottom-0 h-20 transform scale-x-75 scale-y-125 -translate-y-4">
+            <div class="h-full w-full bg-gradient-to-t from-black opacity-10 rounded-b-xl blur"></div>
+        </div>
+        </div>
+
+        <!-- Modal de regras -->
+        <div id="imageRulesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4 shadow-xl">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Regras para Foto Militar</h3>
+                <ul class="text-gray-700 mb-4 list-disc pl-5 space-y-2">
+                    <li>Tamanho máximo: <strong>2MB</strong></li>
+                    <li>Formato: <strong>3x4 (retrato)</strong></li>
+                    <li>Uniforme: <strong>Fardado obrigatoriamente</strong></li>
+                    <li>Fundo: <strong>Branco ou neutro</strong></li>
+                    <li>Expressão: <strong>Rosto visível e sério</strong></li>
+                </ul>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="hideImageRules()" 
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                        Cancelar
+                    </button>
+                    <button onclick="acceptRulesAndOpenFileInput()" 
+                            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        Entendi, Prosseguir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+         <script>
+                // Mostra o modal com as regras
+                function showImageRules() {
+                    document.getElementById('imageRulesModal').classList.remove('hidden');
+                }
+                
+                // Esconde o modal
+                function hideImageRules() {
+                    document.getElementById('imageRulesModal').classList.add('hidden');
+                }
+                
+                // Aceita as regras e abre o seletor de arquivos
+                function acceptRulesAndOpenFileInput() {
+                    document.getElementById('imageRulesModal').classList.add('hidden');
+                    document.getElementById('imageUploadInput').click();
+                }
+                
+                // Função para lidar com o upload da imagem
+                function handleImageUpload(event) {
+                    const input = event.target;
+                    const file = input.files[0];
+                    
+                    if (!file) return;
+                    
+                    // Validações
+                    if (file.size > 2 * 1024 * 1024) { // 2MB
+                        alert('A imagem deve ter no máximo 2MB');
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Verificação de proporção
+                    const img = new Image();
+                    img.onload = function() {
+                        const width = this.width;
+                        const height = this.height;
+                        const ratio = width / height;
+                        
+                        // Proporção 3x4 tem ratio de 0.75 (3/4) com margem de 10%
+                        if (Math.abs(ratio - 0.75) > 0.1) {
+                            alert('A imagem deve estar no padrão 3x4 (retrato)');
+                            input.value = '';
+                            return;
+                        }
+                        
+                        // Mostra preview
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('profileImage').src = e.target.result;
+                            
+                            // Envia o formulário automaticamente
+                            const form = document.getElementById('imageForm');
+                            const formData = new FormData(form);
+                            
+                            fetch(form.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                                }
+                            }).then(response => {
+                                if (response.ok) {
+                                    window.location.reload();
+                                }
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    };
+                    img.src = URL.createObjectURL(file);
+                }
+        </script>
+   
+        <!-- Informações Pessoais -->
+<!-- Substituição das seções Informações Pessoais e Datas Importantes pelo Formulário de Cursos -->
+<section class="glass-card rounded-lg p-6 shadow-md col-span-1 md:col-span-2">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>
+            Cadastro de Cursos
+        </h2>
+        <span class="text-xs text-gray-500">Adicione seus cursos realizados</span>
+    </div>
+
+    <form id="cursoForm" method="post" action="{% url 'cursos:curso_create_self' %}">
+        {% csrf_token %}
+        
+        <div id="curso-forms-container" class="space-y-6">
+            <div class="curso-form-instance bg-white p-4 rounded-xl shadow-sm border border-gray-200" data-index="0">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Dados do Curso #1</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label for="curso_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Tipo de Curso *</label>
+                        <div class="relative">
+                            <select name="curso_0" id="curso_0" required
+                                    class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                           shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                           transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                           appearance-none">
+                                <option value="" disabled selected>Selecione um curso</option>
+                                {% for value, label in curso_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="data_publicacao_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação *</label>
+                        <div class="relative">
+                            <input type="date" id="data_publicacao_0" name="data_publicacao_0" required
+                                   class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                          shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                          transition-all duration-200 placeholder-gray-500
+                                          hover:border-gray-400 text-gray-900 font-medium
+                                          [&::-webkit-calendar-picker-indicator]:opacity-0
+                                          bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                          bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="bol_publicacao_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL Publicação *</label>
+                        <input type="text" id="bol_publicacao_0" name="bol_publicacao_0" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                      shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                      transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                    </div>
+                    
+                    <div class="space-y-2 lg:col-span-3">
+                        <label for="observacoes_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                        <textarea id="observacoes_0" name="observacoes_0" rows="3"
+                                  class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                         shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                         transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-end mt-6">
+            <button type="button" id="addCursoButton"
+                    class="flex items-center justify-center px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg
+                           shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
+                           transition-all duration-200">
+                <i class="fas fa-plus mr-2"></i> Adicionar Outro Curso
+            </button>
+            
+            <button type="button" id="cancelCursoButton"
+                    class="flex items-center justify-center px-5 py-2.5 bg-red-600 text-white font-medium rounded-lg
+                           shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                           transition-all duration-200 hidden">
+                <i class="fas fa-minus mr-2"></i> Remover Último Curso
+            </button>
+            
+            <button type="submit"
+                    class="flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg
+                           shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                           transition-all duration-200">
+                <i class="fas fa-save mr-2"></i> Salvar Curso(s)
+            </button>
+        </div>
+
+        <input type="hidden" id="num_cursos" name="num_cursos" value="1">
+    </form>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addCursoButton = document.getElementById('addCursoButton');
+        const cancelCursoButton = document.getElementById('cancelCursoButton');
+        const cursoFormsContainer = document.getElementById('curso-forms-container');
+        const numCursosInput = document.getElementById('num_cursos');
+        let cursoFormIndex = 1;
+
+        if (addCursoButton) {
+            addCursoButton.addEventListener('click', function() {
+                const newIndex = cursoFormIndex;
+                
+                const newFormHtml = `
+                    <div class="curso-form-instance bg-white p-4 rounded-xl shadow-sm border border-gray-200 mt-4" data-index="${newIndex}">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Dados do Curso #${newIndex + 1}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="space-y-2">
+                                <label for="curso_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Tipo de Curso *</label>
+                                <div class="relative">
+                                    <select name="curso_${newIndex}" id="curso_${newIndex}" required
+                                            class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                   shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                   transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                   appearance-none">
+                                        <option value="" disabled selected>Selecione um curso</option>
+                                        {% for value, label in curso_choices %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label for="data_publicacao_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação *</label>
+                                <div class="relative">
+                                    <input type="date" id="data_publicacao_${newIndex}" name="data_publicacao_${newIndex}" required
+                                           class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                  shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                  transition-all duration-200 placeholder-gray-500
+                                                  hover:border-gray-400 text-gray-900 font-medium
+                                                  [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                  bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                                  bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label for="bol_publicacao_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL Publicação *</label>
+                                <input type="text" id="bol_publicacao_${newIndex}" name="bol_publicacao_${newIndex}" required
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                              shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                              transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                            </div>
+                            
+                            <div class="space-y-2 lg:col-span-3">
+                                <label for="observacoes_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                <textarea id="observacoes_${newIndex}" name="observacoes_${newIndex}" rows="3"
+                                          class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                 transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                cursoFormsContainer.insertAdjacentHTML('beforeend', newFormHtml);
+                cursoFormIndex++;
+                numCursosInput.value = cursoFormIndex;
+                cancelCursoButton.classList.remove('hidden');
+            });
+        }
+
+        if (cancelCursoButton) {
+            cancelCursoButton.addEventListener('click', function() {
+                const forms = cursoFormsContainer.querySelectorAll('.curso-form-instance');
+                if (forms.length > 1) {
+                    forms[forms.length - 1].remove();
+                    cursoFormIndex--;
+                    numCursosInput.value = cursoFormIndex;
+                    
+                    if (cursoFormIndex === 1) {
+                        cancelCursoButton.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        const cursoForm = document.getElementById('cursoForm');
+        if (cursoForm) {
+            cursoForm.addEventListener('submit', function(e) {
+                let isValid = true;
+                const forms = cursoFormsContainer.querySelectorAll('.curso-form-instance');
+
+                forms.forEach((formInstance) => {
+                    const index = formInstance.dataset.index;
+                    const requiredFields = [
+                        `curso_${index}`,
+                        `data_publicacao_${index}`,
+                        `bol_publicacao_${index}`
+                    ];
+
+                    requiredFields.forEach(fieldName => {
+                        const field = formInstance.querySelector(`[name="${fieldName}"]`);
+                        if (field && !field.value.trim()) {
+                            field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        }
+                    });
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Por favor, preencha todos os campos obrigatórios (*) em todos os cursos.');
+                }
+            });
+        }
+
+        cursoFormsContainer.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                e.target.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+            }
+        });
+    });
+</script>
+
+
+        <!-- Situação Militar -->
+        <section class="glass-card rounded-lg p-6 shadow-md">
+            <div class="mb-8">
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Situação Militar
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Situação</p>
+                        <p class="text-sm font-medium" id="situacao">{{ detalhes.situacao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">SGB</p>
+                        <p class="text-sm font-medium" id="sgb">{{ detalhes.sgb }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-sm mr-1"></i>Posto/Seção</p>
+                        <p class="text-sm font-medium" id="postoSecao">{{ detalhes.posto_secao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Adido</p>
+                        <p class="text-sm font-medium" id="adido">{{ detalhes.esta_adido }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Função</p>
+                        <p class="text-sm font-medium" id="funcao">{{ detalhes.funcao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Prontidão</p>
+                        <p class="text-sm font-medium" id="prontidao">{{ detalhes.prontidao_badge|safe }}</p>
+                    </div>
+                </div>
+                <div class="info-value mt-8">
+                    <p class="text-sm text-gray-500">Status Atual</p>
+                    <span class="status-pill {{ categoria_atual.status_display.classe }}">
+                        <i class="fas {{ categoria_atual.status_display.icone }} mr-1"></i>
+                        {{ categoria_atual.status_display.texto }}
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Promoção
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Posto/Graduação</p>
+                        <p class="text-sm font-medium" id="postoGraduacao">{{ promocao.grad|safe }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Quadro</p>
+                        <p class="text-sm font-medium" id="quadro">{{ promocao.get_quadro_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Grupo</p>
+                        <p class="text-sm font-medium" id="grupo">{{ promocao.get_grupo_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Última Promoção</p>
+                        <p class="text-sm font-medium" id="ultimaPromocao">{{ promocao.ultima_promocao|date:'d/m/Y' }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- area de detalhamento -->     
+        <section class="glass-card rounded-lg p-8 shadow-md col-span-1 md:col-span-2">
+            <div class="tabs mb-8">
+                <ul class="flex relative pb-2 border-b border-gray-200 overflow-x-auto">
+
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="medals">
+                        <i class="fas fa-medal mr-2"></i>
+                        <span class="text-base font-medium">Medalhas</span>
+                    </li>
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="courses">
+                        <i class="fas fa-graduation-cap mr-2"></i>
+                        <span class="text-base font-medium">Cursos</span>
+                    </li>
+
+                </ul>
+            </div>
+
+        <!-- Conteúdo das abas -->
+
+            <!-- area de Medalhas -->   
+            <div class="tab-content hidden" id="medals-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-medal mr-2 text-blue-500"></i>
+                            Medalhas
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ medalhas_do_militar|length }} registro{{ medalhas_do_militar|length|pluralize }}
+                        </span>
+                    </div>
+                    
+                    {% if medalhas_do_militar %}
+                        <div class="overflow-x-auto">
+                            <table id="medalsTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Honraria</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Publicação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for medalha in medalhas_do_militar %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ medalha.get_honraria_display }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            {{ medalha.data_publicacao_lp|date:"d/m/Y" }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">Nenhuma medalha registrada</p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+             <!-- area de Cursos -->             
+            <div class="tab-content hidden" id="courses-tab">
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>
+                            Cursos
+                        </h3>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {{ cursos_do_militar|length }} registro{{ cursos_do_militar|length|pluralize }}
+                        </span>
+                    </div>
+                    
+                    {% if cursos_do_militar %}
+                        <div class="overflow-x-auto">
+                            <table id="coursesTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Publicação</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for curso in cursos_do_militar %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {{ curso.get_curso_display }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            {{ curso.data_publicacao|date:"d/m/Y" }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">Nenhum curso registrado</p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+        </section>
+
+        
+
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Configuração e Inicialização do Simple-DataTables ---
+        const commonConfig = {
+            perPage: 10,
+            perPageSelect: [5, 10, 15, 20, 25],
+            labels: {
+                placeholder: "Pesquisar...",
+                perPage: "{select} por página",
+                noRows: "Nenhum registro",
+                info: "Mostrando {start}-{end} de {rows}",
+                noResults: "Nenhum resultado",
+                loading: "Carregando...",
+                infoFiltered: "(filtrado de {rowsTotal})",
+                previous: "Anterior",
+                next: "Próximo",
+                first: "Primeiro",
+                last: "Último"
+            },
+            classes: {
+                wrapper: "p-3",
+                active: "bg-blue-50 text-blue-600",
+                disabled: "opacity-50",
+                selector: "px-2 py-1 border rounded",
+                table: "w-full divide-y divide-gray-200",
+                thead: "",
+                th: "px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider",
+                tbody: "bg-white divide-y divide-gray-200",
+                tr: "hover:bg-gray-50",
+                td: "px-4 py-3 whitespace-nowrap text-center text-sm",
+            }
+        };
+
+        // Mapeia IDs das tabelas para suas instâncias Simple-DataTables
+        const dataTableInstances = {};
+
+        function initializeDataTable(tableId) {
+            const tableElement = document.getElementById(tableId);
+            if (tableElement && !dataTableInstances[tableId]) {
+                dataTableInstances[tableId] = new simpleDatatables.DataTable(`#${tableId}`, commonConfig);
+            }
+        }
+
+        // Inicializa todas as tabelas
+        initializeDataTable('movimentacoesTable');
+        initializeDataTable('promocoesTable');
+        initializeDataTable('lpsTable');
+        initializeDataTable('medalsTable');
+        initializeDataTable('coursesTable');
+
+        // --- Funcionalidade de Troca de Abas ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove classe ativa de todos os botões e conteúdos
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.add('hidden'));
+
+                // Adiciona classe ativa ao botão clicado
+                this.classList.add('active');
+
+                // Mostra o conteúdo correspondente
+                const tabId = this.getAttribute('data-tab');
+                const targetContent = document.getElementById(`${tabId}-tab`);
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+
+                    // Redesenha a tabela Simple-DataTables quando a aba é mostrada
+                    // Isso é útil para tabelas que podem estar em abas inicialmente ocultas
+                    const tableIdForTab = {
+                        'military': 'movimentacoesTable',
+                        'promotion': 'promocoesTable',
+                        'lps': 'lpsTable',
+                        'medals': 'medalsTable',
+                        'courses': 'coursesTable'
+                    };
+                    const currentTableId = tableIdForTab[tabId];
+                    if (currentTableId && dataTableInstances[currentTableId]) {
+                        dataTableInstances[currentTableId].update();
+                    }
+                }
+            });
+        });
+
+        // --- Funcionalidade de Upload de Imagem com Modal ---
+        const profileImageLabel = document.querySelector('label[for="imageUploadInput"]');
+        const imageUploadInput = document.getElementById('imageUploadInput');
+        const profileImage = document.getElementById('profileImage');
+        const imageRulesModal = document.getElementById('imageRulesModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        if (profileImageLabel && imageUploadInput && profileImage && imageRulesModal && closeModalBtn) {
+            profileImageLabel.addEventListener('click', function() {
+                imageRulesModal.classList.remove('hidden'); // Mostra o modal
+            });
+
+            closeModalBtn.addEventListener('click', function() {
+                imageRulesModal.classList.add('hidden'); // Oculta o modal
+                imageUploadInput.click(); // Dispara o input de arquivo após fechar o modal
+            });
+
+            imageUploadInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        profileImage.src = event.target.result;
+                        // Aqui você pode adicionar código para enviar a imagem para o servidor
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+</body>
+
+</html> 

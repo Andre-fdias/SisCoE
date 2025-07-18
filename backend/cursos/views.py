@@ -734,3 +734,232 @@ def import_cursos_csv(request):
 def importar_cursos_view(request):
     # Esta view renderiza o formulário de importação para cursos.
     return render(request, 'cursos/importar_cursos.html', {'title': 'Importar Cursos'})
+
+
+
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+
+import datetime as dt
+import traceback
+
+@login_required
+def user_curso_list(request):
+    """
+    Exibe a lista de cursos do usuário logado.
+    """
+    cadastro = request.user.cadastro
+    cursos = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
+    
+    context = {
+        'cursos': cursos,
+        'title': "Meus Cursos"
+    }
+    return render(request, 'cursos/usuario_cursos.html', context)
+
+@login_required
+def user_curso_create(request):
+    """
+    Permite o cadastro de novos cursos para o próprio usuário logado.
+    Processa múltiplos cursos em uma única requisição POST.
+    """
+    cadastro = request.user.cadastro
+    context = {
+        'title': "Cadastrar Meus Cursos",
+        'curso_choices': Curso.CURSOS_CHOICES,
+        'cadastro': cadastro
+    }
+
+    if request.method == 'POST':
+        num_cursos = int(request.POST.get('num_cursos', 0))
+        cursos_salvos_count = 0
+        
+        for i in range(num_cursos):
+            curso_tipo = request.POST.get(f'curso_{i}')
+            data_publicacao_str = request.POST.get(f'data_publicacao_{i}')
+            bol_publicacao = request.POST.get(f'bol_publicacao_{i}')
+            observacoes = request.POST.get(f'observacoes_{i}', '')
+
+            # Validações básicas para cada curso
+            if not curso_tipo or not data_publicacao_str or not bol_publicacao:
+                messages.warning(request, f'Ignorando curso {i+1}: Campos obrigatórios não preenchidos.')
+                continue
+
+            try:
+                data_publicacao = dt.datetime.strptime(data_publicacao_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.warning(request, f'Ignorando curso {i+1}: Formato de data inválido. Use AAAA-MM-DD.')
+                continue
+
+            Curso.objects.create(
+                cadastro=cadastro,
+                curso=curso_tipo,
+                data_publicacao=data_publicacao,
+                bol_publicacao=bol_publicacao,
+                observacoes=observacoes,
+                usuario_alteracao=request.user
+            )
+            cursos_salvos_count += 1
+        
+        if cursos_salvos_count > 0:
+            messages.success(request, f'{cursos_salvos_count} curso(s) cadastrado(s) com sucesso!')
+            return redirect('cursos:user_curso_list')
+        else:
+            messages.info(request, 'Nenhum curso foi cadastrado. Verifique os dados e tente novamente.')
+    
+    return render(request, 'cursos/usuario_curso_form.html', context)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def user_curso_edit(request, pk):
+    """
+    Edita um curso existente do usuário logado.
+    """
+    curso = get_object_or_404(Curso, pk=pk)
+    
+    # Verifica se o curso pertence ao usuário logado
+    if curso.cadastro != request.user.cadastro:
+        return JsonResponse({'success': False, 'error': 'Acesso não autorizado'}, status=403)
+
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'curso': {
+                'id': curso.id,
+                'curso': curso.curso,
+                'data_publicacao': curso.data_publicacao.strftime('%Y-%m-%d'),
+                'bol_publicacao': curso.bol_publicacao,
+                'observacoes': curso.observacoes
+            }
+        })
+
+    elif request.method == 'POST':
+        try:
+            curso.curso = request.POST.get('curso')
+            curso.data_publicacao = request.POST.get('data_publicacao')
+            curso.bol_publicacao = request.POST.get('bol_publicacao')
+            curso.observacoes = request.POST.get('observacoes')
+            curso.usuario_alteracao = request.user
+            curso.save()
+            
+            return JsonResponse({'success': True, 'message': 'Curso atualizado com sucesso!'})
+        
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required
+@require_http_methods(["POST"])
+def user_curso_delete(request, pk):
+    """
+    Exclui um curso do usuário logado.
+    """
+    curso = get_object_or_404(Curso, pk=pk)
+    
+    # Verifica se o curso pertence ao usuário logado
+    if curso.cadastro != request.user.cadastro:
+        return JsonResponse({
+            'success': False,
+            'error': 'Acesso não autorizado'
+        }, status=403)
+
+    try:
+        curso.delete()
+        return JsonResponse({'success': True, 'message': 'Curso excluído com sucesso!'})
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro ao excluir o curso: {str(e)}'
+        }, status=400)
+    
+
+    # backend/cursos/views.py
+
+# backend/cursos/views.py
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import ProtectedError
+from datetime import datetime as dt
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from .models import Medalha, Cadastro, Curso # Certifique-se de importar Curso se ainda não o fez
+from backend.core.models import Profile
+from datetime import datetime
+import json
+
+
+# ... suas outras views ...
+@login_required
+def user_curso_create(request):
+    """
+    Cria novos cursos para o usuário logado.
+    """
+    try:
+        # Obtém o perfil do usuário logado
+        user_profile = Profile.objects.get(user=request.user)
+        
+        if not user_profile.cadastro:
+            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', 
+                         extra_tags='bg-red-500 text-white p-4 rounded')
+            return redirect('core:index')  # Use uma URL válida
+        
+        cadastro = user_profile.cadastro
+
+        if request.method == 'POST':
+            num_cursos = int(request.POST.get('num_cursos', 1))
+            success_count = 0
+
+            for i in range(num_cursos):
+                curso = request.POST.get(f'curso_{i}')
+                data_publicacao = request.POST.get(f'data_publicacao_{i}')
+                bol_publicacao = request.POST.get(f'bol_publicacao_{i}')
+                observacoes = request.POST.get(f'observacoes_{i}', '')
+
+                if all([curso, data_publicacao, bol_publicacao]):
+                    try:
+                        # Cria o curso associado ao cadastro do usuário
+                        Curso.objects.create(
+                            cadastro=cadastro,
+                            curso=curso,
+                            data_publicacao=data_publicacao,
+                            bol_publicacao=bol_publicacao,
+                            observacoes=observacoes,
+                            usuario_cadastro=request.user
+                        )
+                        success_count += 1
+                    except Exception as e:
+                        messages.error(request, f'Erro ao salvar curso #{i+1}: {str(e)}',
+                                     extra_tags='bg-red-500 text-white p-4 rounded')
+            
+            if success_count > 0:
+                messages.success(request, f'{success_count} curso(s) cadastrado(s) com sucesso!',
+                               extra_tags='bg-green-500 text-white p-4 rounded')
+            else:
+                messages.error(request, 'Nenhum curso foi cadastrado. Verifique os dados.',
+                             extra_tags='bg-red-500 text-white p-4 rounded')
+            
+            # Redireciona para a lista de cursos do usuário
+            return redirect('cursos:usuario_cursos', cadastro_id=cadastro.id)
+
+        # Se for GET, mostrar o formulário de cadastro
+        # (Você precisará criar este template ou redirecionar para onde o formulário está)
+        return render(request, 'cursos/usuario_cursos.html', {
+            'cadastro': cadastro,
+            'title': 'Cadastrar Novo Curso'
+        })
+
+    except Profile.DoesNotExist:
+        messages.error(request, 'Perfil do usuário não encontrado.',
+                     extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('core:index')  # Use uma URL válida
+    except Exception as e:
+        messages.error(request, f'Erro inesperado: {str(e)}',
+                     extra_tags='bg-red-500 text-white p-4 rounded')
+        return redirect('core:index')  # Use uma URL válida
