@@ -28,4 +28,13 @@ urlpatterns = [
     path('cursos/export/csv/', views.export_cursos_csv, name='export_cursos_csv'),
     path('cursos/import/csv/', views.import_cursos_csv, name='import_cursos_csv'),
     path('cursos/importar/', views.importar_cursos_view, name='importar_cursos_view'),
+
+
+   # URLs para cursos do usuário (já estão corretas no seu urls.py)
+    path('meus-cursos/', views.user_curso_list, name='user_curso_list'),
+    # urls.py
+    path('meus-cursos/novo/', views.user_curso_create, name='curso_create_self'),
+    path('meus-cursos/<int:pk>/editar/', views.user_curso_edit, name='user_curso_edit'),
+    path('meus-cursos/<int:pk>/excluir/', views.user_curso_delete, name='user_curso_delete'),
+
 ]
