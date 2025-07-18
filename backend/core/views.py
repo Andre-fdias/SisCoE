@@ -205,28 +205,35 @@ def profile_create(request):
         return redirect('core:profile_list')
     return render(request, 'profiles/profile_form.html')
 
+# core/views.py
 @login_required
 def profile_update(request, pk):
     profile = get_object_or_404(Profile, pk=pk)
-    posto_grad_choices = Profile.posto_grad_choices
-    tipo_choices = Profile.tipo_choices
+    
+    # Verifica se o usuário tem permissão para editar este perfil
+    if not request.user.is_superuser and request.user != profile.user:
+        return HttpResponseForbidden("Você não tem permissão para editar este perfil.")
 
-    if request.method == 'POST':
-        profile.cpf = request.POST.get('cpf')
-        profile.posto_grad = request.POST.get('posto_grad')
-        profile.re = request.POST.get('re')
-        profile.dig = request.POST.get('dig')
-        profile.tipo = request.POST.get('tipo')
-        if 'image' in request.FILES:
-            profile.image = request.FILES['image']
+    if request.method == "POST":
+        # Apenas atualiza a imagem se for enviada
+        if 'image' in request.FILES and profile.cadastro:
+            # Primeiro, desativa todas as imagens atuais
+            profile.cadastro.imagens.update(is_profile=False)
+            
+            # Cria uma nova imagem como perfil ativo
+            nova_imagem = Imagem(
+                cadastro=profile.cadastro,
+                image=request.FILES['image'],
+                user=request.user,
+                is_profile=True
+            )
+            nova_imagem.save()
         
-        profile.save()
+        messages.success(request, "Perfil atualizado com sucesso!")
         return redirect('core:profile_detail', pk=pk)
     
     context = {
         'profile': profile,
-        'posto_grad_choices': posto_grad_choices,
-        'tipo_choices': tipo_choices,
     }
     return render(request, 'profiles/profile_form.html', context)
 

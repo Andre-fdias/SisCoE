@@ -105,15 +105,13 @@ DATABASES = {
 
 # Email config
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
-EMAIL_HOST = config('EMAIL_HOST', 'localhost')  # localhost 0.0.0.0
-EMAIL_PORT = config('EMAIL_PORT', 1025, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
-
-
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True  # Use TLS para segurança
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', '')  # Seu endereço de e-mail do Gmail
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', '') # A Senha de App gerada
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER) # Use o mesmo e-mail como remetente padrão
+SERVER_EMAIL = EMAIL_HOST_USER # Para e-mails de erro do Django
 
 
 # Password validation
@@ -222,13 +220,18 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'WARNING',
     },
-    'loggers': {
+     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'level': 'INFO', # Mude para 'DEBUG' para logs mais detalhados
             'propagate': False,
         },
-    },
+        'backend.accounts.views': { # Nome do seu módulo de views
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG', # Configure este para 'DEBUG' para ver os logs detalhados da sua view
+            'propagate': False,
+        },
+    }
 }
 
 # Configurações para AJAX

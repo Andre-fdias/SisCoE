@@ -1,82 +1,89 @@
-<!-- registration_form.html -->
 {% extends "base_login.html" %}
 {% load static %}
 {% block content %}
-<main class="bg-gray-150">
-
+<main class="bg-gray-900">
   <div class="mx-auto md:h-screen flex flex-col justify-center items-center px-6 pt-8 pt:mt-0">
-    <img src="{% static 'img/logo-siscoe-black2.png' %}" class="my-5" width="180" height="152 role=" img"
-      aria-label="people-circle" id="logo">
+    <img src="{% static 'img/logo-siscoe-black2.png' %}" class="my-5" width="180" height="152" alt="Logo SisCoE">
 
-    <!-- Card -->
-    <div class="bg-gray-900 shadow rounded-lg md:mt-0 w-full sm:max-w-screen-sm xl:p-0">
+    <div class="bg-gray-800 shadow rounded-lg md:mt-0 w-full sm:max-w-screen-sm xl:p-0 border border-gray-700">
       <div class="p-6 sm:p-8 lg:p-16 space-y-8">
         <h2 class="text-2xl lg:text-3xl font-bold text-white">
           Crie sua conta
         </h2>
-        <form class="mt-8 space-y-6" action="." method="POST">
+        
+        {# SEÇÃO PARA EXIBIR TODOS OS ERROS DO FORMULÁRIO (útil para depuração) #}
+        {% if form.errors %}
+          <div class="p-4 mb-4 text-sm text-red-400 bg-gray-700 rounded-lg border border-red-400">
+            <p>Por favor, corrija os seguintes erros:</p>
+            <ul>
+              {% for field_name, errors in form.errors.items %}
+                <li>
+                  <strong>{{ field_name|title }}:</strong>
+                  <ul>
+                    {% for error in errors %}
+                      <li>{{ error }}</li>
+                    {% endfor %}
+                  </ul>
+                </li>
+              {% endfor %}
+              {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              {% endif %}
+            </ul>
+          </div>
+        {% endif %}
+        
+        <form class="mt-8 space-y-6" action="" method="POST">
           {% csrf_token %}
+          
+          {# CAMPOS OCULTOS PARA ENVIAR OS DADOS PRÉ-PREENCHIDOS #}
+          <input type="hidden" name="first_name" value="{{ form.initial.first_name }}">
+          <input type="hidden" name="last_name" value="{{ form.initial.last_name }}">
+          <input type="hidden" name="email" value="{{ form.initial.email }}">
+
           <div>
-            <label for="id_first_name" class="text-sm font-medium text-white block mb-2">Nome Completo</label>
-            <input id="id_first_name" type="text" name="first_name"
-              class="bg-gray-300 border border-gray-300 text-gray-900  sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-              placeholder="Primeiro Nome" required>
+            <label class="text-sm font-medium text-white block mb-2">Nome Completo</label>
+            <input type="text" value="{{ form.initial.first_name }}"
+              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+              readonly>
           </div>
+          
           <div>
-            <label for="id_last_name" class="text-sm font-medium text-white block mb-2">Nome de Guerra</label>
-            <input id="id_last_name" type="text" name="last_name"
-              class="bg-gray-300 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-              placeholder="Sobrenome" required>
+            <label class="text-sm font-medium text-white block mb-2">Nome de Guerra</label>
+            <input type="text" value="{{ form.initial.last_name }}"
+              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+              readonly>
           </div>
+          
           <div>
-            <label for="id_email" class="text-sm font-medium text-white block mb-2">E-mail Funcional</label>
-            <input id="id_email" type="email" name="email"
-              class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-              placeholder="nome@example.com" required>
+            <label class="text-sm font-medium text-white block mb-2">E-mail Funcional</label>
+            <input type="email" value="{{ form.initial.email }}"
+              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+              readonly>
           </div>
-          <!-- <div>
-                                         <label for="id_password1" class="text-sm font-medium text-gray-900 block mb-2">Senha</label>
-                                                                                                       <input
-                                                                                                       id="id_password1"
-                            type="password"
-                          name="password1"
-                           placeholder="••••••••"
-                                 class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                                                                                                                                                     required
-                                                                                                                                                     >
-                                                                                                                                                     </div>
-                                                                                                                                                     <div>
-                                                                                                                                                     <label for="id_password2" class="text-sm font-medium text-gray-900 block mb-2">Confirmação da Senha</label>
-                                                                                                       <input
-                                                                                                       id="id_password2"
-                            type="password"
-                          name="password2"
-                           placeholder="••••••••"
-                                 class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                                                                                                                                                     required
-                                                                                                                                                     >
-                                                                                                                                                     </div> -->
+          
           <div class="flex items-start">
             <div class="flex items-center h-5">
-              <input id="remember" type="checkbox" name="remember" aria-describedby="remember"
-                class="bg-gray-50 border-gray-300 focus:ring-3 focus:ring-cyan-200 h-4 w-4 rounded">
+              <input id="terms" type="checkbox" name="terms" required
+                class="bg-gray-700 border-gray-600 focus:ring-blue-500 h-4 w-4 rounded">
             </div>
             <div class="text-sm ml-3">
-              <label for="remember" class="font-medium text-white">Eu aceito os <a href="#"
-                  class="text-teal-500 hover:underline">Termos e Condições</a></label>
+              <label for="terms" class="font-medium text-white">Eu aceito os <a href="#"
+                  class="text-blue-400 hover:underline">Termos e Condições</a></label>
             </div>
           </div>
+          
           <button type="submit"
-            class="text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-base px-5 py-3 w-full sm:w-auto text-center">Salvar</button>
-          <div class="text-sm font-medium text-gray-500">
-            Você já tem uma conta? <a href="{% url 'login' %}" class="text-teal-500 hover:underline">Login</a>
-          </div>
+            class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 font-medium rounded-lg text-base px-5 py-3 w-full text-center">
+            Criar Conta
+          </button>
         </form>
-        <p class="text-xs  text-gray-500" >* Após preencher os dados e salvar, será encaminhado para o email cadastrado a senha!.</p>
-                       
+        
+        <p class="text-xs text-gray-500">* A senha será enviada para o e-mail cadastrado após a criação da conta.</p>
       </div>
     </div>
   </div>
 </main>
-
 {% endblock content %}

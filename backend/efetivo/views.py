@@ -610,6 +610,51 @@ def editar_dados_pessoais_contatos(request, id):
     return render(request, 'modals/editar_dados_pessoais.html', context)
 
 
+# responsável pela edição da model  cadastro pag de user
+# views.py
+@login_required
+def editar_averbacao_militar(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
+    if request.method == 'POST':
+        try:
+            cadastro.tempo_para_averbar_militar = int(request.POST.get('tempo_para_averbar_militar', 0))
+            cadastro.save()
+            messages.success(request, 'Averbação militar atualizada com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+        except Exception as e:
+            messages.error(request, f'Erro ao atualizar: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
+    
+    return redirect('efetivo:visualizar_militar_publico', id=id)
+
+@login_required
+def editar_averbacao_inss(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
+    if request.method == 'POST':
+        try:
+            cadastro.tempo_para_averbar_inss = int(request.POST.get('tempo_para_averbar_inss', 0))
+            cadastro.save()
+            messages.success(request, 'Averbação INSS atualizada com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+        except Exception as e:
+            messages.error(request, f'Erro ao atualizar: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
+    
+    return redirect('efetivo:visualizar_militar_publico', id=id)
+
+@login_required
+def editar_telefone(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
+    if request.method == 'POST':
+        try:
+            cadastro.telefone = request.POST.get('telefone', '')
+            cadastro.save()
+            messages.success(request, 'Telefone atualizado com sucesso!', extra_tags='bg-green-500 text-white p-4 rounded')
+        except Exception as e:
+            messages.error(request, f'Erro ao atualizar: {e}', extra_tags='bg-red-500 text-white p-4 rounded')
+    
+    return redirect('efetivo:visualizar_militar_publico', id=id)
+
+
 # responsável pela edição da model imagens
 @login_required
 def editar_imagem(request, id):
@@ -637,7 +682,36 @@ def editar_imagem(request, id):
 
 
 
+@login_required
+def editar_imagem_user(request, id):
+    cadastro = get_object_or_404(Cadastro, id=id)
+    
+    # Verifica permissão
+    if not request.user.is_superuser and request.user.cadastro != cadastro:
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
 
+    if request.method == "POST":
+        if request.FILES.get('image'):
+            # Cria uma nova imagem
+            nova_imagem = Imagem(
+                cadastro=cadastro,
+                image=request.FILES.get('image'),
+                user=request.user
+                # O campo 'is_profile' foi removido daqui, pois não está no seu modelo 'Imagem'
+            )
+            nova_imagem.save()
+            
+            # A lógica para desmarcar outras imagens como perfil foi removida,
+            # pois você não quer que ela procure por imagens de perfil e o campo não existe.
+            
+            return JsonResponse({
+                'success': True,
+                'image_url': nova_imagem.image.url
+            })
+        
+        return JsonResponse({'error': 'Nenhuma imagem enviada'}, status=400)
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
 
 # responsável por checar a existencia do RPT
 @login_required
@@ -1861,17 +1935,17 @@ def visualizar_militar_publico(request, id):
         # Obter o perfil do usuário logado
         user_profile = Profile.objects.get(user=request.user)
         
-        # Se o perfil não tem cadastro, redireciona com erro
         if not user_profile.cadastro:
-            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', 
+                         extra_tags='bg-red-500 text-white p-4 rounded')
             return redirect('home')
         
-        # Verificar se o ID solicitado pertence ao cadastro do usuário
         if user_profile.cadastro.id != id:
-            messages.error(request, 'Acesso não autorizado: você só pode visualizar seu próprio perfil.', extra_tags='bg-red-500 text-white p-4 rounded')
+            messages.error(request, 'Acesso não autorizado: você só pode visualizar seu próprio perfil.', 
+                         extra_tags='bg-red-500 text-white p-4 rounded')
             return redirect('home')
         
-        # Obter o cadastro principal com related objects
+        # Obter o cadastro principal com otimizações
         cadastro = Cadastro.objects.select_related('user').prefetch_related(
             Prefetch('imagens'),
             Prefetch('promocoes', queryset=Promocao.objects.order_by('-data_alteracao')),
@@ -1882,15 +1956,28 @@ def visualizar_militar_publico(request, id):
         ).get(id=id)
 
         today = timezone.now().date()
-        detalhes = cadastro.detalhes_situacao.first()  # Mais recente
-        promocao = cadastro.promocoes.order_by('-data_alteracao').first()
-        categoria_atual = cadastro.categorias_efetivo.first()  # Ativa
-        promocoes = Promocao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
-        historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(cadastro=cadastro).order_by('-data_alteracao')
-       # Obter a última situação ativa (não histórica)
-        ultima_situacao = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
-    
-
+        
+        # Obter dados relacionados com tratamento de None
+        detalhes = cadastro.detalhes_situacao.order_by('-data_alteracao').first() or None
+        promocao = cadastro.promocoes.order_by('-data_alteracao').first() or None
+        categoria_atual = cadastro.categorias_efetivo.first() or None
+        promocoes = cadastro.promocoes.order_by('-data_alteracao')
+        
+        # Consultas com tratamento seguro
+        historico_detalhes_situacao = HistoricoDetalhesSituacao.objects.filter(
+            cadastro=cadastro).order_by('-data_alteracao') if hasattr(HistoricoDetalhesSituacao, 'cadastro') else []
+        
+        # CORREÇÃO PARA O ERRO PRINCIPAL - Consulta segura ao histórico de categorias
+        historico_detalhes_cat = []
+        if hasattr(HistoricoCatEfetivo, 'cat_efetivo'):
+            historico_detalhes_cat = HistoricoCatEfetivo.objects.filter(
+                cat_efetivo__cadastro=cadastro,
+                deletado=False
+            ).order_by('-data_registro')
+        
+ 
+ 
+ 
  # Buscar LPs concluídas do militar
         lps_concluidas = cadastro.lp_set.all()
         
@@ -1947,74 +2034,108 @@ def visualizar_militar_publico(request, id):
 
         restricoes_aplicaveis = []
         if categoria_atual and categoria_atual.tipo == 'RESTRICAO':
-            # Obter todos os campos de restrição dinamicamente
-            campos_restricao = [field.name for field in CatEfetivo._meta.get_fields() 
-                               if field.name.startswith('restricao_')]
+            campos_restricao = [f.name for f in CatEfetivo._meta.get_fields() 
+                              if f.name.startswith('restricao_') and hasattr(f, 'choices')]
             
             for campo in campos_restricao:
-                if getattr(categoria_atual, campo):
-                    sigla = campo.split('_')[-1].upper()
-                    if sigla in MENSAGENS_RESTRICOES:
-                        nome_display = next((choice[1] for choice in CatEfetivo._meta.get_field(campo).choices 
-                                           if choice[0] == sigla), sigla)
-                        restricoes_aplicaveis.append({
-                            'sigla': sigla,
-                            'nome': nome_display,
-                            'mensagem': MENSAGENS_RESTRICOES[sigla],
-                            'regra': RestricaoHelper.get_regra_principal(sigla)
-                        })
+                try:
+                    valor_campo = getattr(categoria_atual, campo, None)
+                    if valor_campo:
+                        sigla = campo.split('_')[-1].upper()
+                        if sigla in MENSAGENS_RESTRICOES:
+                            # CORREÇÃO PARA O ERRO: Verifica se o campo tem choices
+                            field = CatEfetivo._meta.get_field(campo)
+                            if hasattr(field, 'choices') and field.choices:
+                                nome_display = next((c[1] for c in field.choices if c[0] == sigla), sigla)
+                            else:
+                                nome_display = sigla
+                            
+                            restricoes_aplicaveis.append({
+                                'sigla': sigla,
+                                'nome': nome_display,
+                                'mensagem': MENSAGENS_RESTRICOES[sigla],
+                                'regra': RestricaoHelper.get_regra_principal(sigla) if hasattr(RestricaoHelper, 'get_regra_principal') else ''
+                            })
+                except Exception as e:
+                    logger.warning(f"Erro ao processar restrição {campo}: {str(e)}")
+                    continue
 
-        # Status da Categoria
+        # Status da Categoria com tratamento seguro
         categoria_status = {}
         if categoria_atual:
-            if categoria_atual.tipo != 'ATIVO' and categoria_atual.data_termino and categoria_atual.data_termino < today:
-                categoria_status = {
-                    'texto': f"{categoria_atual.get_tipo_display()} (Expirado)",
-                    'classe': 'bg-red-100 text-red-800',
-                    'icone': 'fa-exclamation-triangle'
+            try:
+                if categoria_atual.tipo != 'ATIVO' and categoria_atual.data_termino and categoria_atual.data_termino < today:
+                    categoria_status = {
+                        'texto': f"{categoria_atual.get_tipo_display()} (Expirado)",
+                        'classe': 'bg-red-100 text-red-800',
+                        'icone': 'fa-exclamation-triangle'
+                    }
+                elif categoria_atual.tipo != 'ATIVO':
+                    data_termino = categoria_atual.data_termino.strftime('%d/%m/%Y') if categoria_atual.data_termino else 'Indefinido'
+                    categoria_status = {
+                        'texto': f"{categoria_atual.get_tipo_display()} (Até {data_termino})",
+                        'classe': 'bg-yellow-100 text-yellow-800',
+                        'icone': 'fa-info-circle'
+                    }
+                else:
+                    categoria_status = {
+                        'texto': categoria_atual.get_tipo_display(),
+                        'classe': 'bg-green-100 text-green-800',
+                        'icone': 'fa-check-circle'
+                    }
+                categoria_atual.status_display = categoria_status
+            except Exception as e:
+                logger.error(f"Erro ao processar status da categoria: {str(e)}")
+                categoria_atual.status_display = {
+                    'texto': 'Status desconhecido',
+                    'classe': 'bg-gray-100 text-gray-800',
+                    'icone': 'fa-question-circle'
                 }
-            elif categoria_atual.tipo != 'ATIVO':
-                categoria_status = {
-                    'texto': f"{categoria_atual.get_tipo_display()} (Até {categoria_atual.data_termino.strftime('%d/%m/%Y') if categoria_atual.data_termino else 'Indefinido'})",
-                    'classe': 'bg-yellow-100 text-yellow-800',
-                    'icone': 'fa-info-circle'
-                }
-            else:
-                categoria_status = {
-                    'texto': categoria_atual.get_tipo_display(),
-                    'classe': 'bg-green-100 text-green-800',
-                    'icone': 'fa-check-circle'
-                }
-            categoria_atual.status_display = categoria_status
 
-        # Lógica para cursos especiais
+
+
+
+        # Cursos especiais com tratamento seguro
         cursos_especiais = []
-        if detalhes and detalhes.op_adm:
-            tag_desejada = 'Administrativo' if detalhes.op_adm == 'Administrativo' else 'Operacional'
-            
-            cursos_filtrados = []
-            for curso in Curso.objects.filter(cadastro=cadastro):
-                curso_tag = Curso.CURSOS_TAGS.get(curso.curso)
-                if curso_tag == tag_desejada:
-                    cursos_filtrados.append({
-                        'nome': curso.get_curso_display(),
-                        'data': curso.data_publicacao
-                    })
-            
-            # Ordenar por data e remover duplicatas
-            cursos_filtrados = sorted(cursos_filtrados, key=lambda x: x['data'], reverse=True)
-            cursos_especiais = list({curso['nome']: curso for curso in cursos_filtrados}.values())
+        if detalhes and hasattr(detalhes, 'op_adm') and detalhes.op_adm:
+            try:
+                tag_desejada = 'Administrativo' if detalhes.op_adm == 'Administrativo' else 'Operacional'
+                cursos_filtrados = []
+                
+                if hasattr(Curso, 'CURSOS_TAGS'):
+                    for curso in Curso.objects.filter(cadastro=cadastro):
+                        curso_tag = Curso.CURSOS_TAGS.get(curso.curso)
+                        if curso_tag == tag_desejada:
+                            cursos_filtrados.append({
+                                'nome': curso.get_curso_display(),
+                                'data': curso.data_publicacao
+                            })
+                    
+                    cursos_especiais = list({
+                        c['nome']: c for c in sorted(cursos_filtrados, key=lambda x: x['data'], reverse=True)
+                    }.values())
+            except Exception as e:
+                logger.error(f"Erro ao processar cursos especiais: {str(e)}")
 
-        # Dados relacionados
-        medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
-        cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
+        # Dados relacionados com verificações de segurança
+        medalhas_do_militar = []
+        cursos_do_militar = []
+        cadastro_rpt = None
+        count_in_section = 0
         
-        # Dados RPT
-        cadastro_rpt = cadastro.cadastro_rpt.first()
-        count_in_section = Cadastro_rpt.objects.filter(
-            posto_secao_destino=cadastro_rpt.posto_secao_destino,
-            status='Aguardando'
-        ).count() if cadastro_rpt else 0
+        try:
+            medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp') if hasattr(Medalha, 'cadastro') else []
+            cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao') if hasattr(Curso, 'cadastro') else []
+            
+            if hasattr(cadastro, 'cadastro_rpt'):
+                cadastro_rpt = cadastro.cadastro_rpt.first()
+                if cadastro_rpt and hasattr(cadastro_rpt, 'posto_secao_destino'):
+                    count_in_section = Cadastro_rpt.objects.filter(
+                        posto_secao_destino=cadastro_rpt.posto_secao_destino,
+                        status='Aguardando'
+                    ).count()
+        except Exception as e:
+            logger.error(f"Erro ao carregar dados relacionados: {str(e)}")
 
         context = {
             'cadastro': cadastro,
@@ -2029,9 +2150,9 @@ def visualizar_militar_publico(request, id):
             'count_in_section': count_in_section,
             'cursos_especiais': cursos_especiais,
             'lps_concluidas': lps_concluidas,
-            'promocoes': promocoes, # ADICIONE ESTA LINHA
-            'historico_detalhes_situacao': historico_detalhes_situacao, # ADICIONE ESTA LINHA
-            'ultima_situacao': ultima_situacao,  # Passa explicitamente a última situação
+            'promocoes': promocoes,
+            'historico_detalhes_situacao': historico_detalhes_situacao,
+            'historico_categorias_militar': historico_detalhes_cat,
             # Choices
             'situacao_choices': DetalhesSituacao.situacao_choices,
             'sgb_choices': DetalhesSituacao.sgb_choices,
