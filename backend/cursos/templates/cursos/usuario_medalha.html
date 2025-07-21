@@ -1,0 +1,1219 @@
+{% load static %}
+{% load efetivo_filters %}
+{% load cat_efetivo_tags %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil Militar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
+    <style>
+        .main_bg {
+            background: url('bg.png');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+        }
+        
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+        
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+       
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                backdrop-filter: none;
+            }
+            
+            .main_bg {
+                animation: none;
+            }
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .modal-rules-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .modal-rules-list li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-icon-success {
+            color: green;
+            margin-right: 0.5rem;
+        }
+        .modal-close-btn {
+            background-color: #3B82F6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Estilos para as tabs */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+
+
+        .tab-button:hover:not(.active) {
+            border-bottom-color: #93C5FD;
+        }
+
+        .tab-content {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Estilos para seções */
+        .section-card {
+            @apply bg-white rounded-lg shadow-sm p-6 mb-6;
+        }
+
+        .section-title {
+            @apply text-xl font-bold mb-4 flex items-center;
+        }
+
+        .info-grid {
+            @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+        }
+
+        .info-item {
+            @apply p-3 bg-gray-50 rounded-lg;
+        }
+
+
+        .badge-count {
+            @apply bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded;
+        }
+
+
+        .status-pill {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
+
+        /* Dark mode toggle */
+        .toggle-checkbox:checked {
+            @apply right-0 border-green-400;
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            @apply bg-green-400;
+            background-color: #68D391;
+        }
+ 
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+    {# Div para mensagens do Django - usada pelo alerts_cursos.html #}
+    <div id="django-messages" data-messages="{{ messages|safe }}" class="hidden"></div>
+    
+    {# Inclui o modal de alerta genérico #}
+    {% include 'cursos/alerts_cursos.html' %}
+
+
+    <div class="mt-4 relative grid grid-cols-1 md:grid-cols-3 auto-rows-min gap-4 w-full md:w-11/12 lg:w-5/6 p-4 md:p-6 glass-card rounded-lg shadow-lg h-fit">
+        <header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
+            <div class="flex items-center w-full">
+                <figure class="mr-2">
+                    <img src="{% static 'img\logo-siscoe- (2).png' %}" alt="logo" class="w-200 h-20 rounded-full">
+                </figure>
+                <div class="flex-grow text-center">
+                    <span class="text-2xl font-bold uppercase">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+                </div>
+                <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+                    <a href="{% url 'core:index' %}"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Voltar
+                    </a>
+
+                    <button id="darkModeToggle"
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const darkModeToggle = document.getElementById('darkModeToggle');
+                        const sunIcon = document.getElementById('sunIcon');
+                        const moonIcon = document.getElementById('moonIcon');
+                        const body = document.body;
+
+                        // Remove qualquer classe de cor de fundo inicial que possa conflitar
+                        body.classList.remove('bg-gray-200', 'bg-gray-900'); 
+                        
+                        // Verifica se há preferência salva
+                        const savedMode = localStorage.getItem('darkMode');
+                        
+                        // Aplica o modo inicial
+                        if (savedMode === 'dark') {
+                            enableDarkMode();
+                        } else {
+                            // Define o modo padrão como light se não houver preferência salva
+                            disableDarkMode(); 
+                        }
+
+                        // Alterna entre modos
+                        darkModeToggle.addEventListener('click', function() {
+                            if (body.classList.contains('dark-mode')) { // Usa 'dark-mode' como marcador
+                                disableDarkMode();
+                            } else {
+                                enableDarkMode();
+                            }
+                        });
+
+                        function enableDarkMode() {
+                            body.classList.add('dark-mode'); // Adiciona um marcador 'dark-mode'
+                            body.classList.remove('bg-gray-200'); // Remove o fundo claro
+                            body.classList.add('bg-gray-900');    // Adiciona o fundo escuro
+                            localStorage.setItem('darkMode', 'dark');
+                            sunIcon.classList.add('hidden');
+                            moonIcon.classList.remove('hidden');
+                        }
+
+                        function disableDarkMode() {
+                            body.classList.remove('dark-mode'); // Remove o marcador 'dark-mode'
+                            body.classList.remove('bg-gray-900'); // Remove o fundo escuro
+                            body.classList.add('bg-gray-200');    // Adiciona o fundo claro
+                            localStorage.setItem('darkMode', 'light');
+                            sunIcon.classList.remove('hidden');
+                            moonIcon.classList.add('hidden');
+                        }
+                    });
+                </script>
+
+            </div>
+        </header>
+
+         <!-- Imagem de Perfil -->
+
+        <!-- Container Principal com tamanho padrão -->
+        <div class="w-full mx-auto relative" >
+        <!-- Card de Perfil -->
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden relative z-10 h-full">
+            <!-- Seção Visual (Cabeçalho + Foto) ocupando 70% -->
+            <div class="h-[70%] bg-gradient-to-b from-gray-900 to-blue-900 relative">
+            <!-- Overlay de textura -->
+            <div class="absolute inset-0 bg-gray-800 opacity-50 mix-blend-lighten"></div>
+            
+            <!-- Container da Foto 3x4 -->
+            <div class="absolute -bottom-1/4 left-1/2 transform -translate-x-1/2 rounded-lg">
+                <div class="profile relative rounded-lg" style="width: 360px; height: 480px;"> <!-- Proporção 3x4 -->
+                <label for="imageUploadInput" class="cursor-pointer block h-full">
+                    <figure class="relative h-full rounded-lg">
+                    {% with cadastro.imagens.first as imagem %}
+                    {% if imagem %}
+                        <img id="profileImage" 
+                            src="{{ imagem.image.url }}" 
+                            alt="Foto do Militar" 
+                            class="w-full h-full object-cover border-4 border-white rounded-lg shadow-xl"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% else %}
+                        <img id="profileImage" 
+                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234b5563' d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.078 1.182 8.25 3.129zM12 12a6 6 0 100-12 6 6 0 000 12z'/%3E%3C/svg%3E" 
+                            alt="Foto Padrão" 
+                            class="w-full h-full object-cover border-4 border-white shadow-xl bg-gray-200"
+                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
+                    {% endif %}
+                    {% endwith %}
+                    
+      
+                   
+                </label>
+                </div>
+            </div>
+            </div>
+
+            <!-- Informações do Usuário (30% restante) -->
+            <div class="h-[30%] pt-16 pb-6 px-6 text-center flex flex-col justify-center">
+            <h2 class="text-2xl font-bold text-gray-800">{{ cadastro.nome_completo }}</h2>
+            <p class="text-gray-600 text-sm mt-1">@{{ cadastro.user.username|default:"militar" }}</p>
+            
+            <!-- Estatísticas -->
+            <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex-grow text-center">
+                            <span class="text-sm font-bold uppercase dark:text-white">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+                        </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Efeito de sombra -->
+        <div class="absolute inset-x-0 bottom-0 h-20 transform scale-x-75 scale-y-125 -translate-y-4">
+            <div class="h-full w-full bg-gradient-to-t from-black opacity-10 rounded-b-xl blur"></div>
+        </div>
+        </div>
+
+        <!-- Informações Pessoais -->
+        <!-- Substituição das seções Informações Pessoais e Datas Importantes pelo Formulário de Cursos -->
+        <!-- Adicionando seção de Medalhas -->
+        <section class="glass-card rounded-lg p-8 shadow-md col-span-1 md:col-span-2">
+            <div class="tabs mb-8">
+                <ul class="flex relative pb-2 border-b border-gray-200 overflow-x-auto">
+                    <!-- Aba de Medalhas -->
+                    <li class="flex items-center mr-6 pb-2 cursor-pointer tab-button" data-tab="medals">
+                        <i class="fas fa-medal mr-2"></i>
+                        <span class="text-base font-medium">Medalhas</span>
+                    </li>
+                </ul>
+            </div>
+
+ <!-- Conteúdo das abas -->
+            <div class="tab-content" id="medals-tab">
+                <!-- Formulário de Cadastro de Medalhas -->
+                <div class="glass-card rounded-lg p-6 shadow-md mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-medal mr-2 text-blue-500"></i>
+                            Cadastro de Medalhas
+                        </h2>
+                        <span class="text-xs text-gray-500">Adicione suas medalhas recebidas</span>
+                    </div>
+                    <form id="medalhaForm" method="post" action="{% url 'cursos:user_medalha_create' %}">
+                        {% csrf_token %}
+                        
+                        <div id="medalha-forms-container" class="space-y-6">
+                            <div class="medalha-form-instance border border-gray-200 p-4 rounded-lg bg-white shadow-sm" data-index="0">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4">Dados da Medalha #1</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div class="space-y-2">
+                                        <label for="honraria_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Honraria *</label>
+                                        <div class="relative">
+                                            <select name="honraria_0" id="honraria_0" required
+                                                    class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                        shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                        transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                        appearance-none">
+                                                <option value="" disabled selected>Selecione uma honraria</option>
+                                                {% for value, label in honraria_choices %}
+                                                    <option value="{{ value }}">{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="bol_g_pm_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL GPm LP</label>
+                                        <input type="text" id="bol_g_pm_lp_0" name="bol_g_pm_lp_0"
+                                            class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                    shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                    transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label for="data_publicacao_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação LP</label>
+                                        <div class="relative">
+                                            <input type="date" id="data_publicacao_lp_0" name="data_publicacao_lp_0"
+                                                class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                        shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                        transition-all duration-200 placeholder-gray-500
+                                                        hover:border-gray-400 text-gray-900 font-medium
+                                                        [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjA0NzM2NjYwMDE3MTY2NyAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMkM2LjY3IDEzIDIuODY5IDczMiAyMiIvPjwvc3ZnPg==')]
+                                                bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="space-y-2 lg:col-span-3">
+                                        <label for="observacoes_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                        <textarea id="observacoes_0" name="observacoes_0" rows="3"
+                                                class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                        shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                        transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="flex flex-col sm:flex-row gap-4 justify-end mt-6">
+                            <button type="button" id="addMedalhaButton"
+                                    class="flex items-center justify-center px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg
+                                        shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500
+                                        transition-all duration-200">
+                                <i class="fas fa-plus mr-2"></i> Adicionar Outra Medalha
+                            </button>
+                            
+                            <button type="button" id="cancelMedalhaButton"
+                                    class="flex items-center justify-center px-5 py-2.5 bg-red-600 text-white font-medium rounded-lg
+                                        shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                                        transition-all duration-200 hidden">
+                                <i class="fas fa-minus mr-2"></i> Remover Última Medalha
+                            </button>
+                            
+                            <button type="submit"
+                                    class="flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg
+                                        shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                                        transition-all duration-200">
+                                <i class="fas fa-save mr-2"></i> Salvar Medalha(s)
+                            </button>
+                        </div>
+
+                        <input type="hidden" id="num_medalhas" name="num_medalhas" value="1">
+                    </form>
+                </div>  
+            </div>
+        </section>
+
+        <script>
+            // Armazena as choices de honrarias para uso dinâmico nos formulários de medalha
+            const honrariaChoices = [
+                {% for value, label in honraria_choices %}
+                { value: "{{ value|escapejs }}", label: "{{ label|escapejs }}" },
+                {% endfor %}
+            ];
+
+            // Variável global para armazenar o token CSRF
+            let csrftoken = ''; 
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            csrftoken = getCookie('csrftoken');
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- Lógica das Abas (simplificada, pois só terá uma aba visível) ---
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabContents.forEach(content => content.classList.remove('active'));
+
+                        button.classList.add('active');
+                        const targetTab = button.dataset.tab;
+                        document.getElementById(`${targetTab}-tab`).classList.add('active');
+                    });
+                });
+
+                // Ativar a primeira aba por padrão ao carregar
+                if (tabButtons.length > 0) {
+                    tabButtons[0].click();
+                }
+
+                // --- Lógica de Formulários Dinâmicos (Medalhas) ---
+                const addMedalhaButton = document.getElementById('addMedalhaButton');
+                const cancelMedalhaButton = document.getElementById('cancelMedalhaButton');
+                const medalhaFormsContainer = document.getElementById('medalha-forms-container');
+                const numMedalhasInput = document.getElementById('num_medalhas');
+                let medalhaFormIndex = 1; // Começa em 1 porque o primeiro formulário já existe no HTML
+
+                // Esconde o botão de remover se houver apenas um formulário inicialmente
+                if (medalhaFormsContainer.querySelectorAll('.medalha-form-instance').length <= 1) {
+                    cancelMedalhaButton.classList.add('hidden');
+                }
+
+                addMedalhaButton.addEventListener('click', function() {
+                    const newIndex = medalhaFormIndex;
+                    const newFormHtml = `
+                        <div class="medalha-form-instance border border-gray-200 p-4 rounded-lg bg-white shadow-sm mt-4" data-index="${newIndex}">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Dados da Medalha #${newIndex + 1}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="space-y-2">
+                                    <label for="honraria_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Honraria *</label>
+                                    <div class="relative">
+                                        <select name="honraria_${newIndex}" id="honraria_${newIndex}" required
+                                                class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                    shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                    transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                    appearance-none">
+                                            <option value="" disabled selected>Selecione uma honraria</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="bol_g_pm_lp_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL GPm LP</label>
+                                    <input type="text" id="bol_g_pm_lp_${newIndex}" name="bol_g_pm_lp_${newIndex}"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="data_publicacao_lp_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação LP</label>
+                                    <div class="relative">
+                                        <input type="date" id="data_publicacao_lp_${newIndex}" name="data_publicacao_lp_${newIndex}"
+                                            class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                    shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                    transition-all duration-200 placeholder-gray-500
+                                                    hover:border-gray-400 text-gray-900 font-medium
+                                                    [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                    bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjA0NzM2NjYwMDE3MTY2NyAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMkM2LjY3IDEzIDIuODY5IDczMiAyMiIvPjwvc3ZnPg==')]
+                                                bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 lg:col-span-3">
+                                <label for="observacoes_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                <textarea id="observacoes_${newIndex}" name="observacoes_${newIndex}" rows="3"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    
+                    medalhaFormsContainer.insertAdjacentHTML('beforeend', newFormHtml);
+                    
+                    // Preencher o select com as options
+                    const newSelect = document.getElementById(`honraria_${newIndex}`);
+                    honrariaChoices.forEach(choice => {
+                        const option = document.createElement('option');
+                        option.value = choice.value;
+                        option.textContent = choice.label;
+                        newSelect.appendChild(option);
+                    });
+
+                    medalhaFormIndex++;
+                    numMedalhasInput.value = medalhaFormIndex;
+                    cancelMedalhaButton.classList.remove('hidden');
+                });
+
+                cancelMedalhaButton.addEventListener('click', function() {
+                    const forms = medalhaFormsContainer.querySelectorAll('.medalha-form-instance');
+                    if (forms.length > 1) {
+                        forms[forms.length - 1].remove();
+                        medalhaFormIndex--;
+                        numMedalhasInput.value = medalhaFormIndex;
+                        
+                        if (medalhaFormIndex === 1) {
+                            cancelMedalhaButton.classList.add('hidden');
+                        }
+                    }
+                });
+
+                const medalhaForm = document.getElementById('medalhaForm');
+                medalhaForm.addEventListener('submit', async function(event) {
+                    event.preventDefault(); // Impede o envio padrão do formulário
+                    
+                    let isValid = true;
+                    const forms = medalhaFormsContainer.querySelectorAll('.medalha-form-instance');
+
+                    forms.forEach((formInstance) => {
+                        const index = formInstance.dataset.index;
+                        const honrariaField = formInstance.querySelector(`[name="honraria_${index}"]`);
+                        const dataPublicacaoField = formInstance.querySelector(`[name="data_publicacao_lp_${index}"]`);
+
+                        // Validação para campos obrigatórios
+                        if (honrariaField && !honrariaField.value.trim()) {
+                            honrariaField.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        } else {
+                            honrariaField.classList.remove('border-red-500', 'ring-2', 'ring-200');
+                        }
+                        
+                        if (dataPublicacaoField && !dataPublicacaoField.value.trim()) {
+                            dataPublicacaoField.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        } else {
+                            dataPublicacaoField.classList.remove('border-red-500', 'ring-2', 'ring-200');
+                        }
+                    });
+
+                    if (!isValid) {
+                        showAlertModal('Por favor, preencha todos os campos obrigatórios (*) em todas as medalhas.', 'WARNING');
+                        return; // Impede o envio se a validação falhar
+                    }
+
+                    // Prepara o FormData para envio
+                    const formData = new FormData(this);
+
+                    try {
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest', // Indica que é uma requisição AJAX
+                                'X-CSRFToken': csrftoken // Inclui o token CSRF
+                            }
+                        });
+
+                        const data = await response.json(); // Assume que a resposta é JSON
+
+                        if (data.success) {
+                            showAlertModal(data.message || 'Medalha(s) cadastrada(s) com sucesso!', 'SUCCESS');
+                            // Limpa o formulário após o sucesso
+                            medalhaFormsContainer.innerHTML = `
+                                <div class="medalha-form-instance border border-gray-200 p-4 rounded-lg bg-white shadow-sm" data-index="0">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Dados da Medalha #1</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div class="space-y-2">
+                                            <label for="honraria_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Honraria *</label>
+                                            <div class="relative">
+                                                <select name="honraria_0" id="honraria_0" required
+                                                        class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                            appearance-none">
+                                                    <option value="" disabled selected>Selecione uma honraria</option>
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="bol_g_pm_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL GPm LP</label>
+                                            <input type="text" id="bol_g_pm_lp_0" name="bol_g_pm_lp_0"
+                                                class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                        shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                        transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="data_publicacao_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação LP</label>
+                                            <div class="relative">
+                                                <input type="date" id="data_publicacao_lp_0" name="data_publicacao_lp_0"
+                                                    class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 placeholder-gray-500
+                                                            hover:border-gray-400 text-gray-900 font-medium
+                                                            [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                            bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjA0NzM2NjYwMDE3MTY2NyAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMkM2LjY3IDEzIDIuODY5IDczMiAyMiIvPjwvc3ZnPg==')]
+                                                            bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2 lg:col-span-3">
+                                            <label for="observacoes_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                            <textarea id="observacoes_0" name="observacoes_0" rows="3"
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            medalhaFormIndex = 1; // Reseta o índice para o próximo cadastro
+                            numMedalhasInput.value = 1;
+                            cancelMedalhaButton.classList.add('hidden'); // Esconde o botão de remover
+                            
+                            // Preenche o select do primeiro formulário novamente
+                            const firstSelect = document.getElementById('honraria_0');
+                            if (firstSelect) {
+                                firstSelect.innerHTML = '<option value="" disabled selected>Selecione uma honraria</option>';
+                                honrariaChoices.forEach(choice => {
+                                    const option = document.createElement('option');
+                                    option.value = choice.value;
+                                    option.textContent = choice.label;
+                                    firstSelect.appendChild(option);
+                                });
+                            }
+
+                            // Atualiza a tabela de medalhas dinamicamente
+                            updateMedalhasTable();
+
+                        } else {
+                            showAlertModal(data.error || 'Erro ao cadastrar medalha(s).', 'ERROR');
+                        }
+                    } catch (error) {
+                        console.error('Erro na requisição de cadastro de medalha:', error);
+                        showAlertModal('Erro de conexão ao cadastrar medalha(s): ' + error.message, 'ERROR');
+                    }
+                });
+
+                medalhaFormsContainer.addEventListener('input', function(e) {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                        e.target.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    }
+                });
+
+                // --- Funções de Atualização de Tabela (sem DataTables) ---
+                async function updateMedalhasTable() {
+                    try {
+                        const response = await fetch(window.location.href, { // Busca a página atual
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest' // Indica que é uma requisição AJAX
+                            }
+                        });
+                        const html = await response.text();
+                        
+                        // Cria um elemento temporário para parsear o HTML
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Encontra a nova tabela de medalhas e o badge de contagem no HTML retornado
+                        const newTableBody = doc.querySelector('#medalhasTable tbody');
+                        const newBadgeCount = doc.querySelector('#medalhas-count-badge');
+
+                        if (newTableBody) {
+                            const currentTableBody = document.querySelector('#medalhasTable tbody');
+                            if (currentTableBody) {
+                                currentTableBody.innerHTML = newTableBody.innerHTML; // Atualiza o conteúdo da tabela
+                            }
+                        }
+                        if (newBadgeCount) {
+                            const currentBadgeCount = document.querySelector('#medalhas-count-badge');
+                            if (currentBadgeCount) {
+                                currentBadgeCount.textContent = newBadgeCount.textContent; // Atualiza a contagem
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao atualizar a tabela de medalhas:', error);
+                        showAlertModal('Erro ao carregar dados atualizados da tabela de medalhas.', 'ERROR');
+                    }
+                }
+
+                // --- Gerenciamento de Modal de Imagem ---
+                const profileImageLabel = document.querySelector('label[for="imageUploadInput"]');
+                const imageUploadInput = document.getElementById('imageUploadInput');
+                const profileImage = document.getElementById('profileImage');
+                const imageRulesModal = document.getElementById('imageRulesModal');
+                const closeModalBtn = document.getElementById('closeModalBtn');
+
+                if (profileImageLabel && imageUploadInput && profileImage && imageRulesModal && closeModalBtn) {
+                    profileImageLabel.addEventListener('click', function() {
+                        imageRulesModal.classList.remove('hidden');
+                    });
+
+                    closeModalBtn.addEventListener('click', function() {
+                        imageRulesModal.classList.add('hidden');
+                        imageUploadInput.click();
+                    });
+
+                    imageUploadInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                profileImage.src = event.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            });
+        </script>
+
+
+
+        <!-- Situação Militar -->
+        <section class="glass-card rounded-lg p-6 shadow-md">
+            <div class="mb-8">
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Situação Militar
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Situação</p>
+                        <p class="text-sm font-medium" id="situacao">{{ detalhes.situacao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">SGB</p>
+                        <p class="text-sm font-medium" id="sgb">{{ detalhes.sgb }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-sm mr-1"></i>Posto/Seção</p>
+                        <p class="text-sm font-medium" id="postoSecao">{{ detalhes.posto_secao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Adido</p>
+                        <p class="text-sm font-medium" id="adido">{{ detalhes.esta_adido }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Função</p>
+                        <p class="text-sm font-medium" id="funcao">{{ detalhes.funcao }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Prontidão</p>
+                        <p class="text-sm font-medium" id="prontidao">{{ detalhes.prontidao_badge|safe }}</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div>
+                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+                    Promoção
+                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+                </h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Posto/Graduação</p>
+                        <p class="text-sm font-medium" id="postoGraduacao">{{ promocao.grad|safe }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Quadro</p>
+                        <p class="text-sm font-medium" id="quadro">{{ promocao.get_quadro_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Grupo</p>
+                        <p class="text-sm font-medium" id="grupo">{{ promocao.get_grupo_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Última Promoção</p>
+                        <p class="text-sm font-medium" id="ultimaPromocao">{{ promocao.ultima_promocao|date:'d/m/Y' }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- area de detalhamento -->     
+        <section class="glass-card rounded-lg p-8 shadow-md col-span-1 md:col-span-2">
+
+        <!-- Conteúdo das abas -->
+
+            <!-- area de Medalhas -->   
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-medal mr-2 text-blue-500"></i>
+                        Medalhas
+                    </h3>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                        {{ medalhas_do_militar|length }} registro{{ medalhas_do_militar|length|pluralize }}
+                    </span>
+                </div>
+                
+                {% if medalhas_do_militar %}
+                    <div class="overflow-x-auto">
+                        <table id="medalhasTable" class="min-w-full divide-y divide-gray-200 stripe hover">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Honraria</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for medalha in medalhas_do_militar %}
+                                <tr id="medalha-row-{{ medalha.id }}" class="hover:bg-gray-50"> {# Adicionado ID para remoção dinâmica #}
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                        {{ medalha.get_honraria_display }}
+                                    </td>
+                                <td class="px-4 py-3 text-right whitespace-nowrap text-sm font-medium">
+                                    <button onclick="openEditMedalhaModal({{ medalha.id }})" 
+                                            class="text-blue-600 hover:text-blue-900 mr-2" 
+                                            title="Editar">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button onclick="openDeleteMedalhaModal({{ medalha.id }})" 
+                                            class="text-red-600 hover:text-red-900" 
+                                            title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-center text-gray-500 py-4">Nenhuma medalha registrada</p>
+                {% endif %}
+            </div>
+        </div>
+        {# Adicione após a seção de medalhas #}
+        {% include 'cursos/modals/editar_medalhas_modal.html' %}
+        {% include 'cursos/modals/excluir_medalhas_modal.html' %}
+
+        <script>
+            // Armazena as choices em uma variável global
+            const honrariaChoices = [
+                {% for value, label in honraria_choices %}
+                { value: "{{ value|escapejs }}", label: "{{ label|escapejs }}" },
+                {% endfor %}
+            ];
+
+            // Variável global para armazenar o token CSRF
+            let csrftoken = ''; 
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            csrftoken = getCookie('csrftoken');
+
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // --- Configuração do formulário dinâmico de medalhas (Criação) ---
+                const addMedalhaButton = document.getElementById('addMedalhaButton');
+                const cancelMedalhaButton = document.getElementById('cancelMedalhaButton');
+                const medalhaFormsContainer = document.getElementById('medalha-forms-container');
+                const numMedalhasInput = document.getElementById('num_medalhas');
+                let medalhaFormIndex = 1; // Começa em 1 porque o primeiro formulário já existe no HTML
+
+                // Esconde o botão de remover se houver apenas um formulário inicialmente
+                if (medalhaFormsContainer.querySelectorAll('.medalha-form-instance').length <= 1) {
+                    cancelMedalhaButton.classList.add('hidden');
+                }
+
+                addMedalhaButton.addEventListener('click', function() {
+                    const newIndex = medalhaFormIndex;
+                    
+                    const newFormHtml = `
+                        <div class="medalha-form-instance border border-gray-200 p-4 rounded-lg bg-white shadow-sm mt-4" data-index="${newIndex}">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Dados da Medalha #${newIndex + 1}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="space-y-2">
+                                    <label for="honraria_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Honraria *</label>
+                                    <div class="relative">
+                                        <select name="honraria_${newIndex}" id="honraria_${newIndex}" required
+                                                class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                    shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                    transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                    appearance-none">
+                                            <option value="" disabled selected>Selecione uma honraria</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="bol_g_pm_lp_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL GPm LP</label>
+                                    <input type="text" id="bol_g_pm_lp_${newIndex}" name="bol_g_pm_lp_${newIndex}"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label for="data_publicacao_lp_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação LP</label>
+                                    <div class="relative">
+                                        <input type="date" id="data_publicacao_lp_${newIndex}" name="data_publicacao_lp_${newIndex}"
+                                            class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                    shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                    transition-all duration-200 placeholder-gray-500
+                                                    hover:border-gray-400 text-gray-900 font-medium
+                                                    [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                    bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                                bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 lg:col-span-3">
+                                <label for="observacoes_${newIndex}" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                <textarea id="observacoes_${newIndex}" name="observacoes_${newIndex}" rows="3"
+                                        class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    
+                    medalhaFormsContainer.insertAdjacentHTML('beforeend', newFormHtml);
+                    
+                    // Preencher o select com as options
+                    const newSelect = document.getElementById(`honraria_${newIndex}`);
+                    honrariaChoices.forEach(choice => {
+                        const option = document.createElement('option');
+                        option.value = choice.value;
+                        option.textContent = choice.label;
+                        newSelect.appendChild(option);
+                    });
+
+                    medalhaFormIndex++;
+                    numMedalhasInput.value = medalhaFormIndex;
+                    cancelMedalhaButton.classList.remove('hidden');
+                });
+
+                cancelMedalhaButton.addEventListener('click', function() {
+                    const forms = medalhaFormsContainer.querySelectorAll('.medalha-form-instance');
+                    if (forms.length > 1) {
+                        forms[forms.length - 1].remove();
+                        medalhaFormIndex--;
+                        numMedalhasInput.value = medalhaFormIndex;
+                        
+                        if (medalhaFormIndex === 1) {
+                            cancelMedalhaButton.classList.add('hidden');
+                        }
+                    }
+                });
+
+                const medalhaForm = document.getElementById('medalhaForm');
+                medalhaForm.addEventListener('submit', async function(event) {
+                    event.preventDefault(); // Impede o envio padrão do formulário
+                    
+                    let isValid = true;
+                    const forms = medalhaFormsContainer.querySelectorAll('.medalha-form-instance');
+
+                    forms.forEach((formInstance) => {
+                        const index = formInstance.dataset.index;
+                        const honrariaField = formInstance.querySelector(`[name="honraria_${index}"]`);
+                        const dataPublicacaoField = formInstance.querySelector(`[name="data_publicacao_lp_${index}"]`);
+
+                        // Validação para campos obrigatórios
+                        if (honrariaField && !honrariaField.value.trim()) {
+                            honrariaField.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        } else {
+                            honrariaField.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                        }
+                        
+                        if (dataPublicacaoField && !dataPublicacaoField.value.trim()) {
+                            dataPublicacaoField.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                            isValid = false;
+                        } else {
+                            dataPublicacaoField.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                        }
+                    });
+
+                    if (!isValid) {
+                        showAlertModal('Por favor, preencha todos os campos obrigatórios (*) em todas as medalhas.', 'WARNING');
+                        return; // Impede o envio se a validação falhar
+                    }
+
+                    // Prepara o FormData para envio
+                    const formData = new FormData(this);
+
+                    try {
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest', // Indica que é uma requisição AJAX
+                                'X-CSRFToken': csrftoken // Inclui o token CSRF
+                            }
+                        });
+
+                        const data = await response.json(); // Assume que a resposta é JSON
+
+                        if (data.success) {
+                            showAlertModal(data.message || 'Medalha(s) cadastrada(s) com sucesso!', 'SUCCESS');
+                            // Limpa o formulário após o sucesso
+                            medalhaFormsContainer.innerHTML = `
+                                <div class="medalha-form-instance border border-gray-200 p-4 rounded-lg bg-white shadow-sm" data-index="0">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Dados da Medalha #1</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div class="space-y-2">
+                                            <label for="honraria_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Honraria *</label>
+                                            <div class="relative">
+                                                <select name="honraria_0" id="honraria_0" required
+                                                        class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium
+                                                            appearance-none">
+                                                    <option value="" disabled selected>Selecione uma honraria</option>
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="bol_g_pm_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">BOL GPm LP</label>
+                                            <input type="text" id="bol_g_pm_lp_0" name="bol_g_pm_lp_0"
+                                                class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                        shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                        transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium">
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label for="data_publicacao_lp_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Data Publicação LP</label>
+                                            <div class="relative">
+                                                <input type="date" id="data_publicacao_lp_0" name="data_publicacao_lp_0"
+                                                    class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 placeholder-gray-500
+                                                            hover:border-gray-400 text-gray-900 font-medium
+                                                            [&::-webkit-calendar-picker-indicator]:opacity-0
+                                                            bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5Ljg4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                                            bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2 lg:col-span-3">
+                                            <label for="observacoes_0" class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</label>
+                                            <textarea id="observacoes_0" name="observacoes_0" rows="3"
+                                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50
+                                                            shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                                            transition-all duration-200 hover:border-gray-400 text-gray-900 font-medium"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            medalhaFormIndex = 1; // Reseta o índice para o próximo cadastro
+                            numMedalhasInput.value = 1;
+                            cancelMedalhaButton.classList.add('hidden'); // Esconde o botão de remover
+                            
+                            // Preenche o select do primeiro formulário novamente
+                            const firstSelect = document.getElementById('honraria_0');
+                            if (firstSelect) {
+                                firstSelect.innerHTML = '<option value="" disabled selected>Selecione uma honraria</option>';
+                                honrariaChoices.forEach(choice => {
+                                    const option = document.createElement('option');
+                                    option.value = choice.value;
+                                    option.textContent = choice.label;
+                                    firstSelect.appendChild(option);
+                                });
+                            }
+
+                            // Atualiza a tabela de medalhas dinamicamente
+                            updateMedalhasTable();
+
+                        } else {
+                            showAlertModal(data.error || 'Erro ao cadastrar medalha(s).', 'ERROR');
+                        }
+                    } catch (error) {
+                        console.error('Erro na requisição de cadastro de medalha:', error);
+                        showAlertModal('Erro de conexão ao cadastrar medalha(s): ' + error.message, 'ERROR');
+                    }
+                });
+
+                medalhaFormsContainer.addEventListener('input', function(e) {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                        e.target.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    }
+                });
+
+                // --- Funções para Modais de Edição e Exclusão (usando as funções globais) ---
+                // As funções openEditMedalhaModal e openDeleteMedalhaModal são definidas nos modais incluídos.
+                // Apenas nos certificamos de que os botões as chamem corretamente.
+
+                // Função para atualizar a tabela de medalhas dinamicamente
+                async function updateMedalhasTable() {
+                    try {
+                        const response = await fetch(window.location.href, { // Busca a página atual
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest' // Indica que é uma requisição AJAX
+                            }
+                        });
+                        const html = await response.text();
+                        
+                        // Cria um elemento temporário para parsear o HTML
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Encontra a nova tabela de medalhas no HTML retornado
+                        const newTableBody = doc.querySelector('#medalhasTable tbody');
+                        const newBadgeCount = doc.querySelector('#medals-tab .badge-count');
+
+                        if (newTableBody) {
+                            const currentTableBody = document.querySelector('#medalhasTable tbody');
+                            if (currentTableBody) {
+                                currentTableBody.innerHTML = newTableBody.innerHTML; // Atualiza o conteúdo da tabela
+                            }
+                        }
+                        if (newBadgeCount) {
+                            const currentBadgeCount = document.querySelector('#medals-tab .badge-count');
+                            if (currentBadgeCount) {
+                                currentBadgeCount.textContent = newBadgeCount.textContent; // Atualiza a contagem
+                            }
+                        }
+                        // Re-inicializa o Simple-DataTables para a tabela de medalhas
+                        if (dataTableInstances['medalhasTable']) {
+                            dataTableInstances['medalhasTable'].destroy(); // Destrói a instância antiga
+                        }
+                        initializeDataTable('medalhasTable'); // Cria uma nova instância
+                    } catch (error) {
+                        console.error('Erro ao atualizar a tabela de medalhas:', error);
+                        showAlertModal('Erro ao carregar dados atualizados da tabela de medalhas.', 'ERROR');
+                    }
+                }
+
+                // Inicializa a tabela de medalhas ao carregar a página
+                initializeDataTable('medalhasTable');
+            });
+        </script>
+        </section>
+
+
+
+</body>
+
+</html>
