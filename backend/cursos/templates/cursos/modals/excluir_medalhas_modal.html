@@ -1,0 +1,153 @@
+{# backend/cursos/templates/cursos/modals/excluir_medalhas_modal.html #}
+
+<div id="deleteMedalhaModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-red-600 to-red-700 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Excluir Medalha</h2>
+            <button onclick="closeDeleteMedalhaModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form id="deleteMedalhaForm" method="POST" action="" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" id="hiddenMedalhaId" name="medalha_id">
+
+            <div class="text-center py-4">
+                <svg class="mx-auto h-16 w-16 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                
+                <h3 class="text-lg font-medium text-gray-900 mt-4">Tem certeza que deseja excluir esta medalha?</h3>
+                <p class="text-sm text-gray-500 mt-2">
+                    Você está prestes a excluir uma medalha. 
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 bg-red-50 p-4 rounded-xl border border-red-100">
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="text-sm text-red-700">Esta ação removerá permanentemente o registro da medalha do sistema.</p>
+                </div>
+                
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p class="text-sm text-red-700">Não será possível recuperar esta informação posteriormente.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 mt-6">
+                <button type="button" onclick="closeDeleteMedalhaModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="confirmDeleteMedalhaBtn"
+                        class="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalStateDelete">Excluir Medalha</span>
+                    <span id="loadingStateDelete" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Excluindo...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteMedalhaModal = document.getElementById('deleteMedalhaModal');
+        const deleteMedalhaForm = document.getElementById('deleteMedalhaForm');
+        const hiddenMedalhaIdInput = document.getElementById('hiddenMedalhaId');
+        const submitButton = document.getElementById('confirmDeleteMedalhaBtn');
+        const normalStateDelete = submitButton.querySelector('#normalStateDelete');
+        const loadingStateDelete = submitButton.querySelector('#loadingStateDelete');
+
+        // O csrftoken agora é obtido do escopo global de usuario_medalha.html
+        // let csrftoken = ''; // Removido, pois será global
+        // function getCookie(name) { ... } // Removido, pois será global
+        // csrftoken = getCookie('csrftoken'); // Removido, pois será global
+
+
+        // Função para abrir o modal de exclusão
+        window.openDeleteMedalhaModal = function(medalhaId) {
+            hiddenMedalhaIdInput.value = medalhaId;
+            
+            // Define a URL de ação do formulário
+            deleteMedalhaForm.action = `/cursos/meus-medalhas/excluir/${medalhaId}/`;
+
+            // Exibe o modal
+            deleteMedalhaModal.classList.remove('hidden');
+        };
+
+        // Função para fechar o modal de exclusão
+        window.closeDeleteMedalhaModal = function() {
+            deleteMedalhaModal.classList.add('hidden');
+            deleteMedalhaForm.reset();
+        };
+
+        // Envio do formulário de exclusão
+        if (deleteMedalhaForm) {
+            deleteMedalhaForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                // Desabilita o botão de envio e exibe o spinner
+                submitButton.disabled = true;
+                normalStateDelete.classList.add('hidden');
+                loadingStateDelete.classList.remove('hidden');
+
+                const formData = new FormData(this);
+                
+                try {
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken // Usa o csrftoken global
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showAlertModal(data.message || 'Medalha excluída com sucesso!', 'SUCCESS');
+                        closeDeleteMedalhaModal();
+                        
+                        // Não remove a linha diretamente, mas chama a função para atualizar a tabela dinamicamente
+                        // Assumindo que updateMedalhasTable() está disponível no escopo global do pai
+                        if (typeof window.updateMedalhasTable === 'function') {
+                            window.updateMedalhasTable();
+                        } else {
+                            console.warn("Função 'updateMedalhasTable' não encontrada. Recarregando a página.");
+                            window.location.reload(); // Fallback
+                        }
+                    } else {
+                        showAlertModal(data.error || 'Erro ao excluir a medalha.', 'ERROR');
+                    }
+                } catch (error) {
+                    console.error('Erro na requisição de exclusão:', error);
+                    showAlertModal('Erro de conexão ao excluir a medalha: ' + error.message, 'ERROR');
+                } finally {
+                    // Restaura o botão
+                    submitButton.disabled = false;
+                    normalStateDelete.classList.remove('hidden');
+                    loadingStateDelete.classList.add('hidden');
+                }
+            });
+        }
+
+        // Fechar modal ao clicar no fundo escuro
+        deleteMedalhaModal.addEventListener('click', function(event) {
+            if (event.target === deleteMedalhaModal) {
+                closeDeleteMedalhaModal();
+            }
+        });
+    });
+</script>

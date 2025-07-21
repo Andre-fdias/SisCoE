@@ -1,5 +1,38 @@
 # backend/cursos/views.py
 
+# Importações padrão do Django
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse # Adicionado HttpResponse
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+from django.db.models import ProtectedError, Prefetch
+from django.utils import timezone
+from django.contrib.messages import constants # Para usar constants.SUCCESS, etc.
+
+# Importações de bibliotecas externas
+import datetime as dt
+from datetime import datetime
+import json
+import logging
+import csv
+from io import TextIOWrapper, BytesIO
+from tablib import Dataset
+import traceback
+
+# Importações de modelos e resources da sua aplicação
+from .models import Medalha, Curso
+from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao
+from backend.core.models import Profile # Assumindo que Profile está em backend.core.models
+from .resources import MedalhaResource, CursoResource # Certifique-se de ter esses resources
+
+# Configuração de logger
+logger = logging.getLogger(__name__)
+
+# backend/cursos/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -963,3 +996,263 @@ def user_curso_create(request):
         messages.error(request, f'Erro inesperado: {str(e)}',
                      extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('core:index')  # Use uma URL válida
+# --- Views de Medalhas (Usuário Logado) ---
+
+@login_required
+def user_medalha_list(request):
+    """
+    Lista as medalhas associadas ao perfil do usuário logado.
+    """
+    try:
+        user_profile = Profile.objects.get(user=request.user)
+        if not user_profile.cadastro:
+            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.',
+                           extra_tags='error_message')
+            return redirect('core:index') # Ajuste para a sua URL inicial
+        
+        cadastro = user_profile.cadastro
+        medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
+
+        # Carrega dados adicionais do militar para o template (promocoes, detalhes_situacao)
+        detalhes = cadastro.detalhes_situacao.order_by('-apresentacao_na_unidade').first()
+        promocao = cadastro.promocoes.order_by('-data_alteracao').first()
+        promocoes = cadastro.promocoes.order_by('-data_alteracao') # Para listar todas as promoções
+
+        context = {
+            'cadastro': cadastro,
+            'medalhas_do_militar': medalhas_do_militar,
+            'honraria_choices': Medalha.HONRARIA_CHOICES, # Para o modal de edição/criação
+            'title': 'Minhas Medalhas',
+            'detalhes': detalhes,
+            'promocao': promocao,
+            'promocoes': promocoes,
+            'today': timezone.now().date(),
+            # Adicione as choices dos modelos para os selects no template
+            'situacao_choices': DetalhesSituacao.situacao_choices,
+            'sgb_choices': DetalhesSituacao.sgb_choices,
+            'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
+            'esta_adido_choices': DetalhesSituacao.esta_adido_choices,
+            'funcao_choices': DetalhesSituacao.funcao_choices,
+            'prontidao_choices': DetalhesSituacao.prontidao_choices,
+            'posto_grad_choices': Promocao.posto_grad_choices,
+            'quadro_choices': Promocao.quadro_choices,
+            'grupo_choices': Promocao.grupo_choices,
+            'genero_choices': Cadastro.genero_choices,
+            'alteracao_choices': Cadastro.alteracao_choices,
+        }
+        return render(request, 'cursos/usuario_medalha.html', context)
+
+    except Profile.DoesNotExist:
+        messages.error(request, 'Perfil do usuário não encontrado.', extra_tags='error_message')
+        return redirect('core:index')
+    except Cadastro.DoesNotExist:
+        messages.error(request, 'Cadastro militar associado ao perfil não encontrado.', extra_tags='error_message')
+        return redirect('core:index')
+    except Exception as e:
+        logger.error(f"Erro inesperado ao carregar lista de medalhas do usuário: {str(e)}", exc_info=True)
+        messages.error(request, f'Erro inesperado ao carregar suas medalhas: {str(e)}', extra_tags='error_message')
+        return redirect('core:index')
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def user_medalha_create(request):
+    """
+    Permite ao usuário logado cadastrar novas medalhas para seu próprio perfil.
+    GET: Exibe o formulário de cadastro de medalhas.
+    POST: Processa o envio do formulário, permitindo o cadastro de múltiplas medalhas.
+    """
+    try:
+        user_profile = Profile.objects.get(user=request.user)
+        if not user_profile.cadastro:
+            # Para requisições GET, redireciona com mensagem de erro
+            if request.method == 'GET':
+                messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', extra_tags='error_message')
+                return redirect('core:index')
+            # Para requisições POST (AJAX), retorna JSON
+            return JsonResponse({'success': False, 'error': 'Seu perfil não está vinculado a um cadastro militar.'}, status=400)
+
+        cadastro = user_profile.cadastro # O cadastro do usuário logado
+    except Profile.DoesNotExist:
+        if request.method == 'GET':
+            messages.error(request, 'Perfil do usuário não encontrado.', extra_tags='error_message')
+            return redirect('core:index')
+        return JsonResponse({'success': False, 'error': 'Perfil do usuário não encontrado.'}, status=400)
+    except Cadastro.DoesNotExist:
+        if request.method == 'GET':
+            messages.error(request, 'Cadastro militar associado ao perfil não encontrado.', extra_tags='error_message')
+            return redirect('core:index')
+        return JsonResponse({'success': False, 'error': 'Cadastro militar associado ao perfil não encontrado.'}, status=400)
+    except Exception as e:
+        logger.error(f"Erro inesperado ao carregar perfil/cadastro para criação de medalhas: {str(e)}", exc_info=True)
+        if request.method == 'GET':
+            messages.error(request, f'Erro inesperado ao carregar dados do perfil: {str(e)}', extra_tags='error_message')
+            return redirect('core:index')
+        return JsonResponse({'success': False, 'error': f'Erro inesperado ao carregar dados do perfil: {str(e)}'}, status=500)
+
+    # Dados a serem passados para o template, independentemente do método (GET/POST)
+    today = timezone.now().date()
+    detalhes = cadastro.detalhes_situacao.order_by('-apresentacao_na_unidade').first()
+    promocao = cadastro.promocoes.order_by('-data_alteracao').first()
+    promocoes = cadastro.promocoes.order_by('-data_alteracao')
+    
+    if request.method == 'POST':
+        num_medalhas = int(request.POST.get('num_medalhas', 0))
+        medalhas_salvas_count = 0
+        errors = []
+        
+        with transaction.atomic(): # Garante que todas as medalhas são salvas ou nenhuma
+            for i in range(num_medalhas):
+                honraria = request.POST.get(f'honraria_{i}')
+                data_publicacao_lp_str = request.POST.get(f'data_publicacao_lp_{i}')
+                bol_g_pm_lp = request.POST.get(f'bol_g_pm_lp_{i}', '').strip()
+                observacoes = request.POST.get(f'observacoes_{i}', '').strip()
+
+                # Validação dos campos obrigatórios
+                if not honraria:
+                    errors.append(f'Medalha #{i+1}: Honraria é obrigatória.')
+                    continue
+                if not data_publicacao_lp_str:
+                    errors.append(f'Medalha #{i+1}: Data de Publicação LP é obrigatória.')
+                    continue
+
+                data_publicacao_lp = None
+                if data_publicacao_lp_str:
+                    try:
+                        data_publicacao_lp = datetime.strptime(data_publicacao_lp_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        errors.append(f'Medalha #{i+1}: Formato de data inválido. Use AAAA-MM-DD.')
+                        continue
+                
+                try:
+                    Medalha.objects.create(
+                        cadastro=cadastro,
+                        honraria=honraria,
+                        data_publicacao_lp=data_publicacao_lp,
+                        bol_g_pm_lp=bol_g_pm_lp,
+                        observacoes=observacoes,
+                        usuario_alteracao=request.user
+                    )
+                    medalhas_salvas_count += 1
+                except Exception as e:
+                    logger.error(f"Erro ao salvar medalha #{i+1}: {str(e)}", exc_info=True)
+                    errors.append(f'Medalha #{i+1}: Erro ao salvar - {str(e)}')
+        
+        if errors:
+            return JsonResponse({'success': False, 'error': 'Alguns erros ocorreram: ' + '; '.join(errors)}, status=400)
+        elif medalhas_salvas_count > 0:
+            # Removido messages.success para evitar possível conflito com JsonResponse
+            return JsonResponse({'success': True, 'message': f'{medalhas_salvas_count} medalha(s) cadastrada(s) com sucesso!'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Nenhuma medalha foi cadastrada. Verifique os dados e tente novamente.'}, status=400)
+
+    # Se for GET, renderiza o template (o mesmo que user_medalha_list pode usar)
+    # Certifique-se de que este GET path está correto no seu urls.py
+    medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
+    cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
+
+    context = {
+        'cadastro': cadastro,
+        'title': 'Cadastrar Nova Medalha',
+        'medalhas_do_militar': medalhas_do_militar,
+        'cursos_do_militar': cursos_do_militar,
+        'honraria_choices': Medalha.HONRARIA_CHOICES,
+
+        'detalhes': detalhes,
+        'promocao': promocao,
+        'today': today,
+        'promocoes': promocoes,
+        
+        # Adicione as choices dos modelos para os selects no template
+        'situacao_choices': DetalhesSituacao.situacao_choices,
+        'sgb_choices': DetalhesSituacao.sgb_choices,
+        'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
+        'esta_adido_choices': DetalhesSituacao.esta_adido_choices,
+        'funcao_choices': DetalhesSituacao.funcao_choices,
+        'prontidao_choices': DetalhesSituacao.prontidao_choices,
+        'posto_grad_choices': Promocao.posto_grad_choices,
+        'quadro_choices': Promocao.quadro_choices,
+        'grupo_choices': Promocao.grupo_choices,
+        'genero_choices': Cadastro.genero_choices,
+        'alteracao_choices': Cadastro.alteracao_choices,
+    }
+    return render(request, 'cursos/usuario_medalha.html', context)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def user_medalha_edit(request, pk):
+    """
+    Permite ao usuário logado editar uma de suas medalhas.
+    GET: Retorna os dados da medalha em formato JSON para preencher o modal.
+    POST: Atualiza os dados da medalha no banco de dados.
+    """
+    # Garante que só pode editar as próprias medalhas
+    medalha = get_object_or_404(Medalha, pk=pk, cadastro__user=request.user) 
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'medalha': {
+                'id': medalha.pk,
+                'honraria': medalha.honraria,
+                'bol_g_pm_lp': medalha.bol_g_pm_lp or '',
+                'data_publicacao_lp': medalha.data_publicacao_lp.strftime('%Y-%m-%d') if medalha.data_publicacao_lp else '',
+                'observacoes': medalha.observacoes or ''
+            }
+        })
+
+    elif request.method == 'POST':
+        try:
+            with transaction.atomic():
+                honraria = request.POST.get('honraria')
+                bol_g_pm_lp = request.POST.get('bol_g_pm_lp', '').strip() or None
+                data_publicacao_lp_str = request.POST.get('data_publicacao_lp') or None
+                observacoes = request.POST.get('observacoes', '').strip() or None
+
+                if not honraria:
+                    raise ValueError("A honraria é obrigatória.")
+
+                data_publicacao_lp = None
+                if data_publicacao_lp_str:
+                    try:
+                        data_publicacao_lp = datetime.strptime(data_publicacao_lp_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        raise ValueError("Formato de data de publicação inválido. Use AAAA-MM-DD.")
+
+                medalha.honraria = honraria
+                medalha.bol_g_pm_lp = bol_g_pm_lp
+                medalha.data_publicacao_lp = data_publicacao_lp
+                medalha.observacoes = observacoes
+                medalha.usuario_alteracao = request.user
+                medalha.save()
+
+            messages.success(request, 'Medalha atualizada com sucesso!', extra_tags='success_message')
+            return JsonResponse({'success': True, 'message': 'Medalha atualizada com sucesso!'})
+        except ValueError as e:
+            logger.error(f"Erro de validação ao atualizar medalha {pk}: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        except Exception as e:
+            logger.error(f"Erro inesperado ao atualizar medalha {pk}: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': 'Erro interno do servidor ao atualizar a medalha.'}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def user_medalha_delete(request, pk):
+    """
+    Permite ao usuário logado excluir uma de suas medalhas.
+    Retorna uma resposta JSON indicando sucesso ou falha.
+    """
+    try:
+        # Garante que só pode excluir as próprias medalhas
+        medalha = get_object_or_404(Medalha, pk=pk, cadastro__user=request.user) 
+        with transaction.atomic():
+            medalha.delete()
+        messages.success(request, 'Medalha excluída com sucesso!', extra_tags='success_message')
+        return JsonResponse({'success': True, 'message': 'Medalha excluída com sucesso!'})
+    except ProtectedError:
+        logger.warning(f"Tentativa de excluir medalha {pk} protegida por FKs.")
+        messages.error(request, 'Esta medalha não pode ser excluída devido a dependências.', extra_tags='error_message')
+        return JsonResponse({'success': False, 'error': 'Esta medalha não pode ser excluída devido a dependências.'}, status=400)
+    except Exception as e:
+        logger.error(f"Erro ao excluir medalha {pk}: {str(e)}", exc_info=True)
+        messages.error(request, f'Erro ao excluir medalha: {str(e)}', extra_tags='error_message')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

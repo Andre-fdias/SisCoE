@@ -1,0 +1,257 @@
+{# backend/cursos/templates/cursos/modals/editar_medalhas_modal.html #}
+
+{% comment %}
+Modal de edição de medalhas com design moderno e intuitivo
+{% endcomment %}
+
+<div id="editMedalhaModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Editar Medalha</h2>
+            <button onclick="closeEditMedalhaModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form id="editMedalhaForm" method="POST" action="" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="medalha_id" id="edit_medalha_id">
+
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados da Medalha</h2>
+                    <hr class="border-t border-gray-100">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="edit_honraria" class="block text-sm font-medium text-gray-700">Honraria *</label>
+                            <div class="relative">
+                                <select name="honraria" id="edit_honraria" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="" disabled selected>Selecione uma honraria</option>
+                                    <!-- As opções serão preenchidas via JavaScript -->
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Selecione a honraria da medalha.</p>
+                        </div>
+
+                        <div>
+                            <label for="edit_bol_g_pm_lp" class="block text-sm font-medium text-gray-700">BOL GPm LP</label>
+                            <input type="text" id="edit_bol_g_pm_lp" name="bol_g_pm_lp"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Número do Boletim Geral PM/LP.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1">
+                        <div>
+                            <label for="edit_data_publicacao_lp" class="block text-sm font-medium text-gray-700">Data Publicação LP</label>
+                            <div class="relative">
+                                <input type="date" id="edit_data_publicacao_lp" name="data_publicacao_lp"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+                                        [&::-webkit-calendar-picker-indicator]:opacity-0
+                                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5LjY4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                        bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Data de publicação no Boletim Oficial.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1">
+                        <div>
+                            <label for="edit_observacoes" class="block text-sm font-medium text-gray-700">Observações</label>
+                            <textarea id="edit_observacoes" name="observacoes" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Informações adicionais sobre a medalha.</p>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end gap-4">
+                <button type="button" onclick="closeEditMedalhaModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitEditMedalha"
+                        class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalStateEdit">Salvar Alterações</span>
+                    <span id="loadingStateEdit" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </span>
+                </button>
+            </div>
+            
+            <div id="editErrorMessages" class="text-red-500 text-sm mb-4 hidden"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editMedalhaModal = document.getElementById('editMedalhaModal');
+        const editMedalhaForm = document.getElementById('editMedalhaForm');
+        const medalhaIdInput = document.getElementById('edit_medalha_id');
+        const honrariaSelect = document.getElementById('edit_honraria');
+        const submitButton = document.getElementById('submitEditMedalha');
+        const normalState = submitButton.querySelector('#normalStateEdit');
+        const loadingState = submitButton.querySelector('#loadingStateEdit');
+        const editErrorMessages = document.getElementById('editErrorMessages');
+
+        // O csrftoken agora é obtido do escopo global de usuario_medalha.html
+        // let csrftoken = ''; // Removido, pois será global
+
+        // Preenche as opções do select de honraria
+        // honrariaChoices deve ser uma variável global definida no template pai (usuario_medalha.html)
+        if (typeof honrariaChoices !== 'undefined' && honrariaSelect) {
+            honrariaSelect.innerHTML = '<option value="" disabled selected>Selecione uma honraria</option>';
+            honrariaChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice.value;
+                option.textContent = choice.label;
+                honrariaSelect.appendChild(option);
+            });
+        }
+
+        // Função para abrir o modal de edição e carregar dados
+        window.openEditMedalhaModal = async function(medalhaId) {
+            if (!editMedalhaModal || !editMedalhaForm) {
+                console.error("Elementos do modal de edição de medalha não encontrados.");
+                showAlertModal('Erro interno: Componentes do modal de edição não encontrados.', 'ERROR');
+                return;
+            }
+
+            try {
+                // Exibe o estado de carregamento no botão
+                normalState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+                submitButton.disabled = true;
+                editErrorMessages.classList.add('hidden'); // Limpa mensagens de erro anteriores
+
+                const response = await fetch(`/cursos/meus-medalhas/editar/${medalhaId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Não foi possível carregar os dados da medalha.');
+                }
+
+                const data = await response.json();
+                const medalha = data.medalha;
+                
+                // Preenche o formulário com os dados recebidos
+                medalhaIdInput.value = medalha.id;
+                honrariaSelect.value = medalha.honraria;
+                document.getElementById('edit_bol_g_pm_lp').value = medalha.bol_g_pm_lp || '';
+                document.getElementById('edit_data_publicacao_lp').value = medalha.data_publicacao_lp || '';
+                document.getElementById('edit_observacoes').value = medalha.observacoes || '';
+                
+                // Define a URL de ação do formulário
+                editMedalhaForm.action = `/cursos/meus-medalhas/editar/${medalhaId}/`;
+
+                // Exibe o modal
+                editMedalhaModal.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Erro ao carregar medalha para edição:', error);
+                editErrorMessages.textContent = error.message;
+                editErrorMessages.classList.remove('hidden');
+                showAlertModal('Erro ao carregar dados da medalha: ' + error.message, 'ERROR');
+            } finally {
+                // Restaura o botão
+                normalState.classList.remove('hidden');
+                loadingState.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+
+            // Adiciona o event listener para fechar ao clicar fora
+            editMedalhaModal.addEventListener('click', function(event) {
+                if (event.target === editMedalhaModal) {
+                    closeEditMedalhaModal();
+                }
+            });
+        };
+
+        // Função para fechar o modal de edição
+        window.closeEditMedalhaModal = function() {
+            if (editMedalhaModal) {
+                editMedalhaModal.classList.add('hidden');
+                editErrorMessages.textContent = '';
+                editErrorMessages.classList.add('hidden');
+                editMedalhaForm.reset();
+            }
+        };
+
+        // Envio do formulário de edição
+        if (editMedalhaForm) {
+            editMedalhaForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                // Desabilita o botão de envio e exibe o spinner
+                submitButton.disabled = true;
+                normalState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+                editErrorMessages.classList.add('hidden'); // Limpa mensagens de erro anteriores
+
+                const form = event.target;
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken // Usa o csrftoken global
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showAlertModal(data.message || 'Medalha atualizada com sucesso!', 'SUCCESS');
+                        closeEditMedalhaModal();
+                        
+                        // Não recarrega a página, mas chama a função para atualizar a tabela dinamicamente
+                        // Assumindo que updateMedalhasTable() está disponível no escopo global do pai
+                        if (typeof window.updateMedalhasTable === 'function') {
+                            window.updateMedalhasTable();
+                        } else {
+                            console.warn("Função 'updateMedalhasTable' não encontrada. Recarregando a página.");
+                            window.location.reload(); // Fallback
+                        }
+                    } else {
+                        const errorContainer = document.getElementById('editErrorMessages');
+                        if (errorContainer) {
+                            errorContainer.textContent = data.error || 'Erro ao salvar a medalha.';
+                            errorContainer.classList.remove('hidden');
+                        }
+                        showAlertModal(data.error || 'Erro ao salvar a medalha.', 'ERROR');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar medalha:', error);
+                    editErrorMessages.textContent = 'Erro de conexão ao salvar a medalha: ' + error.message;
+                    editErrorMessages.classList.remove('hidden');
+                    showAlertModal('Erro de conexão ao salvar a medalha: ' + error.message, 'ERROR');
+                } finally {
+                    // Restaura o botão
+                    submitButton.disabled = false;
+                    normalState.classList.remove('hidden');
+                    loadingState.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>

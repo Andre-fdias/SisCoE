@@ -1,0 +1,240 @@
+{# backend/cursos/templates/cursos/modals/editar_cursos_modal.html #}
+
+{% comment %}
+Modal de edição de cursos com design moderno e intuitivo
+{% endcomment %}
+
+<div id="editCursoModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 transition-all duration-300">
+        <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-800 rounded-t-2xl">
+            <h2 class="text-xl font-semibold text-white">Editar Curso</h2>
+            <button onclick="closeEditCursoModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <form id="editCursoForm" method="POST" action="" class="p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="curso_id" id="edit_curso_id">
+
+            <fieldset class="border bg-gray-100 border-gray-200 p-6 mb-8 rounded-2xl shadow-sm">
+                <div class="space-y-6">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Dados do Curso</h2>
+                    <hr class="border-t border-gray-100">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="edit_curso" class="block text-sm font-medium text-gray-700">Tipo de Curso *</label>
+                            <div class="relative">
+                                <select name="curso" id="edit_curso" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="" disabled selected>Selecione um curso</option>
+                                    <!-- As opções serão preenchidas via JavaScript -->
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Selecione o tipo de curso realizado.</p>
+                        </div>
+
+                        <div>
+                            <label for="edit_data_publicacao" class="block text-sm font-medium text-gray-700">Data Publicação *</label>
+                            <div class="relative">
+                                <input type="date" id="edit_data_publicacao" name="data_publicacao" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+                                        [&::-webkit-calendar-picker-indicator]:opacity-0
+                                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2Yzc2OGEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCA3VjN2NE0xNSA3VjN2NE0zIDVoMTZjMCAxLjg4NiAwIDIuODI4LjU4NiAzLjQxNEMyMC4xNzIgOSAyMS4xNCA5IDIzIDl2OWMwIDEuODg2IDAgMi44MjguNTg2IDMuNDFDMjEuNjU3IDIyIDIwLjczMSAyMiAxOSAyMkg1Yy0xLjg4NiAwLTIuODU4IDAtMy40MTQtLjU4NkMyIDE2LjgyOCAxIDE5LjY4NiAxIDE4VjhDMi4xNyA0IDMuMTQgNCA1IDRoMk0xOSAxM0g1TTEyIDE3SDVNNjcgMTNIMiIvPjwvc3ZnPg==')]
+                                        bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Data de publicação no Boletim Oficial.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1">
+                        <div>
+                            <label for="edit_bol_publicacao" class="block text-sm font-medium text-gray-700">BOL Publicação *</label>
+                            <input type="text" id="edit_bol_publicacao" name="bol_publicacao" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Número do Boletim Oficial (ex: BOL-123).</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1">
+                        <div>
+                            <label for="edit_observacoes" class="block text-sm font-medium text-gray-700">Observações</label>
+                            <textarea id="edit_observacoes" name="observacoes" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Informações adicionais sobre o curso.</p>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end gap-4">
+                <button type="button" onclick="closeEditCursoModal()"
+                        class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    Cancelar
+                </button>
+                <button type="submit" id="submitEditCurso"
+                        class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all duration-200">
+                    <span id="normalState">Salvar Alterações</span>
+                    <span id="loadingState" class="hidden">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                    </span>
+                </button>
+            </div>
+            
+            <div id="editErrorMessages" class="text-red-500 text-sm mb-4 hidden"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editCursoModal = document.getElementById('editCursoModal');
+        const editCursoForm = document.getElementById('editCursoForm');
+        const cursoIdInput = document.getElementById('edit_curso_id');
+        const cursoSelect = document.getElementById('edit_curso');
+        const submitButton = document.getElementById('submitEditCurso');
+        const normalState = submitButton.querySelector('#normalState');
+        const loadingState = submitButton.querySelector('#loadingState');
+
+        // Preenche as opções do select de curso
+        if (typeof cursoChoices !== 'undefined' && cursoSelect) {
+            cursoSelect.innerHTML = '<option value="" disabled selected>Selecione um curso</option>';
+            cursoChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice.value;
+                option.textContent = choice.label;
+                cursoSelect.appendChild(option);
+            });
+        }
+
+        // Função para abrir o modal de edição e carregar dados
+        window.openEditCursoModal = async function(cursoId) {
+            if (!editCursoModal || !editCursoForm) {
+                console.error("Elementos do modal de edição não encontrados.");
+                showAlertModal('Erro interno: Componentes do modal de edição não encontrados.', 'ERROR');
+                return;
+            }
+
+            try {
+                // Exibe o estado de carregamento no botão
+                normalState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+                submitButton.disabled = true;
+
+                const response = await fetch(`/cursos/meus-cursos/editar/${cursoId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Não foi possível carregar os dados do curso.');
+                }
+
+                const data = await response.json();
+                const curso = data.curso;
+                
+                // Preenche o formulário com os dados recebidos
+                cursoIdInput.value = curso.id;
+                cursoSelect.value = curso.curso;
+                document.getElementById('edit_data_publicacao').value = curso.data_publicacao;
+                document.getElementById('edit_bol_publicacao').value = curso.bol_publicacao;
+                document.getElementById('edit_observacoes').value = curso.observacoes || '';
+                
+                // Define a URL de ação do formulário
+                editCursoForm.action = `/cursos/meus-cursos/editar/${cursoId}/`;
+
+                // Exibe o modal
+                editCursoModal.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Erro ao carregar curso para edição:', error);
+                showAlertModal('Erro ao carregar dados do curso: ' + error.message, 'ERROR');
+            } finally {
+                // Restaura o botão
+                normalState.classList.remove('hidden');
+                loadingState.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+
+            // Adiciona o event listener para fechar ao clicar fora
+            editCursoModal.addEventListener('click', function(event) {
+                if (event.target === editCursoModal) {
+                    closeEditCursoModal();
+                }
+            });
+        };
+
+        // Função para fechar o modal de edição
+        window.closeEditCursoModal = function() {
+            if (editCursoModal) {
+                editCursoModal.classList.add('hidden');
+                document.getElementById('editErrorMessages').textContent = '';
+                document.getElementById('editErrorMessages').classList.add('hidden');
+                editCursoForm.reset();
+            }
+        };
+
+        // Envio do formulário de edição
+        if (editCursoForm) {
+            editCursoForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                // Desabilita o botão de envio e exibe o spinner
+                submitButton.disabled = true;
+                normalState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+
+                const form = event.target;
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': csrftoken
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showAlertModal(data.message || 'Curso atualizado com sucesso!', 'SUCCESS');
+                        closeEditCursoModal();
+                        
+                        // Recarrega a página para atualizar a tabela
+                        window.location.reload();
+                    } else {
+                        const errorContainer = document.getElementById('editErrorMessages');
+                        if (errorContainer) {
+                            errorContainer.textContent = data.error || 'Erro ao salvar o curso.';
+                            errorContainer.classList.remove('hidden');
+                        }
+                        showAlertModal(data.error || 'Erro ao salvar o curso.', 'ERROR');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar curso:', error);
+                    showAlertModal('Erro de conexão ao salvar o curso: ' + error.message, 'ERROR');
+                } finally {
+                    // Restaura o botão
+                    submitButton.disabled = false;
+                    normalState.classList.remove('hidden');
+                    loadingState.classList.add('hidden');
+                }
+            });
+        }
+    });
+</script>
