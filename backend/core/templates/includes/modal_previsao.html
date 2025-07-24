@@ -1,0 +1,226 @@
+<div id="weather-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl relative">
+        <button id="close-weather-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+            ✕
+        </button>
+        
+        <div class="text-white bg-gradient-to-r from-purple-400 via-indigo-300 to-blue-400 rounded-lg p-8">
+            <div class="mb-6 flex justify-between items-center">
+                <h1 id="currentDateAndCondition" class="text-lg font-bold capitalize text-gray-700"></h1>
+                <select id="citySelector" class="bg-blue-300 text-gray-600 rounded-md p-2 mt-1">
+                    <option value="">Selecione uma cidade</option>
+                    <option value="votorantim">Votorantim</option>
+                    <option value="piedade">Piedade</option>
+                    <option value="itu">Itu</option>
+                    <option value="porto feliz">Porto Feliz</option>
+                    <option value="salto">Salto</option>
+                    <option value="sao roque">São Roque</option>
+                    <option value="ibiuna">Ibiúna</option>
+                    <option value="itapeva">Itapeva</option>
+                    <option value="itarare">Itararé</option>
+                    <option value="apiai">Apiaí</option>
+                    <option value="capao bonito">Capão Bonito</option>
+                    <option value="itapetininga">Itapetininga</option>
+                    <option value="angatuba">Angatuba</option>
+                    <option value="boituva">Boituva</option>
+                    <option value="tatui">Tatuí</option>
+                    <option value="tiete">Tietê</option>
+                    <option value="laranjal paulista">Laranjal Paulista</option>
+                    <option value="botucatu">Botucatu</option>
+                    <option value="itai">Itaí</option>
+                    <option value="avare">Avaré</option>
+                    <option value="itatinga">Itatinga</option>
+                    <option value="piraju">Piraju</option>
+                    <option value="campinas">Campinas</option>
+                    <option value="sao paulo">São Paulo</option>
+                    <option value="sorocaba" selected>Sorocaba</option>
+                </select>
+            </div>
+            <div class="flex justify-between items-center mb-6">
+                <div class="bg-gray-500 p-3 rounded-lg">
+                    <p id="currentTime" class="text-gray-200 text-2xl "></p>
+                </div>
+                </div>
+            <div class="mb-8">
+                <div class="rounded-md p-4 flex items-center justify-between mb-4">
+                    <div class="">
+                        <p class="text-5xl font-bold text-gray-700" id="temperature"></p>
+                        </div>
+                    <img id="weatherIcon" class="w-24 h-24" alt="Ícone do tempo">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-sm">
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <p class="text-gray-400 mb-1">Sensação</p>
+                        <p class="font-medium" id="feelsLike"></p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <p class="text-gray-400 mb-1">Vento</p>
+                        <p class="font-medium" id="windSpeed"></p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <p class="text-gray-400 mb-1">Umidade</p>
+                        <p class="font-medium" id="humidity"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="weatherForecast" class="grid grid-cols-3 gap-4 mb-4"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Adicione esses scripts ANTES do seu código -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/pt-br.min.js"></script>
+
+
+<script>
+    $(document).ready(function() {
+        // Arrays com nomes em português
+        const diasSemana = [
+            'Domingo', 'Segunda-feira', 'Terça-feira', 
+            'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'
+        ];
+        
+        const meses = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        function updateCurrentDateTimeDisplay() {
+            const now = new Date();
+            
+            const diaSemana = diasSemana[now.getDay()];
+            const dia = now.getDate();
+            const mes = meses[now.getMonth()];
+            const ano = now.getFullYear();
+            
+            // Formata horas, minutos e segundos com 2 dígitos
+            const horas = now.getHours().toString().padStart(2, '0');
+            const minutos = now.getMinutes().toString().padStart(2, '0');
+            const segundos = now.getSeconds().toString().padStart(2, '0');
+            
+            const dataFormatada = `${diaSemana}, ${dia} de ${mes} de ${ano}`;
+            const horaFormatada = `${horas}:${minutos}:${segundos}`;
+            
+            $('#currentDateTimeDisplay').html(
+                `${dataFormatada} <span class="text-purple-400">${horaFormatada}</span>`
+            );
+        }
+
+        // Atualiza imediatamente e a cada segundo
+        updateCurrentDateTimeDisplay();
+        setInterval(updateCurrentDateTimeDisplay, 1000);
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        moment.locale('pt-br');
+
+        const weatherApiKey = '37c31b897f1242bd16f59c9b0b92ec55';
+        let currentCity = 'sorocaba'; // Cidade inicial
+
+        const weatherWidget = $('#weather-widget');
+        const weatherIconWidget = $('#weather-icon-widget');
+        const temperatureWidget = $('#temperature-widget');
+        const currentCityWidget = $('#current-city');
+
+        const weatherModal = $('#weather-modal');
+        const closeWeatherModal = $('#close-weather-modal');
+        const currentDateAndConditionElem = $('#currentDateAndCondition'); // Novo elemento
+        const currentTimeElem = $('#currentTime');
+        const citySelector = $('#citySelector');
+        const temperatureElem = $('#temperature');
+        const feelsLikeElem = $('#feelsLike');
+        const windSpeedElem = $('#windSpeed');
+        const humidityElem = $('#humidity');
+        const weatherIconElem = $('#weatherIcon');
+        const weatherForecastElem = $('#weatherForecast');
+
+        weatherWidget.on('click', function() {
+            weatherModal.removeClass('hidden');
+        });
+
+        closeWeatherModal.on('click', function() {
+            weatherModal.addClass('hidden');
+        });
+
+        function updateDateTime(weatherCondition = '') {
+            const now = moment();
+            // Combina data, dia da semana e condição do tempo em uma única linha
+            const formattedDate = now.format('dddd [•] LL');
+            const capitalizedDate = formattedDate
+                .replace(/^\w/, c => c.toUpperCase())
+                .replace(/(\s)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+            
+            currentDateAndConditionElem.text(`${capitalizedDate} - ${weatherCondition}`);
+            currentTimeElem.text(now.format('HH:mm'));
+        }
+
+        async function fetchWeather() {
+            try {
+                const currentResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${currentCity}&appid=${weatherApiKey}&units=metric&lang=pt`
+                );
+                const currentData = await currentResponse.json();
+
+                temperatureElem.text(`${Math.round(currentData.main.temp)}°C`);
+                feelsLikeElem.text(`${Math.round(currentData.main.feels_like)}°C`);
+                windSpeedElem.text(`${(currentData.wind.speed * 3.6).toFixed(1)} km/h`);
+                humidityElem.text(`${currentData.main.humidity}%`);
+                weatherIconElem.attr('src', `https://openweathermap.org/img/wn/${currentData.weather[0].icon}@4x.png`);
+
+                // Atualiza a nova linha combinada
+                updateDateTime(currentData.weather[0].description);
+
+                currentCityWidget.text(currentCity);
+                temperatureWidget.text(`${Math.round(currentData.main.temp)}°C`);
+                weatherIconWidget.attr('src', `https://openweathermap.org/img/wn/${currentData.weather[0].icon}@2x.png`);
+
+                const forecastResponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/forecast?q=${currentCity}&appid=${weatherApiKey}&units=metric&lang=pt`
+                );
+                const forecastData = await forecastResponse.json();
+                
+                weatherForecastElem.empty();
+                const now = moment();
+                forecastData.list
+                    .filter(f => moment(f.dt_txt).isSameOrAfter(now))
+                    .slice(0, 3)
+                    .forEach(f => {
+                    weatherForecastElem.append(`
+                        <div class="bg-gray-800 p-3 rounded-lg transform transition-all duration-300 hover:scale-105">
+                            <p class="font-medium">${moment(f.dt_txt).format('HH:mm')}</p>
+                            <img src="https://openweathermap.org/img/w/${f.weather[0].icon}.png"
+                                class="w-12 h-12 mx-auto">
+                            <p class="text-center">${Math.round(f.main.temp)}°C</p>
+                            <p class="text-center text-sm">${f.weather[0].description}</p>
+                        </div>
+                    `);
+                    });
+
+            } catch (error) {
+                console.error('Erro ao buscar dados do tempo:', error);
+                temperatureElem.text('--°C');
+                weatherForecastElem.html('<p class="text-red-400">Erro ao carregar previsão</p>');
+                temperatureWidget.text('--°C');
+                updateDateTime('Erro ao carregar'); // Atualiza mesmo em caso de erro
+            }
+        }
+
+        function init() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            fetchWeather();
+            
+            citySelector.on('change', function() {
+                currentCity = $(this).val();
+                fetchWeather();
+            });
+        }
+
+        init();
+    });
+</script>
+

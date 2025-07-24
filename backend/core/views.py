@@ -424,6 +424,15 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from datetime import datetime
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.views.generic import TemplateView
+from datetime import datetime
+import json
+
+from django.views.generic import TemplateView
+from datetime import datetime
+import json
 
 class CalendarioView(TemplateView):
     template_name = 'calendario.html'
@@ -434,89 +443,89 @@ class CalendarioView(TemplateView):
         
         # Eventos GB
         eventos_gb = [
-            {"titulo": "Aniversário EB Itaí", "data": f"{current_year}-02-23", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário do CB/SP", "data": f"{current_year}-03-10", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário COBOM Scb", "data": f"{current_year}-03-31", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário - PB Botucatu", "data": f"{current_year}-04-14", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Anivers. PB Itapeva", "data": f"{current_year}-05-29", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário do CB/Bra", "data": f"{current_year}-07-02", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Salto", "data": f"{current_year}-07-16", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Tatuí", "data": f"{current_year}-08-08", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Boituva", "data": f"{current_year}-09-03", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Itu", "data": f"{current_year}-09-06", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário - PB Avaré", "data": f"{current_year}-09-15", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Porto Feliz", "data": f"{current_year}-10-26", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Tietê", "data": f"{current_year}-10-27", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Cerrado", "data": f"{current_year}-11-12", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Votorantim", "data": f"{current_year}-12-08", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Apiaí", "data": f"{current_year}-12-10", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário da PM", "data": f"{current_year}-12-15", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário PB Eden", "data": f"{current_year}-12-16", "color": "#3b82f6", "tipo": "Evento GB"},
-            {"titulo": "Aniversário BB Cap.Bonito", "data": f"{current_year}-12-17", "color": "#3b82f6", "tipo": "Evento GB"}
+            {"title": "Aniversário EB Itaí", "start": f"{current_year}-02-23", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário do CB/SP", "start": f"{current_year}-03-10", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário COBOM Scb", "start": f"{current_year}-03-31", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário - PB Botucatu", "start": f"{current_year}-04-14", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Anivers. PB Itapeva", "start": f"{current_year}-05-29", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário do CB/Bra", "start": f"{current_year}-07-02", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Salto", "start": f"{current_year}-07-16", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Tatuí", "start": f"{current_year}-08-08", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário BB Boituva", "start": f"{current_year}-09-03", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Itu", "start": f"{current_year}-09-06", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário - PB Avaré", "start": f"{current_year}-09-15", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário BB Porto Feliz", "start": f"{current_year}-10-26", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário BB Tietê", "start": f"{current_year}-10-27", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Cerrado", "start": f"{current_year}-11-12", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Votorantim", "start": f"{current_year}-12-08", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário BB Apiaí", "start": f"{current_year}-12-10", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário da PM", "start": f"{current_year}-12-15", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário PB Eden", "start": f"{current_year}-12-16", "color": "#3b82f6", "tipo": "Evento GB"},
+            {"title": "Aniversário BB Cap.Bonito", "start": f"{current_year}-12-17", "color": "#3b82f6", "tipo": "Evento GB"}
         ]
 
         # Feriados Nacionais
         feriados_nacionais = [
-            {"titulo": "Feriado Nacional - Ano Novo", "data": f"{current_year}-01-01", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-03", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-04", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Carnaval", "data": f"{current_year}-03-05", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Sexta-Feira Santa", "data": f"{current_year}-04-18", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia de Tiradentes", "data": f"{current_year}-04-21", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Trabalho", "data": f"{current_year}-05-01", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Corpus Christi", "data": f"{current_year}-06-19", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Independência do Brasil", "data": f"{current_year}-09-07", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Nossa Senhora Aparecida", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia das Crianças", "data": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Professor", "data": f"{current_year}-10-15", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia do Servidor Público", "data": f"{current_year}-10-28", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Dia de Finados", "data": f"{current_year}-11-02", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Proclamação da República", "data": f"{current_year}-11-15", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Consciência Negra", "data": f"{current_year}-11-20", "color": "#ef4444", "tipo": "Nacional"},
-            {"titulo": "Feriado Nacional - Natal", "data": f"{current_year}-12-25", "color": "#ef4444", "tipo": "Nacional"}
+            {"title": "Feriado Nacional - Ano Novo", "start": f"{current_year}-01-01", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Carnaval", "start": f"{current_year}-03-03", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Carnaval", "start": f"{current_year}-03-04", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Carnaval", "start": f"{current_year}-03-05", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Sexta-Feira Santa", "start": f"{current_year}-04-18", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia de Tiradentes", "start": f"{current_year}-04-21", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia do Trabalho", "start": f"{current_year}-05-01", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Corpus Christi", "start": f"{current_year}-06-19", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Independência do Brasil", "start": f"{current_year}-09-07", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Nossa Senhora Aparecida", "start": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia das Crianças", "start": f"{current_year}-10-12", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia do Professor", "start": f"{current_year}-10-15", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia do Servidor Público", "start": f"{current_year}-10-28", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Dia de Finados", "start": f"{current_year}-11-02", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Proclamação da República", "start": f"{current_year}-11-15", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Consciência Negra", "start": f"{current_year}-11-20", "color": "#ef4444", "tipo": "Nacional"},
+            {"title": "Feriado Nacional - Natal", "start": f"{current_year}-12-25", "color": "#ef4444", "tipo": "Nacional"}
         ]
 
         # Feriados Estaduais
         feriados_estaduais = [
-            {"titulo": "Feriado Estadual - Revolução Constitucionalista", "data": f"{current_year}-07-09", "color": "#f59e0b", "tipo": "Estadual"}
+            {"title": "Feriado Estadual - Revolução Constitucionalista", "start": f"{current_year}-07-09", "color": "#f59e0b", "tipo": "Estadual"}
         ]
 
         # Feriados Municipais
         feriados_municipais = [
-            {"titulo": "Feriado Municipal - Aniversário de Sorocaba", "data": f"{current_year}-06-15", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Dia do Padroeiro (São Pedro)", "data": f"{current_year}-06-29", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Votorantim", "data": f"{current_year}-08-25", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Piedade", "data": f"{current_year}-07-02", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itu", "data": f"{current_year}-02-02", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Porto Feliz", "data": f"{current_year}-09-10", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Salto", "data": f"{current_year}-08-10", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de São Roque", "data": f"{current_year}-08-16", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Ibiúna", "data": f"{current_year}-03-24", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itapeva", "data": f"{current_year}-09-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itararé", "data": f"{current_year}-05-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Apiaí", "data": f"{current_year}-03-18", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Capão Bonito", "data": f"{current_year}-04-19", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itapetininga", "data": f"{current_year}-11-05", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Angatuba", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Boituva", "data": f"{current_year}-12-23", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Tatuí", "data": f"{current_year}-08-11", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Tietê", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Laranjal Paulista", "data": f"{current_year}-10-27", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Botucatu", "data": f"{current_year}-04-14", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itaí", "data": f"{current_year}-08-26", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Avaré", "data": f"{current_year}-09-15", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Itatinga", "data": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
-            {"titulo": "Feriado Municipal - Aniversário de Piraju", "data": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"}
+            {"title": "Feriado Municipal - Aniversário de Sorocaba", "start": f"{current_year}-06-15", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Dia do Padroeiro (São Pedro)", "start": f"{current_year}-06-29", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Votorantim", "start": f"{current_year}-08-25", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Piedade", "start": f"{current_year}-07-02", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itu", "start": f"{current_year}-02-02", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Porto Feliz", "start": f"{current_year}-09-10", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Salto", "start": f"{current_year}-08-10", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de São Roque", "start": f"{current_year}-08-16", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Ibiúna", "start": f"{current_year}-03-24", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itapeva", "start": f"{current_year}-09-20", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itararé", "start": f"{current_year}-05-20", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Apiaí", "start": f"{current_year}-03-18", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Capão Bonito", "start": f"{current_year}-04-19", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itapetininga", "start": f"{current_year}-11-05", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Angatuba", "start": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Boituva", "start": f"{current_year}-12-23", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Tatuí", "start": f"{current_year}-08-11", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Tietê", "start": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Laranjal Paulista", "start": f"{current_year}-10-27", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Botucatu", "start": f"{current_year}-04-14", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itaí", "start": f"{current_year}-08-26", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Avaré", "start": f"{current_year}-09-15", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Itatinga", "start": f"{current_year}-12-20", "color": "#10b981", "tipo": "Municipal"},
+            {"title": "Feriado Municipal - Aniversário de Piraju", "start": f"{current_year}-03-21", "color": "#10b981", "tipo": "Municipal"}
         ]
 
         # Combinar todos os eventos
         todos_eventos = eventos_gb + feriados_nacionais + feriados_estaduais + feriados_municipais
         
-        context['eventos'] = todos_eventos
+        # Passar eventos formatados para o template
+        context['eventos_json'] = json.dumps(todos_eventos)
         context['eventos_fixos'] = todos_eventos  # Para a tabela
         
-        return context
-    
+        return context  
 
 
 # backend/core/views.py

@@ -1,8 +1,45 @@
-{% extends "base_login.html" %}
-{% load static %}
-{% block title %}Galeria de Documentos{% endblock %}
 
-{% block 'head' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+    <title>Galeria de Documentos</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1f2937',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/pt-br.min.js"></script>
+    <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
 <style>
     /* Estilos específicos para a galeria */
     .thumbnail-container {
@@ -26,59 +63,144 @@
     .file-size-badge {
         font-size: 0.75rem;
     }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-        <!-- Cabeçalho -->
-        <section class="w-full bg-gray-800 rounded-xl shadow-md p-6 mb-8 border border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <h1 class="text-2xl font-semibold text-gray-200">Galeria de Arquivos</h1>
-                <div class="flex space-x-4">
-       
-                    <a href="{% url 'core:index' %}" class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-medium text-gray-300 transition-all duration-200 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Voltar
-                    </a>
-                </div>
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        body.dark {
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+</style>
+
+<!-- Configuração do Tailwind CSS para o modo escuro por classe -->
+<script>
+    tailwind.config = {
+        darkMode: 'class', // Habilita o dark mode baseado na classe 'dark' no HTML
+        theme: {
+            extend: {
+                // Defina suas paletas de cores aqui se necessário
+            }
+        }
+    }
+</script>
+
+<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">  <div class="container mx-auto p-5">
+     
+    
+
+<!-- O corpo principal do HTML (<body>) deve ter as classes bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100
+     definidas no seu base_login.html para que o tema funcione globalmente.
+     Este div interno garante que o conteúdo da galeria siga o tema. -->
+<div class="container mx-auto px-4 py-8  text-gray-900  dark:text-gray-100">
+    <!-- Cabeçalho -->
+    <section class="w-full bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Galeria de Arquivos</h1>
+            <div class="flex space-x-4">
+                <a href="{% url 'core:index' %}" class="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 flex items-center dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Voltar
+                </a>
+                <button id="darkModeToggle"
+                        class="ms-4 flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700">
+                    <svg id="sunIcon" class="w-5 h-5 text-yellow-500 hidden dark:block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-indigo-600 block dark:hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
             </div>
-        </section>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const darkModeToggle = document.getElementById('darkModeToggle');
+                    const sunIcon = document.getElementById('sunIcon');
+                    const moonIcon = document.getElementById('moonIcon');
+                    const body = document.body;
+
+                    // Verifica se há preferência salva no localStorage
+                    const savedMode = localStorage.getItem('darkMode');
+                    
+                    // Aplica o modo inicial com base na preferência salva
+                    if (savedMode === 'dark') {
+                        enableDarkMode();
+                    } else {
+                        // Se não houver preferência salva, ou for 'light', define o modo padrão como claro
+                        disableDarkMode(); 
+                    }
+
+                    // Alterna entre modos ao clicar no botão
+                    darkModeToggle.addEventListener('click', function() {
+                        if (body.classList.contains('dark')) { // Se o body já tem a classe 'dark'
+                            disableDarkMode(); // Desativa o modo escuro
+                        } else {
+                            enableDarkMode(); // Ativa o modo escuro
+                        }
+                    });
+
+                    // Função para ativar o modo escuro
+                    function enableDarkMode() {
+                        body.classList.add('dark'); // Adiciona a classe 'dark' ao body
+                        localStorage.setItem('darkMode', 'dark'); // Salva a preferência
+                        sunIcon.classList.remove('hidden'); // Mostra o sol
+                        moonIcon.classList.add('hidden'); // Esconde a lua
+                    }
+
+                    // Função para desativar o modo escuro (ativar o modo claro)
+                    function disableDarkMode() {
+                        body.classList.remove('dark'); // Remove a classe 'dark' do body
+                        localStorage.setItem('darkMode', 'light'); // Salva a preferência
+                        sunIcon.classList.add('hidden'); // Esconde o sol
+                        moonIcon.classList.remove('hidden'); // Mostra a lua
+                    }
+                });
+            </script>
+        </div>
+    </section>
+
     <!-- Filtros em fieldset -->
-    <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
-        <legend class="text-xl font-bold text-white px-2">Filtrar Documentos</legend>
+    <fieldset class="bg-white rounded-lg p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+        <!-- Legenda ajustada para o tema claro padrão -->
+        <legend class="text-xl font-bold text-gray-900 px-2 dark:text-white">Filtrar Documentos</legend>
         
         <form method="get" class="flex flex-wrap items-center gap-4 mt-4">
+            <!-- Campos de input ajustados para o tema claro padrão -->
             <input type="text" name="assunto" value="{{ request.GET.assunto }}" 
                    placeholder="Filtrar por assunto"
-                   class="px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400">
             
             <input type="date" name="data_inicio" value="{{ request.GET.data_inicio }}" 
-                   class="px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
             
             <input type="date" name="data_fim" value="{{ request.GET.data_fim }}" 
-                   class="px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                   class="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
             
+            <!-- Botões ajustados para o tema claro padrão -->
             <button type="submit" 
-                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 dark:bg-blue-700 dark:hover:bg-blue-600">
                 Filtrar
             </button>
             
             <a href="{% url 'documentos:galeria_documentos' %}" 
-               class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
+               class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 dark:bg-gray-500 dark:hover:bg-gray-600">
                 Limpar
             </a>
         </form>
     </fieldset>
 
     <!-- Visualizador Principal em fieldset -->
-    <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
-        <legend class="text-xl font-bold text-white px-2">Visualização</legend>
+    <fieldset class="bg-white rounded-lg p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+        <!-- Legenda ajustada para o tema claro padrão -->
+        <legend class="text-xl font-bold text-gray-900 px-2 dark:text-white">Visualização</legend>
         
-        <div id="arquivo-principal" class="w-full h-96 bg-gray-700 rounded-lg flex items-center justify-center mt-4">
-            <div class="text-center text-gray-400">
+        <div id="arquivo-principal" class="w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center mt-4 dark:bg-gray-800">
+            <!-- Texto placeholder ajustado para o tema claro padrão -->
+            <div class="text-center text-gray-700 p-6 dark:text-gray-400">
                 <i class="fas fa-file text-5xl mb-4"></i>
                 <p>Selecione um arquivo para visualização</p>
             </div>
@@ -87,24 +209,27 @@
 
     <!-- Grupos de Documentos -->
     {% for doc in documentos %}
-    <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
+    <fieldset class="bg-white rounded-lg p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
         <legend class="flex justify-between items-center w-full">
             <div>
-                <div class="text-sm font-medium text-gray-300">Nº {{ doc.numero_documento }}</div>
-                <h2 class="text-xl font-bold text-white">{{ doc.assunto }}</h2>
+                <!-- Número do documento ajustado para o tema claro padrão -->
+                <div class="text-sm font-medium text-gray-900 dark:text-gray-200">Nº {{ doc.numero_documento }}</div>
+                <!-- Assunto do documento ajustado para o tema claro padrão -->
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ doc.assunto }}</h2>
             </div>
-            <span class="bg-blue-900 text-blue-100 px-3 py-1 rounded-full text-sm whitespace-nowrap">
+            <!-- Badge de data ajustado para o tema claro padrão -->
+            <span class="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm whitespace-nowrap dark:bg-blue-800 dark:text-blue-200">
                 {{ doc.data_documento|date:"d/m/Y" }}
             </span>
         </legend>
         
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
             {% for arquivo in doc.arquivos.all %}
-            <div class="bg-gray-700 rounded-lg overflow-hidden border border-gray-600 hover:border-blue-500 transition-colors duration-200 cursor-pointer"
+            <div class="bg-white rounded-lg overflow-hidden border border-gray-300 hover:border-blue-500 transition-colors duration-200 cursor-pointer dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-600"
                  onclick="carregarArquivo('{{ arquivo.arquivo.url }}', '{{ arquivo.tipo }}')">
                 
                 <!-- Miniatura -->
-                <div class="thumbnail-container bg-gray-600 flex items-center justify-center relative">
+                <div class="thumbnail-container bg-gray-200 flex items-center justify-center relative dark:bg-gray-700">
                     {% if arquivo.tipo == 'IMAGEM' %}
                         <img src="{{ arquivo.arquivo.url }}" alt="{{ arquivo.arquivo.name }}" class="file-thumbnail">
                     
@@ -125,11 +250,12 @@
                             {% elif arquivo.tipo == 'SHEET' %}
                                 <i class="fas fa-file-excel text-green-500 file-icon"></i>
                             {% elif arquivo.tipo == 'TEXT' %}
-                                <i class="fas fa-file-alt text-gray-400 file-icon"></i>
+                                <i class="fas fa-file-alt text-gray-700 file-icon dark:text-gray-500"></i>
                             {% else %}
-                                <i class="fas fa-file text-gray-400 file-icon"></i>
+                                <i class="fas fa-file text-gray-700 file-icon dark:text-gray-500"></i>
                             {% endif %}
-                            <span class="text-xs text-gray-300 mt-2">{{ arquivo.get_tipo_display }}</span>
+                            <!-- Tipo de arquivo ajustado para o tema claro padrão -->
+                            <span class="text-xs text-gray-700 mt-2 dark:text-gray-300">{{ arquivo.get_tipo_display }}</span>
                         </div>
                     {% endif %}
                     
@@ -140,18 +266,20 @@
                 </div>
 
                 <!-- Informações do arquivo -->
-                <div class="p-3 border-t border-gray-600">
-                    <p class="text-sm font-medium text-white truncate">
+                <div class="p-3 border-t border-gray-300 dark:border-gray-700">
+                    <!-- Nome do arquivo ajustado para o tema claro padrão -->
+                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-200">
                         {{ arquivo.arquivo.name|truncatechars:25 }}
                     </p>
                     
                     <div class="flex justify-between items-center mt-2">
-                        <span class="text-xs text-gray-300">
+                        <!-- Tipo de arquivo ajustado para o tema claro padrão -->
+                        <span class="text-xs text-gray-700 dark:text-gray-300">
                             {{ arquivo.get_tipo_display }}
                         </span>
                         
                         <a href="{{ arquivo.arquivo.url }}" download 
-                           class="text-blue-400 hover:text-blue-300 text-xs flex items-center"
+                           class="text-blue-600 hover:text-blue-500 text-xs flex items-center"
                            onclick="event.stopPropagation()">
                             <i class="fas fa-download mr-1"></i> Download
                         </a>
@@ -162,12 +290,14 @@
         </div>
     </fieldset>
     {% empty %}
-    <fieldset class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
-        <legend class="text-xl font-bold text-white px-2">Documentos</legend>
+    <fieldset class="bg-white rounded-lg p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+        <!-- Legenda ajustada para o tema claro padrão -->
+        <legend class="text-xl font-bold text-gray-900 px-2 dark:text-white">Documentos</legend>
         
         <div class="text-center py-12">
-            <i class="fas fa-folder-open text-4xl text-gray-500 mb-4"></i>
-            <p class="text-gray-400">Nenhum documento encontrado</p>
+            <!-- Ícone e texto ajustados para o tema claro padrão -->
+            <i class="fas fa-folder-open text-4xl text-gray-500 mb-4 dark:text-gray-300"></i>
+            <p class="text-gray-700 dark:text-gray-400">Nenhum documento encontrado</p>
         </div>
     </fieldset>
     {% endfor %}
@@ -201,11 +331,12 @@
             }
             else {
                 content = `
-                    <div class="text-center text-gray-400 p-6">
+                    <!-- Mensagem de visualização não disponível ajustada para o tema claro padrão -->
+                    <div class="text-center text-gray-700 p-6 dark:text-gray-400">
                         <i class="fas fa-file text-5xl mb-4"></i>
                         <p class="mb-4">Visualização não disponível</p>
                         <a href="${url}" download 
-                           class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                           class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg dark:bg-blue-700 dark:hover:bg-blue-600">
                             <i class="fas fa-download mr-2"></i> Baixar Arquivo
                         </a>
                     </div>
@@ -216,4 +347,7 @@
         }, 300);
     }
 </script>
-{% endblock %}
+
+    
+  </body>
+</html>

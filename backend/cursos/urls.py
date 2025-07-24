@@ -29,12 +29,14 @@ urlpatterns = [
     path('cursos/import/csv/', views.import_cursos_csv, name='import_cursos_csv'),
     path('cursos/importar/', views.importar_cursos_view, name='importar_cursos_view'),
 
+   # URLs para cursos do usuário (já estão corretas no seu urls.py)
     # URLs para cursos do usuário
     path('meus-cursos/', views.user_curso_list, name='user_curso_list'),
-    path('meus-cursos/novo/', views.user_medalha_create, name='user_curso_create'), # Corrigido o nome da URL
-    path('meus-cursos/editar/<int:pk>/', views.user_curso_edit, name='user_curso_edit'),
-    path('meus-cursos/excluir/<int:pk>/', views.user_curso_delete, name='user_curso_delete'),
+    path('meus-cursos/novo/', views.user_curso_create, name='user_curso_create'),  # NOME CORRIGIDO
+    path('meus-cursos/<int:pk>/editar/', views.user_curso_edit, name='user_curso_edit'),
+    path('meus-cursos/<int:pk>/excluir/', views.user_curso_delete, name='user_curso_delete'),
 
+    
     # NOVAS URLs para medalhas do usuário (adicione ou verifique estas linhas)
     path('meus-medalhas/', views.user_medalha_list, name='user_medalha_list'),
     path('meus-medalhas/novo/', views.user_medalha_create, name='user_medalha_create'), # Linha corrigida

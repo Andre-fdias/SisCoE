@@ -1,7 +1,3 @@
-{# backend/cursos/templates/cursos/modals/excluir_cursos_modal.html #}
-
-
-
 <div id="deleteCursoModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transition-all duration-300">
         <div class="flex justify-between items-center p-6 bg-gradient-to-r from-red-600 to-red-700 rounded-t-2xl">
@@ -20,24 +16,16 @@
                 
                 <h3 class="text-lg font-medium text-gray-900 mt-4">Tem certeza que deseja excluir este curso?</h3>
                 <p class="text-sm text-gray-500 mt-2">
-                    Você está prestes a excluir o curso: <strong id="cursoToDeleteName" class="font-semibold text-red-600"></strong>. 
-                    Esta ação não pode ser desfeita.
+                    Você está prestes a excluir o curso: <strong id="cursoToDeleteName" class="font-semibold text-red-600"></strong>
                 </p>
             </div>
 
             <div class="flex flex-col gap-3 bg-red-50 p-4 rounded-xl border border-red-100">
                 <div class="flex items-start">
-                    <svg class="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-5 w-5 text-red-500 mt-0.5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p class="text-sm text-red-700">Esta ação removerá permanentemente o registro do curso do sistema.</p>
-                </div>
-                
-                <div class="flex items-start">
-                    <svg class="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <p class="text-sm text-red-700">Não será possível recuperar esta informação posteriormente.</p>
+                    <p class="text-sm text-red-700">Esta ação removerá permanentemente o registro do curso</p>
                 </div>
             </div>
 
@@ -72,77 +60,81 @@
         const normalStateDelete = submitButton.querySelector('#normalStateDelete');
         const loadingStateDelete = submitButton.querySelector('#loadingStateDelete');
 
-        // Função para abrir o modal de exclusão
+        // Obter token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Abrir modal de exclusão
         window.openDeleteCursoModal = function(cursoId, cursoName) {
             cursoToDeleteNameSpan.textContent = cursoName;
             hiddenCursoIdInput.value = cursoId;
             
-            // Define a URL de ação do formulário
-            deleteCursoForm.action = `/cursos/meus-cursos/excluir/${cursoId}/`;
-
-            // Exibe o modal
+            // URL CORRIGIDA
+            deleteCursoForm.action = `/cursos/meus-cursos/${cursoId}/excluir/`;
+            
             deleteCursoModal.classList.remove('hidden');
         };
 
-        // Função para fechar o modal de exclusão
+        // Fechar modal de exclusão
         window.closeDeleteCursoModal = function() {
             deleteCursoModal.classList.add('hidden');
-            deleteCursoForm.reset();
         };
 
-        // Envio do formulário de exclusão
+        // Enviar formulário de exclusão
         if (deleteCursoForm) {
             deleteCursoForm.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 
-                // Desabilita o botão de envio e exibe o spinner
+                // Desabilitar botão e mostrar loading
                 submitButton.disabled = true;
                 normalStateDelete.classList.add('hidden');
                 loadingStateDelete.classList.remove('hidden');
 
-                const formData = new FormData(this);
-                
                 try {
                     const response = await fetch(this.action, {
                         method: 'POST',
-                        body: formData,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRFToken': csrftoken
                         }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         showAlertModal(data.message || 'Curso excluído com sucesso!', 'SUCCESS');
                         closeDeleteCursoModal();
                         
-                        // Remove a linha da tabela
-                        const rowToRemove = document.getElementById(`curso-row-${hiddenCursoIdInput.value}`);
-                        if (rowToRemove) {
-                            rowToRemove.remove();
+                        // Atualizar tabela de cursos
+                        if (typeof window.updateCursosTable === 'function') {
+                            window.updateCursosTable();
                         }
                     } else {
-                        showAlertModal(data.error || 'Erro ao excluir o curso.', 'ERROR');
+                        showAlertModal(data.error || 'Erro ao excluir curso', 'ERROR');
                     }
                 } catch (error) {
-                    console.error('Erro na requisição de exclusão:', error);
-                    showAlertModal('Erro de conexão ao excluir o curso: ' + error.message, 'ERROR');
+                    console.error('Erro ao excluir curso:', error);
+                    showAlertModal('Erro de conexão: ' + error.message, 'ERROR');
                 } finally {
-                    // Restaura o botão
+                    // Restaurar botão
                     submitButton.disabled = false;
                     normalStateDelete.classList.remove('hidden');
                     loadingStateDelete.classList.add('hidden');
                 }
             });
         }
-
-        // Fechar modal ao clicar no fundo escuro
-        deleteCursoModal.addEventListener('click', function(event) {
-            if (event.target === deleteCursoModal) {
-                closeDeleteCursoModal();
-            }
-        });
     });
 </script>
