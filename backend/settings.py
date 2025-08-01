@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'backend.accounts.middleware.UserActionLoggingMiddleware',
     'backend.core.middleware.JSONMessagesMiddleware',  # Adicione isto
+    'backend.accounts.middleware.ForcePasswordChangeMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -99,23 +100,29 @@ DATABASES = {
         }
     }
 }
+# ==============================================================================
+# Configurações de E-mail com Brevo API
+# ==============================================================================
 
-# settings.py
+# Configurações principais da API Brevo
+BREVO_API_KEY = config('BREVO_API_KEY')  # Sua chave API do Brevo
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='siscoe.suporte@gmail.com')
+DEFAULT_FROM_NAME = config('DEFAULT_FROM_NAME', default='SisCoE Sistema')
 
+# Configurações opcionais para fallback (se necessário)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desenvolvimento
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Remover ou comentar
 
-# Email config
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True  # Use TLS para segurança
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', '')  # Seu endereço de e-mail do Gmail
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', '') # A Senha de App gerada
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER) # Use o mesmo e-mail como remetente padrão
-SERVER_EMAIL = EMAIL_HOST_USER # Para e-mails de erro do Django
+# Configurações adicionais
+EMAIL_TIMEOUT = 30  # segundos (para operações de rede)
+DEFAULT_CHARSET = 'utf-8'
 
-
+# Observação: Todas as configurações SMTP antigas devem ser removidas ou comentadas
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

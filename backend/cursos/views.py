@@ -25,7 +25,6 @@ import traceback
 # Importações de modelos e resources da sua aplicação
 from .models import Medalha, Curso
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem, HistoricoDetalhesSituacao
-from backend.core.models import Profile # Assumindo que Profile está em backend.core.models
 from .resources import MedalhaResource, CursoResource # Certifique-se de ter esses resources
 
 # Configuração de logger
@@ -826,7 +825,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.db import transaction
 from django.utils import timezone
-from backend.core.models import Profile
 from .models import Curso
 import datetime as dt
 
@@ -1092,7 +1090,7 @@ from datetime import datetime as dt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import Medalha, Cadastro, Curso # Certifique-se de importar Curso se ainda não o fez
-from backend.core.models import Profile
+
 from datetime import datetime
 import json
 

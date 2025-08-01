@@ -4,7 +4,7 @@ class Basico(AbstractUserRole):
     available_permissions = {
         'view_index': True,
         'view_dashboard': True,
-        'view_profile': True,
+        # 'view_profile': True, # Removido, pois o Profile foi excluído
         'view_lembrete': True,
         'add_lembrete': True,
         'change_own_lembrete': True,
@@ -48,7 +48,7 @@ class Gestor(SGB):  # Herda de SGB
         'add_rpt': True,
         'change_rpt': True,
         'delete_rpt': True,
-        'view_user': True,
+        'view_user': True, # Mantido, pois a visualização de usuários ainda é relevante
     })
 
 class Admin(AbstractUserRole):

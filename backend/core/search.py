@@ -20,21 +20,19 @@ class GlobalSearch:
         'rpt': '#338AFF',           # Azul claro
     }
 
-
-
     SEARCHABLE_MODELS = {
         # Accounts
         'user': {
             'app': 'accounts',
-            'model': 'User', # Assumindo que 'User' é o modelo User padrão ou um proxy SearchableUser
-            'fields': ['email', 'first_name', 'last_name'],
-            'url': lambda obj: reverse('user_detail', args=[obj.pk]) # Verifique se 'user_detail' existe
+            'model': 'User', # Agora o User tem a relação direta com Cadastro
+            'fields': ['email', 'first_name', 'last_name', 'cadastro__cpf', 'cadastro__nome_completo', 'cadastro__nome_de_guerra'],
+            'url': lambda obj: reverse('accounts:user_detail', args=[obj.pk]) # Corrigido para 'accounts:user_detail'
         },
         'useractionlog': {
             'app': 'accounts',
-            'model': 'UserActionLog', # Assumindo que 'UserActionLog' é o modelo correto
+            'model': 'UserActionLog',
             'fields': ['action', 'ip_address', 'computer_name'],
-            'url': lambda obj: reverse('user_action_log_detail', args=[obj.pk]) # Verifique se 'user_action_log_detail' existe
+            'url': lambda obj: reverse('accounts:user_action_history', args=[obj.user.pk]) # Link para o histórico de ações do usuário
         },
 
         # Adicional
@@ -43,7 +41,7 @@ class GlobalSearch:
             'model': 'Cadastro_adicional',
             'fields': [
                 'numero_adicional', 'bol_g_pm_adicional', 'situacao_adicional',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('adicional:ver_adicional', args=[obj.pk])
         },
@@ -52,9 +50,9 @@ class GlobalSearch:
             'model': 'HistoricoCadastro',
             'fields': [
                 'numero_adicional', 'situacao_adicional',
-                'cadastro_adicional__cadastro__re' # Busca pelo RE do Cadastro através do Cadastro_adicional
+                'cadastro_adicional__cadastro__re'
             ],
-            'url': lambda obj: reverse('adicional:historico_adicional', args=[obj.cadastro_adicional.id]) # Assumindo URL de histórico
+            'url': lambda obj: reverse('adicional:historico_adicional', args=[obj.cadastro_adicional.id])
         },
 
 
@@ -63,13 +61,13 @@ class GlobalSearch:
             'app': 'agenda',
             'model': 'Lembrete',
             'fields': ['titulo', 'descricao'],
-            'url': lambda obj: reverse('agenda:lembrete_detail', args=[obj.pk]) # Verifique se 'lembrete_detail' existe
+            'url': lambda obj: reverse('agenda:lembrete_detail', args=[obj.pk])
         },
         'tarefa': {
             'app': 'agenda',
             'model': 'Tarefa',
             'fields': ['titulo', 'descricao'],
-            'url': lambda obj: reverse('agenda:tarefa_detail', args=[obj.pk]) # Verifique se 'tarefa_detail' existe
+            'url': lambda obj: reverse('agenda:tarefa_detail', args=[obj.pk])
         },
 
         # BM
@@ -86,16 +84,16 @@ class GlobalSearch:
         'imagem_bm': {
             'app': 'bm',
             'model': 'Imagem_bm',
-            'fields': [], # Imagens geralmente não têm campos textuais para busca direta
-            'url': lambda obj: reverse('bm:ver_bm', args=[obj.cadastro.pk]) # Link para o cadastro BM principal
+            'fields': [],
+            'url': lambda obj: reverse('bm:ver_bm', args=[obj.cadastro.pk])
         },
 
         # Calculadora
         'calculo_militar': {
             'app': 'calculadora',
             'model': 'CalculoMilitar',
-            'fields': [], # Adicione campos se houver texto relevante para busca
-            'url': lambda obj: reverse('calculadora:calculo_detail', args=[obj.pk]) # Verifique se 'calculo_detail' existe
+            'fields': [],
+            'url': lambda obj: reverse('calculadora:calculo_detail', args=[obj.pk])
         },
 
         # Cursos
@@ -103,13 +101,13 @@ class GlobalSearch:
             'app': 'cursos',
             'model': 'Medalha',
             'fields': ['honraria', 'bol_g_pm_lp'],
-            'url': lambda obj: reverse('cursos:medalha_detail', args=[obj.pk]) # Verifique se 'medalha_detail' existe
+            'url': lambda obj: reverse('cursos:medalha_detail', args=[obj.pk])
         },
         'curso': {
             'app': 'cursos',
             'model': 'Curso',
             'fields': ['curso', 'bol_publicacao'],
-            'url': lambda obj: reverse('cursos:curso_detail', args=[obj.pk]) # Verifique se 'curso_detail' existe
+            'url': lambda obj: reverse('cursos:curso_detail', args=[obj.pk])
         },
 
         # Documentos
@@ -117,13 +115,13 @@ class GlobalSearch:
             'app': 'documentos',
             'model': 'Documento',
             'fields': ['numero_documento', 'assunto', 'descricao', 'assinada_por'],
-            'url': lambda obj: reverse('documentos:documento_detail', args=[obj.pk]) # Verifique se 'documento_detail' existe
+            'url': lambda obj: reverse('documentos:documento_detail', args=[obj.pk])
         },
         'arquivo': {
             'app': 'documentos',
             'model': 'Arquivo',
             'fields': ['tipo'],
-            'url': lambda obj: reverse('documentos:documento_detail', args=[obj.documento.pk]) # Link para o documento principal
+            'url': lambda obj: reverse('documentos:documento_detail', args=[obj.documento.pk])
         },
 
         # Efetivo
@@ -140,7 +138,7 @@ class GlobalSearch:
             'model': 'DetalhesSituacao',
             'fields': [
                 'situacao', 'sgb', 'posto_secao', 'funcao', 'esta_adido', 'op_adm', 'prontidao',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('efetivo:historico_movimentacoes', args=[obj.cadastro.id])
         },
@@ -149,24 +147,24 @@ class GlobalSearch:
             'model': 'Promocao',
             'fields': [
                 'posto_grad', 'quadro', 'grupo',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('efetivo:historico_movimentacoes', args=[obj.cadastro.id])
         },
-        'catefetivo': { # Mantido, mas verifique se existe uma URL de detalhe ou se deve linkar ao Cadastro
+        'catefetivo': {
             'app': 'efetivo',
             'model': 'CatEfetivo',
-            'fields': ['tipo', 'observacao', 'cadastro__re'], # Adicionado 'cadastro__re'
-            'url': lambda obj: reverse('efetivo:ver_militar', args=[obj.cadastro.id]) # Link para o militar
+            'fields': ['tipo', 'observacao', 'cadastro__re'],
+            'url': lambda obj: reverse('efetivo:ver_militar', args=[obj.cadastro.id])
         },
         'historicocatefetivo': {
             'app': 'efetivo',
             'model': 'HistoricoCatEfetivo',
             'fields': [
                 'tipo', 'observacao',
-                'cat_efetivo__cadastro__re' # Caminho encadeado para buscar RE
+                'cat_efetivo__cadastro__re'
             ],
-            'url': lambda obj: reverse('efetivo:historico_categorias', args=[obj.cat_efetivo.cadastro.id]) # Corrigido para usar o ID do militar
+            'url': lambda obj: reverse('efetivo:historico_categorias', args=[obj.cat_efetivo.cadastro.id])
         },
 
         # LP
@@ -178,7 +176,7 @@ class GlobalSearch:
                 'mes_proximo_lp', 'ano_proximo_lp', 'dias_desconto_lp',
                 'bol_g_pm_lp', 'data_publicacao_lp', 'data_concessao_lp',
                 'lancamento_sipa', 'observacoes', 'situacao_lp', 'status_lp',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('lp:ver_lp', args=[obj.pk])
         },
@@ -188,9 +186,9 @@ class GlobalSearch:
             'fields': [
                 'situacao_lp', 'status_lp', 'numero_lp', 'bol_g_pm_lp',
                 'observacoes_historico',
-                'lp__cadastro__re' # Busca pelo RE do Cadastro através da LP
+                'lp__cadastro__re'
             ],
-            'url': lambda obj: reverse('lp:ver_lp', args=[obj.lp.pk]) # Link para a LP principal
+            'url': lambda obj: reverse('lp:ver_lp', args=[obj.lp.pk])
         },
         'lp_fruicao': {
             'app': 'lp',
@@ -199,7 +197,7 @@ class GlobalSearch:
                 'numero_lp', 'data_concessao_lp', 'bol_g_pm_lp',
                 'data_publicacao_lp', 'tipo_periodo_afastamento', 'tipo_choice',
                 'dias_disponiveis', 'dias_utilizados', 'bol_int',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('lp:detalhar_fruicao', args=[obj.pk])
         },
@@ -249,7 +247,7 @@ class GlobalSearch:
                 'data_pedido', 'data_movimentacao', 'data_alteracao', 'status',
                 'sgb_destino', 'posto_secao_destino', 'doc_solicitacao',
                 'doc_alteracao', 'doc_movimentacao', 'alteracao',
-                'cadastro__re' # Busca pelo RE do Cadastro relacionado
+                'cadastro__re'
             ],
             'url': lambda obj: reverse('rpt:ver_rpt', args=[obj.pk])
         },
@@ -260,7 +258,7 @@ class GlobalSearch:
                 'data_pedido', 'data_movimentacao', 'data_alteracao', 'status',
                 'sgb_destino', 'posto_secao_destino', 'doc_solicitacao',
                 'doc_alteracao', 'doc_movimentacao', 'alteracao',
-                'cadastro__cadastro__re' # Busca pelo RE do Cadastro através do Cadastro_rpt
+                'cadastro__cadastro__re'
             ],
             'url': lambda obj: reverse('rpt:historico_rpt', args=[obj.cadastro.pk])
         },
@@ -281,44 +279,34 @@ class GlobalSearch:
                 print(f"Erro: Modelo '{config['model']}' no app '{config['app']}' não encontrado. Verifique INSTALLED_APPS e o nome do modelo.")
                 continue
             
-            # Tenta converter query para número se possível (útil para REs numéricos ou IDs)
             query_num = None
             if query.isdigit():
                 query_num = int(query)
             
             q_objects = Q()
             
-            # Busca por campos textuais (incluindo relacionamentos como 'cadastro__re')
             if config['fields']:
                 for field in config['fields']:
-                    # Para campos diretos ou relacionamentos que não são numéricos
                     if '__' in field or not hasattr(model._meta.get_field(field), 'get_internal_type') or model._meta.get_field(field).get_internal_type() not in ['IntegerField', 'PositiveSmallIntegerField', 'FloatField']:
                         try:
-                            # Tenta adicionar a cláusula Q. Se o campo não existir ou o path for inválido, uma exceção será levantada e tratada.
                             q_objects |= Q(**{f'{field}__icontains': query})
                         except Exception as e:
                             print(f"Aviso: Não foi possível criar a cláusula de busca para o campo '{field}' no modelo '{config['model']}' do app '{config['app']}'. Erro: {e}")
-                    # Para campos numéricos diretos que podem ser buscados por valor exato se a query for numérica
                     elif query_num is not None and hasattr(model, field):
                          q_objects |= Q(**{field: query_num})
 
-
-            # Busca por ID do objeto se query for numérica e o modelo tiver campo 'id'
             if query_num is not None:
                 if hasattr(model, 'id'):
                     q_objects |= Q(id=query_num)
             
-            # Executa a consulta apenas se houver Q objects válidos
             if q_objects:
                 try:
-                    for obj in model.objects.filter(q_objects).distinct()[:5]: # Limita a 5 resultados por modelo
+                    for obj in model.objects.filter(q_objects).distinct()[:5]:
                         results.append(cls.format_result(config, obj))
                 except Exception as e:
-                    # Captura erros específicos de FieldError ou outros problemas de consulta
                     print(f"Erro ao buscar em {config['model']} (app: {config['app']}): {str(e)}")
         
         return results
-
 
     @classmethod
     def format_result(cls, config, obj):
@@ -326,30 +314,26 @@ class GlobalSearch:
         Formata o resultado da busca para exibição no template.
         Adiciona cor específica do app ao resultado.
         """
-        # Determina a cor do app (adicionado)
-        app_color = cls.APP_COLORS.get(config['app'], '#CCCCCC')  # Cinza padrão se não encontrado
+        app_color = cls.APP_COLORS.get(config['app'], '#CCCCCC')
         
         result = {
             'app': config['app'],
             'model': config['model'],
             'object': obj,
             'url': config['url'](obj),
-            'app_color': app_color,  # Nova chave adicionada
+            'app_color': app_color,
         }
         
-        # Usa método personalizado get_search_result se disponível no objeto
         if hasattr(obj, 'get_search_result'):
             try:
                 result_data = obj.get_search_result()
                 result['title'] = result_data.get('title', str(obj))
                 result['fields'] = result_data.get('fields', {})
             except Exception as e:
-                # Fallback se get_search_result() falhar
                 print(f"Aviso: Erro ao chamar get_search_result() para {obj} ({config['model']}). Usando fallback. Erro: {e}")
                 result['title'] = str(obj)
                 result['fields'] = {}
         else:
-            # Fallback padrão se get_search_result() não existir
             result['title'] = str(obj)
             result['fields'] = {}
         

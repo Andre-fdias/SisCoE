@@ -1,0 +1,189 @@
+{% load static %}
+
+<!-- Estrutura do Modal de Alerta Global -->
+<div id="alertModal" class="alert-modal">
+    <div class="alert-modal-content">
+        <span class="alert-modal-close">&times;</span>
+        <div id="alertModalIcon" class="alert-modal-icon"></div>
+        <div id="alertModalTitle" class="alert-modal-title"></div>
+        <p id="alertModalMessage" class="alert-modal-message"></p>
+        <button id="alertModalOkButton" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">OK</button>
+    </div>
+</div>
+
+<!-- Container oculto para as mensagens do Django -->
+<div id="django-messages" style="display:none;">
+    {% if messages %}
+        {% for message in messages %}
+            <div data-tags="{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+    /* Estilos para o modal de alerta */
+    .alert-modal {
+        display: none; /* Oculto por padrão */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .alert-modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: 80%;
+        max-width: 400px;
+        text-align: center;
+        position: relative;
+    }
+
+    /* Adaptação para o modo escuro (se você tiver um sistema de dark mode) */
+    body.dark .alert-modal-content {
+        background-color: #1f2937;
+        color: #f3f4f6;
+    }
+
+    .alert-modal-close {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .alert-modal-close:hover,
+    .alert-modal-close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .alert-modal-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+    }
+
+    .alert-modal-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .alert-modal-message {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+
+    /* Cores dos ícones e títulos baseadas no tipo de mensagem */
+    .alert-modal-success .alert-modal-icon, .alert-modal-success .alert-modal-title { color: #10B981; } /* Green */
+    .alert-modal-error .alert-modal-icon, .alert-modal-error .alert-modal-title { color: #EF4444; } /* Red */
+    .alert-modal-warning .alert-modal-icon, .alert-modal-warning .alert-modal-title { color: #F59E0B; } /* Yellow */
+    .alert-modal-info .alert-modal-icon, .alert-modal-info .alert-modal-title { color: #3B82F6; } /* Blue */
+
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Lógica do Modal de Alerta ---
+        const alertModal = document.getElementById('alertModal');
+        const alertModalContent = document.querySelector('.alert-modal-content');
+        const alertModalClose = document.querySelector('.alert-modal-close');
+        const alertModalOkButton = document.getElementById('alertModalOkButton');
+        const alertModalIcon = document.getElementById('alertModalIcon');
+        const alertModalTitle = document.getElementById('alertModalTitle');
+        const alertModalMessage = document.getElementById('alertModalMessage');
+
+        // Função global para exibir o modal de alerta
+        window.showAlertModal = function(message, type = 'INFO', title = '') {
+            // Limpa classes de tipo anteriores
+            alertModalContent.classList.remove('alert-modal-success', 'alert-modal-error', 'alert-modal-warning', 'alert-modal-info');
+            alertModalIcon.innerHTML = ''; // Limpa ícone anterior
+
+            let iconHtml = '';
+            let defaultTitle = '';
+
+            // Define o ícone e o título padrão com base no tipo de mensagem
+            switch (type.toUpperCase()) {
+                case 'SUCCESS':
+                    alertModalContent.classList.add('alert-modal-success');
+                    iconHtml = '<i class="fas fa-check-circle"></i>'; // Ícone de sucesso (Font Awesome)
+                    defaultTitle = 'Sucesso!';
+                    break;
+                case 'ERROR':
+                    alertModalContent.classList.add('alert-modal-error');
+                    iconHtml = '<i class="fas fa-times-circle"></i>'; // Ícone de erro (Font Awesome)
+                    defaultTitle = 'Erro!';
+                    break;
+                case 'WARNING':
+                    alertModalContent.classList.add('alert-modal-warning');
+                    iconHtml = '<i class="fas fa-exclamation-triangle"></i>'; // Ícone de aviso (Font Awesome)
+                    defaultTitle = 'Aviso!';
+                    break;
+                case 'INFO':
+                default:
+                    alertModalContent.classList.add('alert-modal-info');
+                    iconHtml = '<i class="fas fa-info-circle"></i>'; // Ícone de informação (Font Awesome)
+                    defaultTitle = 'Informação';
+                    break;
+            }
+
+            alertModalIcon.innerHTML = iconHtml;
+            alertModalTitle.textContent = title || defaultTitle; // Usa o título fornecido ou o padrão
+            alertModalMessage.textContent = message;
+            alertModal.style.display = 'flex'; // Exibe o modal
+        };
+
+        // Função para fechar o modal de alerta
+        function closeAlertModal() {
+            alertModal.style.display = 'none';
+        }
+
+        // Event Listeners para fechar o modal
+        alertModalClose.addEventListener('click', closeAlertModal);
+        alertModalOkButton.addEventListener('click', closeAlertModal);
+        window.addEventListener('click', function(event) {
+            if (event.target == alertModal) {
+                closeAlertModal();
+            }
+        });
+
+        // --- Exibir mensagens do Django automaticamente ---
+        // Este script é executado quando o DOM está completamente carregado.
+        // Ele verifica se há mensagens do Django no container oculto e as exibe.
+        const messagesContainer = document.getElementById('django-messages');
+        if (messagesContainer) {
+            // Percorre todas as mensagens dentro do container
+            Array.from(messagesContainer.children).forEach(messageElement => {
+                const messageText = messageElement.textContent.trim();
+                const messageTags = messageElement.dataset.tags; // Pega as tags (e.g., 'success', 'error')
+
+                let messageType = 'INFO';
+                if (messageTags.includes('success')) {
+                    messageType = 'SUCCESS';
+                } else if (messageTags.includes('error') || messageTags.includes('danger')) {
+                    messageType = 'ERROR';
+                } else if (messageTags.includes('warning')) {
+                    messageType = 'WARNING';
+                }
+
+                // Exibe cada mensagem em um modal separado
+                window.showAlertModal(messageText, messageType);
+            });
+            // Opcional: Limpar o container de mensagens após exibi-las para evitar reexibição
+            messagesContainer.innerHTML = '';
+        }
+    });
+</script>

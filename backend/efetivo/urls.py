@@ -59,7 +59,7 @@ urlpatterns = [
     # --- Funcionalidades de Etiqueta PDF ---
     path('buscar_militar/', views.pagina_buscar_militar, name='buscar_militar_page'),
     path('gerar_etiqueta_pdf/', views.gerar_etiqueta_pdf, name='gerar_etiqueta_pdf'),
-
+    path('gerar_cadastros_fake/', views.gerar_cadastros_fake, name='gerar_cadastros_fake'),
     # URL para editar situação funcional.
     path('editar_situacao_funcional/<int:id>/', views.editar_situacao_funcional, name='editar_situacao_funcional'),
     path('nova_situacao_funcional/<int:id>/', views.nova_situacao_funcional, name='nova_situacao_funcional'),

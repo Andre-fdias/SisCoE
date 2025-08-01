@@ -1,142 +1,94 @@
-from backend.accounts.models import User
+# backend/core/models.py
+# Remova: from backend.accounts.models import User # Não é mais necessário importar User diretamente
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
-from backend.efetivo.models import Cadastro # Importe a model Cadastro
+# Remova: from backend.efetivo.models import Cadastro # REMOVA ESTA LINHA PARA EVITAR IMPORTAÇÃO CIRCULAR
 from django.db import connection
-from django.conf import settings
+from django.conf import settings # Mantenha esta importação para settings.AUTH_USER_MODEL
 from django.core.exceptions import ValidationError
 import logging
 from django.db.models import Q # Para usar Q objects na busca por email/nome
 
 logger = logging.getLogger(__name__)
 
-class Profile(models.Model):
-    posto_grad_choices = (
-        ("", " "),
-        ("Cel PM", "Cel PM"),
-        ("Ten Cel PM", "Ten Cel PM"),
-        ("Maj PM", "Maj PM"),
-        ("CAP PM", "Cap PM"),
-        ("1º Ten PM", "1º Ten PM"),
-        ("1º Ten QAPM", "1º Ten QAOPM"),
-        ("2º Ten PM", "2º Ten PM"),
-        ("2º Ten QAPM", "2º Ten QAOPM"),
-        ("Asp OF PM", "Asp OF PM"),
-        ("Subten PM", "Subten PM"),
-        ("1º Sgt PM", "1º Sgt PM"),
-        ("2º Sgt PM", "2º Sgt PM"),
-        ("3º Sgt PM", "3º Sgt PM"),
-        ("Cb PM", "Cb PM"),
-        ("Sd PM", "Sd PM"),
-        ("Sd PM 2ºCL", "Sd PM 2ºCL"),
-    )
+# REMOVA TODO O BLOCO DO MODELO Profile E SEUS MÉTODOS
+# class Profile(models.Model):
+#     posto_grad_choices = (...
+#     tipo_choices = (...
+#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     cadastro = models.OneToOneField('efetivo.Cadastro', on_delete=models.SET_NULL, null=True, blank=True, related_name='profile_rel')
+#     posto_grad = models.CharField(max_length=100, choices=posto_grad_choices, blank=True, null=True)
+#     tipo = models.CharField(max_length=20, choices=tipo_choices, blank=True, null=True)
+#     cpf = models.CharField(max_length=14, blank=True, null=True, unique=True)
+#     create_at = models.DateTimeField(auto_now_add=True)
+#     update_at = models.DateTimeField(auto_now=True)
+#     class Meta:
+#         verbose_name = "Perfil"
+#         verbose_name_plural = "Perfis"
+#     def __str__(self):
+#         return f'Perfil de {self.user.email}'
+#     @property
+#     def get_posto_grad_display(self):
+#         return self.get_posto_grad_display()
+#     @property
+#     def get_tipo_display(self):
+#         return self.get_tipo_display()
+#     @property
+#     def display_cpf(self):
+#         return self.cpf
+#     def sync_with_cadastro(self):
+#         if self.cadastro:
+#             self.posto_grad = self.cadastro.ultima_promocao.posto_grad if self.cadastro.ultima_promocao else ""
+#             self.tipo = self.cadastro.detalhes_situacao.first().op_adm if self.cadastro.detalhes_situacao.first() else ""
+#             self.cpf = self.cadastro.cpf
+#             self.save(update_fields=['posto_grad', 'tipo', 'cpf'])
+#             logger.info(f"Profile de {self.user.email} sincronizado com Cadastro {self.cadastro.re}.")
+#         else:
+#             logger.warning(f"Tentativa de sincronizar Profile de {self.user.email} sem Cadastro associado.")
 
-    tipo_choices = (
-        ("administrativo", "Administrativo"),
-        ("operacional", "Operacional"),
-    )
+# REMOVA TODO O BLOCO DO RECEIVER create_or_update_user_profile
+# @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     try:
+#         if created:
+#             profile = Profile.objects.create(user=instance)
+#             print(f"DEBUG: Profile criado para novo usuário {instance.email}.")
+#         else:
+#             profile, created = Profile.objects.get_or_create(user=instance)
+#             if created:
+#                 print(f"DEBUG: Profile criado (get_or_create) para usuário existente {instance.email}.")
+#         from backend.efetivo.models import Cadastro
+#         if not profile.cadastro and instance.email:
+#             cadastro = Cadastro.objects.filter(email=instance.email).first()
+#             if cadastro:
+#                 profile.cadastro = cadastro
+#                 profile.save(update_fields=['cadastro'])
+#                 print(f"DEBUG: Profile de {instance.email} associado ao Cadastro {cadastro.re}.")
+#                 profile.sync_with_cadastro()
+#             else:
+#                 print(f"DEBUG: Nenhum Cadastro encontrado para associar a {instance.email}.")
+#         elif profile.cadastro:
+#             profile.sync_with_cadastro()
+#             print(f"DEBUG: Profile de {instance.email} sincronizado com Cadastro existente {profile.cadastro.re}.")
+#     except Exception as e:
+#         print(f"ERRO: No signal create_or_update_user_profile para {instance.email}: {e}")
+#         logger.error(f"Erro ao criar ou atualizar perfil para o usuário {instance.email}: {e}", exc_info=True)
 
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='profile'
-    )
-    cadastro = models.ForeignKey(
-        Cadastro,
-        on_delete=models.SET_NULL, # Manter Profile mesmo que Cadastro seja apagado
-        null=True, blank=True,
-        related_name='profiles'
-    )
-    posto_grad = models.CharField(
-        max_length=100,
-        choices=posto_grad_choices,
-        blank=True,
-        null=True
-    )
-    re = models.CharField(
-        max_length=10,
-        blank=True,
-        null=True,
-        unique=True # RE deve ser único, se usado para identificação
-    )
-    dig = models.CharField(
-        max_length=1,
-        blank=True,
-        null=True
-    )
-    cpf = models.CharField(
-        max_length=14, # Inclui pontos e traço
-        blank=True,
-        null=True,
-        unique=True # CPF deve ser único
-    )
-    tipo = models.CharField(
-        max_length=20,
-        choices=tipo_choices,
-        blank=True,
-        null=True
-    )
-    is_profile_complete = models.BooleanField(default=False)
-
-
-    class Meta:
-        verbose_name = 'Perfil'
-        verbose_name_plural = 'Perfis'
-
-    def __str__(self):
-        return f'{self.user.email}'
-
-
-    def sync_with_cadastro(self):
-        print(f"DEBUG: sync_with_cadastro chamado para o Profile do usuário {self.user.email}")
-        if self.cadastro:
-            print(f"DEBUG: Profile tem Cadastro associado. Copiando dados...")
-            self.posto_grad = self.cadastro.posto_grad
-            self.re = self.cadastro.re
-            self.dig = self.cadastro.dig
-            self.cpf = self.cadastro.cpf
-            print(f"DEBUG: Dados copiados: posto_grad={self.posto_grad}, re={self.re}")
-            logger.info(f"Dados do Cadastro (RE: {self.cadastro.re}, Posto: {self.cadastro.posto_grad}) sincronizados com o Profile do usuário {self.user.email}")
-        else:
-            print(f"DEBUG: Profile NÃO tem Cadastro associado para sincronizar.")
-            logger.warning(f"Tentativa de sincronizar Profile {self.user.email} sem Cadastro associado.")
-
-
-@receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    print(f"DEBUG: Signal post_save de User disparado para {instance.email}. Created: {created}")
-    if kwargs.get('raw', False):
-        print("DEBUG: Signal ignorado devido a raw=True.")
-        return
-
-    try:
-        profile, profile_created = Profile.objects.get_or_create(user=instance)
-        print(f"DEBUG: Profile {'criado' if profile_created else 'obtido'} para {instance.email}.")
-
-        if created:
-            cadastro = None
-            if instance.email:
-                cadastro = Cadastro.objects.filter(email=instance.email).first()
-                print(f"DEBUG: Buscando Cadastro por email {instance.email}. Encontrado: {cadastro is not None}")
-
-            if cadastro:
-                profile.cadastro = cadastro
-                print(f"DEBUG: Associando Profile ao Cadastro {cadastro.re}.")
-                profile.sync_with_cadastro()
-                profile.save()
-                print(f"DEBUG: Profile salvo após sincronização com Cadastro.")
-
-                if cadastro.nome_de_guerra and instance.first_name != cadastro.nome_de_guerra:
-                    instance.first_name = cadastro.nome_de_guerra
-                    instance.save(update_fields=['first_name'])
-                    print(f"DEBUG: User first_name atualizado para {instance.first_name}.")
-            else:
-                print(f"DEBUG: Nenhum Cadastro encontrado para associar a {instance.email}.")
-        else:
-            print(f"DEBUG: User existente {instance.email}. Nenhuma ação de criação de Profile por este signal.")
-
-    except Exception as e:
-        print(f"ERRO: No signal create_or_update_user_profile para {instance.email}: {e}")
-        logger.error(f"Erro ao criar ou atualizar perfil para o usuário {instance.email}: {e}", exc_info=True)
+# REMOVA TODO O BLOCO DO MODELO SearchableProfile
+# class SearchableProfile(Profile):
+#     class Meta:
+#         proxy = True
+#         verbose_name = "Perfil Pesquisável"
+#         verbose_name_plural = "Perfis Pesquisáveis"
+#     def get_search_result(self):
+#         return {
+#             'title': self.user.get_full_name() or self.user.email,
+#             'fields': {
+#                 'Usuário': self.user.email,
+#                 'Posto/Grad': self.get_posto_grad_display() if self.posto_grad else 'N/A',
+#                 'Tipo': self.get_tipo_display() if self.tipo else 'N/A',
+#                 'CPF': self.cpf or 'N/A',
+#             }
+#         }

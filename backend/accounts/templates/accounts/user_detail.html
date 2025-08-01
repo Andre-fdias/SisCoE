@@ -1,377 +1,442 @@
 {% load static %}
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <link rel="icon" href="{% static 'img\favicon.ico' %}">
-    <title>Perfil de Usuário</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Usuário - SisCoE</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dark: {
-                            800: '#1f2937',
-                        }
-                    }
-                }
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .main_bg {
+            background: url('{% static "img/bg.png" %}');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+            background-size: cover;
+        }
+
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+        body.dark .glass-card {
+            background: linear-gradient(to right bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+        }
+
+        /* Estilos para mensagens */
+        .alert-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        @media (max-width: 768px) {
+            .alert-message {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                width: auto;
             }
         }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Dark Mode Toggle -->
+        <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+            <button id="darkModeToggle"
+                    class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600">
+                <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Card Principal -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full border border-gray-200 dark:border-gray-700">
+            <!-- Header do Card -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Perfil do Usuário</h1>
+                <a href="{% url 'accounts:user_list' %}" 
+                   class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                    Voltar para lista
+                </a>
+            </div>
+
+            <!-- Conteúdo Principal -->
+            <div class="p-6 md:p-8 space-y-8">
+                <!-- Seção Superior - Foto e Informações Básicas -->
+                <div class="flex flex-col md:flex-row gap-8">
+                    <!-- Foto de Perfil -->
+                    <div class="md:w-1/3 flex flex-col items-center space-y-4">
+                        <div class="relative">
+                            {% if user.cadastro and user.cadastro.imagens.exists %}
+                                <img id="profileImage" src="{{ user.cadastro.imagens.first.image.url }}" 
+                                     class="w-48 h-48 rounded-full border-4 border-gray-300 dark:border-gray-600 object-cover">
+                            {% else %}
+                                <div class="w-48 h-48 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                    <span class="text-2xl text-gray-500 dark:text-gray-400">Sem Foto</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-center space-y-2">
+                            <p class="text-xl font-medium text-gray-800 dark:text-gray-200">
+                                {{ user.first_name }} {{ user.last_name }}
+                            </p>
+                            {% if user.cadastro %}
+                                <p class="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                                    {{ user.cadastro.re }}-{{ user.cadastro.dig }}
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    {{ user.cadastro.ultima_promocao.posto_grad }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botões de Edição -->
+                        <div class="flex flex-row gap-2 w-full">
+                            <div class="px-6 py-4 flex flex-col sm:flex-row justify-end items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                {% if request.user.is_authenticated and request.user.pk == user.pk %}
+                                    <a href="{% url 'accounts:change_password_view' user.pk %}"
+                                    class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700
+                                            focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 transition-all duration-200
+                                            flex items-center justify-center">
+                                        <i class="fas fa-lock mr-2"></i> Alterar Senha
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informações de Contato -->
+                    <div class="md:w-2/3 space-y-6">
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Informações de Contato</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Email -->
+                                <div class="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <div class="text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                                        <p class="text-gray-800 dark:text-gray-200">{{ user.email }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Telefone -->
+                                <div class="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <div class="text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-phone"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Telefone</p>
+                                        <p class="text-gray-800 dark:text-gray-200">
+                                            {% if user.cadastro and user.cadastro.telefone %}
+                                                {{ user.cadastro.telefone }}
+                                            {% else %}
+                                                ---
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Localização -->
+                                <div class="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <div class="text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Localização</p>
+                                        <p class="text-gray-800 dark:text-gray-200">
+                                            {% if user.cadastro and user.cadastro.detalhes_situacao.first %}
+                                                {{ user.cadastro.detalhes_situacao.first.sgb }} - {{ user.cadastro.detalhes_situacao.first.posto_secao }}
+                                            {% else %}
+                                                ---
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- CPF -->
+                                <div class="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    <div class="text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">CPF</p>
+                                        <p class="text-gray-800 dark:text-gray-200">
+                                            {% if user.cadastro %}
+                                                {{ user.cadastro.cpf }}
+                                            {% else %}
+                                                ---
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Detalhes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Coluna Esquerda -->
+                    <div class="space-y-6">
+                        <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Detalhes da Conta</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Status</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {% if user.is_active %}
+                                        <span class="flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                            Ativo
+                                        </span>
+                                        {% else %}
+                                        <span class="flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                                            Inativo
+                                        </span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Privilégios</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {{ user.is_admin|yesno:"Administrador,Usuário Padrão" }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Nível de Permissão</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {{ user.get_permissoes_display }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Função</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {% if user.cadastro and user.cadastro.detalhes_situacao.first %}
+                                            {{ user.cadastro.detalhes_situacao.first.funcao }}
+                                        {% else %}
+                                            ---
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600 dark:text-gray-400">Membro desde</span>
+                                    <span class="text-gray-800 dark:text-gray-200">{{ user.date_joined|date:"d/m/Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coluna Direita -->
+                    <div class="space-y-6">
+                        <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
+                            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Atividade</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Último Login</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {% if user.last_login %}
+                                            {{ user.last_login|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            Nunca logou
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Status Online</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {% if user.is_online %}
+                                        <span class="flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                            Online
+                                        </span>
+                                        {% else %}
+                                        <span class="flex items-center">
+                                            <div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                                            Offline
+                                        </span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+                                    <span class="text-gray-600 dark:text-gray-400">Nome do PC</span>
+                                    <span class="text-gray-800 dark:text-gray-200">
+                                        {{ user.last_login_computer_name|default:"---" }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-gray-600 dark:text-gray-400">Endereço IP</span>
+                                    <span class="text-gray-800 dark:text-gray-200 font-mono">
+                                        {{ user.last_login_ip|default:"---" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="flex flex-col md:flex-row justify-between gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <!-- Botão Voltar -->
+                    <div class="flex">
+                        <a href="{% url 'core:index' %}" 
+                           class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-600 text-center">
+                            Voltar para Início
+                        </a>
+                    </div>
+                    
+                    <!-- Grupo Direita -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Histórico de Acessos -->
+                        <div class="flex items-center">
+                            <a href="{% url 'accounts:access_history' user.pk %}"
+                               class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                                Histórico de Acessos
+                            </a>
+                        </div>
+                        
+                        <!-- Outras Ações -->
+                        <div class="flex gap-4">
+                            <a href="{% url 'accounts:user_action_history' user.pk %}" 
+                               class="px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-600">
+                                Histórico de Ações
+                            </a>
+                            {% if request.user.is_superuser and request.user != user %}
+                            <button type="button" 
+                                    class="px-6 py-3 text-red-500 hover:text-red-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 border border-gray-200 dark:border-gray-600"
+                                    onclick="document.getElementById('deleteModal').classList.remove('hidden')">
+                                Excluir Conta
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Script para o Dark Mode -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+            const logo = document.getElementById('logo');
+
+            // Verifica se há preferência salva
+            const savedMode = localStorage.getItem('darkMode');
+
+            // Aplica o modo inicial
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                // Define o modo padrão como light se não houver preferência salva
+                disableDarkMode();
+            }
+
+            // Alterna entre modos
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) { // Usa 'dark' como marcador do Tailwind
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark'); // Adiciona a classe 'dark' do Tailwind
+                body.classList.remove('bg-gray-100');
+                body.classList.add('bg-gray-900');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark'); // Remove a classe 'dark' do Tailwind
+                body.classList.remove('bg-gray-900');
+                body.classList.add('bg-gray-100');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+
+            // Exibir mensagens do Django
+            const messagesContainer = document.getElementById('django-messages');
+            if (messagesContainer) {
+                Array.from(messagesContainer.children).forEach(messageElement => {
+                    const messageText = messageElement.textContent.trim();
+                    const messageTags = messageElement.dataset.tags;
+
+                    let alertType = 'info';
+                    if (messageTags.includes('success')) {
+                        alertType = 'success';
+                    } else if (messageTags.includes('error') || messageTags.includes('danger')) {
+                        alertType = 'error';
+                    } else if (messageTags.includes('warning')) {
+                        alertType = 'warning';
+                    }
+
+                    showAlert(messageText, alertType);
+                });
+            }
+
+            function showAlert(message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert-message p-4 rounded-lg shadow-lg bg-${type === 'error' ? 'red' : type === 'success' ? 'green' : type === 'warning' ? 'yellow' : 'blue'}-500 text-white`;
+                alertDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <i class="fas ${type === 'error' ? 'fa-times-circle' : type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'} mr-2"></i>
+                            <span>${message}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                // Mostrar o alerta
+                setTimeout(() => {
+                    alertDiv.style.display = 'block';
+                }, 100);
+
+                // Remover após 5 segundos
+                setTimeout(() => {
+                    alertDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        alertDiv.remove();
+                    }, 300);
+                }, 5000);
+            }
+        });
     </script>
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
-
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pt-br.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/pt-br.min.js"></script>
-    <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-
-<style>
-    /* Estilos específicos para a galeria (mantidos para compatibilidade, mesmo que não usados diretamente aqui) */
-    .thumbnail-container {
-        height: 120px;
-    }
-    
-    .file-thumbnail {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-    
-    .video-overlay {
-        background: rgba(0, 0, 0, 0.3);
-    }
-    
-    .file-icon {
-        font-size: 3rem;
-    }
-    
-    .file-size-badge {
-        font-size: 0.75rem;
-    }
-
-    /* Estilos base para o corpo, ajustando para dark/light */
-    body {
-        background-color: #f3f4f6; /* light gray */
-        color: #1f2937; /* dark gray */
-    }
-    
-    body.dark {
-        background-color: #1f2937; /* dark gray */
-        color: #e5e7eb; /* light gray */
-    }
-</style>
-
-<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-    <div class="container mx-auto p-5">
-        <div class="container mx-auto p-2 mt-8">
-            <div class="mx-auto flex flex-col justify-center items-center px-6 pt-8 pt:mt-0">
-                <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl xl:p-0 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-                    <div class="p-6 border-b border-gray-300 dark:border-gray-700">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Perfil do Usuário</h1>
-                            <div class="flex space-x-4">
-                                <a href="{% url 'core:index' %}" class="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 flex items-center dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                    Voltar
-                                </a>
-                                <button id="darkModeToggle"
-                                        class="ms-4 flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700">
-                                    <svg id="sunIcon" class="w-5 h-5 text-yellow-500 hidden dark:block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <svg id="moonIcon" class="w-5 h-5 text-indigo-600 block dark:hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    const darkModeToggle = document.getElementById('darkModeToggle');
-                                    const sunIcon = document.getElementById('sunIcon');
-                                    const moonIcon = document.getElementById('moonIcon');
-                                    const body = document.body;
-
-                                    const savedMode = localStorage.getItem('darkMode');
-                                    if (savedMode === 'dark') {
-                                        enableDarkMode();
-                                    } else {
-                                        disableDarkMode(); 
-                                    }
-
-                                    darkModeToggle.addEventListener('click', function() {
-                                        if (body.classList.contains('dark')) { 
-                                            disableDarkMode(); 
-                                        } else {
-                                            enableDarkMode(); 
-                                        }
-                                    });
-
-                                    function enableDarkMode() {
-                                        body.classList.add('dark'); 
-                                        localStorage.setItem('darkMode', 'dark'); 
-                                        sunIcon.classList.remove('hidden'); 
-                                        moonIcon.classList.add('hidden'); 
-                                    }
-
-                                    function disableDarkMode() {
-                                        body.classList.remove('dark'); 
-                                        localStorage.setItem('darkMode', 'light'); 
-                                        sunIcon.classList.add('hidden'); 
-                                        moonIcon.classList.remove('hidden'); 
-                                    }
-                                });
-                            </script>
-                        </div>
-                    </div>
-
-                    <div class="p-8 space-y-8">
-                        <div class="flex flex-col md:flex-row gap-8">
-                            <div class="md:w-1/3 flex flex-col items-center space-y-4">
-                                <div class="relative">
-                                    {% if imagem_perfil %}
-                                        <img id="profileImage" src="{{ imagem_perfil.image.url }}" 
-                                            class="w-48 h-48 rounded-full border-4 border-gray-300 object-cover dark:border-gray-700">
-                                    {% else %}
-                                        <div class="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center dark:bg-gray-700">
-                                            <span class="text-2xl text-gray-500 dark:text-gray-400">Sem Foto</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="text-center space-y-2">
-                                    <p class="text-xl font-medium text-gray-900 dark:text-gray-200">{{ object.first_name }} {{ object.last_name }}</p>
-                                    <p class="text-sm text-gray-700 font-mono dark:text-gray-400">{{ object.profile.re }}-{{ object.profile.dig }}</p>
-                                    <p class="text-sm text-gray-700 dark:text-gray-400">{{ object.profile.grad|safe }}</p>
-                                </div>
-
-                                <div class="flex flex-row gap-2 w-full">
-                                    <a href="{% url 'user_update' object.pk %}" 
-                                    class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                            transition-all duration-200 border border-gray-300 text-center flex-1 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">
-                                        Editar Usuário
-                                    </a>
-                                    <a href="{% url 'core:profile_update' object.pk %}" 
-                                    class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                            transition-all duration-200 border border-gray-300 text-center flex-1 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">
-                                        Editar Perfil
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="md:w-2/3 space-y-6">
-                                <div class="space-y-4">
-                                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Informações de Contato</h2>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                                            <div class="text-gray-500 dark:text-gray-400">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-400">Email</p>
-                                                <p class="text-gray-900 dark:text-gray-200">{{ object.email }}</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                                            <div class="text-gray-500 dark:text-gray-400">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-400">Telefone</p>
-                                                <p class="text-gray-900 dark:text-gray-200">{{ object.cadastro.telefone }}</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                                            <div class="text-gray-500 dark:text-gray-400">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-400">Localização</p>
-                                                <p class="text-gray-900 dark:text-gray-200">{{ object.cadastro.detalhes_situacao.last.sgb }} - {{ object.cadastro.detalhes_situacao.last.posto_secao }}</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                                            <div class="text-gray-500 dark:text-gray-400">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm text-gray-700 dark:text-gray-400">CPF</p>
-                                                <p class="text-gray-900 dark:text-gray-200">{{ object.profile.cpf|default:"---" }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-6">
-                                <div class="bg-white p-6 rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200 mb-4">Detalhes da Conta</h3>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Status</span>
-                                            <span class="text-gray-900 dark:text-gray-200">
-                                                {% if object.is_active %}
-                                                <span class="flex items-center">
-                                                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                                                    Ativo
-                                                </span>
-                                                {% else %}
-                                                <span class="flex items-center">
-                                                    <div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
-                                                    Inativo
-                                                </span>
-                                                {% endif %}
-                                            </span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Privilégios</span>
-                                            <span class="text-gray-900 dark:text-gray-200">
-                                                {{ object.is_admin|yesno:"Administrador,Usuário Padrão" }}
-                                            </span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Função</span>
-                                            <span class="text-gray-900 dark:text-gray-200">{{ cadastro.detalhes_situacao.last.funcao }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2">
-                                            <span class="text-gray-700 dark:text-gray-400">Membro desde</span>
-                                            <span class="text-gray-900 dark:text-gray-200">{{ object.date_joined|date:"d/m/Y" }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-6">
-                                <div class="bg-white p-6 rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200 mb-4">Atividade</h3>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Último Login</span>
-                                            <span class="text-gray-900 dark:text-gray-200">{{ object.last_login|date:"d/m/Y H:i" }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Status Online</span>
-                                            <span class="text-gray-900 dark:text-gray-200">
-                                                {% if object.is_online %}
-                                                <span class="flex items-center">
-                                                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                                                    Online
-                                                </span>
-                                                {% else %}
-                                                <span class="flex items-center">
-                                                    <div class="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
-                                                    Offline
-                                                </span>
-                                                {% endif %}
-                                            </span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                                            <span class="text-gray-700 dark:text-gray-400">Nome do PC</span>
-                                            <span class="text-gray-900 dark:text-gray-200">{{ object.last_login_computer_name }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2">
-                                            <span class="text-gray-700 dark:text-gray-400">Endereço IP</span>
-                                            <span class="text-gray-900 dark:text-gray-200 font-mono">{{ object.last_login_ip }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col md:flex-row justify-between gap-4 pt-8 border-t border-gray-300 dark:border-gray-700">
-                            <div class="flex">
-                                <a href="{% url 'core:index' %}" 
-                                class="px-6 py-3 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                        transition-all duration-200 border border-gray-300 text-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">
-                                    Voltar
-                                </a>
-                            </div>
-                            
-                            <div class="flex flex-col md:flex-row gap-4">
-                                <div class="flex items-center order-2 md:order-1">
-                                    <a href="{% url 'access_history' user.pk %}"
-                                        class="px-6 py-3 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                        transition-all duration-200 border border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">
-                                        Histórico de Acessos
-                                    </a>
-                                </div>
-                                
-                                <div class="flex gap-4 order-1 md:order-2">
-                                    <a href="{% url 'user_action_history' object.pk %}" 
-                                    class="px-6 py-3 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                            transition-all duration-200 border border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">
-                                        Histórico de Ações
-                                    </a>
-                                    <button type="button" 
-                                            class="px-6 py-3 text-red-600 hover:text-red-700 bg-gray-200 hover:bg-gray-300 rounded-lg
-                                                transition-all duration-200 border border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-red-400">
-                                        Excluir Conta
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
-            <div class="bg-white rounded-lg w-full max-w-md border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
-                <div class="p-6 border-b border-gray-300 dark:border-gray-700">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-200">Confirmar Exclusão</h3>
-                </div>
-                <div class="p-6">
-                    <p class="text-gray-700 dark:text-gray-400 mb-4">Tem certeza que deseja excluir esta conta permanentemente?</p>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Digite sua senha</label>
-                            <input type="password" 
-                                   class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg
-                                          text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                                          dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" 
-                                    class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg border border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200"
-                                    data-modal-toggle="deleteModal">
-                                Cancelar
-                            </button>
-                            <button type="button" 
-                                    class="px-4 py-2 text-red-600 bg-gray-200 hover:bg-gray-300 rounded-lg border border-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-red-400">
-                                Confirmar Exclusão
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
+</body>
 </html>
