@@ -137,7 +137,7 @@
             </button>
             <ul id="dropdown-example" class="hidden py-2 space-y-2">
               <li>
-                <a href="{% url 'user_list' %}"   class="flex items-center w-full p-2 text-gray-500 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                <a href="{% url 'accounts:user_list' %}"   class="flex items-center w-full p-2 text-gray-500 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
                   <svg xmlns="http://www.w3.org/2000/svg" color="gray"  width="25" height="25" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
                     <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                     <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
@@ -146,7 +146,7 @@
                 </a>
               </li>
               <li>
-                <a href="{% url 'user_create' %}"  class="flex items-center w-full p-2 text-gray-500 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 ">
+                <a href="{% url 'accounts:user_create' %}"  class="flex items-center w-full p-2 text-gray-500 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 ">
                   <svg xmlns="http://www.w3.org/2000/svg" color="gray"  width="25" height="25" fill="currentColor" class="bi bi-person-fill-add" viewBox="0 0 16 16">
                     <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                     <path d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
@@ -167,7 +167,7 @@
             </ul>
           </li>
           <li>
-            <a href="{% url 'logout' %}" class="text-base text-gray-500 font-normal rounded-lg flex items-center p-2 hover:bg-red-200 group">
+            <a href="{% url 'accounts:logout' %}" class="text-base text-gray-500 font-normal rounded-lg flex items-center p-2 hover:bg-red-200 group">
               <svg class="w-6 h-6 text-red-600 " fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
               <span class="ml-3">Sair</span>
             </a>

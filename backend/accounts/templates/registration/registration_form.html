@@ -1,89 +1,537 @@
-{% extends "base_login.html" %}
 {% load static %}
-{% block content %}
-<main class="bg-gray-900">
-  <div class="mx-auto md:h-screen flex flex-col justify-center items-center px-6 pt-8 pt:mt-0">
-    <img src="{% static 'img/logo-siscoe-black2.png' %}" class="my-5" width="180" height="152" alt="Logo SisCoE">
+{% load cpftags %} {# Carrega os filtros personalizados do cpftags #}
 
-    <div class="bg-gray-800 shadow rounded-lg md:mt-0 w-full sm:max-w-screen-sm xl:p-0 border border-gray-700">
-      <div class="p-6 sm:p-8 lg:p-16 space-y-8">
-        <h2 class="text-2xl lg:text-3xl font-bold text-white">
-          Crie sua conta
-        </h2>
-        
-        {# SEÇÃO PARA EXIBIR TODOS OS ERROS DO FORMULÁRIO (útil para depuração) #}
-        {% if form.errors %}
-          <div class="p-4 mb-4 text-sm text-red-400 bg-gray-700 rounded-lg border border-red-400">
-            <p>Por favor, corrija os seguintes erros:</p>
-            <ul>
-              {% for field_name, errors in form.errors.items %}
-                <li>
-                  <strong>{{ field_name|title }}:</strong>
-                  <ul>
-                    {% for error in errors %}
-                      <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                </li>
-              {% endfor %}
-              {% if form.non_field_errors %}
-                {% for error in form.non_field_errors %}
-                  <li>{{ error }}</li>
-                {% endfor %}
-              {% endif %}
-            </ul>
-          </div>
-        {% endif %}
-        
-        <form class="mt-8 space-y-6" action="" method="POST">
-          {% csrf_token %}
-          
-          {# CAMPOS OCULTOS PARA ENVIAR OS DADOS PRÉ-PREENCHIDOS #}
-          <input type="hidden" name="first_name" value="{{ form.initial.first_name }}">
-          <input type="hidden" name="last_name" value="{{ form.initial.last_name }}">
-          <input type="hidden" name="email" value="{{ form.initial.email }}">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Cadastro - SisCoE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<style>
+        .main_bg {
+            background: url('{% static "img/bg.png" %}');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+            background-size: cover;
+        }
 
-          <div>
-            <label class="text-sm font-medium text-white block mb-2">Nome Completo</label>
-            <input type="text" value="{{ form.initial.first_name }}"
-              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
-              readonly>
-          </div>
-          
-          <div>
-            <label class="text-sm font-medium text-white block mb-2">Nome de Guerra</label>
-            <input type="text" value="{{ form.initial.last_name }}"
-              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
-              readonly>
-          </div>
-          
-          <div>
-            <label class="text-sm font-medium text-white block mb-2">E-mail Funcional</label>
-            <input type="email" value="{{ form.initial.email }}"
-              class="bg-gray-700 border border-gray-600 text-gray-200 sm:text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
-              readonly>
-          </div>
-          
-          <div class="flex items-start">
-            <div class="flex items-center h-5">
-              <input id="terms" type="checkbox" name="terms" required
-                class="bg-gray-700 border-gray-600 focus:ring-blue-500 h-4 w-4 rounded">
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+        body.dark .glass-card {
+            background: linear-gradient(to right bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+        }
+
+        /* Estilos do Modal */
+        .terms-modal {
+            display: none; /* Escondido por padrão */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7); /* Overlay escuro */
+            z-index: 1000;
+            overflow-y: auto; /* Permite scroll se o conteúdo for grande */
+            display: flex; /* Usar flexbox para centralizar */
+            align-items: center; /* Centraliza verticalmente */
+            justify-content: center; /* Centraliza horizontalmente */
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 90%;
+            max-width: 900px; /* Largura máxima do modal */
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-height: 95vh; /* Altura máxima para caber na tela */
+            overflow-y: auto; /* Scroll interno para o conteúdo do modal */
+            position: relative; /* Para o botão de fechar */
+        }
+
+        .dark .modal-content {
+            background: #2d3748; /* Fundo escuro para o modal no dark mode */
+            color: #f7fafc;
+        }
+
+        .signature-container {
+            border: 1px solid #e2e8f0;
+            height: 150px; /* Altura fixa para a área de assinatura */
+            margin: 15px 0;
+            position: relative;
+        }
+
+        #signatureCanvas {
+            width: 100%;
+            height: 100%;
+            background: white; /* Fundo branco para a assinatura */
+            touch-action: none; /* Importante para funcionar em dispositivos móveis */
+        }
+
+        .dark #signatureCanvas {
+            background: #4a5568; /* Fundo escuro para a assinatura no dark mode */
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 2.5% auto; /* Ajusta margem para telas menores */
+                padding: 15px;
+            }
+            
+            .terms-logos {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .terms-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        /* Estilos para o conteúdo dos termos dentro do modal */
+        .prose {
+            max-width: 100%; /* Garante que o conteúdo não ultrapasse o modal */
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .prose h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+
+        .dark .prose {
+            color: #d1d5db;
+        }
+
+        .dark .prose h4 {
+            color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+
+    <div class="mt-4 relative grid grid-cols-1 md:grid-cols-3 auto-rows-min gap-4 w-full md:w-11/12 lg:w-3/4 p-4 md:p-6 glass-card rounded-lg shadow-lg">
+        <header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
+            <div class="flex items-center w-full">
+                <figure class="mr-2">
+                    <img src="{% static 'img/logo-siscoe-black2.png' %}" alt="logo" class="w-40 h-20 rounded-full" id="logo">
+                </figure>
+                <div class="flex-grow text-center">
+                    <span class="text-2xl font-bold uppercase text-gray-800 dark:text-white">Confirme Seus Dados</span>
+                </div>
+                <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+                    <button id="darkModeToggle"
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600">
+                        <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const darkModeToggle = document.getElementById('darkModeToggle');
+                        const sunIcon = document.getElementById('sunIcon');
+                        const moonIcon = document.getElementById('moonIcon');
+                        const body = document.body;
+                        const logo = document.getElementById('logo');
+
+                        // Verifica se há preferência salva
+                        const savedMode = localStorage.getItem('darkMode');
+
+                        // Aplica o modo inicial
+                        if (savedMode === 'dark') {
+                            enableDarkMode();
+                        } else {
+                            // Define o modo padrão como light se não houver preferência salva
+                            disableDarkMode();
+                        }
+
+                        // Alterna entre modos
+                        darkModeToggle.addEventListener('click', function() {
+                            if (body.classList.contains('dark')) { // Usa 'dark' como marcador do Tailwind
+                                disableDarkMode();
+                            } else {
+                                enableDarkMode();
+                            }
+                        });
+
+                        function enableDarkMode() {
+                            body.classList.add('dark'); // Adiciona a classe 'dark' do Tailwind
+                            body.classList.remove('bg-gray-100');
+                            body.classList.add('bg-gray-900');
+                            localStorage.setItem('darkMode', 'dark');
+                            sunIcon.classList.add('hidden');
+                            moonIcon.classList.remove('hidden');
+                            // Troca o logo para a versão escura (black2) no modo escuro
+                            if (logo) {
+                                logo.src = "{% static 'img/logo-siscoe-black2.png' %}";
+                            }
+                        }
+
+                        function disableDarkMode() {
+                            body.classList.remove('dark'); // Remove a classe 'dark' do Tailwind
+                            body.classList.remove('bg-gray-900');
+                            body.classList.add('bg-gray-100');
+                            localStorage.setItem('darkMode', 'light');
+                            sunIcon.classList.remove('hidden');
+                            moonIcon.classList.add('hidden');
+                             // Troca o logo para a versão clara (light) no modo claro
+                            if (logo) {
+                                logo.src = "{% static 'img/logo-siscoe-light.png' %}";
+                            }
+                        }
+                    });
+                </script>
             </div>
-            <div class="text-sm ml-3">
-              <label for="terms" class="font-medium text-white">Eu aceito os <a href="#"
-                  class="text-blue-400 hover:underline">Termos e Condições</a></label>
+        </header>
+
+        <section class="glass-card rounded-lg p-6 shadow-md col-span-1 md:col-span-3 flex flex-col md:flex-row gap-6">
+            <!-- Card da Imagem de Perfil (lado esquerdo) -->
+            <div class="flex-shrink-0 flex flex-col items-center md:block md:w-1/3 lg:w-1/4">
+                <div class="relative group overflow-hidden rounded-xl border-4 border-blue-400/30 shadow-xl hover:shadow-2xl transition-all duration-300 w-60 h-72">
+                    {% if cadastro_data.image_url %}
+                        <img src="{{ cadastro_data.image_url }}"
+                             class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
+                             alt="Pré-visualização da Imagem">
+                    {% else %}
+                        <div class="w-full h-full bg-blue-200/20 flex flex-col items-center justify-center text-blue-400 dark:bg-blue-800/20 dark:text-blue-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-lg font-medium">Sem imagem</span>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-          </div>
-          
-          <button type="submit"
-            class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 font-medium rounded-lg text-base px-5 py-3 w-full text-center">
-            Criar Conta
-          </button>
-        </form>
-        
-        <p class="text-xs text-gray-500">* A senha será enviada para o e-mail cadastrado após a criação da conta.</p>
-      </div>
+
+            <!-- Seção de Dados para Confirmação (lado direito) -->
+            <div class="flex-1 space-y-6">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center md:text-left">
+                    Dados para Confirmação
+                </h2>
+
+                <div class="text-sm grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700 dark:text-gray-200">
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">RE:</strong> {{ cadastro_data.re }}-{{ cadastro_data.dig }}</p>
+                    </div>
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">Nome Completo:</strong> {{ cadastro_data.nome }}</p>
+                    </div>
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">Nome de Guerra:</strong> {{ cadastro_data.nome_de_guerra }}</p>
+                    </div>
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">CPF:</strong> {{ cadastro_data.cpf}}</p>
+                    </div>
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">Posto/Graduação:</strong> {{ cadastro_data.posto_grad}}</p>
+                    </div>
+                    <div>
+                        <p><strong class="text-gray-800 dark:text-gray-100">E-mail Funcional:</strong> {{ cadastro_data.email }}</p>
+                    </div>
+                </div>
+                <form action="{% url 'accounts:signup' %}" method="post" class="mt-8 space-y-6" id="signup-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="cpf" value="{{ cadastro_data.cpf }}">
+                    <input type="hidden" id="signature-data" name="signature_data" value="">
+                    <input type="hidden" id="terms-accepted" name="terms" value="false"> <!-- Campo oculto para o termos -->
+
+                    <div class="flex items-center">
+                        <div class="text-sm">
+                            <label class="font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-cyan-600 bi bi-shield-fill-check mr-1" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.8 11.8 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7 7 0 0 0 1.048-.625 11.8 11.8 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.54 1.54 0 0 0-1.044-1.263 63 63 0 0 0-2.887-.87C9.843.266 8.69 0 8 0m2.146 5.146a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793z"/>
+                                </svg>
+                                Eu li e aceito os 
+                                <button type="button" onclick="openTermsModal()" class="text-teal-500 hover:underline focus:outline-none ml-1 font-semibold">
+                                    Termos e Condições
+                                </button>
+                            </label>
+                            <p id="terms-error" class="text-red-500 text-xs mt-1 hidden">Você precisa ler e aceitar os Termos e Condições</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="mt-8 text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-base px-5 py-3 w-full sm:w-auto text-center" disabled>
+                        Criar o cadastro
+                    </button>
+                </form>
+
+                <div class="text-sm font-medium text-gray-500 mt-4 text-center">
+                    Você já tem uma conta? <a href="{% url 'accounts:login' %}" class="text-teal-500 hover:underline">Login</a>
+                </div>
+            </div>
+        </section>
     </div>
-  </div>
-</main>
-{% endblock content %}
+
+
+<!-- Modal de Termos e Condições -->
+<div id="termsModal" class="terms-modal hidden">
+    <div class="modal-content">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+            <div class="flex items-center space-x-4 terms-logos">
+                <img src="{% static 'img/timbre_estado_sp.png' %}" alt="Timbre do Estado" class="h-12">
+                <img src="{% static 'img/logo_bombeiros_sp.png' %}" alt="Logo Bombeiros" class="h-12">
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white terms-header">TERMOS E CONDIÇÕES DE USO</h3>
+            <button onclick="closeTermsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Conteúdo dos termos -->
+        <div class="max-h-96 overflow-y-auto prose dark:prose-invert text-gray-700 dark:text-gray-300">
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">1. ACEITAÇÃO DOS TERMOS</h3>
+                <p class="mb-4">Ao acessar e utilizar o Sistema de Controle de Ocorrências e Emergências (SisCoE), você concorda com estes Termos e Condições, bem como com a Política de Privacidade e todas as leis e regulamentos aplicáveis.</p>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">2. PROTEÇÃO DE DADOS PESSOAIS</h3>
+                <p class="mb-4">Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), todos os dados pessoais coletados serão tratados com confidencialidade e segurança, sendo utilizados exclusivamente para as finalidades autorizadas.</p>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">3. RESPONSABILIDADES DO USUÁRIO</h3>
+                <p class="mb-2">O usuário é responsável por:</p>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                    <li>Manter a confidencialidade de suas credenciais de acesso</li>
+                    <li>Notificar imediatamente qualquer uso não autorizado de sua conta</li>
+                    <li>Utilizar o sistema apenas para fins legítimos e autorizados</li>
+                    <li>Fornecer informações verídicas e atualizadas</li>
+                </ul>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">4. SEGURANÇA DA INFORMAÇÃO</h3>
+                <p class="mb-4">O acesso ao sistema é monitorado e registrado para fins de auditoria e segurança. Qualquer tentativa de acesso não autorizado ou uso indevido estará sujeita às penalidades legais cabíveis.</p>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">5. RESTRIÇÕES DE USO</h3>
+                <p class="mb-2">É expressamente proibido:</p>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                    <li>Compartilhar credenciais de acesso</li>
+                    <li>Acessar ou tentar acessar dados sem autorização</li>
+                    <li>Modificar, copiar ou distribuir conteúdo do sistema sem autorização</li>
+                    <li>Utilizar o sistema para atividades ilícitas ou não autorizadas</li>
+                </ul>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">6. SANÇÕES</h3>
+                <p class="mb-2">O descumprimento destes Termos poderá resultar em:</p>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                    <li>Suspensão ou cancelamento do acesso</li>
+                    <li>Ações disciplinares conforme regulamento interno</li>
+                    <li>Medidas legais cabíveis</li>
+                </ul>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">7. DISPOSIÇÕES FINAIS</h3>
+                <p class="mb-4">Estes Termos podem ser atualizados periodicamente. O uso continuado do sistema após alterações constitui aceitação das novas condições.</p>
+            </div>
+        </div>
+        
+        <!-- Área de Aceite e Botões -->
+        <div class="terms-acceptance bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800 mt-4">
+            <h3 class="text-lg font-bold mb-4 text-blue-800 dark:text-blue-300">DECLARAÇÃO DE CIÊNCIA E ACEITE</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assinatura Eletrônica</label>
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 h-32">
+                    <canvas id="signatureCanvas" class="w-full h-full cursor-crosshair"></canvas>
+                </div>
+                <div class="flex justify-between mt-2">
+                    <button type="button" onclick="clearSignature()" class="text-xs text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">
+                        Limpar Assinatura
+                    </button>
+                    <span id="signatureStatus" class="text-xs text-gray-500 dark:text-gray-400">Assine acima</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center mb-6">
+                <input id="termsCheckbox" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
+                <label for="termsCheckbox" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    Eu li e concordo com os Termos e Condições acima
+                </label>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeTermsModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="confirmTermsBtn" onclick="acceptTerms()" disabled class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Confirmar Aceite
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+// Variáveis globais
+let signaturePad;
+let termsAccepted = false;
+
+// Inicializar o modal quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    initSignaturePad();
+    
+    // Atualizar botão quando checkbox mudar
+    document.getElementById('termsCheckbox').addEventListener('change', updateConfirmButton);
+});
+
+// Inicializar a área de assinatura
+function initSignaturePad() {
+    const canvas = document.getElementById('signatureCanvas');
+    // Certifique-se de que o canvas está visível e tem dimensões antes de inicializar SignaturePad
+    // Isso é importante se o modal estiver hidden no DOM quando a página carrega.
+    // Uma abordagem melhor é chamar initSignaturePad() quando o modal é aberto.
+    
+    signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)', // Fundo transparente para o SignaturePad
+        penColor: document.body.classList.contains('dark') ? 'white' : 'black', // Cor da caneta baseada no tema
+        minWidth: 1,
+        maxWidth: 3,
+        throttle: 16
+    });
+    
+    // Ajustar canvas para alta resolução e redimensionamento
+    function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        signaturePad.clear(); // Limpa a assinatura ao redimensionar
+        updateSignatureStatus();
+        updateConfirmButton();
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas(); // Chama no início para definir o tamanho correto
+    
+    // Atualizar status quando o usuário assinar
+    signaturePad.onEnd = function() { // Use onEnd para capturar o fim do traço
+        updateSignatureStatus();
+        updateConfirmButton();
+    };
+}
+
+// Atualizar status da assinatura
+function updateSignatureStatus() {
+    const statusElement = document.getElementById('signatureStatus');
+    if (signaturePad && !signaturePad.isEmpty()) {
+        statusElement.textContent = 'Assinatura válida';
+        statusElement.classList.remove('text-gray-500', 'dark:text-gray-400');
+        statusElement.classList.add('text-green-600', 'dark:text-green-400');
+    } else {
+        statusElement.textContent = 'Assine acima';
+        statusElement.classList.remove('text-green-600', 'dark:text-green-400');
+        statusElement.classList.add('text-gray-500', 'dark:text-gray-400');
+    }
+}
+
+// Limpar assinatura
+function clearSignature() {
+    if (signaturePad) {
+        signaturePad.clear();
+        updateSignatureStatus();
+        updateConfirmButton();
+    }
+}
+
+// Atualizar estado do botão de confirmação
+function updateConfirmButton() {
+    const checkbox = document.getElementById('termsCheckbox');
+    const confirmBtn = document.getElementById('confirmTermsBtn');
+    
+    const canConfirm = signaturePad && !signaturePad.isEmpty() && checkbox.checked;
+    confirmBtn.disabled = !canConfirm;
+}
+
+// Aceitar os termos
+function acceptTerms() {
+    if (signaturePad && !signaturePad.isEmpty() && document.getElementById('termsCheckbox').checked) {
+        // Salvar a assinatura no campo hidden
+        document.getElementById('signature-data').value = signaturePad.toDataURL();
+        
+        // Marcar como aceito
+        termsAccepted = true;
+        document.getElementById('terms-accepted').value = 'true';
+        
+        // Fechar o modal
+        closeTermsModal();
+        
+        // Habilitar o botão de submit do formulário principal
+        document.getElementById('submit-btn').disabled = false;
+        
+        // Esconder mensagem de erro se estiver visível
+        document.getElementById('terms-error').classList.add('hidden');
+    }
+}
+
+// Abrir o modal
+function openTermsModal() {
+    document.getElementById('termsModal').classList.remove('hidden');
+    // Se o signaturePad ainda não foi inicializado (primeira vez abrindo o modal)
+    if (!signaturePad) {
+        initSignaturePad();
+    } else {
+        // Se já foi inicializado, apenas redimensiona e limpa para uma nova assinatura
+        const canvas = document.getElementById('signatureCanvas');
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        signaturePad.clear();
+        updateSignatureStatus();
+        updateConfirmButton();
+    }
+}
+
+// Fechar o modal
+function closeTermsModal() {
+    document.getElementById('termsModal').classList.add('hidden');
+}
+
+// Validar antes de enviar o formulário principal
+document.getElementById('signup-form').addEventListener('submit', function(e) {
+    if (!termsAccepted) {
+        e.preventDefault();
+        document.getElementById('terms-error').classList.remove('hidden');
+        document.getElementById('terms-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        openTermsModal(); // Abre o modal automaticamente
+    }
+});
+</script>
+
+{% include 'accounts/includes/messages_include.html' %}
+</body>
+</html>

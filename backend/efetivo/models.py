@@ -1,6 +1,6 @@
-
 from datetime import date, datetime
-from backend.accounts.models import User
+# Remova: from django.contrib.auth import get_user_model
+from django.conf import settings # Adicione esta importação para acessar AUTH_USER_MODEL
 from dateutil.relativedelta import relativedelta
 from django.db import models
 from django.utils.safestring import mark_safe
@@ -10,7 +10,6 @@ import re
 from django.core.exceptions import ValidationError
 from PIL import Image, ImageDraw, ImageFont
 import os
-from django.contrib.auth import get_user_model
 import locale
 from django.utils import timezone
 
@@ -60,7 +59,8 @@ class Cadastro(models.Model):
     telefone = models.CharField(max_length=14, blank=False, null=False)
     alteracao = models.CharField(max_length=20, blank=False, null=False, choices=alteracao_choices)
     create_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cadastros', default=1)  # 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cadastros', default=1)  
+   
    
   
     def __str__(self):
@@ -411,7 +411,7 @@ class DetalhesSituacao(models.Model):
     apresentacao_na_unidade = models.DateField(blank=True, null=True)
     saida_da_unidade = models.DateField(blank=True, null=True)
     data_alteracao = models.DateTimeField(auto_now_add=True) # Geralmente não é alterado pelo usuário
-    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name='detalhes_usuario')
+    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='detalhes_usuario')
 
     def __str__(self):
       return f'{self.cadastro.re} - {self.situacao}'
@@ -539,7 +539,7 @@ class Promocao(models.Model):
     grupo = models.CharField(max_length=100, choices=grupo_choices)
     ultima_promocao = models.DateField(blank=False, null=False)
     data_alteracao = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):
         return f'{self.cadastro} - {self.posto_grad}'
@@ -614,7 +614,7 @@ class Imagem(models.Model):
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='imagens')
     image = models.ImageField(upload_to='img/fotos_perfil')
     create_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
         # Adicione esta linha para ordenar as imagens pela data de criação (mais recente primeiro)
@@ -630,7 +630,7 @@ class HistoricoPromocao(models.Model):
     grupo = models.CharField(max_length=100)
     ultima_promocao = models.DateField()
     data_alteracao = models.DateTimeField(auto_now_add=True) 
-    usuario_alteracao = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'{self.cadastro.re} - {self.posto_grad}'
@@ -652,7 +652,7 @@ class HistoricoDetalhesSituacao(models.Model):
     apresentacao_na_unidade = models.DateField(blank=True, null=True) # Adicionado blank=True, null=True
     saida_da_unidade = models.DateField(null=True, blank=True) # Já era nullable
     data_alteracao = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True) # Usar get_user_model() é mais robusto
+    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Usar get_user_model() é mais robusto
     
     def __str__(self):
         return f'Histórico para {self.cadastro.nome_de_guerra if self.cadastro else "Militar Desconhecido"} - {self.situacao}'
@@ -664,7 +664,6 @@ class HistoricoDetalhesSituacao(models.Model):
 
 from django.db import models
 from django.utils.safestring import mark_safe
-from django.contrib.auth import get_user_model
 from datetime import date
 from backend.efetivo.models import Cadastro
 
@@ -693,7 +692,7 @@ class CatEfetivo(models.Model):
     data_inicio = models.DateField(null=True, blank=True)
     data_termino = models.DateField(null=True, blank=True)
     data_cadastro = models.DateTimeField(auto_now_add=True)
-    usuario_cadastro = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_cadastro = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     ativo = models.BooleanField(default=True)
     observacao = models.TextField(blank=True, null=True)
 
@@ -1167,7 +1166,7 @@ def regras_restricoes_badges(self):
 class HistoricoCatEfetivo(models.Model):
     cat_efetivo = models.ForeignKey('CatEfetivo', on_delete=models.CASCADE, related_name='historico') # Usar string para evitar importação circular se CatEfetivo estiver abaixo
     data_registro = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Campos espelho do CatEfetivo
     tipo = models.CharField(max_length=20, choices=[ # Definir as escolhas aqui ou referenciar CatEfetivo.TIPO_CHOICES

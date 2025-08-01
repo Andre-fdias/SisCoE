@@ -1,74 +1,44 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import User
-from .models import Profile
+# Removida a importação de Profile
 from backend.documentos.models import Documento
-from django.shortcuts import render
 from backend.efetivo.models import Cadastro, Promocao, Imagem, DetalhesSituacao, CatEfetivo
-from backend.municipios.models import  Pessoal
+from backend.municipios.models import Pessoal
 from backend.bm.models import Cadastro_bm
 from datetime import datetime, date
 from django.db.models import Q
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from backend.agenda.models import Lembrete, Tarefa  # Importe os modelos Lembrete e Tarefa
+from backend.agenda.models import Lembrete, Tarefa
 from django.views.generic import TemplateView, View
 from backend.documentos.models import Documento, Arquivo
 from django.db.models import Prefetch
+from django.contrib import messages # Importar messages
+from django.utils import timezone
+import logging
+import json
 
+logger = logging.getLogger(__name__)
 
 def capa(request):
     template_name = 'landing.html'
     return render(request, template_name)
-
-
-
-
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.conf import settings
-from django.db import connection
-from django.contrib import messages
-from django.utils import timezone
-
-
 
 @login_required
 def index(request):
     hoje = datetime.now()
     mes_atual = hoje.month
 
-    # Garante que o usuário tem um perfil
-    try:
-        profile = Profile.objects.get(user=request.user)
-    except Profile.DoesNotExist:
-        profile = Profile.objects.create(user=request.user)
-        messages.info(request, 'Perfil criado automaticamente', extra_tags='bg-blue-500 text-white p-4 rounded')
+    # Acessa o objeto Cadastro diretamente do usuário logado
+    # Se o usuário não tiver um Cadastro associado, 'cadastro_do_usuario' será None
+    cadastro_do_usuario = request.user.cadastro 
 
-    # Se o perfil tem CPF mas não tem cadastro, tenta vincular
-    if profile.cpf and not profile.cadastro:
-        try:
-            cadastro = Cadastro.objects.get(cpf=profile.cpf)
-            profile.cadastro = cadastro
-            profile.save()
-            messages.success(request, 'Cadastro vinculado automaticamente pelo CPF', extra_tags='bg-green-500 text-white p-4 rounded')
-        except Cadastro.DoesNotExist:
-            # CORREÇÃO: Usar 'nasc' em vez de 'data_nascimento'
-            cadastro = Cadastro.objects.create(
-                cpf=profile.cpf,
-                nome_completo=request.user.get_full_name() or f"Usuário {request.user.id}",
-                nasc=datetime.now().date()  # Campo correto é 'nasc'
-            )
-            profile.cadastro = cadastro
-            profile.save()
-            messages.warning(request, 'Cadastro temporário criado automaticamente', extra_tags='bg-yellow-500 text-white p-4 rounded')
-        except Cadastro.MultipleObjectsReturned:
-            cadastro = Cadastro.objects.filter(cpf=profile.cpf).first()
-            profile.cadastro = cadastro
-            profile.save()
-            messages.warning(request, 'Múltiplos cadastros encontrados. Vinculando ao primeiro', extra_tags='bg-yellow-500 text-white p-4 rounded')
-
-    cadastro_do_usuario = profile.cadastro
+    # Se o usuário logado não tem um cadastro associado, pode-se redirecionar ou exibir uma mensagem
+    if not cadastro_do_usuario:
+        messages.warning(request, 'Seu usuário não está vinculado a um cadastro militar. Por favor, entre em contato com o administrador.')
+        # Você pode optar por redirecionar para uma página de erro ou perfil incompleto
+        # return redirect('alguma_pagina_de_erro') 
+        # Ou simplesmente continua com cadastro_do_usuario = None e o template lida com isso
+        pass
 
     FUNCAO_CHOICES_MAP = {
         'Comandante': 'CMT_GB',
@@ -108,7 +78,6 @@ def index(request):
 
     imagens_carrossel = Arquivo.objects.filter(tipo='IMAGEM').select_related('documento').order_by('-documento__data_documento')
 
-    # CORREÇÃO: Usar 'nasc' em vez de 'data_nascimento'
     aniversariantes = Cadastro.objects.filter(
         nasc__month=mes_atual
     ).order_by('nasc__day').prefetch_related(
@@ -156,7 +125,7 @@ def index(request):
         'subcomandante': subcomandante,
         'chefes': chefes,
         'imagens_carrossel': imagens_carrossel,
-        'cadastro': cadastro_do_usuario,
+        'cadastro': cadastro_do_usuario, # Passa o objeto Cadastro diretamente
     }
     
     return render(request, 'index.html', context)
@@ -166,99 +135,12 @@ def dashboard(request):
     template_name = 'dashboard.html'
     return render(request, template_name)
 
-
-@login_required
-def profile(request):
-    profile = request.user.profile
-    return render(request, 'profiles/profile.html', {'profile': profile})
-
-
-
-@login_required
-def profile_list(request):
-    profiles = Profile.objects.all()
-    return render(request, 'accounts/user_list.html', {'profiles': profiles})
-
-
-
-@login_required
-def profile_detail(request, pk):
-    profile = get_object_or_404(Profile, pk=pk)
-    user = profile.user  # Obtenha o User associado
-    return render(request, 'accounts/user_detail.html', {'object': user})  # Passe o User como 'object'
-
-
-@login_required
-def profile_create(request):
-    if request.method == 'POST':
-        user = request.POST.get('user')
-        cadastro = request.POST.get('cadastro')
-        re = request.POST.get('re')
-        dig = request.POST.get('dig')
-        posto_grad = request.POST.get('posto_grad')
-        image = request.FILES.get('image')
-        cpf = request.POST.get('cpf')
-        tipo = request.POST.get('tipo')
-        
-        profile = Profile(user=user, cadastro=cadastro, re=re, dig=dig, posto_grad=posto_grad, image=image, cpf=cpf, tipo=tipo)
-        profile.save()
-        return redirect('core:profile_list')
-    return render(request, 'profiles/profile_form.html')
-
-# core/views.py
-@login_required
-def profile_update(request, pk):
-    profile = get_object_or_404(Profile, pk=pk)
-    
-    # Verifica se o usuário tem permissão para editar este perfil
-    if not request.user.is_superuser and request.user != profile.user:
-        return HttpResponseForbidden("Você não tem permissão para editar este perfil.")
-
-    if request.method == "POST":
-        # Apenas atualiza a imagem se for enviada
-        if 'image' in request.FILES and profile.cadastro:
-            # Primeiro, desativa todas as imagens atuais
-            profile.cadastro.imagens.update(is_profile=False)
-            
-            # Cria uma nova imagem como perfil ativo
-            nova_imagem = Imagem(
-                cadastro=profile.cadastro,
-                image=request.FILES['image'],
-                user=request.user,
-                is_profile=True
-            )
-            nova_imagem.save()
-        
-        messages.success(request, "Perfil atualizado com sucesso!")
-        return redirect('core:profile_detail', pk=pk)
-    
-    context = {
-        'profile': profile,
-    }
-    return render(request, 'profiles/profile_form.html', context)
-
-@login_required
-def profile_delete(request, pk):
-    profile = get_object_or_404(Profile, pk=pk)
-    if request.method == 'POST':
-        profile.delete()
-        return redirect('core:profile_list')
-    return render(request, 'profiles/profile_confirm_delete.html', {'profile': profile})
-
+# As views profile_list, profile_detail, profile_create, profile_update, profile_delete foram removidas
+# do app 'core' e devem ser gerenciadas no app 'accounts' ou removidas se não forem mais necessárias.
 
 def exibir_cadastros(request):
     cadastros = Cadastro.objects.all()
     return render(request, 'index.html', {'cadastros': cadastros})
-
-
-
-
-from django.db.models import Sum, Count, Q
-from backend.municipios.models import Pessoal
-from backend.efetivo.models import Cadastro, DetalhesSituacao
-from backend.bm.models import Cadastro_bm
-from datetime import date, timedelta
-from django.utils import timezone
 
 def dashboard_view(request):
     try:
@@ -419,21 +301,6 @@ def calcular_variacao(valor_anterior, valor_atual):
         return 100 if valor_atual > 0 else 0
     return round(((valor_atual - valor_anterior) / valor_anterior) * 100, 1)
 
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.views.generic import TemplateView
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.views.generic import TemplateView
-from datetime import datetime
-import json
-
-from django.views.generic import TemplateView
-from datetime import datetime
-import json
-
 class CalendarioView(TemplateView):
     template_name = 'calendario.html'
 
@@ -527,18 +394,14 @@ class CalendarioView(TemplateView):
         
         return context  
 
-
-# backend/core/views.py
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .search import GlobalSearch # Importe a classe GlobalSearch
-
 @login_required
 def global_search_view(request):
     """
     View para realizar a busca global no sistema.
     Recebe um termo de busca via parâmetro 'q' na URL e retorna os resultados.
     """
+    from .search import GlobalSearch # Importe a classe GlobalSearch aqui para evitar circular import
+
     query = request.GET.get('q', '').strip() # Obtém o termo de busca da URL, remove espaços
     results = []
 
@@ -551,4 +414,3 @@ def global_search_view(request):
         'results': results,
     }
     return render(request, 'global_search/results.html', context)
-

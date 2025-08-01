@@ -73,6 +73,7 @@ sqlparse==0.5.3
 tqdm==4.67.1
 typing_extensions==4.13.2
 django-import-export==3.3.8
+brevo-python-1.2.0
 
 # ==============================================
 # COMPRESSÃO E OTIMIZAÇÃO

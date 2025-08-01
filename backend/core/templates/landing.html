@@ -1,4 +1,3 @@
-<!-- index.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -7,157 +6,705 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-  <link rel="icon" href="{% static 'img\favicon.ico' %}">
-  <title>SisCoE</title>
+  <meta name="description" content="Sistema de Controle de Efetivo do 15º Grupamento de Bombeiros">
+  <link rel="icon" href="{% static 'img/favicon.ico' %}">
+  <title>SisCoE - 15º GB</title>
 
   <!-- TailwindCSS -->
-  <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-
-  <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <style type="text/tailwindcss">
-    @layer utilities {
-        .form-control {
-          @apply text-gray-600 placeholder-gray-400 px-4 py-3 w-full rounded-lg focus:outline-none mb-4
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              800: '#1f2937',
+              900: '#111827',
+            },
+            primary: {
+              600: '#7c3aed',
+              700: '#6d28d9',
+            },
+            secondary: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'wave': 'wave 2s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-20px)' },
+            },
+            wave: {
+              '0%': { transform: 'rotate(0deg)' },
+              '10%': { transform: 'rotate(14deg)' },
+              '20%': { transform: 'rotate(-8deg)' },
+              '30%': { transform: 'rotate(14deg)' },
+              '40%': { transform: 'rotate(-4deg)' },
+              '50%': { transform: 'rotate(10deg)' },
+              '60%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(0deg)' },
+            }
+          }
         }
       }
-    </style>
+    }
+  </script>
 
+  <style>
+    @layer utilities {
+      .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r;
+      }
+      .glass-effect {
+        @apply backdrop-blur-md bg-white/30 dark:bg-gray-800/50;
+      }
+    }
+
+    /* Animação de partículas para o background */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -10;
+      pointer-events: none;
+    }
+    
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(124, 58, 237, 0.5);
+      animation: float 15s infinite linear;
+    }
+    
+    @keyframes float {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Efeito de onda animado */
+    .wave {
+      animation-name: wave;
+      animation-duration: 2.5s;
+      animation-iteration-count: infinite;
+      transform-origin: 70% 70%;
+      display: inline-block;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-900">
-
-  <header class="fixed w-full dark:bg-gray-900">
-    <nav class=" border-gray-200 py-2.5 bg-gray-900">
-      <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
-        <a href="#" class="flex items-center">
-          <img src="{% static 'img/logo-siscoe-black2.png' %}" width="250" height="150 role=" img"
-            aria-label="people-circle" id="logo">
-          <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white"></span>
-        </a>
-        <div class="flex items-center lg:order-2">
-
-
-          <a href="{% url 'login' %}"
-            class="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 sm:mr-2 lg:mr-0 dark:bg-purple-600 dark:hover:bg-purple-700 focus:outline-none dark:focus:ring-purple-800">Login</a>
-
+<body class="bg-gray-50 dark:bg-dark-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col">
+  <!-- Efeito de partículas -->
+ 
+    {% include "accounts/includes/messages_include.html" %}
+    
+  <!-- Header Final Otimizado -->
+  <header class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <!-- Logo - Fixo (não muda com dark mode) -->
+      <a href="#" class="flex items-center space-x-2">
+        <img src="{% static 'img/logo-siscoe-light.png' %}" width="160" alt="SisCoE Logo" class="h-10 object-contain">
+      
+      </a>
+      
+      <!-- Menu e Dark Mode -->
+      <div class="flex items-center space-x-4">
+        <!-- Dropdown Login Modernizado -->
+        <div class="relative" x-data="{ open: false }">
+          <button @click="open = !open" class="hidden md:flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-md transition-all duration-300">
+            <i class="fas fa-sign-in-alt mr-2"></i> Acessar Sistema
+            <svg class="w-4 h-4 ml-2 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          
+          <!-- Dropdown Content -->
+          <div x-show="open" @click.away="open = false" 
+              x-transition:enter="transition ease-out duration-100"
+              x-transition:enter-start="transform opacity-0 scale-95"
+              x-transition:enter-end="transform opacity-100 scale-100"
+              x-transition:leave="transition ease-in duration-75"
+              x-transition:leave-start="transform opacity-100 scale-100"
+              x-transition:leave-end="transform opacity-0 scale-95"
+              class="absolute right-0 mt-2 w-80 origin-top-right rounded-lg shadow-xl bg-white border border-gray-200 z-50 overflow-hidden">
+            <div class="p-6 space-y-4">
+              <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-user-circle mr-2 text-blue-500"></i> Login
+              </h3>
+              <form class="space-y-4" action="{% url 'accounts:login' %}" method="POST">
+                {% csrf_token %}
+                <div>
+                  <label for="dropdown_email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                  <div class="relative">
+                    <input id="dropdown_email" type="email" name="username" required
+                      class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="seu@email.com">
+                    <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                  </div>
+                </div>
+                <div>
+                  <label for="dropdown_password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                  <div class="relative">
+                    <input id="dropdown_password" type="password" name="password" required
+                      class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="••••••••">
+                    <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <a href="{% url 'accounts:password_reset' %}" class="text-sm text-blue-600 hover:underline">Esqueceu a senha?</a>
+                  <button type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg hover:from-blue-700 hover:to-cyan-600 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md transition-all duration-300">
+                    Entrar <i class="fas fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </form>
+              <div class="text-sm text-center text-gray-600 pt-2 border-t border-gray-200">
+                Não tem conta? <a href="{% url 'accounts:verificar_cpf' %}" class="text-blue-600 hover:underline font-medium">Cadastre-se</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1" id="mobile-menu-2">
 
+        <!-- Dark Mode Toggle (extrema direita) -->
+        <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+          </svg>
+          <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+          </svg>
+        </button>
+        
+        <!-- Menu Mobile -->
+        <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200">
+          <i class="fas fa-bars text-gray-800 text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Menu Mobile -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+      <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+        <a href="{% url 'accounts:login' %}" class="w-full text-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-md transition-all duration-300">
+          <i class="fas fa-sign-in-alt mr-2"></i> Acessar Sistema
+        </a>
+        <div class="flex justify-center space-x-4 py-2">
+          <a href="https://www.facebook.com/corpodebombeirosdapmesp" target="_blank" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+            <i class="fab fa-facebook-f text-gray-700"></i>
+          </a>
+          <a href="https://www.instagram.com/decimoquintogbpmesp/" target="_blank" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
+            <i class="fab fa-instagram text-gray-700"></i>
+          </a>
         </div>
       </div>
-    </nav>
+    </div>
   </header>
 
-  <section class="bg-gray-900">
-    <div class="grid max-w-screen-xl px-4 pt-20 pb-8 mx-auto lg:gap-8 xl:gap-0 lg:py-36 lg:grid-cols-12 lg:pt-28">
-      <div class="mr-auto place-self-center lg:col-span-7">
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <h1
-          class="max-w-4xl mb-4 text-3xl font-extrabold leading-none tracking-tight md:text-5xl xl:text-6xl text-white">
-          15º Grupamento de Bombeiros <br></h1>
-        <p class="max-w-2xl mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400">Sistema de
-          Controle de Efetivo </p>
-        <div class="space-y-4 sm:flex sm:space-y-0 sm:space-x-4">
-          <a href="https://www.facebook.com/corpodebombeirosdapmesp" target="_blank"
-            class="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-gray-900 border border-gray-200 rounded-lg sm:w-auto hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 text-white border-gray-700 hover:bg-gray-700 focus:ring-gray-800">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill-rule="evenodd"
-                d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                clip-rule="evenodd" />
-            </svg> &ensp;Facebook
-          </a>
-          <a href="https://www.instagram.com/decimoquintogbpmesp/" target="_blank"
-            class="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-center text-gray-900 border border-gray-200 rounded-lg sm:w-auto hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 text-white border-gray-700 hover:bg-gray-700 focus:ring-gray-800">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill-rule="evenodd"
-                d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"
-                clip-rule="evenodd" />
-            </svg> &ensp;Instagram
-          </a>
+  <!-- AlpineJS para o dropdown -->
+  <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+  <script>
+    
+
+      // Mobile menu toggle
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      const mobileMenu = document.getElementById('mobileMenu');
+      
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+    
+  </script>
+
+  <!-- Hero Section -->
+  <section class="relative py-16 md:py-24 lg:py-32 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary-600/10 to-secondary-400/10 dark:from-primary-700/20 dark:to-secondary-500/20"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white dark:from-dark-900 to-transparent"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="flex flex-col lg:flex-row items-center">
+        <!-- Text Content -->
+        <div class="lg:w-1/2 mb-12 lg:mb-0 lg:pr-12">
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+            <span class="text-gradient from-primary-600 to-secondary-500">15º Grupamento</span><br>
+            <span class="text-gray-700 dark:text-gray-400">de Bombeiros</span>
+          </h1>
+          
+          <p class="text-lg md:text-xl text-gray-600 dark:text-gray-500 mb-8 leading-relaxed">
+            Sistema de Controle de Efetivo desenvolvido para otimizar a gestão de pessoal e recursos do 15º GB.
+          </p>
+          
+          <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <a href="{% url 'accounts:login' %}" class="btn-primary">
+              <i class="fas fa-sign-in-alt mr-2"></i> Acessar Sistema
+            </a>
+            
+            <a href="#features" class="btn-secondary">
+              <i class="fas fa-info-circle mr-2"></i> Saiba Mais
+            </a>
+          </div>
+          
+          <!-- Social Links -->
+          <div class="mt-8 flex space-x-4">
+            <a href="https://www.facebook.com/corpodebombeirosdapmesp" target="_blank" class="social-icon-lg">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://www.instagram.com/decimoquintogbpmesp/" target="_blank" class="social-icon-lg">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="http://prdwiang.ccb.policiamilitar.sp.gov.br/intranetCB/#/pagina-opm/344" target="_blank" class="social-icon-lg">
+              <i class="fas fa-globe"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Image Content -->
+        <div class="lg:w-1/2 flex justify-center">
+          <div class="relative w-full max-w-md">
+            <div class="relative glass-effect rounded-2xl overflow-hidden ">
+              <img src="{% static 'img/logo.png' %}" alt="15º GB Logo" class="w-3/4 h-auto object-cover animate-float">
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  </section>
 
-
-      <div class="hidden lg:mt-0 lg:col-span-5 lg:flex">
-        &ensp; &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;<img src="{% static 'img/logo.png' %}" width="280"
-          height="160 role="img" aria-label="people-circle" id="logo">
+  <!-- Features Section -->
+  <section id="features" class="py-16 md:py-24 bg-white dark:bg-dark-800">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gradient from-primary-600 to-secondary-500">
+          Recursos do Sistema
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          Conheça as principais funcionalidades que tornam o SisCoE essencial para a gestão do efetivo
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Gestão de Efetivo</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Controle completo dos dados dos militares, incluindo histórico funcional, cursos e promoções.
+          </p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+            <i class="fas fa-medal"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Condecorações</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Registro e acompanhamento de medalhas e condecorações recebidas pelos militares.
+          </p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-secondary-100 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Documentos</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Sistema completo para gestão de documentos com busca avançada e controle de prazos.
+          </p>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
+            <i class="fas fa-birthday-cake"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Aniversariantes</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Controle dos aniversários do efetivo com alertas e relatórios mensais.
+          </p>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+            <i class="fas fa-calculator"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Calculadoras</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Ferramentas para cálculo de tempo de serviço, progressão e outros benefícios.
+          </p>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 dark:text-white">Relatórios</h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Geração de relatórios personalizados para análise e tomada de decisão.
+          </p>
+        </div>
       </div>
     </div>
   </section>
 
 
 
-
-
-  <footer class="bg-gray-800 fixed bottom-0 w-full">
-    <div class="max-w-screen-xl p-4 py-6 mx-auto lg:py-16 md:p-8 lg:p-10">
-      <div class="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
-
-      </div>
-      <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8">
-      <div class="text-center">
-        <a href="#" class="flex items-center justify-center mb-5 text-2xl font-semibold text-white">
-          <img src="{% static 'img/favicon.ico' %}" class="h-6 mr-3 sm:h-9" alt="Landwind Logo" />
-          SisCoE
+  <!-- CTA Section -->
+  <section class="py-16 md:py-24 bg-gradient-to-r from-primary-600 to-secondary-500 text-white">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Pronto para transformar a gestão do seu efetivo?</h2>
+      <p class="text-xl mb-8 max-w-3xl mx-auto opacity-90">
+        O SisCoE está disponível para todos os militares do 15º Grupamento de Bombeiros.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <a href="{% url 'accounts:login' %}" class="btn-white">
+          <i class="fas fa-sign-in-alt mr-2"></i> Acessar Agora
         </a>
-        <span class="block text-sm text-center text-gray-400">© 2024-2025 SisCoE™. Todos Direitos
-          Reservados. Desenvolvido por <a href="https://www.linkedin.com/in/andre-fonseca-dias-814a91243/"
-            target="_blank" class="text-purple-600 hover:underline dark:text-purple-500">André Fonseca Dias</a>.
-        </span>
-        <ul class="flex justify-center mt-5 space-x-5">
-          <li>
-            <a href="https://www.facebook.com/corpodebombeirosdapmesp" target="_blank"
-              class="text-gray-500 hover:text-gray-900 dark:hover:text-white dark:text-gray-400">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill-rule="evenodd"
-                  d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                  clip-rule="evenodd" />
-              </svg>
-            </a>
-          </li>
-          <li>
-            <a href="https://www.instagram.com/decimoquintogbpmesp" target="_blank"
-              class="text-gray-500 hover:text-gray-900 dark:hover:text-white dark:text-gray-400">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill-rule="evenodd"
-                  d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"
-                  clip-rule="evenodd" />
-              </svg>
-            </a>
-          </li>
+        <a href="#contact" class="btn-outline-white">
+          <i class="fas fa-envelope mr-2"></i> Fale Conosco
+        </a>
+      </div>
+    </div>
+  </section>
 
-          <li>
-            <a href="http://prdwiang.ccb.policiamilitar.sp.gov.br/intranetCB/#/pagina-opm/344" target="_blank"
-              class="text-gray-500 hover:text-gray-900 dark:hover:text-white dark:text-gray-400">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill-rule="evenodd"
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c5.51 0 10-4.48 10-10S17.51 2 12 2zm6.605 4.61a8.502 8.502 0 011.93 5.314c-.281-.054-3.101-.629-5.943-.271-.065-.141-.12-.293-.184-.445a25.416 25.416 0 00-.564-1.236c3.145-1.28 4.577-3.124 4.761-3.362zM12 3.475c2.17 0 4.154.813 5.662 2.148-.152.216-1.443 1.941-4.48 3.08-1.399-2.57-2.95-4.675-3.189-5A8.687 8.687 0 0112 3.475zm-3.633.803a53.896 53.896 0 013.167 4.935c-3.992 1.063-7.517 1.04-7.896 1.04a8.581 8.581 0 014.729-5.975zM3.453 12.01v-.26c.37.01 4.512.065 8.775-1.215.25.477.477.965.694 1.453-.109.033-.228.065-.336.098-4.404 1.42-6.747 5.303-6.942 5.629a8.522 8.522 0 01-2.19-5.705zM12 20.547a8.482 8.482 0 01-5.239-1.8c.152-.315 1.888-3.656 6.703-5.337.022-.01.033-.01.054-.022a35.318 35.318 0 011.823 6.475 8.4 8.4 0 01-3.341.684zm4.761-1.465c-.086-.52-.542-3.015-1.659-6.084 2.679-.423 5.022.271 5.314.369a8.468 8.468 0 01-3.655 5.715z"
-                  clip-rule="evenodd" />
-              </svg>
+  <!-- Footer -->
+  <footer class="bg-gray-100 dark:bg-dark-800 pt-12 pb-6">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <!-- Logo Column -->
+        <div class="md:col-span-1">
+          <a href="#" class="flex items-center mb-4">
+            <img src="{% static 'img/logo-siscoe-light.png' %}" width="150" alt="SisCoE Logo" id="footer-logo" class="mr-2">
+          </a>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Sistema de Controle de Efetivo do 15º Grupamento de Bombeiros.
+          </p>
+          <div class="flex space-x-4">
+            <a href="https://www.facebook.com/corpodebombeirosdapmesp" target="_blank" class="social-icon text-gray-600 dark:text-gray-400" >
+              <i class="fab fa-facebook-f"></i>
             </a>
-          </li>
-        </ul>
+            <a href="https://www.instagram.com/decimoquintogbpmesp/" target="_blank" class="social-icon text-gray-600 dark:text-gray-400">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="http://prdwiang.ccb.policiamilitar.sp.gov.br/intranetCB/#/pagina-opm/344" target="_blank" class="social-icon text-gray-600 dark:text-gray-400">
+              <i class="fas fa-globe"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Quick Links -->
+        <div>
+          <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Links Rápidos</h3>
+          <ul class="space-y-2">
+            <li><a href="https://portalminhaarea.sp.gov.br/minha_area" target="_blank"  class="footer-link text-gray-600 dark:text-gray-400">Minha Área SP</a></li>
+            <li><a href="#features" class="footer-link text-gray-600 dark:text-gray-400" target="_blank" >Recursos </a></li>
+            <li><a href="#contact" class="footer-link text-gray-600 dark:text-gray-400" target="_blank" >Contato</a></li>
+          </ul>
+        </div>
+        
+        <!-- Useful Links -->
+        <div>
+          <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Links Úteis</h3>
+          <ul class="space-y-2">
+            <li><a href="http://intranet.policiamilitar.sp.gov.br/" target="_blank" class="footer-link text-gray-600 dark:text-gray-400">PMESP Intranet</a></li>
+            <li><a href="http://prdwiang.ccb.policiamilitar.sp.gov.br/intranetCB/#/" target="_blank" class="footer-link text-gray-600 dark:text-gray-400">CB Intranet</a></li>
+            <li><a href="https://www.rh.intranet.policiamilitar.sp.gov.br/" target="_blank" class="footer-link text-gray-600 dark:text-gray-400">SGP</a></li>
+          </ul>
+        </div>
+        
+        <!-- Contact -->
+        <div id="contact">
+          <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Contato</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fas fa-map-marker-alt mt-1 mr-3 text-primary-600 dark:text-primary-400"></i>
+              <span class="text-gray-600 dark:text-gray-300">Av. Dom Aguirre, 2233 - Sorocaba/SP</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-phone-alt mr-3 text-primary-600 dark:text-primary-400"></i>
+              <span class="text-gray-600 dark:text-gray-300">(15) 2101-0193</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-envelope mr-3 text-primary-600 dark:text-primary-400"></i>
+              <span class="text-gray-600 dark:text-gray-300">15gb@policiamilitar.sp.gov.br</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <hr class="border-gray-200 dark:border-gray-700 my-6">
+      
+      <div class="flex flex-col md:flex-row justify-between items-center">
+      <!-- Modal de Login Superuser (escondido no footer) -->
+<!-- Modal de Login Superuser (manter exatamente onde está no seu footer) -->
+<div id="superuserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                <i class="fas fa-user-shield mr-2 text-purple-600"></i> Acesso Administrativo
+            </h3>
+            <button onclick="document.getElementById('superuserModal').classList.add('hidden')" 
+                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+                  
+        <form id="superuserLoginForm" action="{% url 'accounts:admin_login' %}" method="POST">
+            {% csrf_token %}
+            
+            <!-- Mensagens de erro/sucesso -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="space-y-4">
+                <!-- Campo Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail Administrativo</label>
+                    <div class="relative">
+                        <input name="username" type="email" required
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
+                            placeholder="admin@dominio.com"
+                            value="{{ request.GET.username|default:'' }}">
+                        <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- Campo Senha -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
+                    <div class="relative">
+                        <input name="password" type="password" required
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
+                            placeholder="••••••••">
+                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- Botão de Submit -->
+                <div class="pt-2">
+                    <button type="submit" 
+                            class="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Acessar como Admin
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+          <!-- Ativador escondido no copyright -->
+<!-- Na seção de copyright do footer -->
+<div class="text-gray-600 dark:text-gray-300 text-sm mb-4 md:mb-0">
+    &copy; 
+    <span onclick="document.getElementById('superuserModal').classList.remove('hidden')" 
+          class="hidden cursor-pointer text-purple-600 hover:underline" 
+          id="superuserTrigger">
+        2025 
+    </span>SisCoE. Todos os direitos reservados.
+</div>
+
+<script>
+    // Ativa o trigger apenas em ambiente de desenvolvimento
+    document.addEventListener('DOMContentLoaded', function() {
+        const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+        const isDev = window.location.hostname.includes('.dev') || window.location.hostname.includes('.test');
+        
+        if (isLocalhost || isDev) {
+            document.getElementById('superuserTrigger').classList.remove('hidden');
+        }
+    });
+</script>
+
+          <script>
+            // Mostra o link de acesso admin apenas para desenvolvedores
+            document.addEventListener('DOMContentLoaded', function() {
+              // Verifica se é localhost ou IP de desenvolvimento
+              if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                document.getElementById('superuserTrigger').classList.remove('hidden');
+              }
+            });
+          </script>
+
+
+        <div class="text-gray-600 dark:text-gray-300 text-sm">
+          Desenvolvido por <a href="https://www.linkedin.com/in/andre-fonseca-dias-814a91243/" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">André Fonseca Dias</a>
+        </div>
       </div>
     </div>
   </footer>
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <script src="https://unpkg.com/flowbite@1.4.1/dist/flowbite.js"></script>
 
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 bg-primary-600 text-white p-3 rounded-full shadow-lg hover:bg-primary-700 transition-all opacity-0 invisible">
+    <i class="fas fa-arrow-up"></i>
+  </button>
 
-
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-</body>
+  
+  <script>
+    // Initialize Swiper
+    const swiper = new Swiper('.testimonials-swiper', {
+      loop: true,
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false,
+      },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      breakpoints: {
+        640: {
+          slidesPerView: 1,
+          spaceBetween: 20,
+        },
+        768: {
+          slidesPerView: 2,
+          spaceBetween: 30,
+        },
+        1024: {
+          slidesPerView: 3,
+          spaceBetween: 30,
+        },
+      }
+    });
 
+    // Dark Mode Toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const sunIcon = document.getElementById('sunIcon');
+      const moonIcon = document.getElementById('moonIcon');
+      const body = document.body;
+      const logo = document.getElementById('logo');
+      const footerLogo = document.getElementById('footer-logo');
+
+      const savedMode = localStorage.getItem('darkMode');
+
+      if (savedMode === 'dark') {
+        enableDarkMode();
+      } else {
+        disableDarkMode();
+      }
+
+      darkModeToggle.addEventListener('click', function() {
+        if (body.classList.contains('dark')) {
+          disableDarkMode();
+        } else {
+          enableDarkMode();
+        }
+      });
+
+      function enableDarkMode() {
+        body.classList.add('dark');
+        localStorage.setItem('darkMode', 'dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        if (logo) logo.src = "{% static 'img/logo-siscoe-black2.png' %}";
+        if (footerLogo) footerLogo.src = "{% static 'img/logo-siscoe-black2.png' %}";
+      }
+
+      function disableDarkMode() {
+        body.classList.remove('dark');
+        localStorage.setItem('darkMode', 'light');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+        if (logo) logo.src = "{% static 'img/logo-siscoe-light.png' %}";
+        if (footerLogo) footerLogo.src = "{% static 'img/logo-siscoe-light.png' %}";
+      }
+
+      // Mobile Menu Toggle
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      const mobileMenu = document.getElementById('mobileMenu');
+      
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+
+      // Back to Top Button
+      const backToTopButton = document.getElementById('backToTop');
+      
+      window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.remove('opacity-0', 'invisible');
+          backToTopButton.classList.add('opacity-100', 'visible');
+        } else {
+          backToTopButton.classList.remove('opacity-100', 'visible');
+          backToTopButton.classList.add('opacity-0', 'invisible');
+        }
+      });
+
+      backToTopButton.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+
+      // Create particles
+      const particlesContainer = document.getElementById('particles-js');
+      if (particlesContainer) {
+        for (let i = 0; i < 30; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+          
+          // Random size between 5 and 15px
+          const size = Math.random() * 10 + 5;
+          particle.style.width = `${size}px`;
+          particle.style.height = `${size}px`;
+          
+          // Random position
+          particle.style.left = `${Math.random() * 100}%`;
+          particle.style.top = `${Math.random() * 100}%`;
+          
+          // Random animation duration
+          particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
+          
+          // Random delay
+          particle.style.animationDelay = `${Math.random() * 5}s`;
+          
+          particlesContainer.appendChild(particle);
+        }
+      }
+    });
+  </script>
+</body>
 </html>

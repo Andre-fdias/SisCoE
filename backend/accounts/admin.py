@@ -1,40 +1,60 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.utils.translation import gettext_lazy as _
-from .models import User  # Certifique-se de importar o modelo User
+from .models import User, UserActionLog, SearchableUserActionLog, SearchableUser
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 
+# Removendo o ProfileAdmin se existia
+
+@admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    # The fields to be used in displaying the User model.
-    # These override the definitions on the base UserAdmin
-    # that reference specific fields on auth.User.
-    list_display = ('email', 'first_name', 'last_name', 'is_admin', 'is_active')  # noqa E501
-    list_filter = ('is_admin',)
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
+
+    list_display = ('email', 'first_name', 'last_name', 'is_admin', 'is_active', 'permissoes', 'cadastro_link')
+    list_filter = ('is_admin', 'is_active', 'permissoes')
+    search_fields = ('email', 'first_name', 'last_name', 'cadastro__cpf', 'cadastro__nome_de_guerra')
+    ordering = ('email',)
+    filter_horizontal = ()
+
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
-        (_('Permissions'), {
-            'fields': (
-                'is_active',
-                'is_admin',
-                # 'is_superuser',
-                'groups',
-                'user_permissions',
-            )
-        }),
-        (_('Important dates'), {'fields': ('last_login',)}),
+        ('Informações Pessoais', {'fields': ('first_name', 'last_name', 'cadastro')}), # Adiciona 'cadastro'
+        ('Permissões', {'fields': ('is_admin', 'is_active', 'is_superuser', 'groups', 'user_permissions', 'permissoes')}),
+        ('Datas Importantes', {'fields': ('last_login', 'date_joined')}),
+        ('Histórico de Login', {'fields': ('last_login_ip', 'last_login_computer_name', 'login_history', 'is_online')}),
     )
-    # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
-    # overrides get_fieldsets to use this attribute when creating a user.
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('email', 'first_name', 'last_name', 'password', 'password2', 'permissoes', 'cadastro'), # Adiciona 'cadastro'
         }),
     )
-    search_fields = ('email', 'first_name', 'last_name')
-    ordering = ('email',)
-    filter_horizontal = ('groups', 'user_permissions',)
 
-# Registrar o modelo User no admin (APENAS UMA VEZ)
-admin.site.register(User, UserAdmin)
+    def cadastro_link(self, obj):
+        if obj.cadastro:
+            from django.utils.html import format_html
+            from django.urls import reverse
+            link = reverse("admin:efetivo_cadastro_change", args=[obj.cadastro.pk])
+            return format_html('<a href="{}">{} ({})</a>', link, obj.cadastro.nome_de_guerra, obj.cadastro.cpf)
+        return "-"
+    cadastro_link.short_description = "Cadastro Militar"
+
+
+@admin.register(UserActionLog)
+class UserActionLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'action', 'timestamp', 'ip_address', 'computer_name')
+    list_filter = ('action', 'timestamp', 'user')
+    search_fields = ('user__email', 'action', 'ip_address', 'computer_name')
+    date_hierarchy = 'timestamp' # Adiciona uma hierarquia de data para navegação
+    readonly_fields = ('user', 'action', 'timestamp', 'ip_address', 'computer_name') # Torna os campos somente leitura
+
+@admin.register(SearchableUserActionLog)
+class SearchableUserActionLogAdmin(UserActionLogAdmin):
+    # Este é um proxy model, então ele herda as configurações do UserActionLogAdmin
+    pass
+
+@admin.register(SearchableUser)
+class SearchableUserAdmin(UserAdmin):
+    # Este é um proxy model, então ele herda as configurações do UserAdmin
+    pass

@@ -1,120 +1,278 @@
-{% extends "base_login.html" %}
 {% load static %}
-{% block content %}
-<main class="bg-gray-150">
-    <div class="mx-auto md:h-screen flex flex-col justify-center items-center px-6 pt-8 pt:mt-0">
-        <img src="{% static 'img/logo-siscoe-black2.png' %}" class="my-5" width="180" height="152" role="img" aria-label="people-circle" id="logo">
-        <div class="bg-gray-900 shadow rounded-lg md:mt-0 w-full sm:max-w-screen-sm xl:p-0">
-            <div class="p-6 sm:p-8 lg:p-16 space-y-8">
-                <h2 class="text-2xl lg:text-3xl font-bold text-white">Verificação de CPF</h2>
-                <form class="mt-8 space-y-6" action="." method="POST" id="cpfForm">
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <title>Verificação de CPF - SisCoE</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1f2937',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .main_bg {
+            background: url("{% static 'img/bg.png' %}");
+            background-size: cover;
+            background-position: center;
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+        }
+        
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+        
+        .dark .main_bg {
+            filter: blur(8px) brightness(0.7);
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .dark .card {
+            background: rgb(31, 41, 55);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+        }
+
+        body, .card, input, button {
+            transition: all 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-150 min-h-screen flex flex-col justify-center items-center px-6 pt-8 pt:mt-0 relative dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+    
+    <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+        <button id="darkModeToggle"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700">
+            <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+            </svg>
+            <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <img src="{% static 'img/logo-siscoe-black2.png' %}" class="my-5" width="180" height="152" role="img"
+      aria-label="people-circle" id="logo">
+    
+    <div class="p-4 mx-auto w-full max-w-md animate-fade-in">
+        <div class="card p-6 w-full dark:bg-gray-800">
+            <div class="space-y-6">
+                <div>
+                    
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">Verificação de CPF</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Digite seu CPF para continuar</p>
+                </div>
+                
+                <form class="space-y-4" action="." method="POST" id="cpfForm">
                     {% csrf_token %}
                     <div>
-                        <label for="cpf" class="text-sm font-medium text-white block mb-2">CPF</label>
-                        <input id="cpf" type="text" name="cpf" class="bg-gray-300 border border-gray-300 text-gray-700 sm:text-sm rounded-lg focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5" placeholder="Digite seu CPF" required oninput="formatCPF(this)" onblur="validateCPF(this)" maxlength="14">
-                        <p class="text-red-500 text-sm mt-1 hidden" id="cpf_error">Por favor, insira um CPF válido.</p>
+                        <label for="cpf" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">CPF</label>
+                        <input id="cpf" type="text" name="cpf" 
+                               class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                               placeholder="000.000.000-00" 
+                               required 
+                               oninput="formatCPF(this)" 
+                               onblur="validateCPF(this)" 
+                               maxlength="14">
+                        <p class="text-red-500 text-xs mt-1 hidden" id="cpf_error">Por favor, insira um CPF válido.</p>
                     </div>
-                    <button type="submit" class="text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-base px-5 py-3 w-full sm:w-auto text-center" id="submitButton">Verificar</button>
-                    {% if message %}
-                        <p class="text-red-500">{{ message }}</p>
+                    
+                    <button type="submit" 
+                            class="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium text-sm rounded-lg shadow hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50"
+                            id="submitButton">
+                        Verificar
+                    </button>
+                    
+                    {% if messages %}
+                        <ul class="space-y-1">
+                            {% for message in messages %}
+                                <li class="text-red-500 text-xs {% if message.tags %}{{ message.tags }}{% endif %}">
+                                    {{ message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 </form>
-                <div class="text-sm font-medium text-gray-500">
-                    Você já tem uma conta? <a href="{% url 'login' %}" class="text-teal-500 hover:underline">Login</a>
+                
+                <div class="text-center text-xs text-gray-600 dark:text-gray-400">
+                    Já tem uma conta? 
+                    <a href="{% url 'core:capa' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">
+                        Faça login
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</main>
 
-<script>
-  function formatCPF(input) {
-    let value = input.value.replace(/\D/g, '');
-    let formattedValue = '';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+            const logo = document.getElementById('logo');
+            const loginCard = document.querySelector('.card'); // Seleciona o card principal
 
-    if (value.length > 0) {
-      formattedValue += value.substring(0, 3);
-      if (value.length > 3) {
-        formattedValue += '.' + value.substring(3, 6);
-        if (value.length > 6) {
-          formattedValue += '.' + value.substring(6, 9);
-          if (value.length > 9) {
-            formattedValue += '-' + value.substring(9, 11);
-          }
+            const savedMode = localStorage.getItem('darkMode');
+            
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode(); 
+            }
+
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark');
+                body.classList.remove('bg-gray-150');
+                body.classList.add('bg-gray-900');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                if (logo) {
+                    logo.src = "{% static 'img/logo-siscoe-black2.png' %}";
+                }
+                if (loginCard) {
+                    loginCard.classList.remove('bg-white');
+                    loginCard.classList.add('dark:bg-gray-800');
+                }
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                body.classList.remove('bg-gray-900');
+                body.classList.add('bg-gray-150');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                if (logo) {
+                    logo.src = "{% static 'img/logo-siscoe-light.png' %}";
+                }
+                if (loginCard) {
+                    loginCard.classList.remove('dark:bg-gray-800');
+                    loginCard.classList.add('bg-white');
+                }
+            }
+        });
+
+        function formatCPF(input) {
+            let value = input.value.replace(/\D/g, '');
+            let formattedValue = '';
+
+            if (value.length > 0) {
+                formattedValue += value.substring(0, 3);
+                if (value.length > 3) {
+                    formattedValue += '.' + value.substring(3, 6);
+                    if (value.length > 6) {
+                        formattedValue += '.' + value.substring(6, 9);
+                        if (value.length > 9) {
+                            formattedValue += '-' + value.substring(9, 11);
+                        }
+                    }
+                }
+            }
+            input.value = formattedValue;
         }
-      }
-    }
-    input.value = formattedValue;
-  }
 
-  function validateCPF(input) {
-    const cpf = input.value.replace(/\D/g, '');
-    const errorDiv = document.getElementById('cpf_error');
-    const submitButton = document.getElementById('submitButton');
+        function validateCPF(input) {
+            const cpf = input.value.replace(/\D/g, '');
+            const errorDiv = document.getElementById('cpf_error');
+            const submitButton = document.getElementById('submitButton');
 
-    if (!cpf || cpf.length !== 11 || isInvalidCPFPattern(cpf) || !validateCPFDigits(cpf)) {
-      errorDiv.classList.remove('hidden');
-      input.classList.add('border-red-500');
-      submitButton.disabled = true; // Disable the submit button if CPF is invalid
-      return false;
-    }
+            if (!cpf || cpf.length !== 11 || isInvalidCPFPattern(cpf) || !validateCPFDigits(cpf)) {
+                errorDiv.classList.remove('hidden');
+                input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                submitButton.disabled = true; 
+                submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+                return false;
+            }
 
-    errorDiv.classList.add('hidden');
-    input.classList.remove('border-red-500');
-    submitButton.disabled = false; // Enable the submit button if CPF is valid
-    return true;
-  }
+            errorDiv.classList.add('hidden');
+            input.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+            submitButton.disabled = false; 
+            submitButton.classList.remove('opacity-70', 'cursor-not-allowed');
+            return true;
+        }
 
-  function isInvalidCPFPattern(cpf) {
-    return cpf === '00000000000' ||
-           cpf === '11111111111' ||
-           cpf === '22222222222' ||
-           cpf === '33333333333' ||
-           cpf === '44444444444' ||
-           cpf === '55555555555' ||
-           cpf === '66666666666' ||
-           cpf === '77777777777' ||
-           cpf === '88888888888' ||
-           cpf === '99999999999';
-  }
+        function isInvalidCPFPattern(cpf) {
+            const invalidPatterns = [
+                '00000000000', '11111111111', '22222222222', '33333333333', '44444444444',
+                '55555555555', '66666666666', '77777777777', '88888888888', '99999999999'
+            ];
+            return invalidPatterns.includes(cpf);
+        }
 
-  function validateCPFDigits(cpf) {
-    let sum;
-    let remainder;
+        function validateCPFDigits(cpf) {
+            let sum = 0;
+            let remainder;
+            
+            for (let i = 1; i <= 9; i++) {
+                sum += parseInt(cpf.substring(i-1, i)) * (11 - i);
+            }
+            remainder = (sum * 10) % 11;
+            
+            if ((remainder === 10) || (remainder === 11)) {
+                remainder = 0;
+            }
+            if (remainder !== parseInt(cpf.substring(9, 10))) {
+                return false;
+            }
+            
+            sum = 0;
+            for (let i = 1; i <= 10; i++) {
+                sum += parseInt(cpf.substring(i-1, i)) * (12 - i);
+            }
+            remainder = (sum * 10) % 11;
+            
+            if ((remainder === 10) || (remainder === 11)) {
+                remainder = 0;
+            }
+            if (remainder !== parseInt(cpf.substring(10, 11))) {
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
 
-    sum = 0;
-    for (let i = 1; i <= 9; i++) {
-      sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
-    }
-    remainder = (sum * 10) % 11;
-    if ((remainder === 10) || (remainder === 11)) {
-      remainder = 0;
-    }
-    if (remainder !== parseInt(cpf.substring(9, 10))) {
-      return false;
-    }
-
-    sum = 0;
-    for (let i = 1; i <= 10; i++) {
-      sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
-    }
-    remainder = (sum * 10) % 11;
-    if ((remainder === 10) || (remainder === 11)) {
-      remainder = 0;
-    }
-    if (remainder !== parseInt(cpf.substring(10, 11))) {
-      return false;
-    }
-
-    return true;
-  }
-
-  // Prevent form submission if CPF is invalid on submit
-  document.getElementById('cpfForm').addEventListener('submit', function(event) {
-    const cpfInput = document.getElementById('cpf');
-    if (!validateCPF(cpfInput)) {
-      event.preventDefault(); // Prevent the form from submitting
-    }
-  });
-</script>
-{% endblock content %}
+{% include 'accounts/includes/messages_include.html' %}
+</body>
+</html>
