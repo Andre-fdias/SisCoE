@@ -1,0 +1,244 @@
+{% load static %}
+<div id="permissionModal" class="modal fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 opacity-0 invisible transition-all duration-300">
+    <div class="max-w-md w-full p-6 rounded-2xl shadow-2xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 relative transform scale-95 transition-all duration-300">
+        <!-- Botão de Fechar -->
+        <button type="button" class="absolute top-5 right-5 p-1 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors group" onclick="closePermissionModal()" aria-label="Fechar modal">
+            <svg class="h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="text-center mb-6">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 mb-3">
+                <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Editar Permissões</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400" id="modalUserEmail"></p>
+        </div>
+
+        <form id="permissionUpdateForm" method="post" class="space-y-5" action="">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" id="modalUserId">
+
+            <!-- Campo de Permissões -->
+            <div class="space-y-2">
+                <label for="id_permissoes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nível de Permissão</label>
+                <div class="relative">
+                    <select id="id_permissoes" name="permissoes" class="block w-full pl-3 pr-10 py-2.5 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 rounded-lg shadow-sm appearance-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all">
+                        <option value="basico">Básico</option>
+                        <option value="sgb">SGB</option>
+                        <option value="gestor">Gestor</option>
+                        <option value="admin">Admin</option>
+                        <option value="visitantes">Visitante</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="space-y-3">
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="id_is_active" name="is_active" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded transition">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="id_is_active" class="font-medium text-gray-700 dark:text-gray-300">Usuário Ativo</label>
+                        <p class="text-gray-500 dark:text-gray-400">Permitir que o usuário acesse o sistema</p>
+                    </div>
+                </div>
+
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="id_is_admin" name="is_admin" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded transition">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="id_is_admin" class="font-medium text-gray-700 dark:text-gray-300">Administrador</label>
+                        <p class="text-gray-500 dark:text-gray-400">Acesso completo ao sistema</p>
+                    </div>
+                </div>
+
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="id_is_superuser" name="is_superuser" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded transition">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="id_is_superuser" class="font-medium text-gray-700 dark:text-gray-300">Superusuário</label>
+                        <p class="text-gray-500 dark:text-gray-400">Acesso total ao sistema e configurações</p>
+                    </div>
+                </div>
+
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="id_must_change_password" name="must_change_password" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded transition">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="id_must_change_password" class="font-medium text-gray-700 dark:text-gray-300">Alterar Senha</label>
+                        <p class="text-gray-500 dark:text-gray-400">Obrigar usuário a alterar senha no próximo login</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closePermissionModal()" class="px-4 py-2.5 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2.5 inline-flex items-center rounded-md border border-transparent shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors group">
+                    <svg class="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Função para abrir o modal com animação e preencher os dados
+    function openPermissionModal(userId, email, permissoes, is_active, is_admin, is_superuser, must_change_password) {
+        const modal = document.getElementById('permissionModal');
+        const form = document.getElementById('permissionUpdateForm');
+        
+        // Preencher os campos
+        document.getElementById('modalUserId').value = userId;
+        document.getElementById('modalUserEmail').textContent = email;
+        document.getElementById('id_permissoes').value = permissoes;
+        document.getElementById('id_is_active').checked = is_active === 'true';
+        document.getElementById('id_is_admin').checked = is_admin === 'true';
+        document.getElementById('id_is_superuser').checked = is_superuser === 'true';
+        document.getElementById('id_must_change_password').checked = must_change_password === 'true';
+        
+        // Construir a URL correta
+        form.action = `/accounts/users/${userId}/permission_update/`;
+        
+        // Mostrar modal com animação
+        modal.classList.remove('invisible', 'opacity-0');
+        modal.classList.add('opacity-100', 'visible');
+        setTimeout(() => {
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }, 10);
+    }
+
+    // Função para fechar o modal com animação
+    function closePermissionModal() {
+        const modal = document.getElementById('permissionModal');
+        modal.querySelector('div').classList.remove('scale-100');
+        modal.querySelector('div').classList.add('scale-95');
+        
+        setTimeout(() => {
+            modal.classList.remove('opacity-100', 'visible');
+            modal.classList.add('invisible', 'opacity-0');
+        }, 200);
+    }
+    
+    // Configurar o envio do formulário via AJAX
+    document.getElementById('permissionUpdateForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        // Desativar o botão para evitar múltiplos envios
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Salvando...
+        `;
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Mostrar mensagem de sucesso
+                showAlert('success', data.message || 'Permissões atualizadas com sucesso!');
+                
+                // Fechar o modal após 1 segundo
+                setTimeout(() => {
+                    closePermissionModal();
+                    // Atualizar a página para refletir as mudanças
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // Mostrar mensagem de erro
+                showAlert('error', data.error || 'Erro ao atualizar permissões');
+                
+                // Reativar o botão
+                submitButton.disabled = false;
+                submitButton.innerHTML = `
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar Alterações
+                `;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('error', 'Erro na comunicação com o servidor');
+            
+            // Reativar o botão
+            submitButton.disabled = false;
+            submitButton.innerHTML = `
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Salvar Alterações
+            `;
+        }
+    });
+    
+    // Função para mostrar alertas (substitua pela sua implementação)
+    function showAlert(type, message) {
+        // Implementação básica - substitua pelo seu sistema de notificação
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+    
+    // Fechar ao clicar fora do modal
+    window.addEventListener('click', (event) => {
+        const modal = document.getElementById('permissionModal');
+        if (event.target === modal) {
+            closePermissionModal();
+        }
+    });
+
+    // Fechar com a tecla ESC
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closePermissionModal();
+        }
+    });
+</script>

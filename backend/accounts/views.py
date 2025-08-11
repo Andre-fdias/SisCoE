@@ -7,17 +7,18 @@ from django.contrib.auth.views import (
     PasswordResetView,
     SetPasswordForm 
 )
+from django.http import  JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from backend.accounts.services import send_mail_to_user, log_user_action, send_generated_password_email
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem # Certifique-se de que Imagem está importada
-from django.contrib.auth import authenticate, login, update_session_auth_hash
+from django.contrib.auth import authenticate, update_session_auth_hash, login, logout as auth_logout, get_user_model #
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 import socket
 from .models import User, UserActionLog, TermosAceite
-from .forms import CustomUserChangeForm# CustomUserCreationForm não será usado diretamente para criar o User aqui
+from .forms import CustomUserChangeForm, UserPermissionChangeForm# CustomUserCreationForm não será usado diretamente para criar o User aqui
 from django.utils import timezone
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -43,6 +44,8 @@ from django.urls import reverse_lazy
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+from datetime import datetime, timedelta # Importar timedelta
+from .decorators import permissao_necessaria, permission_required, group_required
 
 logger = logging.getLogger(__name__)
 
@@ -372,6 +375,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, reverse
 from django.contrib.auth import authenticate, login
 
+
 @require_http_methods(["POST"])
 def admin_login(request):
     username = request.POST.get('username', '').strip()
@@ -439,20 +443,39 @@ def force_password_change_view(request):
     })
 
 
-
 @login_required
 def my_logout(request):
-    log_user_action(request.user, "User logged out", request)
-    logout(request)
-    messages.info(request, 'Você foi desconectado com sucesso.')
-    return redirect('core:capa')
+    # Verifica se o usuário está autenticado antes de tentar atualizar o histórico
+    if request.user.is_authenticated:
+        # Atualiza o histórico de login com o tempo de logout
+        # Passa o IP e o nome do computador da última sessão registrada
+        # Estes são os dados do login atual, que serão usados para encontrar a sessão aberta
+        request.user.update_login_history(
+            ip=request.user.last_login_ip, # Usa o IP do último login registrado
+            computer_name=request.user.last_login_computer_name, # Usa o nome do PC do último login registrado
+            logout_time=timezone.now() # Define o tempo de logout
+        )
+        request.user.is_online = False # Define explicitamente como offline
+        # Salva o histórico de login atualizado e o status online
+        request.user.save(update_fields=['login_history', 'is_online'])
+        log_user_action(request.user, "Fez logout do sistema", request) # Log da ação de logout
+
+    auth_logout(request) # Chama a função de logout do Django
+    messages.info(request, "Você saiu da sua conta.")
+    return redirect('accounts:login') # Redireciona para a página de login
 
 
-
+@permissao_necessaria(level='admin')
 @login_required
 def user_list(request):
+    # Verifica a permissão para visualizar a lista de usuários
+    if not request.user.has_permission_level('gestor'): # Apenas gestores e admins podem ver
+        messages.error(request, "Você não tem permissão para visualizar a lista de usuários.")
+        return redirect('core:index') # Redireciona para uma página de erro ou home
+
     users = User.objects.all().order_by('email')
-    return render(request, 'user_list.html', {'users': users})
+    log_user_action(request.user, "Visualizou a lista de usuários", request)
+    return render(request, 'accounts/user_list.html', {'users': users})
 
 
 
@@ -460,12 +483,12 @@ def user_list(request):
 def user_detail(request, pk):
     user = get_object_or_404(User, pk=pk)
     
-    # Verifica se o usuário tem permissão para ver este perfil
+    # Verifica permissões
     if not request.user.is_superuser and request.user.pk != user.pk:
         messages.error(request, "Você não tem permissão para visualizar este perfil.")
         return redirect('accounts:user_detail', pk=request.user.pk)
     
-    # Prepara o contexto com todas as informações necessárias
+    # Gera o contexto
     context = {
         'user': user,
         'cadastro_info': user.cadastro,
@@ -474,143 +497,560 @@ def user_detail(request, pk):
         'last_login_ip': user.last_login_ip or "---",
         'last_login_computer_name': user.last_login_computer_name or "---",
         'login_history': user.login_history[-10:][::-1] if user.login_history else [],
+        'has_termo_aceite': TermosAceite.objects.filter(usuario=user).exists()
     }
     
     return render(request, 'accounts/user_detail.html', context)
 
 
+import os
+import base64
+from io import BytesIO
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.platypus import Paragraph
+from reportlab.lib.utils import ImageReader
+from django.conf import settings
+from .models import User, TermosAceite
+
 @login_required
-def user_create(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Você não tem permissão para criar usuários.")
-        return redirect('accounts:user_list')
+def generate_termo_pdf(request, pk):
+    user = get_object_or_404(User, pk=pk)
     
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST) # Usar CustomUserCreationForm
-        if form.is_valid():
-            user = form.save()
-            log_user_action(request.user, f'Criou o usuário {user.email}', request)
-            messages.success(request, 'Usuário criado com sucesso!')
-            return redirect('accounts:user_list')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{error}")
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'user_form.html', {'form': form, 'action': 'create'})
-
-@login_required
-def user_update(request, pk):
-    user = get_object_or_404(User, pk=pk)
-    if not request.user.is_superuser and request.user != user:
-        messages.error(request, "Você não tem permissão para editar este usuário.")
-        return redirect('accounts:user_list')
-
-    if request.method == 'POST':
-        form = CustomUserChangeForm(request.POST, instance=user)
-        if form.is_valid():
-            form.save()
-            log_user_action(request.user, f'Atualizou o usuário {user.email}', request)
-            messages.success(request, 'Usuário atualizado com sucesso!')
-            return redirect('accounts:user_detail', pk=user.pk)
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{error}")
-    else:
-        form = CustomUserChangeForm(instance=user)
-    return render(request, 'user_form.html', {'form': form, 'action': 'update', 'user': user})
-
-@login_required
-def user_delete(request, pk):
-    user = get_object_or_404(User, pk=pk)
-    if not request.user.is_superuser:
-        messages.error(request, "Você não tem permissão para excluir usuários.")
-        return redirect('accounts:user_list')
-
-    if request.method == 'POST':
-        if str(request.user.pk) == str(pk):
-            messages.error(request, "Você não pode excluir sua própria conta.")
-            return redirect('accounts:user_list')
+    if not request.user.is_superuser and request.user.pk != user.pk:
+        messages.error(request, "Você não tem permissão para gerar este documento.")
+        return redirect('accounts:user_detail', pk=request.user.pk)
+    
+    termo = TermosAceite.objects.filter(usuario=user).order_by('-data_aceite').first()
+    
+    if not termo:
+        messages.error(request, "Nenhum termo de aceite encontrado.")
+        return redirect('accounts:user_detail', pk=pk)
+    
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    
+    width, height = letter
+    margin = 50
+    line_height = 12
+    y_position = height - margin
+    
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Justify', alignment=TA_JUSTIFY, fontSize=9, leading=12))
+    
+    # Cabeçalho: Logo e Título
+    try:
+        logo_path = os.path.join(settings.STATIC_ROOT, 'img', 'logo-siscoe-light.png')
+        pdf.drawImage(logo_path, margin, y_position - 15, width=60, height=25, preserveAspectRatio=True)
+    except FileNotFoundError:
+        pass
+    
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(margin + 70, y_position - 5, "TERMO DE RESPONSABILIDADE PARA ACESSO AO SISCOE")
+    
+    y_position -= 40
+    
+    # Dados Institucionais com o brasão à esquerda
+    y_position -= 20
+    
+    try:
+        brasao_path = os.path.join(settings.STATIC_ROOT, 'img', 'brasaoSP.png')
+        # Posição do brasão alinhada com o texto
+        pdf.drawImage(brasao_path, margin, y_position - 15, width=40, height=40, preserveAspectRatio=True)
+    except FileNotFoundError:
+        pass
+    
+    text_x = margin + 50
+    text_y = y_position
+    
+    pdf.setFont("Helvetica", 9)
+    pdf.drawString(text_x, text_y, "SECRETARIA DA SEGURANÇA PÚBLICA")
+    text_y -= line_height
+    pdf.drawString(text_x, text_y, "POLÍCIA MILITAR DO ESTADO DE SÃO PAULO")
+    text_y -= line_height
+    pdf.drawString(text_x, text_y, f"Sorocaba, {termo.data_aceite.strftime('%d/%m/%Y')}")
+    
+    y_position = text_y - line_height * 2
+    
+    # Dados do Militar
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "IDENTIFICAÇÃO DO MILITAR:")
+    y_position -= line_height
+    
+    pdf.setFont("Helvetica", 9)
+    cadastro = user.cadastro
+    posto_grad = cadastro.ultima_promocao.posto_grad if hasattr(cadastro, 'ultima_promocao') and cadastro.ultima_promocao else ""
+    
+    pdf.drawString(margin, y_position, f"Nome: {posto_grad} {cadastro.nome}")
+    y_position -= line_height
+    pdf.drawString(margin, y_position, f"RE: {cadastro.re}-{cadastro.dig}")
+    y_position -= line_height
+    pdf.drawString(margin, y_position, f"CPF: {cadastro.cpf}")
+    y_position -= line_height * 2
+    
+    # 1. FINALIDADE
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "1. FINALIDADE")
+    y_position -= line_height
+    
+    p = Paragraph("O acesso ao sistema é exclusivo para fins institucionais, em conformidade com as atribuições funcionais do usuário e com as disposições da Instrução Policial-Militar I-31-PM (3ª edição, 2022) e da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).", styles['Justify'])
+    p_width, p_height = p.wrap(width - 2 * margin, height)
+    p.drawOn(pdf, margin, y_position - p_height)
+    y_position -= p_height + 10
+    
+    # 2. OBRIGAÇÕES DO USUÁRIO
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "2. OBRIGAÇÕES DO USUÁRIO")
+    y_position -= line_height
+    
+    declaracao = f"Eu, {posto_grad} {cadastro.re}-{cadastro.dig} {cadastro.nome}, inscrito no CPF {cadastro.cpf}, declaro estar ciente e de acordo com os seguintes termos:"
+    p = Paragraph(declaracao, styles['Justify'])
+    p_width, p_height = p.wrap(width - 2 * margin, height)
+    p.drawOn(pdf, margin, y_position - p_height)
+    y_position -= p_height + 10
+    
+    obrigacoes = [
+        "• Utilizar o sistema de forma ética, responsável e em consonância com as normas da PMESP e da LGPD",
+        "• Manter a confidencialidade de senhas e credenciais de acesso, sendo integralmente responsável por seu uso",
+        "• Não compartilhar, divulgar ou acessar dados sem autorização legal ou institucional",
+        "• Não utilizar o sistema para fins ilícitos, difamatórios, políticos, comerciais ou que violem direitos de terceiros",
+        "• Comunicar imediatamente ao Oficial de Telemática da OPM qualquer violação de segurança ou uso indevido"
+    ]
+    
+    for item in obrigacoes:
+        pdf.setFont("Helvetica", 9)
+        pdf.drawString(margin + 10, y_position, item)
+        y_position -= line_height
+    
+    y_position -= line_height
+    
+    # 3. LGPD
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "3. LGPD")
+    y_position -= line_height
+    
+    p = Paragraph("Os dados pessoais tratados no sistema estão sujeitos às normas da LGPD, incluindo os princípios de finalidade, adequação, necessidade e transparência. O usuário consente com o tratamento de seus dados pessoais para fins de controle de acesso, auditoria e cumprimento de obrigações legais.", styles['Justify'])
+    p_width, p_height = p.wrap(width - 2 * margin, height)
+    p.drawOn(pdf, margin, y_position - p_height)
+    y_position -= p_height + 10
+    
+    # 4. AUDITORIA E MONITORAMENTO
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "4. AUDITORIA E MONITORAMENTO")
+    y_position -= line_height
+    
+    p = Paragraph("A PMESP reserva-se o direito de monitorar e auditar o uso do sistema, conforme previsto no Artigo 7º da I-31-PM. Em caso de irregularidades, o usuário estará sujeito às sanções administrativas, civis e penais cabíveis.", styles['Justify'])
+    p_width, p_height = p.wrap(width - 2 * margin, height)
+    p.drawOn(pdf, margin, y_position - p_height)
+    y_position -= p_height + 10
+    
+    # 5. PENALIDADES
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "5. PENALIDADES")
+    y_position -= line_height
+    
+    p = Paragraph("Descumprimento deste termo acarretará medidas disciplinares, conforme o Regulamento Geral da PMESP e a legislação vigente, podendo resultar em suspensão ou cancelamento do acesso, ações disciplinares e medidas legais cabíveis.", styles['Justify'])
+    p_width, p_height = p.wrap(width - 2 * margin, height)
+    p.drawOn(pdf, margin, y_position - p_height)
+    y_position -= p_height + 10
+    
+    # 6. DISPOSIÇÕES FINAIS
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "6. DISPOSIÇÕES FINAIS")
+    y_position -= line_height
+    
+    disposicoes = [
+        "Este termo entra em vigor na data de sua publicação.",
+        "Dúvidas ou esclarecimentos devem ser dirigidos ao 15º Grupamento de Bombeiros via e-mail: 15gb@policiamilitar.sp.gov.br.",
+        "Referências Legais:",
+        "• I-31-PM (3ª edição, 2022)",
+        "• LGPD (Lei nº 13.709/2018)",
+        "• Decreto Federal nº 7.845/2012 (sigilo de informações)"
+    ]
+    
+    for item in disposicoes:
+        pdf.setFont("Helvetica", 9)
+        pdf.drawString(margin if not item.startswith("•") else margin + 10, y_position, item)
+        y_position -= line_height
+    
+    y_position -= line_height * 2
+    
+    # Declaração de Ciência e Aceite
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(margin, y_position, "DECLARAÇÃO DE CIÊNCIA E ACEITE")
+    y_position -= line_height
+    
+    pdf.setFont("Helvetica", 9)
+    y_position -= 15
+    
+    # Desenha a linha para assinatura física e o nome abaixo
+    pdf.line(margin, y_position, margin + 200, y_position)
+    y_position -= 15 # Espaço para o nome não sobrepor a linha
+    pdf.drawString(margin, y_position, f"Nome: {posto_grad} {cadastro.nome} - RE: {cadastro.re}-{cadastro.dig}")
+    y_position -= line_height * 2
+    
+    # Se houver assinatura digital, desenha-a de forma clara
+    try:
+        signature_data = termo.signature_data
+        if signature_data.startswith('data:image'):
+            signature_data = signature_data.split(',')[1]
         
-        password = request.POST.get('password')
-        if not request.user.check_password(password):
-            messages.error(request, "Senha incorreta. A exclusão foi cancelada.")
-            return redirect('accounts:user_detail', pk=pk)
-
-        email_deleted_user = user.email
-        user.delete()
-        log_user_action(request.user, f'Excluiu o usuário {email_deleted_user}', request)
-        messages.success(request, 'Usuário excluído com sucesso!')
-        return redirect('accounts:user_list')
+        signature_img = ImageReader(BytesIO(base64.b64decode(signature_data)))
+        pdf.drawString(margin, y_position, "Assinatura Eletrônica Registrada:")
+        y_position -= 40
+        pdf.drawImage(signature_img, margin, y_position, width=200, height=40, preserveAspectRatio=True)
+        y_position -= 50
+    except:
+        # Se não houver assinatura digital, apenas ajusta a posição
+        y_position -= 20
     
-    return render(request, 'user_confirm_delete.html', {'user': user})
+    # Rodapé
+    pdf.setFont("Helvetica-Oblique", 8)
+    pdf.drawCentredString(width / 2, margin - 20, '"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"')
+    
+    pdf.save()
+    buffer.seek(0)
+    
+    response = FileResponse(buffer, as_attachment=True, filename=f"termo_aceite_{cadastro.re}.pdf")
+    return response
 
+# Views para Histórico
 
 @login_required
 def access_history(request, pk):
-    user = get_object_or_404(User, pk=pk)
-    if not request.user.is_superuser and request.user != user:
-        messages.error(request, "Você não tem permissão para visualizar este histórico.")
-        return redirect('accounts:user_list')
+    user_obj = get_object_or_404(User, pk=pk)
 
-    login_records = user.login_history
-    login_records.reverse()
-    for i, record in enumerate(login_records):
-        record['counter'] = len(login_records) - i
+    # Permite que o próprio utilizador ou um superutilizador veja o histórico
+    if not (request.user == user_obj or request.user.is_superuser):
+        messages.error(request, "Não tem permissão para visualizar este histórico de acessos.")
+        return redirect('accounts:user_detail', pk=user_obj.pk)
 
-    return render(request, 'access_history.html', {'user': user, 'login_records': login_records})
+    # Data limite - 2 meses atrás
+    two_months_ago = timezone.now() - timedelta(days=60)
+    
+    # Agora, o histórico de login vem do campo JSONField do modelo User
+    login_history_data = user_obj.login_history if user_obj.login_history else []
 
+    # Processar os dados do histórico para exibição
+    processed_login_history = []
+    for entry in login_history_data:
+        login_time_str = entry.get('login_time')
+        logout_time_str = entry.get('logout_time')
+        
+        login_time = datetime.fromisoformat(login_time_str) if login_time_str else None
+        logout_time = datetime.fromisoformat(logout_time_str) if logout_time_str else None
 
-@login_required
-def all_user_action_history(request):
-    if not request.user.is_superuser:
-        messages.error(request, "Você não tem permissão para visualizar o histórico de ações de todos os usuários.")
-        return redirect('core:index')
+        # Pular registros com data de login anterior a 2 meses
+        if login_time and login_time < two_months_ago:
+            continue
 
-    action_logs = UserActionLog.objects.all()
-    users = User.objects.all().order_by('email')
+        duration = None
+        if login_time and logout_time:
+            delta = logout_time - login_time
+            total_seconds = int(delta.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            duration = f"{hours:02d}h {minutes:02d}m {seconds:02d}s"
+        elif login_time and not logout_time:
+            duration = "Ativo" # Sessão ainda ativa
 
-    selected_user_id = request.GET.get('user')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+        processed_login_history.append({
+            'login_time': login_time,
+            'logout_time': logout_time,
+            'ip': entry.get('ip'),
+            'computer_name': entry.get('computer_name'),
+            'duration': duration,
+            'status_display': "Online" if logout_time is None else "Offline"
+        })
+    
+    # Ordenar o histórico, se necessário (o JSONField não garante ordem)
+    processed_login_history.sort(key=lambda x: x['login_time'] if x['login_time'] else datetime.min, reverse=True)
 
-    selected_user = None
-    if selected_user_id:
-        action_logs = action_logs.filter(user__id=selected_user_id)
-        selected_user = get_object_or_404(User, id=selected_user_id)
+    context = {
+        'user': user_obj,
+        'login_history': processed_login_history, # Passa os dados processados
+        'history_limit': "2 meses", # Adiciona informação sobre o limite
+    }
+    log_user_action(request.user, f"Visualizou o histórico de acessos de {user_obj.email}", request)
+    return render(request, 'accounts/access_history.html', context)
 
-    if start_date:
-        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
-        if start_date_obj and not is_aware(start_date_obj):
-            start_date_obj = timezone.make_aware(start_date_obj)
-        action_logs = action_logs.filter(timestamp__gte=start_date_obj)
-
-    if end_date:
-        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-        end_date_obj = end_date_obj.replace(hour=23, minute=59, second=59)
-        if end_date_obj and not is_aware(end_date_obj):
-            end_date_obj = timezone.make_aware(end_date_obj)
-        action_logs = action_logs.filter(timestamp__lte=end_date_obj)
-
-    action_logs = action_logs.order_by('-timestamp')
-
-    return render(request, 'accounts/all_user_action_history.html', {
-        'action_logs': action_logs,
-        'users': users,
-        'selected_user': selected_user,
-        'start_date': start_date,
-        'end_date': end_date,
-    })
 
 @login_required
 def user_action_history(request, pk):
-    user = get_object_or_404(User, pk=pk)
-    if not request.user.is_superuser and request.user != user:
-        messages.error(request, "Você não tem permissão para visualizar este histórico.")
-        return redirect('accounts:user_list')
-        
-    action_logs = UserActionLog.objects.filter(user=user).order_by('-timestamp')
-    return render(request, 'accounts/user_action_history.html', {'user': user, 'action_logs': action_logs})
+    user_obj = get_object_or_404(User, pk=pk)
 
+    # Permite que o próprio utilizador ou um superutilizador veja o histórico
+    if not (request.user == user_obj or request.user.is_superuser):
+        messages.error(request, "Não tem permissão para visualizar este histórico de ações.")
+        return redirect('accounts:user_detail', pk=user_obj.pk)
+
+    # Data limite - 2 meses atrás
+    two_months_ago = timezone.now() - timedelta(days=60)
+    
+    # Filtrar ações dos últimos 2 meses
+    action_logs = UserActionLog.objects.filter(
+        user=user_obj,
+        timestamp__gte=two_months_ago
+    ).order_by('-timestamp')
+
+    context = {
+        'user': user_obj,
+        'action_logs': action_logs,
+        'history_limit': "2 meses", # Adiciona informação sobre o limite
+    }
+    log_user_action(request.user, f"Visualizou o histórico de ações de {user_obj.email}", request)
+    return render(request, 'accounts/user_action_history.html', context)
+
+
+
+# View para alterar permissões de um usuário específico (apenas para Gestores e Admins)
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from .models import User
+from .forms import UserPermissionChangeForm
+
+
+@login_required
+@permissao_necessaria(level='admin')
+def user_permission_update(request, pk):
+    user_to_edit = get_object_or_404(User, pk=pk)
+    
+    # Verificação de permissões
+    if request.user == user_to_edit:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'error': 'Você não pode alterar suas próprias permissões por esta tela.'
+            }, status=403)
+        messages.error(request, "Você não pode alterar suas próprias permissões por esta tela.")
+        return redirect('accounts:user_detail', pk=user_to_edit.pk)
+    
+    if not request.user.is_superuser:
+        if user_to_edit.is_superuser:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'error': 'Você não tem permissão para alterar as permissões de um superusuário.'
+                }, status=403)
+            messages.error(request, "Você não tem permissão para alterar as permissões de um superusuário.")
+            return redirect('accounts:user_list')
+        
+        if user_to_edit.permissoes == 'admin' and not request.user.has_permission_level('admin'):
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'error': 'Você não tem permissão para alterar as permissões de um administrador.'
+                }, status=403)
+            messages.error(request, "Você não tem permissão para alterar as permissões de um administrador.")
+            return redirect('accounts:user_list')
+        
+        if not request.user.has_permission_level('gestor'):
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'error': 'Você não tem permissão para acessar a gestão de permissões de usuários.'
+                }, status=403)
+            messages.error(request, "Você não tem permissão para acessar a gestão de permissões de usuários.")
+            return redirect('accounts:user_list')
+
+    if request.method == 'POST':
+        form = UserPermissionChangeForm(request.POST, instance=user_to_edit, current_user=request.user)
+        if form.is_valid():
+            # Validação adicional para garantir que as permissões não estão sendo alteradas indevidamente
+            if user_to_edit.is_superuser and not request.user.is_superuser:
+                form.cleaned_data['is_superuser'] = user_to_edit.is_superuser
+                form.cleaned_data['is_admin'] = user_to_edit.is_admin
+                form.cleaned_data['permissoes'] = user_to_edit.permissoes
+            
+            elif user_to_edit.permissoes == 'admin' and request.user.has_permission_level('gestor') and not request.user.is_superuser:
+                form.cleaned_data['is_admin'] = user_to_edit.is_admin
+                form.cleaned_data['permissoes'] = user_to_edit.permissoes
+
+            user = form.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f"Permissões de {user.email} atualizadas com sucesso!",
+                    'user': {
+                        'is_active': user.is_active,
+                        'is_admin': user.is_admin,
+                        'is_superuser': user.is_superuser,
+                        'permissoes': user.permissoes,
+                        'must_change_password': user.must_change_password
+                    }
+                })
+            
+            messages.success(request, f"Permissões de {user.email} atualizadas com sucesso!")
+            return redirect('accounts:user_list')
+        
+        # Formulário inválido
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'error': 'Erro de validação',
+                'errors': form.errors
+            }, status=400)
+        
+        messages.error(request, "Erro ao atualizar as permissões. Verifique os dados.")
+        return redirect('accounts:user_list')
+    
+    # Método GET - Não deveria acontecer para AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'error': 'Método não permitido'
+        }, status=405)
+    
+    # Se não for AJAX, renderize o template normalmente
+    form = UserPermissionChangeForm(instance=user_to_edit, current_user=request.user)
+    return render(request, 'accounts/user_permission_update.html', {
+        'form': form,
+        'user_to_edit': user_to_edit
+    })
+
+
+
+# View para histórico global de acessos (apenas para Gestores e Admins)
+
+@login_required
+@permissao_necessaria(level='admin')
+def global_access_history(request):
+    if not request.user.has_permission_level('gestor'):
+        messages.error(request, "Você não tem permissão para visualizar o histórico de acessos de todos os usuários.")
+        return redirect('core:index')
+
+    all_users = User.objects.all().order_by('email')
+    
+    # Data limite padrão - 2 meses atrás
+    two_months_ago = timezone.now() - timedelta(days=60)
+    
+    # Filtros
+    selected_user_id = request.GET.get('user')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    # Se não houver filtro de data, aplica o limite de 2 meses
+    if not start_date_str:
+        start_date_obj = two_months_ago
+    else:
+        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%d')
+
+    filtered_history = []
+
+    # Iterar sobre todos os usuários ou um usuário selecionado
+    users_to_process = []
+    if selected_user_id:
+        try:
+            users_to_process.append(User.objects.get(id=selected_user_id))
+        except User.DoesNotExist:
+            messages.warning(request, "Usuário selecionado para filtro não encontrado.")
+    else:
+        users_to_process = all_users
+
+    for user_obj in users_to_process:
+        login_history_data = user_obj.login_history if user_obj.login_history else []
+        for entry in login_history_data:
+            login_time_str = entry.get('login_time')
+            logout_time_str = entry.get('logout_time')
+            
+            login_time = datetime.fromisoformat(login_time_str) if login_time_str else None
+            logout_time = datetime.fromisoformat(logout_time_str) if logout_time_str else None
+
+            # Pular registros sem data de login ou anteriores ao limite
+            if not login_time or login_time < start_date_obj:
+                continue
+
+            # Aplicar filtro de data final se especificado
+            if end_date_str:
+                end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%d') + timedelta(days=1)
+                if login_time.date() >= end_date_obj.date():
+                    continue
+
+            duration = None
+            if login_time and logout_time:
+                delta = logout_time - login_time
+                total_seconds = int(delta.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                duration = f"{hours:02d}h {minutes:02d}m {seconds:02d}s"
+            elif login_time and not logout_time:
+                duration = "Ativo"
+
+            filtered_history.append({
+                'user': user_obj,
+                'user_email': user_obj.email,
+                'user_full_name': user_obj.get_full_name(),
+                'login_time': login_time,
+                'logout_time': logout_time,
+                'ip': entry.get('ip'),
+                'computer_name': entry.get('computer_name'),
+                'duration': duration,
+                'status_display': "Online" if logout_time is None else "Offline"
+            })
+    
+    # Ordenar o histórico pela data de login (mais recente primeiro)
+    filtered_history.sort(key=lambda x: x['login_time'] if x['login_time'] else datetime.min, reverse=True)
+
+    context = {
+        'all_users': all_users,
+        'selected_user_id': selected_user_id,
+        'start_date': start_date_obj.strftime('%Y-%m-%d') if not start_date_str else start_date_str,
+        'end_date': end_date_str,
+        'global_login_history': filtered_history,
+        'history_limit': "2 meses (padrão)" if not start_date_str else None,
+    }
+    log_user_action(request.user, "Visualizou o histórico global de acessos", request)
+    return render(request, 'accounts/global_access_history.html', context)
+
+
+@login_required
+@permissao_necessaria(level='admin')
+def global_user_action_history(request):
+    if not request.user.has_permission_level('gestor'):
+        messages.error(request, "Você não tem permissão para visualizar o histórico de ações de todos os usuários.")
+        return redirect('core:index')
+
+    all_users = User.objects.all().order_by('email')
+    
+    # Data limite padrão - 2 meses atrás
+    two_months_ago = timezone.now() - timedelta(days=60)
+    
+    # Inicializa o queryset com o filtro de tempo padrão
+    action_logs = UserActionLog.objects.filter(
+        timestamp__gte=two_months_ago
+    )
+
+    # Filtros
+    selected_user_id = request.GET.get('user')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    if selected_user_id:
+        action_logs = action_logs.filter(user__id=selected_user_id)
+    
+    # Se houver filtro de data inicial, substitui o limite padrão de 2 meses
+    if start_date_str:
+        start_date_obj = datetime.strptime(start_date_str, '%Y-%m-%d')
+        action_logs = action_logs.filter(timestamp__gte=start_date_obj)
+    
+    if end_date_str:
+        end_date_obj = datetime.strptime(end_date_str, '%Y-%m-%d') + timedelta(days=1)
+        action_logs = action_logs.filter(timestamp__lt=end_date_obj)
+
+    action_logs = action_logs.order_by('-timestamp')
+
+    context = {
+        'all_users': all_users,
+        'selected_user_id': selected_user_id,
+        'start_date': start_date_str if start_date_str else two_months_ago.strftime('%Y-%m-%d'),
+        'end_date': end_date_str,
+        'global_action_logs': action_logs,
+        'history_limit': "2 meses (padrão)" if not start_date_str else None,
+    }
+    log_user_action(request.user, "Visualizou o histórico global de ações", request)
+    return render(request, 'accounts/global_user_action_history.html', context)
