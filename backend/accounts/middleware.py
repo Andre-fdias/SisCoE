@@ -39,3 +39,28 @@ class ForcePasswordChangeMiddleware:
             return redirect('accounts:force_password_change')
         
         return self.get_response(request)
+    
+
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from datetime import timedelta
+
+User = get_user_model()
+
+class UpdateLastActivityMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        if request.user.is_authenticated:
+            # Atualiza o last_login a cada request para manter o usuário online
+            threshold = timezone.now() - timedelta(minutes=15)
+            if not request.user.last_login or request.user.last_login < threshold:
+                User.objects.filter(pk=request.user.pk).update(
+                    last_login=timezone.now(),
+                    is_online=True
+                )
+        
+        return response

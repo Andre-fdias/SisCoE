@@ -66,7 +66,9 @@ MIDDLEWARE = [
     'backend.accounts.middleware.UserActionLoggingMiddleware',
     'backend.core.middleware.JSONMessagesMiddleware',  # Adicione isto
     'backend.accounts.middleware.ForcePasswordChangeMiddleware',
+    'backend.accounts.middleware.UpdateLastActivityMiddleware',
 ]
+
 
 ROOT_URLCONF = 'backend.urls'
 

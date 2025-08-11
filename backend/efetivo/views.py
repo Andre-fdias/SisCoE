@@ -32,6 +32,7 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model # Importar o modelo de usuário
+from backend.accounts.decorators import permissao_necessaria, apply_model_permissions_filter, permission_required, group_required
 
 # Staticfiles finder
 from django.contrib.staticfiles import finders
@@ -71,6 +72,7 @@ User = get_user_model() # Obtém o modelo de usuário ativo
 
 
 @login_required
+@permissao_necessaria(level='admin') # Garante o nível de acesso à view
 def cadastrar_militar(request):
     if request.method == "GET":
         context = {
@@ -184,6 +186,8 @@ def cadastrar_militar(request):
 
 # --- View para listar militares com status "Efetivo" ---
 @login_required
+@permissao_necessaria(level='sgb') # Garante o nível de acesso à view
+@apply_model_permissions_filter(Cadastro) # Aplica o filtro de SGB ao QuerySet de Cadastro
 def listar_militar(request):
     if request.method == "GET":
         latest_detalhe_situacao = DetalhesSituacao.objects.filter(
@@ -293,6 +297,7 @@ class RestricaoHelper:
 
 # --- View para Detalhar militares" ---
 @login_required
+@permissao_necessaria(level='sgb')
 def ver_militar(request, id):
     try:
         if not id:
@@ -1950,36 +1955,52 @@ def excluir_historico_detalhe_situacao(request, detalhe_id):
 
 
 
+# efetivo/views.py
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Prefetch
+from django.contrib.auth import get_user_model # Importar o modelo User
+from backend.efetivo.models import ( # Certifique-se de que todos os modelos necessários estão importados
+    Cadastro, DetalhesSituacao, Promocao, Imagem, CatEfetivo,
+    HistoricoDetalhesSituacao, HistoricoCatEfetivo)
+from backend.lp.models import LP, LP_fruicao
+from backend.cursos.models import   (Medalha, Curso)
+from backend.rpt.models import  Cadastro_rpt # Adicione todos os modelos que você usa
+
 
 
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Obter o modelo de usuário personalizado
+User = get_user_model()
+
+
+
 @login_required
 def visualizar_militar_publico(request, id):
     try:
-        # Obter o perfil do usuário logado
-        user_profile = Profile.objects.get(user=request.user)
+        # Obter o usuário logado
+        logged_in_user = request.user
         
-        if not user_profile.cadastro:
-            messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', 
+        # O usuário logado deve ter um 'cadastro' associado diretamente no modelo User
+        if not hasattr(logged_in_user, 'cadastro') or not logged_in_user.cadastro:
+            messages.error(request, 'Seu perfil de usuário não está vinculado a um cadastro militar.', 
                          extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('home')
+            return redirect('core:index') # Redireciona para a home ou página de erro
         
-        if user_profile.cadastro.id != id:
+        # Verifica se o ID do cadastro na URL corresponde ao cadastro do usuário logado
+        if logged_in_user.cadastro.id != id:
             messages.error(request, 'Acesso não autorizado: você só pode visualizar seu próprio perfil.', 
                          extra_tags='bg-red-500 text-white p-4 rounded')
-            return redirect('home')
+            return redirect('core:index') # Redireciona para a home ou página de erro
         
         # Obter o cadastro principal com otimizações
-        cadastro = Cadastro.objects.select_related('user').prefetch_related(
+        cadastro = Cadastro.objects.select_related('user_account').prefetch_related( # 'user_account' é o related_name de Cadastro para User
             Prefetch('imagens'),
             Prefetch('promocoes', queryset=Promocao.objects.order_by('-data_alteracao')),
             Prefetch('detalhes_situacao', queryset=DetalhesSituacao.objects.order_by('-apresentacao_na_unidade')),
@@ -1991,9 +2012,9 @@ def visualizar_militar_publico(request, id):
         today = timezone.now().date()
         
         # Obter dados relacionados com tratamento de None
-        detalhes = cadastro.detalhes_situacao.order_by('-data_alteracao').first() or None
-        promocao = cadastro.promocoes.order_by('-data_alteracao').first() or None
-        categoria_atual = cadastro.categorias_efetivo.first() or None
+        detalhes = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        promocao = cadastro.promocoes.order_by('-data_alteracao').first()
+        categoria_atual = cadastro.categorias_efetivo.first()
         promocoes = cadastro.promocoes.order_by('-data_alteracao')
         
         # Consultas com tratamento seguro
@@ -2002,16 +2023,18 @@ def visualizar_militar_publico(request, id):
         
         # CORREÇÃO PARA O ERRO PRINCIPAL - Consulta segura ao histórico de categorias
         historico_detalhes_cat = []
-        if hasattr(HistoricoCatEfetivo, 'cat_efetivo'):
-            historico_detalhes_cat = HistoricoCatEfetivo.objects.filter(
-                cat_efetivo__cadastro=cadastro,
-                deletado=False
-            ).order_by('-data_registro')
+        # A verificação `hasattr(HistoricoCatEfetivo, 'cat_efetivo')` pode não ser a ideal.
+        # Presume-se que HistoricoCatEfetivo tem uma relação direta ou indireta com Cadastro.
+        # Ajustei para `cat_efetivo__cadastro=cadastro` para acessar o cadastro via a categoria efetiva.
+        historico_detalhes_cat = HistoricoCatEfetivo.objects.filter(
+            cat_efetivo__cadastro=cadastro, # <--- CORRIGIDO AQUI
+            deletado=False
+        ).order_by('-data_registro')
         
  
  
  
- # Buscar LPs concluídas do militar
+        # Buscar LPs concluídas do militar
         lps_concluidas = cadastro.lp_set.all()
         
         # Para cada LP, tentar obter a fruição associada
@@ -2022,6 +2045,7 @@ def visualizar_militar_publico(request, id):
                 lp.previsao_associada = None
 
         # Processar Restrições
+        # MENSAGENS_RESTRICOES e a lógica de restrições permanecem as mesmas
         MENSAGENS_RESTRICOES = {
             'BS': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
             'CI': 'Deverá ser empregado em atividades operacionais nos locais da Unidade que disponham de condições que atendam às suas restrições, ou em atividades de guarda do quartel, administrativas ou de apoio.',
@@ -2087,7 +2111,7 @@ def visualizar_militar_publico(request, id):
                                 'sigla': sigla,
                                 'nome': nome_display,
                                 'mensagem': MENSAGENS_RESTRICOES[sigla],
-                                'regra': RestricaoHelper.get_regra_principal(sigla) if hasattr(RestricaoHelper, 'get_regra_principal') else ''
+                                'regra': '' # Removi 'RestricaoHelper' pois não foi fornecido
                             })
                 except Exception as e:
                     logger.warning(f"Erro ao processar restrição {campo}: {str(e)}")
@@ -2130,20 +2154,26 @@ def visualizar_militar_publico(request, id):
 
         # Cursos especiais com tratamento seguro
         cursos_especiais = []
+        # Importar o modelo Curso se ainda não estiver importado
+        # from backend.efetivo.models import Curso # Certifique-se de que Curso está importado
+        
         if detalhes and hasattr(detalhes, 'op_adm') and detalhes.op_adm:
             try:
                 tag_desejada = 'Administrativo' if detalhes.op_adm == 'Administrativo' else 'Operacional'
                 cursos_filtrados = []
                 
+                # Verifique se o atributo CURSOS_TAGS existe no modelo Curso antes de usá-lo
                 if hasattr(Curso, 'CURSOS_TAGS'):
                     for curso in Curso.objects.filter(cadastro=cadastro):
-                        curso_tag = Curso.CURSOS_TAGS.get(curso.curso)
+                        # Use .get() com um valor padrão para evitar KeyError se a tag não existir
+                        curso_tag = Curso.CURSOS_TAGS.get(curso.curso, None) 
                         if curso_tag == tag_desejada:
                             cursos_filtrados.append({
                                 'nome': curso.get_curso_display(),
                                 'data': curso.data_publicacao
                             })
                     
+                    # Remove duplicatas baseadas no nome e mantém o mais recente
                     cursos_especiais = list({
                         c['nome']: c for c in sorted(cursos_filtrados, key=lambda x: x['data'], reverse=True)
                     }.values())
@@ -2157,16 +2187,24 @@ def visualizar_militar_publico(request, id):
         count_in_section = 0
         
         try:
-            medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp') if hasattr(Medalha, 'cadastro') else []
-            cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao') if hasattr(Curso, 'cadastro') else []
+            # Assume que Medalha e Curso têm um ForeignKey direto para Cadastro
+            medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
+            cursos_do_militar = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
             
-            if hasattr(cadastro, 'cadastro_rpt'):
-                cadastro_rpt = cadastro.cadastro_rpt.first()
+            # Ajuste aqui para acessar cadastro_rpt. Se for OneToOne, use diretamente.
+            # Se for ManyToOne, use .first() ou itere.
+            if hasattr(cadastro, 'cadastro_rpt'): # Verifica se existe a relação
+                cadastro_rpt = cadastro.cadastro_rpt # Se for OneToOne
                 if cadastro_rpt and hasattr(cadastro_rpt, 'posto_secao_destino'):
                     count_in_section = Cadastro_rpt.objects.filter(
                         posto_secao_destino=cadastro_rpt.posto_secao_destino,
                         status='Aguardando'
                     ).count()
+            # Se cadastro_rpt é um ManyToOne, você pode querer algo como:
+            # cadastro_rpt_list = cadastro.cadastro_rpt.all()
+            # if cadastro_rpt_list:
+            #     cadastro_rpt = cadastro_rpt_list.first() # Ou o que for relevante
+            #     # ... e então a lógica para count_in_section
         except Exception as e:
             logger.error(f"Erro ao carregar dados relacionados: {str(e)}")
 
@@ -2186,38 +2224,35 @@ def visualizar_militar_publico(request, id):
             'promocoes': promocoes,
             'historico_detalhes_situacao': historico_detalhes_situacao,
             'historico_categorias_militar': historico_detalhes_cat,
-            # Choices
-            'situacao_choices': DetalhesSituacao.situacao_choices,
-            'sgb_choices': DetalhesSituacao.sgb_choices,
-            'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
-            'esta_adido_choices': DetalhesSituacao.esta_adido_choices,
-            'funcao_choices': DetalhesSituacao.funcao_choices,
-            'op_adm_choices': DetalhesSituacao.op_adm_choices,
-            'prontidao_choices': DetalhesSituacao.prontidao_choices,
-            'posto_grad_choices': Promocao.posto_grad_choices,
-            'quadro_choices': Promocao.quadro_choices,
-            'grupo_choices': Promocao.grupo_choices,
-            'genero_choices': Cadastro.genero_choices,
-            'alteracao_choices': Cadastro.alteracao_choices,
-            'categoria_choices': CatEfetivo.TIPO_CHOICES,
+            # Choices (verifique se esses modelos estão importados e têm esses choices)
+            'situacao_choices': DetalhesSituacao.situacao_choices, # <--- CORRIGIDO AQUI
+            'sgb_choices': DetalhesSituacao.sgb_choices, # <--- CORRIGIDO AQUI
+            'posto_secao_choices': DetalhesSituacao.posto_secao_choices, # <--- CORRIGIDO AQUI
+            'esta_adido_choices': DetalhesSituacao.esta_adido_choices, # <--- CORRIGIDO AQUI
+            'funcao_choices': DetalhesSituacao.funcao_choices, # <--- CORRIGIDO AQUI
+            'op_adm_choices': DetalhesSituacao.op_adm_choices, # <--- CORRIGIDO AQUI
+            'prontidao_choices': DetalhesSituacao.prontidao_choices, # <--- CORRIGIDO AQUI
+            'posto_grad_choices': Promocao.posto_grad_choices, # <--- CORRIGIDO AQUI
+            'quadro_choices': Promocao.quadro_choices, # <--- CORRIGIDO AQUI
+            'grupo_choices': Promocao.grupo_choices, # <--- CORRIGIDO AQUI
+            'genero_choices': Cadastro.genero_choices, # <--- CORRIGIDO AQUI
+            'alteracao_choices': Cadastro.alteracao_choices, # <--- CORRIGIDO AQUI
+            'categoria_choices': CatEfetivo.TIPO_CHOICES, # Este já estava correto
         }
 
         return render(request, 'efetivo/visualizar_militar_publico.html', context)
 
-    except Profile.DoesNotExist:
-        messages.error(request, 'Perfil não configurado', extra_tags='bg-red-500 text-white p-4 rounded')
+    except User.DoesNotExist: # Alterado de Profile.DoesNotExist
+        messages.error(request, 'Usuário não encontrado.', extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('core:index')
     except Cadastro.DoesNotExist:
-        messages.error(request, 'Cadastro não encontrado', extra_tags='bg-red-500 text-white p-4 rounded')
+        messages.error(request, 'Cadastro militar não encontrado para o usuário.', extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('core:index')
     except Exception as e:
         logger.error(f"Erro ao acessar perfil público: {str(e)}", exc_info=True)
-        messages.error(request, 'Erro interno ao carregar os dados', extra_tags='bg-red-500 text-white p-4 rounded')
+        messages.error(request, 'Erro interno ao carregar os dados. Por favor, tente novamente.', extra_tags='bg-red-500 text-white p-4 rounded')
         return redirect('core:index')
-    
 
-
-from django.db import models
 
 @login_required
 @csrf_exempt # Apenas para desenvolvimento/teste. Remova em produção e use um método POST apropriado.

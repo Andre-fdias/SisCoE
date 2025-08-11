@@ -16,6 +16,8 @@ from django.contrib import messages # Importar messages
 from django.utils import timezone
 import logging
 import json
+from backend.accounts.decorators import permissao_necessaria, apply_model_permissions_filter, permission_required, group_required
+
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +133,7 @@ def index(request):
     return render(request, 'index.html', context)
 
 @login_required
+@permissao_necessaria(level='admin') # Garante o nível de acesso à view
 def dashboard(request):
     template_name = 'dashboard.html'
     return render(request, template_name)

@@ -292,10 +292,9 @@
         <!-- Cabeçalho do Modal -->
         <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
             <div class="flex items-center space-x-4 terms-logos">
-                <img src="{% static 'img/timbre_estado_sp.png' %}" alt="Timbre do Estado" class="h-12">
-                <img src="{% static 'img/logo_bombeiros_sp.png' %}" alt="Logo Bombeiros" class="h-12">
+               <img src="{% static 'img/logo-siscoe-light.png' %}" alt="Logo Bombeiros" class="h-12">
             </div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white terms-header">TERMOS E CONDIÇÕES DE USO</h3>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white terms-header">TERMO DE RESPONSABILIDADE PARA ACESSO AO SISCOE</h3>
             <button onclick="closeTermsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -305,56 +304,73 @@
         
         <!-- Conteúdo dos termos -->
         <div class="max-h-96 overflow-y-auto prose dark:prose-invert text-gray-700 dark:text-gray-300">
-            <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">1. ACEITAÇÃO DOS TERMOS</h3>
-                <p class="mb-4">Ao acessar e utilizar o Sistema de Controle de Ocorrências e Emergências (SisCoE), você concorda com estes Termos e Condições, bem como com a Política de Privacidade e todas as leis e regulamentos aplicáveis.</p>
+            <div class="flex items-start mb-8">
+                <!-- Coluna da Imagem -->
+                <div class="flex items-center justify-center mr-4" style="height: calc(3 * 1.5em);"> <!-- Altura equivalente a 3 linhas de texto -->
+                    <img src="{% static 'img/brasaoSP.png' %}" alt="Timbre do Estado" class="h-full object-contain">
+                </div>
+                
+                <!-- Coluna do Texto -->
+                <div class="text-sm text-gray-600 dark:text-gray-400 flex-1">
+                    <p><strong>SECRETARIA DA SEGURANÇA PÚBLICA</strong></p>
+                    <p><strong>POLÍCIA MILITAR DO ESTADO DE SÃO PAULO</strong></p>
+                    <p>Sorocaba, <span id="currentDateExtenso"></span>.</p>
+                </div>
             </div>
             
             <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">2. PROTEÇÃO DE DADOS PESSOAIS</h3>
-                <p class="mb-4">Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), todos os dados pessoais coletados serão tratados com confidencialidade e segurança, sendo utilizados exclusivamente para as finalidades autorizadas.</p>
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">1. FINALIDADE</h3>
+                <p class="mb-4">O acesso ao sistema é exclusivo para fins institucionais, em conformidade com as atribuições funcionais do usuário e com as disposições da Instrução Policial-Militar I-31-PM (3ª edição, 2022) e da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).</p>
             </div>
             
             <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">3. RESPONSABILIDADES DO USUÁRIO</h3>
-                <p class="mb-2">O usuário é responsável por:</p>
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">2. OBRIGAÇÕES DO USUÁRIO</h3>
+                <p class="mb-2">Eu, {{ cadastro_data.posto_grad}}  {{ cadastro_data.re }}-{{ cadastro_data.dig }}{{ cadastro_data.nome }}, inscrito no CPF {{ cadastro_data.cpf}},  declaro estar ciente e de acordo com os seguintes termos:</p>
                 <ul class="list-disc pl-5 mb-4 space-y-1">
-                    <li>Manter a confidencialidade de suas credenciais de acesso</li>
-                    <li>Notificar imediatamente qualquer uso não autorizado de sua conta</li>
-                    <li>Utilizar o sistema apenas para fins legítimos e autorizados</li>
-                    <li>Fornecer informações verídicas e atualizadas</li>
+                    <li>Utilizar o sistema de forma ética, responsável e em consonância com as normas da PMESP e da LGPD</li>
+                    <li>Manter a confidencialidade de senhas e credenciais de acesso, sendo integralmente responsável por seu uso</li>
+                    <li>Não compartilhar, divulgar ou acessar dados sem autorização legal ou institucional</li>
+                    <li>Não utilizar o sistema para fins ilícitos, difamatórios, políticos, comerciais ou que violem direitos de terceiros</li>
+                    <li>Comunicar imediatamente ao Oficial de Telemática da OPM qualquer violação de segurança ou uso indevido</li>
                 </ul>
             </div>
             
             <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">4. SEGURANÇA DA INFORMAÇÃO</h3>
-                <p class="mb-4">O acesso ao sistema é monitorado e registrado para fins de auditoria e segurança. Qualquer tentativa de acesso não autorizado ou uso indevido estará sujeita às penalidades legais cabíveis.</p>
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">3. LGPD</h3>
+                <p class="mb-4">Os dados pessoais tratados no sistema estão sujeitos às normas da LGPD, incluindo os princípios de finalidade, adequação, necessidade e transparência. O usuário consente com o tratamento de seus dados pessoais para fins de controle de acesso, auditoria e cumprimento de obrigações legais.</p>
             </div>
             
             <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">5. RESTRIÇÕES DE USO</h3>
-                <p class="mb-2">É expressamente proibido:</p>
-                <ul class="list-disc pl-5 mb-4 space-y-1">
-                    <li>Compartilhar credenciais de acesso</li>
-                    <li>Acessar ou tentar acessar dados sem autorização</li>
-                    <li>Modificar, copiar ou distribuir conteúdo do sistema sem autorização</li>
-                    <li>Utilizar o sistema para atividades ilícitas ou não autorizadas</li>
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">4. AUDITORIA E MONITORAMENTO</h3>
+                <p class="mb-4">A PMESP reserva-se o direito de monitorar e auditar o uso do sistema, conforme previsto no Artigo 7º da I-31-PM. Em caso de irregularidades, o usuário estará sujeito às sanções administrativas, civis e penais cabíveis.</p>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">5. PENALIDADES</h3>
+                <p class="mb-4">Descumprimento deste termo acarretará medidas disciplinares, conforme o Regulamento Geral da PMESP e a legislação vigente, podendo resultar em suspensão ou cancelamento do acesso, ações disciplinares e medidas legais cabíveis.</p>
+            </div>
+            
+            <div class="terms-section mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">6. DISPOSIÇÕES FINAIS</h3>
+                <p class="mb-2">Este termo entra em vigor na data de sua publicação.</p>
+                <p class="mb-2">Dúvidas ou esclarecimentos devem ser dirigidos ao 15º Grupamento de Bombeiros via e-mail: 15gb@policiamilitar.sp.gov.br.</p>
+                <p class="mb-2"><strong>Referências Legais:</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>I-31-PM (3ª edição, 2022)</li>
+                    <li>LGPD (Lei nº 13.709/2018)</li>
+                    <li>Decreto Federal nº 7.845/2012 (sigilo de informações)</li>
                 </ul>
             </div>
             
-            <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">6. SANÇÕES</h3>
-                <p class="mb-2">O descumprimento destes Termos poderá resultar em:</p>
-                <ul class="list-disc pl-5 mb-4 space-y-1">
-                    <li>Suspensão ou cancelamento do acesso</li>
-                    <li>Ações disciplinares conforme regulamento interno</li>
-                    <li>Medidas legais cabíveis</li>
-                </ul>
-            </div>
-            
-            <div class="terms-section mb-6">
-                <h3 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300">7. DISPOSIÇÕES FINAIS</h3>
-                <p class="mb-4">Estes Termos podem ser atualizados periodicamente. O uso continuado do sistema após alterações constitui aceitação das novas condições.</p>
+            <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg mb-4">
+                            <style>
+                .text-xxs {
+                    font-size: 0.65rem;
+                    line-height: 0.9rem;
+                }
+                </style>
+
+                <p class="text-center italic text-xxs">"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"</p>
             </div>
         </div>
         
@@ -378,7 +394,7 @@
             <div class="flex items-center mb-6">
                 <input id="termsCheckbox" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
                 <label for="termsCheckbox" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                    Eu li e concordo com os Termos e Condições acima
+                    Eu, {{ cadastro_data.posto_grad}}  {{ cadastro_data.re }}-{{ cadastro_data.dig }}{{ cadastro_data.nome }}, declaro ter lido, compreendido e aceito integralmente os termos acima
                 </label>
             </div>
             
@@ -390,10 +406,39 @@
                     Confirmar Aceite
                 </button>
             </div>
+            
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                <p>Data: Sorocaba, <span id="currentDateExtensoFooter"></span></p>
+            </div>
         </div>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    
+    // Mapeamento de meses em português
+    const meses = [
+        'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+    
+    const dia = now.getDate();
+    const mes = meses[now.getMonth()];
+    const ano = now.getFullYear();
+    
+    // Capitaliza a primeira letra do mês
+    const mesFormatado = mes.charAt(0).toUpperCase() + mes.slice(1);
+    
+    // Formata a data no padrão brasileiro por extenso
+    const dataFormatada = `${dia} de ${mesFormatado} de ${ano}`;
+    
+    // Atualiza ambos os campos
+    document.getElementById('currentDateExtenso').textContent = dataFormatada;
+    document.getElementById('currentDateExtensoFooter').textContent = dataFormatada;
+});
+</script>
  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
 // Variáveis globais
