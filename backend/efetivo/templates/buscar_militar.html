@@ -1,75 +1,151 @@
-{% extends "base_login.html" %}
 {% load static %}
 
-{% block title %}Buscar Militar por RE - SisCoE{% endblock %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Etiqueta de Militar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .main_bg {
+            background: url('{% static "img/bg.png" %}');
+            filter: blur(10px);
+            animation: bgAnimation 20s infinite alternate;
+            background-size: cover;
+        }
 
-{% block content %}
-<div class="flex items-center justify-center min-h-screen">
-    <div class="bg-gray-900 p-8 rounded-lg shadow-md w-full max-w-md card-container">
-        <h2 class="text-3xl font-extrabold mb-8 text-center text-gray-300">Buscar Militar por RE</h2>
-        
-        <!-- Mensagens de erro -->
-           <fieldset class="rounded-md">
-                {% if messages %}
-                    <div id="django-messages" style="display:none;" data-messages='[
-                        {% for message in messages %}
-                            {
-                                "tags": "{{ message.tags|upper }}",
-                                "message": "{{ message|escapejs }}"
-                            }{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    ]'></div>
-                {% endif %}
-                    {% include 'modals/alert_modal.html' %}
-            </fieldset>
-        
-        <form id="formBuscaRE" method="POST" action="{% url 'efetivo:gerar_etiqueta_pdf' %}">
-            {% csrf_token %}
-            <div class="mb-6">
-                <label for="re_input" class="block text-gray-400 text-lg font-semibold mb-3">
-                    Digite o RE do militar:
-                </label>
-                <input type="text" id="re_input" name="re"
-                       class="shadow-sm appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-800 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                       placeholder="Ex: 123456" 
-                       required
-                       pattern="[0-9]+"
-                       title="Por favor, digite apenas números para o RE."
-                       value="{{ re_value|default:'' }}">
+        @keyframes bgAnimation {
+            0% { background-position: left; }
+            100% { background-position: right; }
+        }
+
+        .glass-card {
+            background: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
+            backdrop-filter: blur(3rem);
+        }
+
+        body.dark .glass-card {
+            background: linear-gradient(to right bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <span class="main_bg fixed top-0 left-0 w-full h-full -z-10"></span>
+
+    <div class="relative w-full max-w-lg p-4 md:p-6 glass-card rounded-lg shadow-lg">
+        <header class="flex items-center justify-between w-full mb-6">
+            <div class="flex items-center">
+                <figure class="mr-2">
+                    <img src="{% static 'img/logo-siscoe-light.png' %}" alt="logo" class="w-30 h-12" id="logo">
+                </figure>
             </div>
-            <div class="flex items-center justify-center mt-8">
-                <button type="submit" id="gerarPdfBtn"
-                        class="w-full bg-gradient-to-r from-purple-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-3 px-6 rounded-lg text-lg tracking-wide shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Gerar Etiqueta PDF
+            <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+                <button id="darkModeToggle"
+                        class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600">
+                    <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
                 </button>
             </div>
+        </header>
+
+        <h1 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">Gerar Etiqueta</h1>
+
+        {% if error_message %}
+        <div class="bg-red-100 dark:bg-red-900 border-l-4 border-red-500 dark:border-red-400 text-red-700 dark:text-red-100 p-4 mb-4 rounded-md" role="alert">
+            <div class="flex items-center">
+                <div class="py-1">
+                    <svg class="fill-current h-6 w-6 text-red-500 dark:text-red-300 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586l-1.293-1.293z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-bold">Erro</p>
+                    <p class="text-sm">{{ error_message }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'efetivo:gerar_etiqueta_pdf' %}" class="space-y-6 flex flex-col items-center">
+            {% csrf_token %}
+
+            <div class="w-3/4">
+                <label for="re" class="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-1">
+                    Digite o RE do Militar:
+                </label>
+                <input type="text" id="re" name="re" maxlength="6"
+                       value="{{ re_value|default:'' }}" required
+                       placeholder="Ex: 123456"
+                       class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-base text-gray-900 dark:text-gray-100">
+            </div>
+
+            <button type="submit"
+                    class="w-3/4 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:ring-offset-gray-900 transition-colors">
+                Gerar Etiqueta PDF
+            </button>
         </form>
 
-        <div class="mt-8 text-center">
-            <a href="{% url 'core:index' %}" 
-               class="text-blue-600 hover:text-blue-400 font-semibold transition duration-200 ease-in-out">
-                Voltar à Página Inicial
-            </a>
-        </div>
+        <p class="mt-6 text-sm text-center text-gray-500 dark:text-gray-300">
+            Informe o RE e clique em <strong class="text-gray-700 dark:text-gray-100">Gerar Etiqueta PDF</strong> para baixar a etiqueta.
+        </p>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('formBuscaRE');
-        const gerarPdfBtn = document.getElementById('gerarPdfBtn');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+            const logo = document.getElementById('logo');
 
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            gerarPdfBtn.disabled = true;
-            gerarPdfBtn.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...</span>';
+            const savedMode = localStorage.getItem('darkMode');
 
-            // Submete o formulário normalmente
-            this.submit();
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark');
+                body.classList.remove('bg-gray-100');
+                body.classList.add('bg-gray-900');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                if (logo) {
+                    logo.src = "{% static 'img/logo-siscoe-light.png' %}";
+                }
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                body.classList.remove('bg-gray-900');
+                body.classList.add('bg-gray-100');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                if (logo) {
+                    logo.src = "{% static 'img/logo-siscoe-light.png' %}";
+                }
+            }
         });
-    });
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>

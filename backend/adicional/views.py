@@ -18,6 +18,10 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 import logging
+
+from backend.core.utils import filter_by_user_sgb
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -253,12 +257,13 @@ def gravar_historico(instance, usuario_alteracao):
         status_adicional=instance.status_adicional
     )
 
+
+
 @login_required
 def listar_adicional(request):
-    """
-    View para listar todos os Adicionais cadastrados.
-    """
     registros_adicional = Cadastro_adicional.objects.all()
+    registros_adicional = filter_by_user_sgb(registros_adicional, request.user)
+    
     current_year = datetime.now().year
     anos = list(range(2018, current_year + 2))
 
@@ -266,7 +271,6 @@ def listar_adicional(request):
         'registros_adicional': registros_adicional,
         'anos': anos,
     }
-
     return render(request, 'adicional/listar_adicional.html', context)
 
 

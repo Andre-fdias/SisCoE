@@ -214,12 +214,16 @@
             id="logo">
     </div>
 
+
     <!-- Link Secretaria centralizado -->
     <div class="flex-grow flex justify-center">
-        <a href="{% url 'core:dashboard' %}"
-           class="text-gray-600 hover:text-purple-700 px-3 py-2 text-sm sm:text-base transition-colors dark:text-gray-300 dark:hover:text-purple-600">
-            Secretaria
-        </a>
+        {# Oculta o link 'Secretaria' para usuários com permissão 'basico' #}
+        {% if user.is_superuser or user.permissoes != 'basico' %}
+            <a href="{% url 'core:dashboard' %}"
+               class="text-gray-600 hover:text-purple-700 px-3 py-2 text-sm sm:text-base transition-colors dark:text-gray-300 dark:hover:text-purple-600">
+                Secretaria
+            </a>
+        {% endif %}
     </div>
 
     <!-- Dados do usuário na extrema direita -->

@@ -20,6 +20,7 @@ openpyxl==3.1.5
 orjson==3.10.16
 reportlab==4.4.0
 pillow==11.2.1
+redis-6.4.0
 
 # ==============================================
 # AUTENTICAÇÃO E SEGURANÇA

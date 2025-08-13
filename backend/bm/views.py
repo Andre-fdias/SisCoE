@@ -10,8 +10,12 @@ from .export_utils import export_bm_data
 from .models import Cadastro_bm, Imagem_bm
 from django.contrib.messages import constants
 
+from backend.core.utils import filter_by_user_sgb
+
+@login_required
 def listar_bm(request):
     cadastros = Cadastro_bm.objects.all()
+    cadastros = filter_by_user_sgb(cadastros, request.user)
     return render(request, 'listar_bm.html', {'cadastros': cadastros})
 
 def ver_bm(request, pk):

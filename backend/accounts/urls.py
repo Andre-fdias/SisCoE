@@ -29,6 +29,7 @@ urlpatterns = [
 
       # URLs de gestão de usuários (incluindo a lista e edição de permissões)
     path('users/', include(user_management_patterns)),
+    path('acesso-negado/', v.acesso_negado, name='acesso_negado'),
 
     # URLs para históricos globais
     path('global_access_history/', v.global_access_history, name='global_access_history'),
