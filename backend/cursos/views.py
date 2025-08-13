@@ -14,7 +14,7 @@ from django.contrib.messages import constants # Para usar constants.SUCCESS, etc
 
 # Importações de bibliotecas externas
 import datetime as dt
-from datetime import datetime
+from datetime import datetime, date
 import json
 import logging
 import csv
@@ -70,13 +70,14 @@ from django.views.decorators.http import require_http_methods
 from .models import Medalha, Cadastro
 from datetime import datetime
 import json
-
+from backend.core.utils import filter_by_user_sgb
 
 
 @login_required
 def medalha_list(request):
     medalhas = Medalha.objects.all().select_related('cadastro')
-    cadastros = Cadastro.objects.all().order_by('nome')
+    cadastros = Cadastro.objects.all()
+    cadastros = filter_by_user_sgb(cadastros, request.user).order_by('nome')
     
     context = {
         'medalhas': medalhas,
@@ -85,7 +86,6 @@ def medalha_list(request):
         'title': 'Lista de Medalhas'
     }
     return render(request, 'cursos/medalha_list.html', context)
-
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -427,19 +427,18 @@ import traceback # Para logging detalhado de exceções
 
 @login_required
 def curso_list(request):
-    """
-    Exibe a lista de todos os cursos cadastrados.
-    """
-    cursos = Curso.objects.all().order_by('-id')  # Ordena da mais recente para a mais antiga
-    cadastros = Cadastro.objects.all().order_by('nome') # Adiciona todos os cadastros
+    cursos = Curso.objects.all().order_by('-id')
+    cadastros = Cadastro.objects.all()
+    cadastros = filter_by_user_sgb(cadastros, request.user).order_by('nome')
     
     context = {
         'cursos': cursos,
-        'cadastros': cadastros, # Adiciona cadastros ao contexto
-        'curso_choices': Curso.CURSOS_CHOICES, # Adiciona as choices de curso ao contexto
+        'cadastros': cadastros,
+        'curso_choices': Curso.CURSOS_CHOICES,
         'title': "Lista de Cursos"
     }
     return render(request, 'cursos/curso_list.html', context)
+
 
 
 
@@ -451,12 +450,11 @@ def curso_create(request):
     """
     context = {
         'title': "Cadastrar Curso",
-        'curso_choices': Curso.CURSOS_CHOICES   # Renamed to match template for consistency
+        'curso_choices': Curso.CURSOS_CHOICES
     }
     template_name = 'cursos/curso_form.html'
 
     if request.method == 'POST':
-        # Captura o RE do militar que foi buscado na etapa anterior
         re = request.POST.get('militar_re_display')
         cadastro_id = request.POST.get('militar_id')
         
@@ -466,57 +464,61 @@ def curso_create(request):
 
         try:
             cadastro = get_object_or_404(Cadastro, pk=cadastro_id)
+
+            # Verifica permissão baseada no SGB para criação
+            if not request.user.is_superuser and not request.user.permissoes in ['admin', 'gestor']:
+                if not (hasattr(request.user, 'cadastro') and request.user.cadastro and \
+                        hasattr(cadastro, 'detalhes_situacao') and \
+                        cadastro.detalhes_situacao.filter(sgb=request.user.get_user_sgb()).exists()):
+                    messages.error(request, 'Você não tem permissão para cadastrar cursos para este militar.', extra_tags='error_message')
+                    return redirect('cursos:buscar_militar_curso')
             
-            # Prepara para processar múltiplos formulários de curso
             num_cursos = int(request.POST.get('num_cursos', 0))
             cursos_salvos_count = 0
             
-            for i in range(num_cursos):
-                curso_tipo = request.POST.get(f'curso_{i}')
-                # outros_cursos = request.POST.get(f'outro_curso_{i}') # REMOVED: outros_cursos
-                data_publicacao_str = request.POST.get(f'data_publicacao_{i}')
-                bol_publicacao = request.POST.get(f'bol_publicacao_{i}')
-                observacoes = request.POST.get(f'observacoes_{i}', '')
+            with transaction.atomic():
+                for i in range(num_cursos):
+                    curso_tipo = request.POST.get(f'curso_{i}')
+                    data_publicacao_str = request.POST.get(f'data_publicacao_{i}')
+                    bol_publicacao = request.POST.get(f'bol_publicacao_{i}')
+                    observacoes = request.POST.get(f'observacoes_{i}', '')
 
-                # Validações básicas para cada curso
-                if not curso_tipo or not data_publicacao_str or not bol_publicacao:
-                    messages.warning(request, f'Ignorando curso {i+1}: Campos obrigatórios não preenchidos.')
-                    continue
+                    if not curso_tipo or not data_publicacao_str or not bol_publicacao:
+                        messages.warning(request, f'Ignorando curso {i+1}: Campos obrigatórios não preenchidos.')
+                        continue
 
-                try:
-                    data_publicacao = dt.strptime(data_publicacao_str, '%Y-%m-%d').date()
-                except ValueError:
-                    messages.warning(request, f'Ignorando curso {i+1}: Formato de data inválido. Use AAAA-MM-DD.')
-                    continue
-                
-                # if curso_tipo == 'OUTRO' and not outros_cursos: # REMOVED: outros_cursos
-                #     messages.warning(request, f'Ignorando curso {i+1}: O nome do "Outro Curso" é obrigatório.')
-                #     continue
+                    try:
+                        data_publicacao = datetime.strptime(data_publicacao_str, '%Y-%m-%d').date()
+                        # Impedir datas futuras
+                        if data_publicacao > date.today():
+                            messages.warning(request, f"Ignorando curso #{i + 1}: Data de publicação não pode ser futura.")
+                            continue
 
-                Curso.objects.create(
-                    cadastro=cadastro,
-                    curso=curso_tipo,
-                    # outro_curso=outros_cursos if curso_tipo == 'OUTRO' else '', # REMOVED: outros_cursos
-                    data_publicacao=data_publicacao,
-                    bol_publicacao=bol_publicacao,
-                    observacoes=observacoes,
-                    usuario_alteracao=request.user
-                )
-                cursos_salvos_count += 1
+                    except ValueError:
+                        messages.warning(request, f'Ignorando curso {i+1}: Formato de data inválido. Use AAAA-MM-DD.')
+                        continue
+                    
+                    Curso.objects.create(
+                        cadastro=cadastro,
+                        curso=curso_tipo,
+                        data_publicacao=data_publicacao,
+                        bol_publicacao=bol_publicacao,
+                        observacoes=observacoes,
+                        usuario_alteracao=request.user
+                    )
+                    cursos_salvos_count += 1
             
             if cursos_salvos_count > 0:
                 messages.success(request, f'{cursos_salvos_count} curso(s) cadastrado(s) com sucesso para o RE {re}!')
-                # Redireciona para a lista de cursos
                 return redirect('cursos:curso_list')
             else:
                 messages.info(request, 'Nenhum curso foi cadastrado. Verifique os dados e tente novamente.')
-                # Se nenhum curso foi salvo, renderiza o formulário novamente com os dados do militar
                 context.update({
                     'found_militar': True,
                     'cadastro': {
                         'id': cadastro.id,
                         're': cadastro.re,
-                        'nome': cadastro.nome_guerra,
+                        'nome': cadastro.nome_de_guerra,
                     },
                     'found_re': re,
                 })
@@ -526,23 +528,20 @@ def curso_create(request):
             messages.error(request, f'Militar com RE {re} não encontrado.')
             return redirect('cursos:buscar_militar_curso')
         except Exception as e:
+            logger.error(f"Erro ao cadastrar curso: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao cadastrar curso: {str(e)}')
-            print(traceback.format_exc()) # Log do erro no console
-            # Se der erro, renderiza o formulário novamente com os dados do militar
             context.update({
                 'found_militar': True,
                 'cadastro': {
                     'id': cadastro.id,
                     're': cadastro.re,
-                    'nome': cadastro.nome_guerra,
+                    'nome': cadastro.nome_de_guerra,
                 },
                 'found_re': re,
             })
             return render(request, template_name, context)
             
     # GET request: Renderiza o formulário (geralmente após buscar o militar)
-    # Se houver um 'militar_id' e 'militar_re' na sessão (vindo de buscar_militar_curso),
-    # use-os para pré-popular o formulário.
     militar_id_session = request.session.pop('militar_id_curso', None)
     militar_re_session = request.session.pop('militar_re_curso', None)
     militar_nome_session = request.session.pop('militar_nome_curso', None)
@@ -558,6 +557,8 @@ def curso_create(request):
             'found_re': militar_re_session,
         })
     return render(request, template_name, context)
+
+
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -833,13 +834,8 @@ User = get_user_model()
 
 
 # --- Views para Cursos do Usuário Logado ---
-
 @login_required
 def user_curso_list(request):
-    """
-    Exibe a lista de cursos do usuário logado.
-    """
-    # Acessa o cadastro diretamente do usuário logado
     if not hasattr(request.user, 'cadastro') or not request.user.cadastro:
         messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.', 
                        extra_tags='error_message')
@@ -847,22 +843,18 @@ def user_curso_list(request):
 
     cadastro = request.user.cadastro
     cursos = Curso.objects.filter(cadastro=cadastro).order_by('-data_publicacao')
-    
-    # Obter dados adicionais para o contexto (detalhes, promocao, etc.)
-    detalhes = cadastro.detalhes_situacao.order_by('-apresentacao_na_unidade').first()
-    promocao = cadastro.promocoes.order_by('-data_alteracao').first()
-    promocoes = cadastro.promocoes.order_by('-data_alteracao')
-    
+
+    detalhes = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+    promocao = cadastro.promocoes.order_by('-ultima_promocao').first()
+
     context = {
         'cursos': cursos,
         'title': "Meus Cursos",
-        'cadastro': cadastro, # Passa o objeto cadastro para o template
+        'cadastro': cadastro,
         'detalhes': detalhes,
         'promocao': promocao,
-        'promocoes': promocoes,
         'today': timezone.now().date(),
-        'curso_choices': Curso.CURSOS_CHOICES, # Garante que as choices estão disponíveis
-        # Adicione as choices dos modelos para os selects no template
+        'curso_choices': Curso.CURSOS_CHOICES,
         'situacao_choices': DetalhesSituacao.situacao_choices,
         'sgb_choices': DetalhesSituacao.sgb_choices,
         'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
@@ -1119,37 +1111,29 @@ def user_curso_delete(request, pk):
 
 
 # --- Views para Medalhas do Usuário Logado ---
-
 @login_required
 def user_medalha_list(request):
-    """
-    Lista as medalhas associadas ao perfil do usuário logado.
-    """
     try:
-        # Acessa o cadastro diretamente do usuário logado
         if not hasattr(request.user, 'cadastro') or not request.user.cadastro:
             messages.error(request, 'Seu perfil não está vinculado a um cadastro militar.',
                            extra_tags='error_message')
-            return redirect('core:index') 
-        
+            return redirect('core:index')
+
         cadastro = request.user.cadastro
         medalhas_do_militar = Medalha.objects.filter(cadastro=cadastro).order_by('-data_publicacao_lp')
 
-        # Carrega dados adicionais do militar para o template (promocoes, detalhes_situacao)
-        detalhes = cadastro.detalhes_situacao.order_by('-apresentacao_na_unidade').first()
-        promocao = cadastro.promocoes.order_by('-data_alteracao').first()
-        promocoes = cadastro.promocoes.order_by('-data_alteracao') # Para listar todas as promoções
+        detalhes = cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+        # aqui troca para pegar a atual de verdade
+        promocao = cadastro.promocoes.order_by('-ultima_promocao').first()
 
         context = {
             'cadastro': cadastro,
             'medalhas_do_militar': medalhas_do_militar,
-            'honraria_choices': Medalha.HONRARIA_CHOICES, # Para o modal de edição/criação
+            'honraria_choices': Medalha.HONRARIA_CHOICES,
             'title': 'Minhas Medalhas',
             'detalhes': detalhes,
             'promocao': promocao,
-            'promocoes': promocoes,
             'today': timezone.now().date(),
-            # Adicione as choices dos modelos para os selects no template
             'situacao_choices': DetalhesSituacao.situacao_choices,
             'sgb_choices': DetalhesSituacao.sgb_choices,
             'posto_secao_choices': DetalhesSituacao.posto_secao_choices,
@@ -1168,6 +1152,7 @@ def user_medalha_list(request):
         logger.error(f"Erro inesperado ao carregar lista de medalhas do usuário: {str(e)}", exc_info=True)
         messages.error(request, f'Erro inesperado ao carregar suas medalhas: {str(e)}', extra_tags='error_message')
         return redirect('core:index')
+
 
 @login_required
 @require_http_methods(["GET", "POST"])

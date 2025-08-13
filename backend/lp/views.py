@@ -16,7 +16,7 @@ from .models import LP, HistoricoLP, N_CHOICES, situacao_choices
 from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem # Importe os modelos necessários
 from django.template.loader import render_to_string
 import logging
-
+from backend.core.utils import filter_by_user_sgb
 import json 
 from django.db.models import Max, Subquery, OuterRef # Importar Max, Subquery, OuterRef
 
@@ -683,15 +683,18 @@ def excluir_lp(request, pk):
 
 
 @login_required
-def listar_lp(request): 
-    lps = LP.objects.all().order_by('cadastro__nome_de_guerra', 'numero_lp')
+def listar_lp(request):
+    lps = LP.objects.all()
+    if not request.user.is_superuser and request.user.permissoes == 'sgb':
+        lps = lps.filter(cadastro__detalhessituacao__sgb=request.user.get_user_sgb())
+    
+    lps = lps.order_by('cadastro__nome_de_guerra', 'numero_lp')
+    
     context = {
         'lps': lps,
         'N_CHOICES': N_CHOICES 
     }
     return render(request, 'lp/listar_lp.html', context)
-
-
 
 
 

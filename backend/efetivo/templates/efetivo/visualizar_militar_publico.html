@@ -167,86 +167,86 @@
     </div>-->
 
     <div class="mt-4 relative grid grid-cols-1 md:grid-cols-3 auto-rows-min gap-4 w-full md:w-11/12 lg:w-5/6 p-4 md:p-6 glass-card rounded-lg shadow-lg h-fit">
-<header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
-    <div class="flex items-center w-full">
-        <figure class="mr-2">
-            <img src="{% static 'img\logo-siscoe- (2).png' %}" alt="logo" class="w-200 h-20 rounded-full">
-        </figure>
-        <div class="flex-grow text-center">
-            <span class="text-2xl font-bold uppercase">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
-        </div>
-        <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
-            <a href="{% url 'core:index' %}"
-               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Voltar
-            </a>
+        <header class="col-span-1 md:col-span-3 flex items-center p-4 md:px-8">
+            <div class="flex items-center w-full">
+                <figure class="mr-2">
+                    <img src="{% static 'img\logo-siscoe- (2).png' %}" alt="logo" class="w-200 h-20 rounded-full">
+                </figure>
+                <div class="flex-grow text-center">
+                    <span class="text-2xl font-bold uppercase">{{ promocao.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+                </div>
+                <div class="fixed top-4 right-4 z-50 flex items-center space-x-3">
+                    <a href="{% url 'core:index' %}"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Voltar
+                    </a>
 
-            <button id="darkModeToggle"
-                    class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
-                </svg>
-                <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                </svg>
-            </button>
-        </div>
+                    <button id="darkModeToggle"
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const darkModeToggle = document.getElementById('darkModeToggle');
-                const sunIcon = document.getElementById('sunIcon');
-                const moonIcon = document.getElementById('moonIcon');
-                const body = document.body;
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const darkModeToggle = document.getElementById('darkModeToggle');
+                        const sunIcon = document.getElementById('sunIcon');
+                        const moonIcon = document.getElementById('moonIcon');
+                        const body = document.body;
 
-                // Remove qualquer classe de cor de fundo inicial que possa conflitar
-                body.classList.remove('bg-gray-200', 'bg-gray-900'); 
-                
-                // Verifica se há preferência salva
-                const savedMode = localStorage.getItem('darkMode');
-                
-                // Aplica o modo inicial
-                if (savedMode === 'dark') {
-                    enableDarkMode();
-                } else {
-                    // Define o modo padrão como light se não houver preferência salva
-                    disableDarkMode(); 
-                }
+                        // Remove qualquer classe de cor de fundo inicial que possa conflitar
+                        body.classList.remove('bg-gray-200', 'bg-gray-900'); 
+                        
+                        // Verifica se há preferência salva
+                        const savedMode = localStorage.getItem('darkMode');
+                        
+                        // Aplica o modo inicial
+                        if (savedMode === 'dark') {
+                            enableDarkMode();
+                        } else {
+                            // Define o modo padrão como light se não houver preferência salva
+                            disableDarkMode(); 
+                        }
 
-                // Alterna entre modos
-                darkModeToggle.addEventListener('click', function() {
-                    if (body.classList.contains('dark-mode')) { // Usa 'dark-mode' como marcador
-                        disableDarkMode();
-                    } else {
-                        enableDarkMode();
-                    }
-                });
+                        // Alterna entre modos
+                        darkModeToggle.addEventListener('click', function() {
+                            if (body.classList.contains('dark-mode')) { // Usa 'dark-mode' como marcador
+                                disableDarkMode();
+                            } else {
+                                enableDarkMode();
+                            }
+                        });
 
-                function enableDarkMode() {
-                    body.classList.add('dark-mode'); // Adiciona um marcador 'dark-mode'
-                    body.classList.remove('bg-gray-200'); // Remove o fundo claro
-                    body.classList.add('bg-gray-900');    // Adiciona o fundo escuro
-                    localStorage.setItem('darkMode', 'dark');
-                    sunIcon.classList.add('hidden');
-                    moonIcon.classList.remove('hidden');
-                }
+                        function enableDarkMode() {
+                            body.classList.add('dark-mode'); // Adiciona um marcador 'dark-mode'
+                            body.classList.remove('bg-gray-200'); // Remove o fundo claro
+                            body.classList.add('bg-gray-900');    // Adiciona o fundo escuro
+                            localStorage.setItem('darkMode', 'dark');
+                            sunIcon.classList.add('hidden');
+                            moonIcon.classList.remove('hidden');
+                        }
 
-                function disableDarkMode() {
-                    body.classList.remove('dark-mode'); // Remove o marcador 'dark-mode'
-                    body.classList.remove('bg-gray-900'); // Remove o fundo escuro
-                    body.classList.add('bg-gray-200');    // Adiciona o fundo claro
-                    localStorage.setItem('darkMode', 'light');
-                    sunIcon.classList.remove('hidden');
-                    moonIcon.classList.add('hidden');
-                }
-            });
-        </script>
+                        function disableDarkMode() {
+                            body.classList.remove('dark-mode'); // Remove o marcador 'dark-mode'
+                            body.classList.remove('bg-gray-900'); // Remove o fundo escuro
+                            body.classList.add('bg-gray-200');    // Adiciona o fundo claro
+                            localStorage.setItem('darkMode', 'light');
+                            sunIcon.classList.remove('hidden');
+                            moonIcon.classList.add('hidden');
+                        }
+                    });
+                </script>
 
-    </div>
-</header>
+            </div>
+        </header>
 
          <!-- Imagem de Perfil -->
 
@@ -259,68 +259,112 @@
             <!-- Overlay de textura -->
             <div class="absolute inset-0 bg-gray-800 opacity-50 mix-blend-lighten"></div>
             
+  
             <!-- Container da Foto 3x4 -->
-            <div class="absolute -bottom-1/4 left-1/2 transform -translate-x-1/2 rounded-lg">
-                <div class="profile relative rounded-lg" style="width: 360px; height: 480px;"> <!-- Proporção 3x4 -->
-                <label for="imageUploadInput" class="cursor-pointer block h-full">
-                    <figure class="relative h-full rounded-lg">
-                    {% with cadastro.imagens.first as imagem %}
-                    {% if imagem %}
-                        <img id="profileImage" 
-                            src="{{ imagem.image.url }}" 
-                            alt="Foto do Militar" 
-                            class="w-full h-full object-cover border-4 border-white rounded-lg shadow-xl"
-                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
-                    {% else %}
-                        <img id="profileImage" 
-                            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234b5563' d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.078 1.182 8.25 3.129zM12 12a6 6 0 100-12 6 6 0 000 12z'/%3E%3C/svg%3E" 
-                            alt="Foto Padrão" 
-                            class="w-full h-full object-cover border-4 border-white shadow-xl bg-gray-200"
-                            style="aspect-ratio: 3/4;"> <!-- Força proporção 3x4 -->
-                    {% endif %}
-                    {% endwith %}
+<!-- Container da Foto 3x4 -->
+<div class="absolute -bottom-1/4 left-1/2 transform -translate-x-1/2 rounded-lg" style="z-index: 10;">
+    <div class="profile relative rounded-lg" style="width: 360px; height: 480px;">
+        <!-- Formulário para upload -->
+        <form id="imageForm" action="{% url 'efetivo:editar_imagem_user' cadastro.id %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+        </form>
+        
+        <label for="imageUploadInput" class="cursor-pointer block h-full">
+            <figure class="relative h-full rounded-lg">
+                {% with cadastro.imagens.first as imagem %}
+                {% if imagem %}
+                    <img id="profileImage" 
+                        src="{{ imagem.image.url }}" 
+                        alt="Foto do Militar" 
+                        class="w-full h-full object-cover border-4 border-white rounded-lg shadow-xl"
+                        style="aspect-ratio: 3/4;">
+                {% else %}
+                    <img id="profileImage" 
+                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234b5563' d='M24 20.993V24H0v-2.996A14.977 14.977 0 0112 15c3.183 0 6.078 1.182 8.25 3.129zM12 12a6 6 0 100-12 6 6 0 000 12z'/%3E%3C/svg%3E" 
+                        alt="Foto Padrão" 
+                        class="w-full h-full object-cover border-4 border-white shadow-xl bg-gray-200"
+                        style="aspect-ratio: 3/4;">
+                {% endif %}
+                {% endwith %}
+    <div class="absolute bottom-4 right-4 rounded-full" style="z-index: 50; background: gray; padding: 10px;">
+        <svg xmlns="http://www.w3.org/2000/svg"
+            class="rounded-full h-6 w-6 text-white group-hover:scale-110 transition-transform duration-200"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+    </div>
+                <!-- Overlay hover -->
+                <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <span class="text-white text-sm font-medium">Alterar Foto</span>
+                </div>
+            </figure>
+        </label>
+
+        <!-- Botão da câmera - Movido para fora do label -->
+        {% if request.user == cadastro.user or request.user.is_superuser %}
+            <div class="absolute bottom-4 right-4" style="z-index: 50;">
+                <button onclick="showImageRules()" 
+                        class="group relative p-2 rounded-full cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl">
+                    <!-- Fundo gradiente com animação -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full opacity-100 group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300"></div>
                     
-                    <!-- Overlay hover -->
-                    <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span class="text-white text-sm font-medium">Alterar Foto</span>
+                    <!-- Efeito de brilho no hover -->
+                    <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white mix-blend-overlay"></div>
+                    
+                    <!-- Borda sutil -->
+                    <div class="absolute inset-0 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"></div>
+                    
+                    <!-- Ícone centralizado -->
+                    <div class="relative z-10 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-200"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
                     </div>
                     
-                    <!-- Botão da câmera -->
-                    {% if request.user == cadastro.user or request.user.is_superuser %}
-                        <div class="absolute bottom-2 right-2">
-                            <button onclick="showImageRules()" 
-                                    class="group relative p-2 rounded-full cursor-pointer transition-all duration-300 shadow-xl hover:shadow-2xl">
-                                <!-- Fundo gradiente com animação -->
-                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full opacity-100 group-hover:from-blue-600 group-hover:to-blue-700 transition-all duration-300"></div>
-                                
-                                <!-- Efeito de brilho no hover -->
-                                <div class="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white mix-blend-overlay"></div>
-                                
-                                <!-- Borda sutil -->
-                                <div class="absolute inset-0 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"></div>
-                                
-                                <!-- Ícone centralizado -->
-                                <div class="relative z-10 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-200"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                </div>
-                                
-                                <!-- Tooltip (opcional) -->
-                                <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    Alterar Foto
-                                </span>
-                            </button>
-                        </div>
-                        {% endif %}
-                    </figure>
-                </label>
+                    <!-- Tooltip (opcional) -->
+                    <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        Alterar Foto
+                    </span>
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+            <!-- Input de upload escondido -->
+            <input type="file" id="imageUploadInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+
+            <!-- Modal de regras -->
+            <div id="imageRulesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4 shadow-xl">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Regras para Foto Militar</h3>
+                    <ul class="text-gray-700 mb-4 list-disc pl-5 space-y-2">
+                        <li>Tamanho máximo: <strong>2MB</strong></li>
+                        <li>Formato: <strong>3x4 (retrato)</strong></li>
+                        <li>Uniforme: <strong>Fardado obrigatoriamente</strong></li>
+                        <li>Fundo: <strong>Branco ou neutro</strong></li>
+                        <li>Expressão: <strong>Rosto visível e sério</strong></li>
+                    </ul>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="hideImageRules()" 
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                            Cancelar
+                        </button>
+                        <button onclick="acceptRulesAndOpenFileInput()" 
+                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                            Entendi, Prosseguir
+                        </button>
+                    </div>
                 </div>
             </div>
             </div>
@@ -332,9 +376,9 @@
             
             <!-- Estatísticas -->
             <div class="mt-4 border-t border-gray-200 pt-4">
-                            <div class="flex-grow text-center">
-                            <span class="text-sm font-bold uppercase dark:text-white">{{ cadastro.promocoes.last.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
-                        </div>
+              <div class="flex-grow text-center">
+                  <span class="text-sm font-bold uppercase dark:text-white">{{ promocao.grad|safe }} {{ cadastro.re }}-{{ cadastro.dig }} {{ cadastro.nome }}</span>
+              </div>
             </div>
             </div>
         </div>
@@ -345,102 +389,93 @@
         </div>
         </div>
 
-        <!-- Modal de regras -->
-        <div id="imageRulesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-            <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4 shadow-xl">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">Regras para Foto Militar</h3>
-                <ul class="text-gray-700 mb-4 list-disc pl-5 space-y-2">
-                    <li>Tamanho máximo: <strong>2MB</strong></li>
-                    <li>Formato: <strong>3x4 (retrato)</strong></li>
-                    <li>Uniforme: <strong>Fardado obrigatoriamente</strong></li>
-                    <li>Fundo: <strong>Branco ou neutro</strong></li>
-                    <li>Expressão: <strong>Rosto visível e sério</strong></li>
-                </ul>
-                <div class="flex justify-end space-x-3">
-                    <button onclick="hideImageRules()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
-                        Cancelar
-                    </button>
-                    <button onclick="acceptRulesAndOpenFileInput()" 
-                            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                        Entendi, Prosseguir
-                    </button>
-                </div>
-            </div>
-        </div>
-
-         <script>
-                // Mostra o modal com as regras
-                function showImageRules() {
-                    document.getElementById('imageRulesModal').classList.remove('hidden');
+        <script>
+            // Mostra o modal com as regras
+            function showImageRules() {
+                document.getElementById('imageRulesModal').classList.remove('hidden');
+            }
+            
+            // Esconde o modal
+            function hideImageRules() {
+                document.getElementById('imageRulesModal').classList.add('hidden');
+            }
+            
+            // Aceita as regras e abre o seletor de arquivos
+            function acceptRulesAndOpenFileInput() {
+                hideImageRules();
+                document.getElementById('imageUploadInput').click();
+            }
+            
+            // Função para lidar com o upload da imagem
+            function handleImageUpload(event) {
+                const input = event.target;
+                const file = input.files[0];
+                
+                if (!file) return;
+                
+                // Validações
+                if (file.size > 2 * 1024 * 1024) { // 2MB
+                    alert('A imagem deve ter no máximo 2MB');
+                    input.value = '';
+                    showImageRules();
+                    return;
                 }
                 
-                // Esconde o modal
-                function hideImageRules() {
-                    document.getElementById('imageRulesModal').classList.add('hidden');
-                }
-                
-                // Aceita as regras e abre o seletor de arquivos
-                function acceptRulesAndOpenFileInput() {
-                    document.getElementById('imageRulesModal').classList.add('hidden');
-                    document.getElementById('imageUploadInput').click();
-                }
-                
-                // Função para lidar com o upload da imagem
-                function handleImageUpload(event) {
-                    const input = event.target;
-                    const file = input.files[0];
+                // Verificação de proporção
+                const img = new Image();
+                img.onload = function() {
+                    const width = this.width;
+                    const height = this.height;
+                    const ratio = width / height;
                     
-                    if (!file) return;
-                    
-                    // Validações
-                    if (file.size > 2 * 1024 * 1024) { // 2MB
-                        alert('A imagem deve ter no máximo 2MB');
+                    // Proporção 3x4 tem ratio de 0.75 (3/4) com margem de 10%
+                    if (Math.abs(ratio - 0.75) > 0.1) {
+                        alert('A imagem deve estar no padrão 3x4 (retrato)');
                         input.value = '';
+                        showImageRules();
                         return;
                     }
                     
-                    // Verificação de proporção
-                    const img = new Image();
-                    img.onload = function() {
-                        const width = this.width;
-                        const height = this.height;
-                        const ratio = width / height;
+                    // Mostra preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('profileImage').src = e.target.result;
                         
-                        // Proporção 3x4 tem ratio de 0.75 (3/4) com margem de 10%
-                        if (Math.abs(ratio - 0.75) > 0.1) {
-                            alert('A imagem deve estar no padrão 3x4 (retrato)');
-                            input.value = '';
-                            return;
-                        }
+                        // Envia o formulário automaticamente
+                        const form = document.getElementById('imageForm');
+                        const formData = new FormData(form);
+                        formData.append('image', file);
                         
-                        // Mostra preview
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            document.getElementById('profileImage').src = e.target.result;
-                            
-                            // Envia o formulário automaticamente
-                            const form = document.getElementById('imageForm');
-                            const formData = new FormData(form);
-                            
-                            fetch(form.action, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-                                }
-                            }).then(response => {
-                                if (response.ok) {
-                                    window.location.reload();
-                                }
-                            });
-                        };
-                        reader.readAsDataURL(file);
+                        // Adiciona o CSRF token
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRFToken': csrfToken
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                throw new Error('Erro no servidor');
+                            }
+                        }).catch(error => {
+                            console.error('Erro:', error);
+                            alert('Erro ao enviar a imagem. Por favor, tente novamente.');
+                        });
                     };
-                    img.src = URL.createObjectURL(file);
-                }
+                    reader.readAsDataURL(file);
+                };
+                img.onerror = function() {
+                    alert('Erro ao carregar a imagem. Por favor, selecione um arquivo válido.');
+                    input.value = '';
+                };
+                img.src = URL.createObjectURL(file);
+            }
         </script>
-   
+
         <!-- Informações Pessoais -->
         <section class="bg-white rounded-xl shadow-sm p-6">
             <div class="mb-8">
@@ -506,6 +541,8 @@
                 </div>
             </div>
 
+
+                
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -521,19 +558,17 @@
                         </div>
                         <div class="flex-1">
                             <p class="text-xs font-medium text-gray-500">Email</p>
-                            <p class="text-sm font-medium text-gray-800 truncate">{{ cadastro.email|default:"-" }}</p>
+                            <p class="text-sm font-medium text-gray-800 truncate" id="displayEmail">{{ cadastro.email|default:"-" }}</p>
                         </div>
                         <div class="flex space-x-1 ml-2">
-                            <button onclick="copyToClipboard('{{ cadastro.email }}')" 
+                            <button type="button" onclick="copyToClipboard('{{ cadastro.email }}')" 
                                     class="p-1 text-gray-500 hover:text-blue-600 transition-colors"
                                     title="Copiar email">
                                 <i class="fas fa-copy"></i>
                             </button>
-                            <a href="mailto:{{ cadastro.email|default:'#' }}" 
-                            class="p-1 text-gray-500 hover:text-blue-600 transition-colors"
-                            title="Enviar email">
-                                <i class="fas fa-paper-plane"></i>
-                            </a>
+                            <button type="button" onclick="openModal('emailModal')" class="p-1 text-gray-500 hover:text-blue-600 transition-colors" title="Editar Email">
+                                <i class="fas fa-pen"></i>
+                            </button>
                         </div>
                     </div>
                     
@@ -543,20 +578,20 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-medium text-gray-500">Telefone</p>
-                            <p class="text-sm font-medium text-gray-800 phone-number">{{ cadastro.telefone|default:"-" }}</p>
+                            <p class="text-sm font-medium text-gray-800 phone-number" id="displayTelefone">{{ cadastro.telefone|default:"-" }}</p>
                         </div>
                         <div class="flex space-x-1 ml-2">
-                            <button onclick="copyToClipboard(this.closest('.phone-number').textContent)" 
+                            <button type="button" onclick="copyToClipboard(document.getElementById('displayTelefone').textContent)" 
                                     class="p-1 text-gray-500 hover:text-green-600 transition-colors"
                                     title="Copiar telefone">
                                 <i class="fas fa-copy"></i>
                             </button>
-                            <button onclick="openModal('telefoneModal')" class="p-1 text-gray-500 hover:text-green-600 transition-colors" title="Editar Telefone">
+                            <button type="button" onclick="openModal('telefoneModal')" class="p-1 text-gray-500 hover:text-green-600 transition-colors" title="Editar Telefone">
                                 <i class="fas fa-pen"></i>
                             </button>
                         </div>
                     </div>
-
+              
                     <script>
                         // Função para formatar números de telefone
                         function formatPhoneNumber(phone) {
@@ -724,7 +759,124 @@
                             });
                         });
                     });
-            </script>            
+            </script> 
+            
+        
+            <!-- Modal de E-mail -->
+            <div id="emailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+                <div class="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-semibold mb-4">Editar E-mail</h3>
+                    <form id="emailEditForm" action="{% url 'efetivo:editar_email' cadastro.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="emailInput" class="block text-xs font-medium text-gray-500 uppercase tracking-wide">E-mail</label>
+                            <input type="email" id="emailInput" name="email" 
+                                value="{{ cadastro.email|default:'' }}"
+                                placeholder="seu_usuario@policiamilitar.sp.gov.br"
+                                class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                        shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
+                                        transition-all duration-200 placeholder-gray-400
+                                        hover:border-gray-300 text-gray-700 font-medium"
+                                pattern="^[\w\.-]+@policiamilitar\.sp\.gov\.br$"
+                                title="O e-mail deve ter o domínio @policiamilitar.sp.gov.br"
+                                required>
+                            <div class="text-red-500 text-sm mt-1 hidden" id="emailError">O e-mail deve ter o domínio @policiamilitar.sp.gov.br.</div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancelEmailEdit" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Elementos do DOM
+                    const emailModal = document.getElementById('emailModal');
+                    const emailInput = document.getElementById('emailInput');
+                    const emailError = document.getElementById('emailError');
+                    const cancelEmailEdit = document.getElementById('cancelEmailEdit');
+                    const emailEditForm = document.getElementById('emailEditForm');
+                    const displayEmail = document.getElementById('displayEmail');
+
+                    // Função para abrir o modal
+                    function openEmailModal() {
+                        // Preenche o campo com o e-mail atual ou string vazia se for '-'
+                        emailInput.value = displayEmail.textContent.trim() === '-' ? '' : displayEmail.textContent.trim();
+                        emailError.classList.add('hidden');
+                        emailInput.classList.remove('border-red-500');
+                        emailModal.classList.remove('hidden');
+                    }
+
+                    // Função para fechar o modal
+                    function closeEmailModal() {
+                        emailModal.classList.add('hidden');
+                    }
+
+                    // Evento para abrir o modal (você precisa ter um botão com onclick="openEmailModal()")
+                    // Exemplo: <button onclick="openEmailModal()">Editar E-mail</button>
+
+                    // Evento para cancelar edição
+                    cancelEmailEdit.addEventListener('click', closeEmailModal);
+
+                    // Validação do formulário
+                    emailEditForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        // Validação do e-mail
+                        const emailRegex = /^[\w\.-]+@policiamilitar\.sp\.gov\.br$/;
+                        if (!emailRegex.test(emailInput.value)) {
+                            emailError.classList.remove('hidden');
+                            emailInput.classList.add('border-red-500');
+                            return;
+                        }
+
+                        // Envio do formulário via AJAX
+                        const formData = new FormData(this);
+                        
+                        fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Atualiza o e-mail exibido
+                                displayEmail.textContent = data.updated_email;
+                                // Fecha o modal
+                                closeEmailModal();
+                                // Mostra mensagem de sucesso
+                                alert('E-mail atualizado com sucesso!');
+                            } else {
+                                // Mostra mensagem de erro
+                                emailError.textContent = data.message || 'Erro ao atualizar e-mail';
+                                emailError.classList.remove('hidden');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro:', error);
+                            emailError.textContent = 'Erro na comunicação com o servidor';
+                            emailError.classList.remove('hidden');
+                        });
+                    });
+
+                    // Fechar modal ao clicar fora
+                    emailModal.addEventListener('click', function(e) {
+                        if (e.target === emailModal) {
+                            closeEmailModal();
+                        }
+                    });
+                });
+            </script>
         </section>
 
 
@@ -835,7 +987,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-500">Situação</p>
-                        <p class="text-sm font-medium" id="situacao">{{ detalhes.situacao }}</p>
+                        <p class="text-sm font-medium" id="situacao">  {{ cadastro.detalhes_situacao.last.status|default:"-" }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">SGB</p>

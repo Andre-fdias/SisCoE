@@ -25,7 +25,7 @@ urlpatterns = [
     path('editar_averbacao_militar/<int:id>/', views.editar_averbacao_militar, name='editar_averbacao_militar'),
     path('editar_averbacao_inss/<int:id>/', views.editar_averbacao_inss, name='editar_averbacao_inss'),
     path('editar_telefone/<int:id>/', views.editar_telefone, name='editar_telefone'),
-
+    path('editar_email/<int:id>/', views.editar_email, name='editar_email'), # <--- ADICIONE ESTA LINHA
 
     # --- Históricos e Outros Status ---
     path('historico_movimentacoes/<int:id>/', views.historico_movimentacoes, name='historico_movimentacoes'),

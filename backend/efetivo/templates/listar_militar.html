@@ -21,10 +21,13 @@
                         </div>
                         
                         <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            <a href="{% url 'efetivo:cadastrar_militar' %}" 
-                            class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
-                                <i class="fas fa-user-plus mr-2"></i> Cadastrar Novo Militar
-                            </a>
+                            {# Botão "Cadastrar Novo Militar" visível apenas para gestores ou superusuários #}
+                            {% if user.is_superuser or user.permissoes == 'gestor' or user.permissoes == 'admin' %}
+                                <a href="{% url 'efetivo:cadastrar_militar' %}" 
+                                class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                                    <i class="fas fa-user-plus mr-2"></i> Cadastrar Novo Militar
+                                </a>
+                            {% endif %}
                             <a href="{% url 'efetivo:lista_militares' %}" 
                             class="flex items-center justify-center px-6 py-3 border border-green-600 text-base font-medium rounded-md text-white bg-green-700 hover:bg-gray-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
                                 <i class="fas fa-users mr-2"></i> Relação de Efetivo 

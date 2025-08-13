@@ -810,6 +810,9 @@ def user_action_history(request, pk):
 
 
 
+
+
+
 # View para alterar permissões de um usuário específico (apenas para Gestores e Admins)
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -1054,3 +1057,12 @@ def global_user_action_history(request):
     }
     log_user_action(request.user, "Visualizou o histórico global de ações", request)
     return render(request, 'accounts/global_user_action_history.html', context)
+
+
+
+
+from django.shortcuts import render
+from django.http import HttpResponseForbidden
+
+def acesso_negado(request):
+    return render(request, 'accounts/acesso_negado.html', status=403)

@@ -773,69 +773,135 @@
 
 
 
-        <!-- Situação Militar -->
-        <section class="glass-card rounded-lg p-6 shadow-md">
-            <div class="mb-8">
-                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
-                    Situação Militar
-                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
-                </h1>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Situação</p>
-                        <p class="text-sm font-medium" id="situacao">{{ detalhes.situacao }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">SGB</p>
-                        <p class="text-sm font-medium" id="sgb">{{ detalhes.sgb }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-sm mr-1"></i>Posto/Seção</p>
-                        <p class="text-sm font-medium" id="postoSecao">{{ detalhes.posto_secao }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Adido</p>
-                        <p class="text-sm font-medium" id="adido">{{ detalhes.esta_adido }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Função</p>
-                        <p class="text-sm font-medium" id="funcao">{{ detalhes.funcao }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Prontidão</p>
-                        <p class="text-sm font-medium" id="prontidao">{{ detalhes.prontidao_badge|safe }}</p>
-                    </div>
-                </div>
-
-            </div>
-
+  <!-- Situação Militar -->
+<section class="glass-card rounded-lg p-6 shadow-md">
+    <div class="mb-8">
+        <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+            Situação Militar
+            <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+        </h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
-                    Promoção
-                    <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
-                </h1>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Posto/Graduação</p>
-                        <p class="text-sm font-medium" id="postoGraduacao">{{ promocao.grad|safe }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Quadro</p>
-                        <p class="text-sm font-medium" id="quadro">{{ promocao.get_quadro_display }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Grupo</p>
-                        <p class="text-sm font-medium" id="grupo">{{ promocao.get_grupo_display }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Última Promoção</p>
-                        <p class="text-sm font-medium" id="ultimaPromocao">{{ promocao.ultima_promocao|date:'d/m/Y' }}</p>
-                    </div>
-                </div>
+                <p class="text-sm text-gray-500">Situação</p>
+                <p class="text-sm font-medium" id="situacao">
+                    {% if detalhes %}
+                        {{ detalhes.situacao }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
             </div>
-        </section>
+            <div>
+                <p class="text-sm text-gray-500">SGB</p>
+                <p class="text-sm font-medium" id="sgb">
+                    {% if detalhes %}
+                        {{ detalhes.sgb }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt text-sm mr-1"></i>Posto/Seção</p>
+                <p class="text-sm font-medium" id="postoSecao">
+                    {% if detalhes %}
+                        {{ detalhes.posto_secao }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Adido</p>
+                <p class="text-sm font-medium" id="adido">
+                    {% if detalhes %}
+                        {{ detalhes.esta_adido }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Função</p>
+                <p class="text-sm font-medium" id="funcao">
+                    {% if detalhes %}
+                        {{ detalhes.funcao }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Prontidão</p>
+                <p class="text-sm font-medium" id="prontidao">
+                    {% if detalhes %}
+                        {{ detalhes.prontidao_badge|safe }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="info-value mt-8">
+            <p class="text-sm text-gray-500">Status Atual</p>
+            <span class="status-pill {{ categoria_atual.status_display.classe }}">
+                <i class="fas {{ categoria_atual.status_display.icone }} mr-1"></i>
+                {{ categoria_atual.status_display.texto }}
+            </span>
+        </div>
+    </div>
+
+    <div>
+        <h1 class="text-xs uppercase text-gray-500 mb-4 relative">
+            Promoção
+            <span class="absolute bottom-0 right-0 h-px w-11/12 bg-gray-300"></span>
+        </h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-500">Posto/Graduação</p>
+                <p class="text-sm font-medium" id="postoGraduacao">
+                    {% if promocao %}
+                        {{ promocao.grad|safe }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Quadro</p>
+                <p class="text-sm font-medium" id="quadro">
+                    {% if promocao %}
+                        {{ promocao.get_quadro_display }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Grupo</p>
+                <p class="text-sm font-medium" id="grupo">
+                    {% if promocao %}
+                        {{ promocao.get_grupo_display }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Última Promoção</p>
+                <p class="text-sm font-medium" id="ultimaPromocao">
+                    {% if promocao and promocao.ultima_promocao %}
+                        {{ promocao.ultima_promocao|date:'d/m/Y' }}
+                    {% else %}
+                        Não informado
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 
 
         <!-- area de detalhamento -->     

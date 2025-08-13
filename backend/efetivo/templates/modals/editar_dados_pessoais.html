@@ -14,11 +14,41 @@
             </div>
         </div>
 
-        <form method="POST" action="{% url 'efetivo:editar_dados_pessoais_contatos' cadastro.id %}"
+        <form id="editarDadosForm" method="POST" action="{% url 'efetivo:editar_dados_pessoais_contatos' cadastro.id %}"
               enctype="multipart/form-data"
               class="p-6 space-y-6 bg-white">
             {% csrf_token %}
-            
+
+            <!-- Mensagens de erro -->
+            <div id="form-errors" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800" id="error-title">Ocorreram erros ao enviar o formulário</h3>
+                        <div class="mt-2 text-sm text-red-700" id="error-messages">
+                            <!-- Mensagens de erro serão inseridas aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensagem de sucesso -->
+            <div id="form-success" class="hidden bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">Sucesso!</h3>
+                        <div class="mt-2 text-sm text-green-700" id="success-message">
+                            <!-- Mensagem de sucesso será inserida aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Nome Completo (100% width) -->
             <div class="col-span-full">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -28,6 +58,7 @@
                 <input type="text" name="nome"
                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                        value="{{ cadastro.nome }}" required>
+                <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="nome"></div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -40,6 +71,7 @@
                     <input type="text" name="nome_de_guerra"
                         class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                         value="{{ cadastro.nome_de_guerra }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="nome_de_guerra"></div>
                 </div>
 
                 <!-- RE -->
@@ -51,6 +83,7 @@
                     <input type="text" name="re"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.re }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="re"></div>
                 </div>
 
                 <!-- Dig -->
@@ -62,6 +95,7 @@
                     <input type="text" name="dig"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.dig }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="dig"></div>
                 </div>
 
                 <!-- Gênero -->
@@ -71,10 +105,15 @@
                         Gênero
                     </label>
                     <select name="genero" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white" required>
+                        {% comment %} Exemplo de opções, ajuste conforme seu Django context {% endcomment %}
+                        <option value="M" {% if cadastro.genero == 'M' %}selected{% endif %}>Masculino</option>
+                        <option value="F" {% if cadastro.genero == 'F' %}selected{% endif %}>Feminino</option>
+                        {% comment %} Remova o loop abaixo se as opções forem fixas ou não vierem do contexto Django de forma específica aqui {% endcomment %}
                         {% for value, label in cadastro.genero_choices %}
                             <option value="{{ value }}" {% if cadastro.genero == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="genero"></div>
                 </div>
                 <!-- Data de Nascimento -->
                 <div>
@@ -85,6 +124,7 @@
                     <input type="date" name="nasc"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.nasc|date:'Y-m-d' }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="nasc"></div>
                 </div>
 
                 <!-- Data de Matrícula -->
@@ -96,6 +136,7 @@
                     <input type="date" name="matricula"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.matricula|date:'Y-m-d' }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="matricula"></div>
                 </div>
 
                 <!-- Data de Admissão -->
@@ -107,6 +148,7 @@
                     <input type="date" name="admissao"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.admissao|date:'Y-m-d' }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="admissao"></div>
                 </div>
 
                 <!-- Previsão de Inatividade -->
@@ -118,6 +160,7 @@
                     <input type="date" name="previsao_de_inatividade"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.previsao_de_inatividade|date:'Y-m-d' }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="previsao_de_inatividade"></div>
                 </div>
 
                 <!-- CPF -->
@@ -126,9 +169,13 @@
                         <i class="fas fa-id-card mr-2 text-indigo-600"></i>
                         CPF
                     </label>
-                    <input type="text" name="cpf"
+                    <input type="text" name="cpf" id="cpf"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                           value="{{ cadastro.cpf }}" required>
+                           value="{{ cadastro.cpf }}"
+                           data-mask="000.000.000-00"
+                           placeholder="000.000.000-00"
+                           required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="cpf"></div>
                 </div>
 
                 <!-- RG -->
@@ -140,28 +187,38 @@
                     <input type="text" name="rg"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.rg }}" required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="rg"></div>
                 </div>
 
-                    <!-- Telefone -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-phone mr-2 text-indigo-600"></i>
-                            Telefone
-                        </label>
-                        <input type="tel" name="telefone"
-                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                            value="{{ cadastro.telefone }}" required>
-                    </div>
-                     <!-- E-mail (2 colunas) -->
-                     <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-envelope mr-2 text-indigo-600"></i>
-                            E-mail
-                        </label>
-                        <input type="email" name="email"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.email }}" required>
-                    </div>
+                <!-- Telefone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2 text-indigo-600"></i>
+                        Telefone
+                    </label>
+                    <input type="tel" name="telefone" id="telefone"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                        value="{{ cadastro.telefone }}"
+                        placeholder="(00) 00000-0000"
+                        data-mask="(00) 00000-0000"
+                        required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="telefone"></div>
+                </div>
+                
+                <!-- E-mail (2 colunas) -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-2 text-indigo-600"></i>
+                        E-mail
+                    </label>
+                    <input type="email" name="email" id="email"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.email }}"
+                           pattern="^[\w\.-]+@policiamilitar\.sp\.gov\.br$"
+                           title="O e-mail deve ter o domínio @policiamilitar.sp.gov.br"
+                           required>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="email"></div>
+                </div>
 
                 <!-- Tempo para Averbar Militar -->
                 <div>
@@ -172,24 +229,22 @@
                     <input type="text" name="tempo_para_averbar_militar"
                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
                            value="{{ cadastro.tempo_para_averbar_militar }}">
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="tempo_para_averbar_militar"></div>
                 </div>
-                       <!-- Tempo para Averbar INSS -->
-                       <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-university mr-2 text-indigo-600"></i>
-                            Averbação INSS
-                        </label>
-                        <input type="text" name="tempo_para_averbar_inss"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
-                               value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}"
-                               placeholder="0">
-                    </div>
+                
+                <!-- Tempo para Averbar INSS -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-university mr-2 text-indigo-600"></i>
+                        Averbação INSS
+                    </label>
+                    <input type="text" name="tempo_para_averbar_inss"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+                           value="{{ cadastro.tempo_para_averbar_inss|default:'0' }}"
+                           placeholder="0">
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="tempo_para_averbar_inss"></div>
+                </div>
 
-         
-
-            
-
-                <!-- Motivo da Alteração -->
                 <!-- Motivo da Alteração -->
                 <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -197,10 +252,15 @@
                         Motivo da Alteração
                     </label>
                     <select name="alteracao" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white" required>
+                        {% comment %} Exemplo de opções, ajuste conforme seu Django context {% endcomment %}
+                        <option value="Atualizacao" {% if cadastro.alteracao == 'Atualizacao' %}selected{% endif %}>Atualização</option>
+                        <option value="Correcao" {% if cadastro.alteracao == 'Correcao' %}selected{% endif %}>Correção</option>
+                        {% comment %} Remova o loop abaixo se as opções forem fixas ou não vierem do contexto Django de forma específica aqui {% endcomment %}
                         {% for value, label in cadastro.alteracao_choices %}
                             <option value="{{ value }}" {% if cadastro.alteracao == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
+                    <div class="text-red-500 text-xs mt-1 error-message hidden" data-field="alteracao"></div>
                 </div>
             </div>
 
@@ -221,20 +281,25 @@
     </div>
 </div>
 
-<!-- Mantido o mesmo script -->
+<!-- Inclui jQuery e jQuery Mask para as máscaras de input -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const editarDadosPessoaisModal = document.getElementById('editarDadosPessoaisModal');
+        const form = document.getElementById('editarDadosForm'); // Usar ID para o formulário para garantir que estamos pegando o correto
 
+        // Função para abrir o modal
         const openModal = (modalId) => {
-            // Adicione o '#' para usar como seletor CSS
-            const modal = document.querySelector(`#${modalId}`); // <--- CORREÇÃO AQUI
+            const modal = document.querySelector(`#${modalId}`);
             if (modal) {
                 modal.classList.remove('hidden');
             }
         };
 
+        // Função para fechar o modal
         const closeModal = (modalSelector) => {
             const modal = document.querySelector(modalSelector);
             if (modal) {
@@ -242,9 +307,79 @@
             }
         };
 
-        document.querySelectorAll('[data-modal-open]').forEach(button => { // <--- Pequena otimização aqui, para pegar qualquer um
+        // Função para limpar erros
+        const clearErrors = () => {
+            // Esconde a mensagem de erro geral
+            document.getElementById('form-errors').classList.add('hidden');
+            document.getElementById('form-success').classList.add('hidden');
+            
+            // Limpa todas as mensagens de erro individuais
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.add('hidden');
+                el.textContent = '';
+            });
+            
+            // Remove a classe de erro dos inputs
+            document.querySelectorAll('input, select').forEach(input => {
+                input.classList.remove('border-red-500');
+                input.classList.add('border-gray-300');
+            });
+        };
+
+        // Função para mostrar erros no formulário
+        const showErrors = (errors) => {
+            clearErrors();
+            
+            // Mostra a mensagem de erro geral
+            const errorContainer = document.getElementById('form-errors');
+            const errorMessages = document.getElementById('error-messages');
+            
+            errorContainer.classList.remove('hidden');
+            errorMessages.innerHTML = '';
+            
+            // Adiciona cada mensagem de erro ao container
+            Object.entries(errors).forEach(([field, messages]) => {
+                // Adiciona ao resumo de erros
+                messages.forEach(message => {
+                    const errorItem = document.createElement('p');
+                    errorItem.textContent = `- ${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`; // Capitaliza o nome do campo
+                    errorMessages.appendChild(errorItem);
+                });
+                
+                // Mostra erro no campo específico
+                const fieldInput = document.querySelector(`[name="${field}"]`);
+                const errorElement = document.querySelector(`.error-message[data-field="${field}"]`);
+                
+                if (fieldInput && errorElement) {
+                    fieldInput.classList.remove('border-gray-300');
+                    fieldInput.classList.add('border-red-500');
+                    errorElement.textContent = messages.join(', ');
+                    errorElement.classList.remove('hidden');
+                }
+            });
+            
+            // Rolagem para o topo do formulário para mostrar os erros
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        
+        // Função para mostrar sucesso
+        const showSuccess = (message) => {
+            clearErrors();
+            
+            const successContainer = document.getElementById('form-success');
+            const successMessage = document.getElementById('success-message');
+            
+            successContainer.classList.remove('hidden');
+            successMessage.textContent = message || 'Dados salvos com sucesso!';
+            
+            // Rolagem para o topo do formulário para mostrar a mensagem de sucesso
+            successContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // Event listeners para abrir/fechar modal
+        document.querySelectorAll('[data-modal-open]').forEach(button => {
             button.addEventListener('click', () => {
-                const modalId = button.dataset.modalOpen; // Obter o valor do atributo data-modal-open
+                const modalId = button.dataset.modalOpen;
                 openModal(modalId);
             });
         });
@@ -254,104 +389,156 @@
                 closeModal('#editarDadosPessoaisModal');
             });
         });
-    });
-    document.querySelector('form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitButton = form.querySelector('button[type="submit"]');
-        const modal = document.getElementById('editarDadosPessoaisModal');
-        
-        try {
-            // Mostrar estado de carregamento
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
-            
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            });
-            
-            // Verificar se a resposta é JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Resposta do servidor não é JSON');
+
+        // Validação de CPF
+        function validateCpf(cpf) {
+            cpf = cpf.replace(/[^\d]+/g, '');
+            if (cpf === '') return false;
+            // Elimina CPFs com todos os dígitos iguais
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+
+            let sum = 0;
+            let remainder;
+
+            // Valida 1º dígito verificador
+            for (let i = 1; i <= 9; i++) {
+                sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
             }
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro no servidor');
+            remainder = (sum * 10) % 11;
+            if ((remainder === 10) || (remainder === 11)) {
+                remainder = 0;
             }
-            
-            if (data.success) {
-                showToast('success', data.message || 'Dados salvos com sucesso!');
-                
-                // Fechar o modal suavemente
-                modal.classList.add('opacity-0');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('opacity-0');
-                }, 300);
-                
-                // Atualizar a página após 1 segundo para ver as mudanças
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-                
-            } else {
-                throw new Error(data.message || 'Erro ao salvar os dados');
+            if (remainder !== parseInt(cpf.substring(9, 10))) {
+                return false;
             }
-        } catch (error) {
-            showToast('error', error.message || 'Erro na comunicação com o servidor');
-            console.error('Erro:', error);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+
+            sum = 0;
+            // Valida 2º dígito verificador
+            for (let i = 1; i <= 10; i++) {
+                sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            }
+            remainder = (sum * 10) % 11;
+            if ((remainder === 10) || (remainder === 11)) {
+                remainder = 0;
+            }
+            if (remainder !== parseInt(cpf.substring(10, 11))) {
+                return false;
+            }
+
+            return true;
         }
+
+        // Manipulador de envio do formulário
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const submitButton = form.querySelector('button[type="submit"]');
+            let hasError = false;
+            const clientErrors = {}; // Objeto para coletar erros do lado do cliente
+
+            // Limpa erros anteriores
+            clearErrors();
+
+            // Validação do campo CPF
+            const cpfInput = form.querySelector('input[name="cpf"]');
+            if (cpfInput && !validateCpf(cpfInput.value)) {
+                clientErrors.cpf = ['CPF inválido.'];
+                hasError = true;
+            }
+
+            // Validação do campo Telefone
+            const telefoneInput = form.querySelector('input[name="telefone"]');
+            if (telefoneInput) {
+                const cleanTelefone = telefoneInput.value.replace(/[()\s-]/g, '');
+                if (cleanTelefone.length < 10) { // Considerando (XX) XXXXX-XXXX tem 11 dígitos, (XX) XXXX-XXXX tem 10
+                    clientErrors.telefone = ['Telefone deve ter no mínimo 10 dígitos.'];
+                    hasError = true;
+                }
+            }
+            
+            // Validação do campo E-mail (domínio específico)
+            const emailInput = form.querySelector('input[name="email"]');
+            if (emailInput) {
+                const emailValue = emailInput.value;
+                const emailRegex = new RegExp('^[\\w\\.-]+@policiamilitar\\.sp\\.gov\\.br$');
+                if (!emailRegex.test(emailValue)) {
+                    clientErrors.email = ['O e-mail deve ter o domínio @policiamilitar.sp.gov.br.'];
+                    hasError = true;
+                }
+            }
+
+            // Exibe erros do lado do cliente se houver
+            if (hasError) {
+                showErrors(clientErrors);
+                return; // Impede o envio do formulário
+            }
+
+            try {
+                // Mostrar estado de carregamento
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+                
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    // Se a resposta não for OK (status 4xx ou 5xx),
+                    // o erro deve ser tratado como um erro do servidor ou validação de backend
+                    throw new Error(data.message || 'Erro no servidor');
+                }
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    
+                    // Atualizar os campos do formulário com os novos valores (se necessário)
+                    if (data.updated_data) {
+                        Object.entries(data.updated_data).forEach(([field, value]) => {
+                            const input = form.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.value = value;
+                            }
+                        });
+                    }
+                    
+                    // Fechar o modal após 3 segundos se desejado
+                    // setTimeout(() => closeModal('#editarDadosPessoaisModal'), 3000);
+                } else {
+                    if (data.errors) {
+                        showErrors(data.errors); // Mostra erros de validação do Django
+                    } else {
+                        throw new Error(data.message || 'Erro ao salvar os dados');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showErrors({ 
+                    'geral': [error.message || 'Erro na comunicação com o servidor'] 
+                });
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+            }
+        });
+
+        // Aplica as máscaras quando o DOM estiver carregado usando jQuery Mask
+        // Certifique-se de que o jQuery e jQuery Mask estejam carregados antes deste script
+        $('#cpf').mask('000.000.000-00', { reverse: true });
+        $('#telefone').mask('(00) 00000-0000');
+
+
+        // Inicializar event listeners para abrir o modal, se houver botões fora do modal
+        // que o abrem.
+        // Exemplo: document.getElementById('openEditModalButton').addEventListener('click', () => {
+        //     openModal('editarDadosPessoaisModal');
+        // });
     });
-    
-    // Função para mostrar notificação
-    function showToast(type, message) {
-        const toast = document.createElement('div');
-        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-md shadow-lg text-white ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } animate-fade-in`;
-        toast.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i>
-                ${message}
-            </div>
-        `;
-        document.body.appendChild(toast);
-        
-        // Remover após 5 segundos
-        setTimeout(() => {
-            toast.classList.add('animate-fade-out');
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }
-    
-    // Adicione estas animações no seu CSS
-    // <style>
-    // .animate-fade-in {
-    //     animation: fadeIn 0.3s ease-in-out;
-    // }
-    // .animate-fade-out {
-    //     animation: fadeOut 0.3s ease-in-out;
-    // }
-    // @keyframes fadeIn {
-    //     from { opacity: 0; transform: translateY(20px); }
-    //     to { opacity: 1; transform: translateY(0); }
-    // }
-    // @keyframes fadeOut {
-    //     from { opacity: 1; transform: translateY(0); }
-    //     to { opacity: 0; transform: translateY(20px); }
-    // }
-    // </style>
 </script>
