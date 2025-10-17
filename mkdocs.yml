@@ -1,0 +1,70 @@
+site_name: SisCoE Documentation
+site_url: https://seusite.com
+repo_url: https://github.com/seuuser/siscoe
+repo_name: GitHub Repo
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+    - content.tabs
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Modo Escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Modo Claro
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          selection:
+            filters:
+              - "!^_[^_]"
+          rendering:
+            show_root_heading: true
+            show_source: false
+
+nav:
+  - Introdução:
+    - Visão Geral: 'index.md'
+    - Primeiros Passos: 'getting-started.md'
+  
+  - Core Module:
+    - Models: 'core/models.md'
+    - Admin: 'core/admin.md'
+    - Views: 'core/views.md'
+    - URLs: 'core/urls.md'
+    - Signals: 'core/signals.md'
+    - Templates: 'core/templates.md'
+  
+  - Guias:
+    - Como Contribuir: 'guides/contributing.md'
+    - Padrões de Código: 'guides/code-style.md'
+    - Deployment: 'guides/deployment.md'
+  
+  - Referência:
+    - API Documentation: 'reference/api.md'
+    - Configurações: 'reference/settings.md'
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - toc:
+      permalink: true
