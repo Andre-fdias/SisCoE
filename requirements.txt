@@ -20,7 +20,7 @@ openpyxl==3.1.5
 orjson==3.10.16
 reportlab==4.4.0
 pillow==11.2.1
-redis-6.4.0
+redis
 
 # ==============================================
 # AUTENTICAÇÃO E SEGURANÇA
@@ -74,7 +74,7 @@ sqlparse==0.5.3
 tqdm==4.67.1
 typing_extensions==4.13.2
 django-import-export==3.3.8
-brevo-python-1.2.0
+brevo-python==1.2.0
 
 # ==============================================
 # COMPRESSÃO E OTIMIZAÇÃO
@@ -110,3 +110,4 @@ threadpoolctl==3.6.0
 toposort==1.10
 
 geopy==2.4.1
+dj-database-url
