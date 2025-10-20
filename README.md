@@ -1,146 +1,202 @@
-# SisCoE - Sistema de Controle de Efetivo
+# 🧭 SisCoE — Sistema de Controle de Efetivo
 
-## Descrição do Projeto
-
-O SisCoE é um sistema de gestão completo, desenvolvido para [adicionar aqui o propósito principal, ex: otimizar a administração de uma instituição, gerenciar recursos de bombeiros, etc.]. Ele oferece uma plataforma robusta para o controle de diversas áreas, incluindo gestão de pessoal, relacionamento com o cliente (CRM), agendamento, cursos e documentação.
-
-**Tecnologias Utilizadas:**
-
-*   **Backend:** Python, Django
-*   **Frontend:** JavaScript, Tailwind CSS, FullCalendar.js, Flowbite
-*   **Banco de Dados:** PostgreSQL (para produção) e SQLite3 (para desenvolvimento)
-*   **Outras Ferramentas:** Node.js, npm, Brevo (para e-mails), Gunicorn, Whitenoise
-
-**Público-Alvo:**
-
-Este projeto é destinado a [adicionar público-alvo, ex: administradores de sistemas, gestores de RH, etc.] que necessitam de uma ferramenta centralizada para gerenciar as operações do dia a dia.
+> **SisCoE** é uma plataforma completa de gestão operacional e administrativa, projetada para otimizar o controle de efetivo, escalas, documentos, treinamentos e muito mais — centralizando todas as operações em um único sistema integrado.
 
 ---
 
-## Instalação
-
-Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
-
-**Pré-requisitos:**
-
-*   Python 3.10+ (com `pip` e `venv`)
-*   Node.js e npm
-*   Git
-
-**Passo a Passo:**
-
-1.  **Clone o Repositório:**
-
-    ```bash
-    git clone [URL do seu repositório]
-    cd SisCoE
-    ```
-
-2.  **Crie e Ative um Ambiente Virtual (venv):**
-
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # No Windows: venv\Scripts\activate
-    ```
-
-3.  **Instale as Dependências do Python:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Instale as Dependências do Node.js:**
-
-    ```bash
-    npm install
-    ```
-
-5.  **Configure as Variáveis de Ambiente:**
-
-    Copie o arquivo de exemplo `.envexample` e renomeie-o para `.env`. Em seguida, preencha as variáveis com suas credenciais.
-
-    ```bash
-    cp .envexample .env
-    ```
-
-    Abra o arquivo `.env` e preencha as chaves de API e outras configurações necessárias.
-
-6.  **Aplique as Migrações do Banco de Dados:**
-
-    Como o ambiente de desenvolvimento usa SQLite, este comando criará o arquivo `db.sqlite3` e o schema do banco.
-
-    ```bash
-    python manage.py migrate
-    ```
+## 📘 Sumário
+- [Descrição Geral](#descrição-geral)
+- [Arquitetura e Tecnologias](#arquitetura-e-tecnologias)
+- [Instalação e Configuração](#instalação-e-configuração)
+- [Uso e Execução](#uso-e-execução)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Funcionalidades Principais](#funcionalidades-principais)
+- [Testes e Qualidade de Código](#testes-e-qualidade-de-código)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
+- [Contato](#contato)
 
 ---
 
-## Uso
+## 🧩 Descrição Geral
 
-Para iniciar o servidor de desenvolvimento local, execute o seguinte comando:
+O **SisCoE** foi desenvolvido para [coloque aqui o propósito exato, ex: “gerenciar de forma eficiente o efetivo de corporações militares, otimizando escalas, cursos e atividades administrativas”].
+
+O sistema integra diversos módulos especializados:
+- Gestão de pessoal (efetivo)
+- Planejamento e escalas
+- CRM (relacionamento com colaboradores e parceiros)
+- Cursos e certificações
+- Documentos e relatórios
+
+---
+
+## ⚙️ Arquitetura e Tecnologias
+
+| Camada | Tecnologias |
+|--------|--------------|
+| **Backend** | Django, Python 3.10+ |
+| **Frontend** | JavaScript, Tailwind CSS, Flowbite, FullCalendar.js |
+| **Banco de Dados** | PostgreSQL (produção), SQLite3 (desenvolvimento) |
+| **Infra e Deploy** | Gunicorn, Whitenoise, Nginx, Docker (opcional) |
+| **Integrações** | Brevo (SMTP e notificações por e-mail) |
+| **Documentação** | MkDocs + Material for MkDocs |
+
+---
+
+## 🧰 Instalação e Configuração
+
+### Pré-requisitos
+- Python 3.10+
+- Node.js e npm
+- Git
+- PostgreSQL (para produção)
+
+### Passo a passo
+
+```bash
+# 1. Clonar o repositório
+git clone git@github.com:Andre-fdias/SisCoE.git
+cd SisCoE
+
+# 2. Criar e ativar ambiente virtual
+python -m venv venv
+source venv/bin/activate   # No Windows: venv\Scripts\activate
+
+# 3. Instalar dependências Python
+pip install -r requirements.txt
+
+# 4. Instalar dependências do frontend
+npm install
+
+# 5. Configurar variáveis de ambiente
+cp .envexample .env
+# Edite o arquivo .env conforme seu ambiente
+
+# 6. Criar o banco e aplicar migrações
+python manage.py makemigrations
+python manage.py migrate
+
+# 7. Criar usuário administrador
+python manage.py createsuperuser
+```
+
+## 🖥️ Uso e Execução
+
+Execute o servidor de desenvolvimento:
 
 ```bash
 python manage.py runserver
 ```
 
-O sistema estará acessível em `http://127.0.0.1:8000`.
+Acesse em: 👉 http://127.0.0.1:8000
 
----
+- **Painel administrativo:** `/admin`
+- **Interface principal:** `/`
 
-## Funcionalidades
+## 🗂️ Estrutura do Projeto
 
-*   **Gestão de Contas:** Controle de usuários, permissões e autenticação.
-*   **CRM:** Módulo para gerenciamento de relacionamento com clientes.
-*   **Controle de Efetivo:** Ferramentas para administrar o pessoal.
-*   **Agenda:** Sistema de calendário para agendamento de eventos e tarefas.
-*   **Cursos:** Gerenciamento de cursos e matrículas.
-*   **Documentos:** Repositório para upload e gestão de documentos.
-*   **Relatórios:** Geração de relatórios (módulo RPT).
-*   **Calculadora:** Ferramenta de cálculo integrada.
-*   E muito mais.
+```
+backend/
+├── core/             # Base e utilitários globais
+├── accounts/         # Autenticação e gestão de usuários
+├── crm/              # Relacionamento e dados operacionais
+├── efetivo/          # Controle de pessoal e escalas
+├── adicional/        # Benefícios e adicionais
+├── lp/               # Logística / planejamento
+├── rpt/              # Relatórios e exportação
+├── bm/               # Batalhões / macroáreas
+├── municipios/       # Dados geográficos e administrativos
+├── documentos/       # Armazenamento e controle documental
+├── agenda/           # Agenda e compromissos
+├── calculadora/      # Cálculos de produtividade e finanças
+├── cursos/           # Cursos e certificações
+├── settings/
+│   ├── base.py
+│   ├── dev.py
+│   └── prod.py
+├── manage.py
+└── urls.py
+```
 
----
+## 🔍 Funcionalidades Principais
 
-## Testes
+| Módulo | Descrição |
+|---|---|
+| **Accounts** | Controle de usuários, autenticação e permissões |
+| **Efetivo** | Escalas, lotações e controle de pessoal |
+| **CRM** | Relacionamento e registro de interações |
+| **Agenda** | Agendamento e calendário de eventos |
+| **Cursos** | Gestão de cursos, certificados e progressão |
+| **Documentos** | Upload e controle documental com versionamento |
+| **RPT** | Relatórios administrativos e estatísticos |
+| **Calculadora** | Ferramenta integrada de cálculo |
 
-Para executar a suíte de testes automatizados do projeto, utilize o comando:
+## 🧪 Testes e Qualidade de Código
+
+Execute todos os testes automatizados:
 
 ```bash
 python manage.py test
 ```
 
----
+Verifique lint e estilo de código (se estiver configurado):
 
-## Contribuição
+```bash
+# Exemplo com flake8 e black
+flake8
+black --check .
+```
 
-Contribuições são bem-vindas! Se você deseja ajudar no desenvolvimento do SisCoE, siga estes passos:
+## 🤝 Contribuição
 
-1.  **Faça um Fork** do projeto.
-2.  **Crie uma Branch** para sua nova funcionalidade (`git checkout -b feature/nova-feature`).
-3.  **Faça o Commit** de suas alterações (`git commit -m 'Adiciona nova feature'`).
-4.  **Faça o Push** para a sua branch (`git push origin feature/nova-feature`).
-5.  **Abra um Pull Request**.
+Contribuições são muito bem-vindas!
+Siga o fluxo padrão de Git Flow:
 
-Por favor, mantenha um estilo de código consistente e adicione testes para novas funcionalidades.
+```bash
+# Criar nova branch de feature
+git checkout -b feature/nome-da-feature
 
----
+# Commit semântico
+git commit -m "feat(efetivo): adiciona cálculo de adicionais"
 
-## Licença
+# Push e criação de PR
+git push origin feature/nome-da-feature
+```
 
-Este projeto está licenciado sob a licença [Nome da Licença]. Veja o arquivo `LICENSE` para mais detalhes. (Adicionar arquivo LICENSE se necessário).
+Antes de abrir o PR:
 
----
+- ✅ Execute todos os testes
+- 📝 Documente o que foi alterado
+- 📚 Atualize a documentação (`docs/`)
 
-## Contato
+## 📘 Documentação Técnica (MkDocs)
 
-**André Fonseca Dias**
+A documentação detalhada por app está em `docs/`, e pode ser visualizada localmente com:
 
-*   **E-mail:** andrefonsecadias21@gmail.com
-*   **GitHub:** [Andre-fdias](https://github.com/Andre-fdias)
+```bash
+mkdocs serve
+```
 
----
+Acesse: 👉 http://127.0.0.1:8001
 
-## Extras
+Cada módulo (accounts, crm, efetivo, etc.) possui uma seção explicando suas models, views, signals, e endpoints.
 
-*   **Documentação Adicional:** [Link para a documentação, se houver]
-*   **Deploy:** [Link para o ambiente de produção, se houver]
+## 🪪 Licença
+
+Distribuído sob a licença MIT.
+Consulte o arquivo `LICENSE` para mais detalhes.
+
+## 📞 Contato
+
+👤 **André Fonseca Dias**
+
+📧 andrefonsecadias21@gmail.com
+
+🔗 **GitHub:** [Andre-fdias](https://github.com/Andre-fdias)
+
+## 🧱 Extras
+
+- 📚 **Documentação:** `docs/`
+- 🚀 **Deploy:** (adicione link de produção se houver)
+- 🔄 **CI/CD:** Configurável via GitHub Actions (`.github/workflows/deploy.yml`)
