@@ -1,0 +1,88 @@
+site_name: SisCoE - Documentação Técnica
+site_author: André Fonseca Dias
+site_description: >
+  Documentação técnica completa do Sistema de Controle de Efetivo (SisCoE),
+  detalhando arquitetura, desenvolvimento, configuração e todos os módulos da aplicação.
+
+# Repositório
+repo_url: https://github.com/Andre-fdias/SisCoE
+repo_name: Andre-fdias/SisCoE
+
+# Configuração do Tema (Material for MkDocs)
+theme:
+  name: material
+  language: pt
+  logo: assets/logo.png # Adicione um logo se desejar
+  palette:
+    # Modo claro e escuro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Mudar para modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Mudar para modo claro
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+
+# Navegação
+nav:
+  - 'Início': 'index.md'
+  - 'Desenvolvimento':
+    - 'Arquitetura': 'desenvolvimento/arquitetura.md'
+    - 'Estrutura de Pastas': 'desenvolvimento/estrutura_pastas.md'
+    - 'Versionamento e Git': 'desenvolvimento/versionamento.md'
+    - 'Executando o Projeto': 'desenvolvimento/executando_o_projeto.md'
+  - 'Aplicações (Apps)':
+    - 'Core': 'apps/core.md'
+    - 'Accounts': 'apps/accounts.md'
+    - 'CRM': 'apps/crm.md'
+    - 'Efetivo': 'apps/efetivo.md'
+    - 'Adicional': 'apps/adicional.md'
+    - 'Logística (LP)': 'apps/lp.md'
+    - 'Relatórios (RPT)': 'apps/rpt.md'
+    - 'Batalhões (BM)': 'apps/bm.md'
+    - 'Municípios': 'apps/municipios.md'
+    - 'Documentos': 'apps/documentos.md'
+    - 'Agenda': 'apps/agenda.md'
+    - 'Calculadora': 'apps/calculadora.md'
+    - 'Cursos': 'apps/cursos.md'
+  - 'Configuração':
+    - 'Settings Base': 'configuracao/settings_base.md'
+    - 'Settings Dev': 'configuracao/settings_dev.md'
+    - 'Settings Prod': 'configuracao/settings_prod.md'
+
+# Extensões do Markdown
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+# Plugins
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true

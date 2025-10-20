@@ -97,26 +97,33 @@ Acesse em: 👉 http://127.0.0.1:8000
 ## 🗂️ Estrutura do Projeto
 
 ```
-backend/
-├── core/             # Base e utilitários globais
-├── accounts/         # Autenticação e gestão de usuários
-├── crm/              # Relacionamento e dados operacionais
-├── efetivo/          # Controle de pessoal e escalas
-├── adicional/        # Benefícios e adicionais
-├── lp/               # Logística / planejamento
-├── rpt/              # Relatórios e exportação
-├── bm/               # Batalhões / macroáreas
-├── municipios/       # Dados geográficos e administrativos
-├── documentos/       # Armazenamento e controle documental
-├── agenda/           # Agenda e compromissos
-├── calculadora/      # Cálculos de produtividade e finanças
-├── cursos/           # Cursos e certificações
-├── settings/
-│   ├── base.py
-│   ├── dev.py
-│   └── prod.py
-├── manage.py
-└── urls.py
+.
+├── backend/            # Contém toda a lógica principal da aplicação Django
+│   ├── accounts/       # Gestão de usuários, autenticação e perfis
+│   ├── adicional/      # Lógica para adicionais e benefícios
+│   ├── agenda/         # Módulo de agenda e calendário
+│   ├── bm/             # Funcionalidades relacionadas a Bombeiros Municipais
+│   ├── calculadora/    # Ferramenta de cálculo de tempo de serviço(em desenvolvimento)
+│   ├── core/           # Funcionalidades centrais e compartilhadas
+│   ├── crm/            # Módulo de Customer Relationship Management
+│   ├── cursos/         # Gestão de cursos e Medalhas
+│   ├── documentos/     # Upload e gerenciamento de documentos, sistema de galeria para educação a distancia
+│   ├── efetivo/        # Controle de pessoal e efetivo
+│   ├── lp/             # Módulo de Licença Prêmio
+│   ├── municipios/     # Gestão de municípios e dados geográficos
+│   ├── rpt/            # Geração de Relação de Transferência
+│   ├── settings/       # Arquivos de configuração do Django (dev, prod)
+│   ├── static/         # Arquivos estáticos globais do backend
+│   └── templates/      # Templates HTML globais do backend
+├── docs/               # Arquivos da documentação do projeto (MkDocs)
+├── node_modules/       # Dependências do frontend (gerenciado pelo npm)
+├── static/             # Arquivos estáticos coletados para produção
+├── venv/               # Ambiente virtual do Python
+├── .env.example        # Arquivo de exemplo para variáveis de ambiente
+├── requirements.txt    # Dependências do Python (pip)
+├── package.json        # Dependências do frontend (npm)
+├── manage.py           # Utilitário de linha de comando do Django
+└── README.md           # Este arquivo
 ```
 
 ## 🔍 Funcionalidades Principais
