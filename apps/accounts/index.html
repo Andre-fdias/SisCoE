@@ -14,6 +14,10 @@
       
       
       
+        <link rel="prev" href="../core/">
+      
+      
+        <link rel="next" href="../crm/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -21,7 +25,7 @@
     
     
       
-        <title>Modelos do Aplicativo Core - SisCoE - Documentação Técnica</title>
+        <title>Accounts - SisCoE - Documentação Técnica</title>
       
     
     
@@ -75,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#modelos-do-aplicativo-core" class="md-skip">
+        <a href="#app-accounts" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -108,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Modelos do Aplicativo Core
+              Accounts
             
           </span>
         </div>
@@ -250,11 +254,13 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../apps/core/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../core/" class="md-tabs__link">
           
   
   Aplicações (Apps)
@@ -486,27 +492,30 @@
       
   
   
+    
   
   
+  
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -517,7 +526,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Aplicações (Apps)
@@ -531,7 +540,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/core/" class="md-nav__link">
+      <a href="../core/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -549,10 +558,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../apps/accounts/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Accounts
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -561,6 +590,119 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modelo-de-dados" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modelo de Dados
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modelo de Dados">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-modelo-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      O Modelo User
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelos-de-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modelos de Auditoria
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fluxo-de-criacao-de-conta" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fluxo de Criação de Conta
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#autenticacao-e-seguranca" class="md-nav__link">
+    <span class="md-ellipsis">
+      Autenticação e Segurança
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Autenticação e Segurança">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#login" class="md-nav__link">
+    <span class="md-ellipsis">
+      Login
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recuperacao-de-senha" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recuperação de Senha
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troca-de-senha-forcada" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troca de Senha Forçada
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gestao-e-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Gestão e Auditoria
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -573,7 +715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/crm/" class="md-nav__link">
+      <a href="../crm/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -594,7 +736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/efetivo/" class="md-nav__link">
+      <a href="../efetivo/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -615,7 +757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/adicional/" class="md-nav__link">
+      <a href="../adicional/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -636,7 +778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/lp/" class="md-nav__link">
+      <a href="../lp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -657,7 +799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/rpt/" class="md-nav__link">
+      <a href="../rpt/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -678,7 +820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/bm/" class="md-nav__link">
+      <a href="../bm/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -699,7 +841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/municipios/" class="md-nav__link">
+      <a href="../municipios/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -720,7 +862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/documentos/" class="md-nav__link">
+      <a href="../documentos/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -741,7 +883,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/agenda/" class="md-nav__link">
+      <a href="../agenda/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -762,7 +904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/calculadora/" class="md-nav__link">
+      <a href="../calculadora/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -783,7 +925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../apps/cursos/" class="md-nav__link">
+      <a href="../cursos/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -934,23 +1076,91 @@
   
 
 
-<h1 id="modelos-do-aplicativo-core">Modelos do Aplicativo Core<a class="headerlink" href="#modelos-do-aplicativo-core" title="Permanent link">&para;</a></h1>
-<h2 id="profile"><code>Profile</code><a class="headerlink" href="#profile" title="Permanent link">&para;</a></h2>
-<p>O modelo <code>Profile</code> estende o modelo <code>User</code> do Django, adicionando informações adicionais como posto/graduação, CPF, tipo (administrativo/operacional) e imagem de perfil.</p>
-<p>```python
-from backend.accounts.models import User
-from django.db import models
-from backend.efetivo.models import Cadastro</p>
-<p>class Profile(models.Model):
-    # ... campos do modelo ...</p>
-<div class="highlight"><pre><span></span><code>def __str__(self):
-    return self.full_name
-
-@property
-def grad(self):
-    # ... lógica para exibir posto/graduação com formatação HTML ...
-    pass
+<h1 id="app-accounts">App: Accounts<a class="headerlink" href="#app-accounts" title="Permanent link">&para;</a></h1>
+<p>O app <code>accounts</code> é responsável por todo o ciclo de vida do usuário no SisCoE, desde o seu registro e autenticação até a gestão de permissões e auditoria de suas ações. Ele substitui o sistema de usuário padrão do Django por um modelo mais robusto e adaptado às necessidades do projeto.</p>
+<hr />
+<h2 id="modelo-de-dados">Modelo de Dados<a class="headerlink" href="#modelo-de-dados" title="Permanent link">&para;</a></h2>
+<p>O <code>accounts</code> é construído em torno de um modelo de usuário customizado e modelos de suporte para auditoria.</p>
+<h3 id="o-modelo-user">O Modelo <code>User</code><a class="headerlink" href="#o-modelo-user" title="Permanent link">&para;</a></h3>
+<p>O coração do app é o modelo <code>User</code>, que herda de <code>AbstractBaseUser</code> do Django.</p>
+<div class="admonition abstract">
+<p class="admonition-title">Modelo <code>accounts.models.User</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="p">(</span><span class="n">AbstractBaseUser</span><span class="p">,</span> <span class="n">PermissionsMixin</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span><span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">is_active</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">is_admin</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="c1"># Campos customizados</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">permissoes</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">PERMISSOES_CHOICES</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;basico&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">cadastro</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">OneToOneField</span><span class="p">(</span><span class="s1">&#39;efetivo.Cadastro&#39;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">SET_NULL</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">must_change_password</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">login_history</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">USERNAME_FIELD</span> <span class="o">=</span> <span class="s1">&#39;email&#39;</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">REQUIRED_FIELDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;first_name&#39;</span><span class="p">,</span> <span class="s1">&#39;last_name&#39;</span><span class="p">]</span>
 </code></pre></div>
+</div>
+<p><strong>Campos Notáveis:</strong>
+-   <strong><code>email</code></strong>: Usado como o identificador único para login, em vez de um nome de usuário.
+-   <strong><code>permissoes</code></strong>: Um campo <code>CharField</code> que define o nível de acesso do usuário no sistema (ex: <code>basico</code>, <code>sgb</code>, <code>gestor</code>, <code>admin</code>). Este campo é a base para o controle de permissões hierárquico.
+-   <strong><code>cadastro</code></strong>: Uma chave estrangeira <code>OneToOne</code> para o modelo <code>Cadastro</code> do app <code>efetivo</code>. Este vínculo é crucial, pois conecta a identidade do usuário no sistema à sua ficha militar.
+-   <strong><code>must_change_password</code></strong>: Um booleano que, se <code>True</code>, força o usuário a trocar sua senha no primeiro login.
+-   <strong><code>login_history</code></strong>: Um campo <code>JSONField</code> que armazena um log detalhado de cada sessão de login do usuário, incluindo IP, nome do computador e horários de login/logout.</p>
+<h3 id="modelos-de-auditoria">Modelos de Auditoria<a class="headerlink" href="#modelos-de-auditoria" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>UserActionLog</code></strong>: Registra ações importantes realizadas por um usuário, como "Fez login" ou "Alterou senha".</li>
+<li><strong><code>TermosAceite</code></strong>: Armazena a prova de que um usuário aceitou os termos e condições durante o registro, incluindo a data, IP e uma cópia da assinatura digital.</li>
+</ul>
+<hr />
+<h2 id="fluxo-de-criacao-de-conta">Fluxo de Criação de Conta<a class="headerlink" href="#fluxo-de-criacao-de-conta" title="Permanent link">&para;</a></h2>
+<p>O processo de criação de conta é projetado para garantir que apenas militares ativos e válidos possam se registrar.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sequenceDiagram
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    participant Usuário
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    participant SisCoE
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    participant &quot;BD (Efetivo)&quot;
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    participant &quot;E-mail (Brevo)&quot;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    Usuário-&gt;&gt;SisCoE: Acessa &quot;Criar Conta&quot;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    SisCoE-&gt;&gt;Usuário: Solicita CPF (view `verificar_cpf`)
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    Usuário-&gt;&gt;SisCoE: Envia CPF
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    SisCoE-&gt;&gt;BD (Efetivo): Consulta `Cadastro` pelo CPF
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    alt CPF Válido e Ativo
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        BD (Efetivo)--&gt;&gt;SisCoE: Retorna dados do militar
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        SisCoE-&gt;&gt;Usuário: Mostra tela de registro com dados pré-preenchidos (view `signup`)
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        Usuário-&gt;&gt;SisCoE: Aceita os termos e assina digitalmente
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        SisCoE-&gt;&gt;SisCoE: Cria o `User` no banco
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        SisCoE-&gt;&gt;SisCoE: Gera senha aleatória
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        SisCoE-&gt;&gt;E-mail (Brevo): Envia e-mail com a senha gerada
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        E-mail (Brevo)--&gt;&gt;Usuário: Entrega o e-mail
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        SisCoE-&gt;&gt;Usuário: Exibe mensagem de sucesso
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    else CPF Inválido ou Inativo
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        BD (Efetivo)--&gt;&gt;SisCoE: Não retorna dados
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        SisCoE-&gt;&gt;Usuário: Exibe mensagem de erro
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    end
+</code></pre></div>
+<hr />
+<h2 id="autenticacao-e-seguranca">Autenticação e Segurança<a class="headerlink" href="#autenticacao-e-seguranca" title="Permanent link">&para;</a></h2>
+<h3 id="login">Login<a class="headerlink" href="#login" title="Permanent link">&para;</a></h3>
+<p>A view de login (<code>login_view</code>) não apenas valida as credenciais do usuário, mas também executa uma verificação crítica em tempo real:
+1.  Autentica o usuário com e-mail e senha.
+2.  Verifica o <code>cadastro</code> associado no app <code>efetivo</code>.
+3.  Confere se a situação do militar é "Efetivo" e "ATIVO".
+4.  Se a verificação falhar, o login é impedido e o usuário é desativado (<code>is_active = False</code>) como medida de segurança.</p>
+<h3 id="recuperacao-de-senha">Recuperação de Senha<a class="headerlink" href="#recuperacao-de-senha" title="Permanent link">&para;</a></h3>
+<p>O fluxo de "Esqueci Minha Senha" utiliza as views padrão do Django, mas as sobrescreve (<code>MyPasswordResetView</code>, etc.) para delegar o envio de e-mails ao serviço <strong>Brevo</strong>, garantindo alta taxa de entrega e desacoplamento.</p>
+<h3 id="troca-de-senha-forcada">Troca de Senha Forçada<a class="headerlink" href="#troca-de-senha-forcada" title="Permanent link">&para;</a></h3>
+<p>Se o campo <code>must_change_password</code> de um usuário for <code>True</code>, ele é automaticamente redirecionado para a view <code>force_password_change_view</code> após o login, garantindo que senhas temporárias ou iniciais sejam imediatamente substituídas.</p>
+<hr />
+<h2 id="gestao-e-auditoria">Gestão e Auditoria<a class="headerlink" href="#gestao-e-auditoria" title="Permanent link">&para;</a></h2>
+<p>O app <code>accounts</code> fornece um conjunto completo de ferramentas para administradores e gestores:</p>
+<ul>
+<li><strong>Lista de Usuários (<code>/users/</code>)</strong>: Permite visualizar todos os usuários cadastrados.</li>
+<li><strong>Detalhes do Usuário (<code>/users/&lt;pk&gt;/</code>)</strong>: Exibe informações detalhadas de um usuário, incluindo seu histórico de logins recentes.</li>
+<li><strong>Alteração de Permissões (<code>/users/&lt;pk&gt;/permission_update/</code>)</strong>: Uma interface para gestores e administradores ajustarem o nível de permissão (<code>permissoes</code>), o status de ativo e outras flags de segurança de um usuário.</li>
+<li><strong>Históricos Globais</strong>: Views como <code>global_access_history</code> e <code>global_user_action_history</code> permitem uma auditoria completa de todos os acessos e ações no sistema.</li>
+</ul>
 
 
 
