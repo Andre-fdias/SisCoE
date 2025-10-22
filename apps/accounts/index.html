@@ -1117,28 +1117,29 @@
 <h2 id="fluxo-de-criacao-de-conta">Fluxo de Criação de Conta<a class="headerlink" href="#fluxo-de-criacao-de-conta" title="Permanent link">&para;</a></h2>
 <p>O processo de criação de conta é projetado para garantir que apenas militares ativos e válidos possam se registrar.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sequenceDiagram
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    participant Usuário
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    participant SisCoE
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    participant &quot;BD (Efetivo)&quot;
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    participant &quot;E-mail (Brevo)&quot;
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    participant U as Usuário
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    participant S as SisCoE
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    participant DB as BD (Efetivo)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    participant M as E-mail (Brevo)
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    Usuário-&gt;&gt;SisCoE: Acessa &quot;Criar Conta&quot;
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    SisCoE-&gt;&gt;Usuário: Solicita CPF (view `verificar_cpf`)
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    Usuário-&gt;&gt;SisCoE: Envia CPF
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    SisCoE-&gt;&gt;BD (Efetivo): Consulta `Cadastro` pelo CPF
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    alt CPF Válido e Ativo
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        BD (Efetivo)--&gt;&gt;SisCoE: Retorna dados do militar
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        SisCoE-&gt;&gt;Usuário: Mostra tela de registro com dados pré-preenchidos (view `signup`)
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        Usuário-&gt;&gt;SisCoE: Aceita os termos e assina digitalmente
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        SisCoE-&gt;&gt;SisCoE: Cria o `User` no banco
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        SisCoE-&gt;&gt;SisCoE: Gera senha aleatória
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        SisCoE-&gt;&gt;E-mail (Brevo): Envia e-mail com a senha gerada
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        E-mail (Brevo)--&gt;&gt;Usuário: Entrega o e-mail
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        SisCoE-&gt;&gt;Usuário: Exibe mensagem de sucesso
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    else CPF Inválido ou Inativo
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        BD (Efetivo)--&gt;&gt;SisCoE: Não retorna dados
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        SisCoE-&gt;&gt;Usuário: Exibe mensagem de erro
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    end
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    U-&gt;&gt;S: Acessa &quot;Criar Conta&quot;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    S-&gt;&gt;U: Solicita CPF (view `verificar_cpf`)
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    U-&gt;&gt;S: Envia CPF
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    S-&gt;&gt;DB: Consulta `Cadastro` pelo CPF
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    alt CPF Válido e Ativo
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        DB--&gt;&gt;S: Retorna dados do militar
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        S-&gt;&gt;U: Mostra tela de registro com dados pré-preenchidos (view `signup`)
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        U-&gt;&gt;S: Aceita os termos e assina digitalmente
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        S-&gt;&gt;S: Cria o `User` no banco
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        S-&gt;&gt;S: Gera senha aleatória
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        S-&gt;&gt;M: Envia e-mail com a senha gerada
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        M--&gt;&gt;U: Entrega o e-mail
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        S-&gt;&gt;U: Exibe mensagem de sucesso
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    else CPF Inválido ou Inativo
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        DB--&gt;&gt;S: Não retorna dados
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        S-&gt;&gt;U: Exibe mensagem de erro
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    end
 </code></pre></div>
 <hr />
 <h2 id="autenticacao-e-seguranca">Autenticação e Segurança<a class="headerlink" href="#autenticacao-e-seguranca" title="Permanent link">&para;</a></h2>
