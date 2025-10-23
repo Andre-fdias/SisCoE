@@ -11,17 +11,21 @@ repo_name: Andre-fdias/SisCoE
 # Configuração do Tema (Material for MkDocs)
 theme:
   name: material
-  language: pt
-  logo: assets/logo.png # Adicione um logo se desejar
+  language: pt-BR
+  logo: assets/img/logo.png
+  favicon: assets/img/favicon.ico
   palette:
-    # Modo claro e escuro
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: blue
+      accent: indigo
       toggle:
         icon: material/weather-sunny
         name: Mudar para modo escuro
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: blue
+      accent: indigo
       toggle:
         icon: material/weather-night
         name: Mudar para modo claro
@@ -30,59 +34,75 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.tabs.fixed
     - toc.integrate
     - search.suggest
     - search.highlight
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+    - navigation.footer
 
 # Navegação
 nav:
-  - 'Início': 'index.md'
-  - 'Desenvolvimento':
-    - 'Arquitetura': 'desenvolvimento/arquitetura.md'
-    - 'Estrutura de Pastas': 'desenvolvimento/estrutura_pastas.md'
-    - 'Versionamento e Git': 'desenvolvimento/versionamento.md'
-    - 'Executando o Projeto': 'desenvolvimento/executando_o_projeto.md'
-  - 'Aplicações (Apps)':
-    - 'Core': 'apps/core.md'
-    - 'Accounts': 'apps/accounts.md'
-    - 'CRM': 'apps/crm.md'
-    - 'Efetivo': 'apps/efetivo.md'
-    - 'Adicional': 'apps/adicional.md'
-    - 'Logística (LP)': 'apps/lp.md'
-    - 'Relatórios (RPT)': 'apps/rpt.md'
-    - 'Batalhões (BM)': 'apps/bm.md'
-    - 'Municípios': 'apps/municipios.md'
-    - 'Documentos': 'apps/documentos.md'
-    - 'Agenda': 'apps/agenda.md'
-    - 'Calculadora': 'apps/calculadora.md'
-    - 'Cursos': 'apps/cursos.md'
-  - 'Configuração':
-    - 'Settings Base': 'configuracao/settings_base.md'
-    - 'Settings Dev': 'configuracao/settings_dev.md'
-    - 'Settings Prod': 'configuracao/settings_prod.md'
+  - Início: index.md
+  - Desenvolvimento:
+      - Arquitetura: desenvolvimento/arquitetura.md
+      - Estrutura de Pastas: desenvolvimento/estrutura_pastas.md
+      - Versionamento e Git: desenvolvimento/versionamento.md
+      - Executando o Projeto: desenvolvimento/executando_o_projeto.md
+  - Aplicações:
+      - Core: apps/core.md
+      - Accounts: apps/accounts.md
+      - CRM: apps/crm.md
+      - Efetivo: apps/efetivo.md
+      - Adicional: apps/adicional.md
+      - Licença Prêmio (LP): apps/lp.md
+      - Prioridade de Transferência (RPT): apps/rpt.md
+      - Bombeiros Municipais (BM): apps/bm.md
+      - Municípios: apps/municipios.md
+      - Documentos: apps/documentos.md
+      - Agenda: apps/agenda.md
+      - Calculadora: apps/calculadora.md
+      - Cursos: apps/cursos.md
+  - Configuração:
+      - Settings Base: configuracao/settings_base.md
+      - Settings Dev: configuracao/settings_dev.md
+      - Settings Prod: configuracao/settings_prod.md
 
 # Extensões do Markdown
 markdown_extensions:
+  - admonition
+  - def_list
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
-  - admonition
-  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.tasklist
+  - pymdownx.critic
   - toc:
       permalink: true
 
 # Plugins
 plugins:
   - search
+  - autorefs
   - mkdocstrings:
       handlers:
         python:
           options:
             show_root_heading: true
+            show_source: false
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Andre-fdias

@@ -1,76 +1,115 @@
-# App: CRM
+# 🧾 App: CRM (Módulo de Contato)
 
-Apesar do nome, o app `crm` no SisCoE atualmente serve a um propósito muito específico e contido: ele funciona como um **módulo de formulário de contato**.
-
-Sua única responsabilidade é fornecer um endpoint para receber dados de um formulário de contato e enviá-los por e-mail.
-
-!!! info "Funcionalidade Atual vs. Nome"
-    O nome "CRM" (Customer Relationship Management) sugere uma funcionalidade mais ampla, como gerenciamento de leads ou contatos. No entanto, em seu estado atual, o app não possui modelos de dados (`models.py` está vazio) e se limita a processar um formulário de contato.
+O app `crm`, em seu estado atual no projeto SisCoE, funciona como um micro-serviço para uma única finalidade: processar e enviar os dados de um **formulário de contato** por e-mail.
 
 ---
 
-## Fluxo de Operação
+## 📋 Visão Geral
 
-O fluxo do app é linear e simples:
+O propósito do app é fornecer um endpoint único e isolado para capturar mensagens enviadas através de um formulário de contato (por exemplo, em uma página "Fale Conosco") e encaminhá-las para um destinatário de e-mail pré-definido.
 
-1.  Um usuário (ou um sistema externo) envia uma requisição `POST` para o endpoint `/contact/`.
-2.  Os dados da requisição são validados pelo `ContactForm`.
-3.  Se o formulário for válido, a view `send_contact` utiliza a função `send_mail` do Django para enviar um e-mail com o conteúdo do formulário.
-4.  Após o envio, o usuário é redirecionado para a página inicial (`core:index`).
+- 🎯 **Formulário de Contato**: Sua única função é receber e processar dados de um formulário com nome, e-mail, título e mensagem.
+- 📧 **Envio de E-mail**: Utiliza o sistema de e-mail do Django para enviar o conteúdo do formulário.
+- 🚪 **Endpoint Único**: Expõe uma única URL (`/contact/`) para receber os dados.
+- ❌ **Sem Persistência de Dados**: O app não possui modelos de dados e não armazena nenhuma informação no banco de dados.
+
+!!! warning "Funcionalidade Atual vs. Nome"
+    O nome "CRM" (Customer Relationship Management) geralmente implica um sistema complexo de gestão de contatos, interações e funis de venda. A funcionalidade atual é muito mais simples, limitada a um formulário de contato.
+
+---
+
+## 🗂️ Modelos de Dados
+
+O app `crm` **não possui modelos de dados** (`models.py` está vazio). Toda a informação recebida é processada e enviada por e-mail, sem ser salva no banco de dados do sistema.
+
+---
+
+## 🔄 Fluxo de Trabalho
+
+O fluxo de operação é linear e executado em uma única requisição.
 
 ```mermaid
 sequenceDiagram
-    participant Usuário
-    participant "View (send_contact)"
-    participant "Servidor de E-mail"
+    participant U as Usuário
+    participant S as Sistema (View `send_contact`)
+    participant EmailSvc as Servidor de E-mail
 
-    Usuário->>View (send_contact): POST /contact/ com dados do formulário
-    View (send_contact)->>View (send_contact): Valida dados com `ContactForm`
+    U->>S: Envia formulário (POST para /contact/)
+    S->>S: Valida os dados com `ContactForm`
     alt Formulário Válido
-        View (send_contact)->>Servidor de E-mail: send_mail()
-        Servidor de E-mail-->>View (send_contact): E-mail enviado
-        View (send_contact)->>Usuário: Redirect para a página inicial
+        S->>EmailSvc: Chama `send_mail()` com os dados
+        EmailSvc-->>S: Confirma o envio
+        S->>U: Redireciona para a página inicial (`core:index`)
     else Formulário Inválido
-        View (send_contact)-->>Usuário: (Ignora e redireciona)
+        S->>U: Redireciona para a página inicial (sem enviar e-mail)
     end
 ```
 
 ---
 
-## Componentes Principais
+## 🎯 Funcionalidades Principais
 
-### Formulário (`forms.py`)
+- **Validação de Formulário**: Utiliza um `ContactForm` do Django para validar os campos `name`, `email`, `title` e `body` enviados na requisição.
+- **Envio de E-mail**: Se a validação for bem-sucedida, a view `send_contact` monta e envia um e-mail contendo a mensagem do usuário.
 
--   **`ContactForm`**: Um formulário simples do Django que define os campos esperados:
-    -   `name` (CharField)
-    -   `email` (EmailField)
-    -   `title` (CharField)
-    -   `body` (CharField com widget de Textarea)
+---
 
-### View (`views.py`)
+## 🔗 Relacionamentos
 
--   **`send_contact(request)`**:
-    -   Aceita apenas requisições `POST`.
-    -   Valida os dados recebidos usando o `ContactForm`.
-    -   Se válido, envia um e-mail e redireciona.
+O app `crm` é **totalmente independente** e não possui relacionamentos com nenhum outro app do sistema.
 
-!!! warning "Configuração de Destinatário"
-    Atualmente, a view `send_contact` está configurada para enviar e-mails para o destinatário `['localhost']`. Esta é uma configuração de desenvolvimento e **precisa ser alterada** para um endereço de e-mail de produção real para que a funcionalidade seja útil.
+---
+
+## 🛡️ Controles de Acesso e Validações
+
+- **Acesso**: O endpoint `/contact/` é público e não requer autenticação. Ele é protegido apenas pela restrição de aceitar somente requisições do tipo `POST`.
+- **Validações**: A única validação é a do `ContactForm`, que verifica se os campos foram preenchidos e se o e-mail do remetente tem um formato válido.
+
+---
+
+## 📈 Métricas e Estatísticas
+
+Este app não gera nem armazena dados, portanto não há métricas ou estatísticas associadas a ele.
+
+---
+
+## 🎨 Interface do Usuário
+
+O app `crm` não possui templates próprios. Ele apenas processa os dados de um formulário que deve ser renderizado por outro app (provavelmente o `core`, em uma página de contato).
+
+---
+
+## 🔧 Configuração Técnica
+
+**URLs Principais**
+```python
+app_name = 'crm'
+
+urlpatterns = [
+    path('contact/', v.send_contact, name='send_contact'),
+]
+```
+
+**Dependências**: Nenhuma dependência externa. Utiliza apenas o `send_mail` nativo do Django.
+
+!!! danger "Configuração Crítica de Produção"
+    A view `send_contact` está atualmente configurada para enviar e-mails para `['localhost']`. Para que o formulário funcione em produção, este endereço **precisa ser alterado** para o e-mail do destinatário real.
 
     ```python
     # crm/views.py
-
     send_mail(
-        subject,
-        message,
-        sender,
-        ['localhost'],  # <-- ATENÇÃO: Mudar para produção
+        subject, message, sender,
+        ['email_real@dominio.com'], # <-- ALTERAR AQUI
         fail_silently=False,
     )
     ```
 
-### URL (`urls.py`)
+---
 
-O app expõe um único endpoint:
+## 💡 Casos de Uso
 
--   **`path('contact/', v.send_contact, name='send_contact')`**
+**Cenário Típico**: Um visitante externo acessa a página "Fale Conosco" do portal SisCoE, preenche o formulário com seu nome, e-mail e uma pergunta, e clica em "Enviar". O navegador envia os dados para o endpoint `/contact/` do app `crm`. O app valida os dados, monta um e-mail com a pergunta do visitante e o envia para a caixa de entrada do administrador do sistema. O visitante é então redirecionado para a página inicial.
+
+**Benefícios**:
+- **🎯 Simplicidade**: Oferece uma maneira simples e direta de receber contato externo.
+- **⚙️ Desacoplamento**: Isola a lógica de envio de e-mail de contato em um app dedicado.

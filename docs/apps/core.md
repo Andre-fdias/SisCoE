@@ -1,142 +1,127 @@
-# App: Core
+# 🧾 App: Core (Orquestrador Central do Sistema)
 
-O app `core` é o coração da interface do usuário e da orquestração de dados no SisCoE. Diferente de outros apps, ele não gerencia um domínio de negócio específico com seus próprios models. Em vez disso, sua principal função é agregar dados de múltiplos apps e apresentá-los de forma coesa nas páginas principais do sistema.
-
-!!! info "Arquitetura do App Core"
-    Este app funciona como um **agregador e apresentador**. Ele busca informações dos apps `efetivo`, `agenda`, `documentos`, entre outros, e as consolida em dashboards e páginas principais, além de gerenciar funcionalidades transversais como permissões e busca global.
+O app `core` é o coração do SisCoE. Diferente de outros apps que gerenciam um domínio de negócio específico (como `efetivo` ou `cursos`), o `core` não possui modelos de dados próprios. Sua função é orquestrar a interface principal, agregar informações de múltiplos apps e fornecer funcionalidades transversais que se aplicam a todo o sistema.
 
 ---
 
-## Responsabilidades Principais
+## 📋 Visão Geral
 
--   **Páginas Principais**: Fornece as views e templates para a landing page, a página inicial pós-login e o dashboard de BI.
--   **Controle de Acesso**: Implementa o sistema de papéis e permissões usando a biblioteca `django-role-permissions`.
--   **Agregação de Dados**: Suas views reúnem dados de vários apps para criar uma experiência de usuário unificada.
--   **Funcionalidades Transversais**: Contém a lógica para a busca global e o calendário de eventos.
--   **Utilitários**: Oferece middlewares e template tags customizadas para uso em todo o projeto.
+O propósito do `core` é ser o ponto de entrada e a principal camada de apresentação para o usuário. Ele é responsável por criar uma experiência de usuário coesa, reunindo dados de diferentes partes do sistema em um único local.
 
----
-
-## Sistema de Papéis (Roles)
-
-O controle de acesso no SisCoE é gerenciado pelo `django-role-permissions` e configurado em `core/roles.py`. Os seguintes papéis são definidos:
-
-!!! note "Papel: `Basico`"
-    **Descrição**: Papel fundamental com permissões de visualização essenciais.
-    **Permissões Chave**:
-    - Visualizar dashboard e perfil.
-    - Gerenciar seus próprios lembretes e tarefas.
-    - Visualizar documentos e calcular tempo de serviço.
-
-!!! note "Papel: `SGB`"
-    **Herda de**: `Basico`
-    **Descrição**: Destinado a usuários que operam no nível de um Subgrupamento de Bombeiros (SGB).
-    **Permissões Adicionais**:
-    - Visualizar cadastros, promoções e situações do efetivo.
-    - Acessar relatórios (`rpt`) e adicionais.
-
-!!! note "Papel: `Gestor`"
-    **Herda de**: `SGB`
-    **Descrição**: Usuários com capacidade de gerenciar (criar, editar, excluir) os dados do sistema.
-    **Permissões Adicionais**:
-    - Gerenciamento completo do cadastro de efetivo.
-    - Gerenciamento de documentos e relatórios.
-    - Visualização de usuários do sistema.
-
-!!! note "Papel: `Visitante`"
-    **Descrição**: Papel com acesso muito limitado, geralmente para usuários não autenticados ou com pouquíssimas permissões.
-    **Permissões Chave**:
-    - Apenas visualizar a página inicial e documentos públicos.
-
-!!! warning "Papel: `Admin`"
-    **Descrição**: Papel de superusuário com acesso irrestrito a todas as funcionalidades. Este papel não tem limitações.
+- 🎯 **Páginas Principais**: Fornece as views para a página de entrada (`landing.html`), a página inicial pós-login (`index.html`) e o dashboard de BI.
+- 🔍 **Busca Global**: Contém a lógica da barra de pesquisa global, que busca informações em todos os apps do sistema.
+- 📅 **Funcionalidades Comuns**: Apresenta o calendário de eventos, feriados e aniversários.
+- 🧠 **Middleware**: Inclui middlewares que operam em todas as requisições, como o que injeta mensagens do Django em respostas JSON (útil para AJAX/HTMX).
+- 📊 **Agregação de Dados**: Suas views consultam múltiplos apps (`efetivo`, `agenda`, `documentos`, `municipios`) para construir os dashboards e a página inicial.
 
 ---
 
-## Views e Endpoints
+## 🗂️ Modelos de Dados
 
-As views do app `core` são o ponto de entrada para as principais páginas do sistema.
-
-<div class="tabbed-set" data-tabs="1-3">
-<div class="tabbed-content">
-
-<details>
-<summary><code>/</code> (Página de Entrada)</summary>
-<div markdown>
-**View**: `capa(request)`
-**Template**: `landing.html`
-
-Renderiza a página de entrada (landing page) para usuários não autenticados.
-</div>
-</details>
-
-<details>
-<summary><code>/home</code> (Página Inicial)</summary>
-<div markdown>
-**View**: `index(request)`
-**Template**: `index.html`
-
-Esta é a página principal que um usuário vê após o login. É uma view complexa que agrega múltiplas informações:
-- Aniversariantes do mês.
-- Documentos recentes.
-- Lembretes e tarefas do usuário.
-- Hierarquia de comando (Comandante, Subcomandante, Chefes).
-- Imagens para o carrossel da página inicial.
-</div>
-</details>
-
-<details>
-<summary><code>/dashboard/</code></summary>
-<div markdown>
-**View**: `dashboard_view(request)`
-**Template**: `dashboard.html`
-
-Renderiza o dashboard de Business Intelligence (BI), que exibe métricas e gráficos sobre o efetivo:
-- Efetivo fixado vs. existente.
-- Percentual de "claro" (vagas não preenchidas).
-- Distribuição de efetivo por SGB.
-- Movimentações recentes.
-- Gráficos de distribuição por idade, posto/graduação e saúde.
-</div>
-</details>
-
-<details>
-<summary><code>/calendario/</code></summary>
-<div markdown>
-**View**: `CalendarioView.as_view()`
-**Template**: `calendario.html`
-
-Exibe um calendário completo com eventos do grupamento, feriados nacionais, estaduais e municipais.
-</div>
-</details>
-
-<details>
-<summary><code>/search/</code></summary>
-<div markdown>
-**View**: `global_search_view(request)`
-**Template**: `global_search/results.html`
-
-Processa as requisições da barra de busca global, utilizando a classe `GlobalSearch` para encontrar resultados em múltiplos apps.
-</div>
-</details>
-
-</div>
-</div>
+O app `core` **não possui modelos de dados próprios**. Ele é um app de lógica e apresentação, e todos os dados que ele exibe são consultados dos modelos de outros apps.
 
 ---
 
-## Componentes Adicionais
+## 🔄 Fluxo de Trabalho
 
-### Middleware
+O fluxo mais importante gerenciado pelo `core` é o da **Busca Global**.
 
--   **`JSONMessagesMiddleware`**: Intercepta respostas JSON e injeta nelas quaisquer mensagens pendentes do `django.contrib.messages`. Útil para requisições AJAX/HTMX onde a resposta não é uma página HTML completa.
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant S as Sistema (Core)
+    participant GS as GlobalSearch
+    participant Apps as Outros Apps (Efetivo, Cursos, etc.)
 
-### Comandos de Gerenciamento
+    U->>S: Digita um termo na barra de busca e pressiona Enter
+    S->>GS: Chama o método `GlobalSearch.search(termo)`
+    GS->>Apps: Itera sobre uma lista de modelos pesquisáveis
+    Note over GS,Apps: Para cada modelo, executa uma query `__icontains` nos campos definidos
+    Apps-->>GS: Retorna os objetos encontrados
+    GS->>S: Retorna uma lista de resultados formatados
+    S->>U: Renderiza a página de resultados com links para os itens encontrados
+```
 
--   **`link_profiles`**: Um comando customizado (`python manage.py link_profiles`) que provavelmente é usado para associar perfis de usuário a outros registros no sistema (possivelmente legados, dado que o model `Profile` foi removido).
+---
 
-### Template Tags
+## 🎯 Funcionalidades Principais
 
-O app `core` fornece várias template tags customizadas em `core/templatetags/`:
-- `dict_filters.py`: Filtros para manipulação de dicionários nos templates.
-- `messages_extras.py` e `messages_tag.py`: Tags e filtros para aprimorar a exibição de mensagens do Django.
+- **Página Inicial (`index`)**: Uma view complexa que agrega aniversariantes do mês, documentos recentes, lembretes e tarefas do usuário, e a hierarquia de comando, consultando os apps `efetivo`, `agenda` e `documentos`.
+- **Dashboard de BI (`dashboard_view`)**: Exibe métricas consolidadas sobre o efetivo, como total fixado vs. existente, percentual de "claro" (vagas), e distribuição por SGB. Consulta os apps `efetivo`, `municipios` e `bm`.
+- **Busca Global (`global_search_view`)**: Utiliza a classe `GlobalSearch` para realizar uma busca textual em mais de 20 modelos de diferentes apps, retornando uma lista unificada de resultados.
+- **Calendário de Eventos (`CalendarioView`)**: Exibe um calendário com eventos do grupamento e feriados (nacionais, estaduais e municipais) que são pré-definidos diretamente na view.
+
+---
+
+## 🔗 Relacionamentos
+
+O app `core` não possui modelos, portanto não tem `ForeignKey` ou outros relacionamentos de banco de dados. No entanto, ele possui **dependências lógicas** com quase todos os outros apps, pois suas views importam e consultam os modelos deles para agregar dados. Os principais apps consumidos são:
+
+- `efetivo` (para aniversariantes, hierarquia de comando, métricas do dashboard)
+- `documentos` (para a lista de documentos recentes)
+- `agenda` (para lembretes e tarefas do usuário)
+- `municipios` e `bm` (para os totais de efetivo no dashboard)
+
+---
+
+## 🛡️ Controles de Acesso e Validações
+
+O `core` utiliza os decoradores de permissão definidos em `accounts.decorators` para proteger suas views mais sensíveis.
+
+| View | Permissão Requerida | Acesso |
+| :--- | :--- | :--- |
+| `index` / `capa` | Autenticação (para `index`) | Todos os usuários logados |
+| `dashboard_view` | `admin` (implícito na lógica) | Gestores e Admin |
+| `global_search_view` | Autenticação | Todos os usuários logados |
+
+- **✅ Filtro por SGB**: As views como `index` aplicam filtros (`filter_by_user_sgb`) para que usuários com permissão de SGB vejam apenas dados (como aniversariantes) do seu próprio Subgrupamento.
+
+---
+
+## 📈 Métricas e Estatísticas
+
+A view `dashboard_view` é a principal central de métricas do sistema, calculando em tempo real:
+
+- **Efetivo Fixado vs. Existente**: Compara o total de vagas (`Pessoal`) com o total de militares ativos (`Cadastro`).
+- **Percentual de Claro**: Calcula a porcentagem de vagas não preenchidas.
+- **Distribuição por SGB**: Agrupa o efetivo por Subgrupamento, mostrando o total fixado, existente e o claro para cada um.
+
+---
+
+## 🎨 Interface do Usuário
+
+- **`landing.html`**: A página de entrada do sistema para usuários não autenticados.
+- **`index.html`**: A página principal do sistema, com múltiplos componentes como cards de aniversariantes, lista de documentos e carrossel de imagens.
+- **`dashboard.html`**: Template que renderiza os gráficos e tabelas de BI, utilizando `Chart.js` para visualização de dados.
+- **`global_search/results.html`**: Página que exibe os resultados da busca global, agrupados por app.
+
+---
+
+## 🔧 Configuração Técnica
+
+**URLs Principais**
+```python
+app_name = 'core'
+
+urlpatterns = [
+    path('home', index, name='index'),
+    path('', capa, name='capa'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('calendario/', CalendarioView.as_view(), name='calendario'),
+    path('search/', global_search_view, name='global_search'),
+]
+```
+
+**Dependências**: O `core` não introduz novas dependências de pacotes, mas depende funcionalmente de quase todos os outros apps do projeto.
+
+---
+
+## 💡 Casos de Uso
+
+**Cenário Típico**: Um comandante de SGB faz login no sistema. A view `index` do app `core` é chamada. Ela busca os aniversariantes do seu SGB no app `efetivo`, suas tarefas no app `agenda` e os últimos documentos no app `documentos`. Todas essas informações são renderizadas de forma organizada na sua página inicial. Em seguida, ele usa a barra de busca global para procurar por um militar específico pelo nome, e o `GlobalSearch` retorna um link direto para o perfil do militar no app `efetivo`.
+
+**Benefícios**:
+- **🎯 Visão Unificada**: Agrega as informações mais importantes de todo o sistema em um único local.
+- **⚙️ Navegação Centralizada**: Serve como o principal ponto de navegação para as demais funcionalidades do SisCoE.
+- **📊 Inteligência de Negócio**: O dashboard fornece aos gestores uma visão macro e imediata da situação do efetivo.
+- **📈 Eficiência**: A busca global economiza tempo, permitindo encontrar qualquer informação no sistema rapidamente.
