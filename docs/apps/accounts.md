@@ -1,104 +1,202 @@
-# App: Accounts
+# 🧾 App: Accounts (Gestão de Usuários e Acesso)
 
-O app `accounts` é responsável por todo o ciclo de vida do usuário no SisCoE, desde o seu registro e autenticação até a gestão de permissões e auditoria de suas ações. Ele substitui o sistema de usuário padrão do Django por um modelo mais robusto e adaptado às necessidades do projeto.
-
----
-
-## Modelo de Dados
-
-O `accounts` é construído em torno de um modelo de usuário customizado e modelos de suporte para auditoria.
-
-### O Modelo `User`
-
-O coração do app é o modelo `User`, que herda de `AbstractBaseUser` do Django.
-
-!!! abstract "Modelo `accounts.models.User`"
-    ```python
-    class User(AbstractBaseUser, PermissionsMixin):
-        email = models.EmailField(unique=True)
-        first_name = models.CharField(max_length=150)
-        last_name = models.CharField(max_length=150)
-        is_active = models.BooleanField(default=True)
-        is_admin = models.BooleanField(default=False)
-        
-        # Campos customizados
-        permissoes = models.CharField(max_length=20, choices=PERMISSOES_CHOICES, default="basico")
-        cadastro = models.OneToOneField('efetivo.Cadastro', on_delete=models.SET_NULL, null=True, blank=True)
-        must_change_password = models.BooleanField(default=False)
-        login_history = models.JSONField(default=list, blank=True, null=True)
-        
-        USERNAME_FIELD = 'email'
-        REQUIRED_FIELDS = ['first_name', 'last_name']
-    ```
-
-**Campos Notáveis:**
--   **`email`**: Usado como o identificador único para login, em vez de um nome de usuário.
--   **`permissoes`**: Um campo `CharField` que define o nível de acesso do usuário no sistema (ex: `basico`, `sgb`, `gestor`, `admin`). Este campo é a base para o controle de permissões hierárquico.
--   **`cadastro`**: Uma chave estrangeira `OneToOne` para o modelo `Cadastro` do app `efetivo`. Este vínculo é crucial, pois conecta a identidade do usuário no sistema à sua ficha militar.
--   **`must_change_password`**: Um booleano que, se `True`, força o usuário a trocar sua senha no primeiro login.
--   **`login_history`**: Um campo `JSONField` que armazena um log detalhado de cada sessão de login do usuário, incluindo IP, nome do computador e horários de login/logout.
-
-### Modelos de Auditoria
-
--   **`UserActionLog`**: Registra ações importantes realizadas por um usuário, como "Fez login" ou "Alterou senha".
--   **`TermosAceite`**: Armazena a prova de que um usuário aceitou os termos e condições durante o registro, incluindo a data, IP e uma cópia da assinatura digital.
+O app `accounts` é o módulo central do SisCoE para segurança, identidade e controle de acesso. Ele gerencia todo o ciclo de vida do usuário, desde um registro seguro e verificado até a autenticação, gestão de permissões e auditoria detalhada de suas ações.
 
 ---
 
-## Fluxo de Criação de Conta
+## 📋 Visão Geral
 
-O processo de criação de conta é projetado para garantir que apenas militares ativos e válidos possam se registrar.
+O propósito do `accounts` é substituir o sistema de usuário padrão do Django por um modelo customizado, alinhado às regras de negócio da Polícia Militar, garantindo que apenas militares com status válido possam acessar o sistema.
+
+- 🎯 **Identidade Única**: Vincula cada conta de usuário a um registro único no app `efetivo`.
+- 🔐 **Segurança em Camadas**: Implementa um fluxo de cadastro seguro, recuperação de senha via e-mail e troca de senha forçada no primeiro login.
+- ιε **Controle de Permissões**: Utiliza um sistema hierárquico de permissões para controlar o acesso a diferentes partes do sistema.
+- 🔄 **Integração com E-mail**: Delega o envio de e-mails transacionais (boas-vindas, recuperação de senha) ao serviço externo Brevo para maior confiabilidade.
+- 📈 **Auditoria Completa**: Registra o histórico de logins e ações de cada usuário para fins de rastreabilidade.
+
+---
+
+## 🗂️ Modelos de Dados
+
+A arquitetura é focada no modelo `User` customizado e em modelos de suporte para logs.
+
+### User
+O modelo `User` herda de `AbstractBaseUser` e `PermissionsMixin` e é o coração do sistema de autenticação.
+
+```python
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_('email address'), unique=True)
+    first_name = models.CharField(_('first name'), max_length=150)
+    last_name = models.CharField(_('last name'), max_length=150)
+    is_active = models.BooleanField(_('active'), default=True)
+    
+    # Campos customizados
+    permissoes = models.CharField(max_length=20, choices=PERMISSOES_CHOICES, default="basico")
+    cadastro = models.OneToOneField('efetivo.Cadastro', on_delete=models.SET_NULL, null=True)
+    must_change_password = models.BooleanField(default=False)
+    login_history = models.JSONField(default=list, null=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+```
+
+```mermaid
+classDiagram
+    class User {
+        +String email
+        +String first_name
+        +String last_name
+        +Boolean is_active
+        +Enum permissoes
+        +Cadastro cadastro
+        +Boolean must_change_password
+        +JSON login_history
+        +has_permission_level(level) bool
+        +password_expired() bool
+    }
+```
+
+### UserActionLog
+Registra ações importantes realizadas por um usuário.
+
+```python
+class UserActionLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True)
+```
+
+```mermaid
+classDiagram
+    class UserActionLog {
+        +User user
+        +String action
+        +DateTimeField timestamp
+        +IPAddress ip_address
+    }
+    User "1" -- "N" UserActionLog : realiza
+```
+
+### TermosAceite
+Armazena a prova de que um usuário aceitou os Termos e Condições durante o registro.
+
+---
+
+## 🔄 Fluxo de Trabalho
+
+O fluxo mais crítico é o de **criação de conta**, que garante a identidade do militar.
 
 ```mermaid
 sequenceDiagram
-    participant Usuário
-    participant SisCoE
-    participant "BD (Efetivo)"
-    participant "E-mail (Brevo)"
+    participant U as Usuário
+    participant S as SisCoE
+    participant DB_Efetivo as BD (Efetivo)
+    participant Email_Svc as E-mail (Brevo)
 
-    Usuário->>SisCoE: Acessa "Criar Conta"
-    SisCoE->>Usuário: Solicita CPF (view `verificar_cpf`)
-    Usuário->>SisCoE: Envia CPF
-    SisCoE->>BD (Efetivo): Consulta `Cadastro` pelo CPF
-    alt CPF Válido e Ativo
-        BD (Efetivo)-->>SisCoE: Retorna dados do militar
-        SisCoE->>Usuário: Mostra tela de registro com dados pré-preenchidos (view `signup`)
-        Usuário->>SisCoE: Aceita os termos e assina digitalmente
-        SisCoE->>SisCoE: Cria o `User` no banco
-        SisCoE->>SisCoE: Gera senha aleatória
-        SisCoE->>E-mail (Brevo): Envia e-mail com a senha gerada
-        E-mail (Brevo)-->>Usuário: Entrega o e-mail
-        SisCoE->>Usuário: Exibe mensagem de sucesso
-    else CPF Inválido ou Inativo
-        BD (Efetivo)-->>SisCoE: Não retorna dados
-        SisCoE->>Usuário: Exibe mensagem de erro
+    U->>S: Acessa "Criar Conta" e informa o CPF
+    S->>DB_Efetivo: Consulta `Cadastro` pelo CPF
+    
+    alt CPF válido e militar ATIVO
+        DB_Efetivo-->>S: Retorna dados do militar
+        S->>U: Exibe tela de registro com dados pré-preenchidos
+        U->>S: Aceita os termos e assina digitalmente
+        S->>S: Cria o `User` no banco com senha aleatória
+        S->>Email_Svc: Envia e-mail de boas-vindas com a senha
+        Email_Svc-->>U: Entrega o e-mail
+        S->>U: Exibe mensagem de sucesso e redireciona para login
+    else CPF inválido ou militar INATIVO
+        DB_Efetivo-->>S: Não retorna dados ou status é inválido
+        S->>U: Exibe mensagem de erro apropriada
     end
 ```
 
 ---
 
-## Autenticação e Segurança
+## 🎯 Funcionalidades Principais
 
-### Login
-A view de login (`login_view`) não apenas valida as credenciais do usuário, mas também executa uma verificação crítica em tempo real:
-1.  Autentica o usuário com e-mail e senha.
-2.  Verifica o `cadastro` associado no app `efetivo`.
-3.  Confere se a situação do militar é "Efetivo" e "ATIVO".
-4.  Se a verificação falhar, o login é impedido e o usuário é desativado (`is_active = False`) como medida de segurança.
-
-### Recuperação de Senha
-O fluxo de "Esqueci Minha Senha" utiliza as views padrão do Django, mas as sobrescreve (`MyPasswordResetView`, etc.) para delegar o envio de e-mails ao serviço **Brevo**, garantindo alta taxa de entrega e desacoplamento.
-
-### Troca de Senha Forçada
-Se o campo `must_change_password` de um usuário for `True`, ele é automaticamente redirecionado para a view `force_password_change_view` após o login, garantindo que senhas temporárias ou iniciais sejam imediatamente substituídas.
+- **Criação de Conta Verificada**: Apenas militares com CPF cadastrado no app `efetivo` e com status "Efetivo" e "ATIVO" podem se registrar.
+- **Autenticação Segura**: A view de login valida não apenas a senha, mas também o status do militar em tempo real, desativando o acesso se o status mudar.
+- **Recuperação de Senha**: Fluxo completo de "esqueci minha senha" que envia e-mails através do Brevo.
+- **Troca de Senha Forçada**: Usuários recém-criados são obrigados a definir uma nova senha no primeiro acesso.
+- **Gestão de Permissões**: Interface para administradores alterarem o nível de acesso de outros usuários.
 
 ---
 
-## Gestão e Auditoria
+## 🔗 Relacionamentos
 
-O app `accounts` fornece um conjunto completo de ferramentas para administradores e gestores:
+- **`efetivo` (Essencial)**: O app `accounts` possui uma forte dependência do `efetivo.Cadastro`. O `OneToOneField` no modelo `User` garante que cada conta do sistema corresponda a um e apenas um militar.
+  ```python
+  # No modelo User
+  cadastro = models.OneToOneField(
+      'efetivo.Cadastro',
+      on_delete=models.SET_NULL, # Se o cadastro for excluído, o usuário não é, mas perde o vínculo
+      null=True,
+      related_name='user_account'
+  )
+  ```
 
--   **Lista de Usuários (`/users/`)**: Permite visualizar todos os usuários cadastrados.
--   **Detalhes do Usuário (`/users/<pk>/`)**: Exibe informações detalhadas de um usuário, incluindo seu histórico de logins recentes.
--   **Alteração de Permissões (`/users/<pk>/permission_update/`)**: Uma interface para gestores e administradores ajustarem o nível de permissão (`permissoes`), o status de ativo e outras flags de segurança de um usuário.
--   **Históricos Globais**: Views como `global_access_history` e `global_user_action_history` permitem uma auditoria completa de todos os acessos e ações no sistema.
+---
+
+## 🛡️ Controles de Acesso e Validações
+
+| View | Permissão Requerida | Acesso |
+| :--- | :--- | :--- |
+| `user_list` | `gestor` ou superior | Gestores e Admin |
+| `user_detail` | Autenticação | O próprio usuário ou Admin |
+| `user_permission_update` | `admin` | Apenas Admins |
+| `global_access_history` | `gestor` ou superior | Gestores e Admin |
+
+- **✅ Validação de CPF**: A primeira etapa do registro é a validação do CPF contra a base de dados do `efetivo`.
+- **✅ Validação de Status**: No login, o status do militar é verificado em tempo real. Se inativo, o acesso é bloqueado.
+- **✅ Hierarquia de Permissões**: Um usuário não pode alterar as permissões de outro usuário de nível igual ou superior.
+
+---
+
+## 📈 Métricas e Estatísticas
+
+- **`User.password_expired`**: `@property` que verifica se a senha do usuário expirou (a cada 180 dias).
+- **`User.login_history`**: Campo JSON que permite análises sobre frequência de acesso, IPs mais utilizados e duração das sessões.
+- **`UserActionLog`**: Permite criar relatórios sobre as ações mais comuns, usuários mais ativos, etc.
+
+---
+
+## 🎨 Interface do Usuário
+
+- **`registration/verificacao_cpf.html`**: Primeiro passo do cadastro, onde o usuário informa o CPF.
+- **`registration/registration_form.html`**: Formulário de finalização do cadastro, com os dados do militar pré-preenchidos e o campo para aceite dos termos e assinatura.
+- **`accounts/user_detail.html`**: Perfil do usuário, exibindo seus dados, informações do último login e um histórico recente de acessos.
+- **`accounts/user_list.html`**: Tabela de gerenciamento de usuários para administradores.
+
+---
+
+## 🔧 Configuração Técnica
+
+**URLs Principais**
+```python
+app_name = 'accounts'
+
+urlpatterns = [
+    path('login/', v.login_view, name='login'),
+    path('logout/', v.my_logout, name='logout'),
+    path('register/', v.signup, name='signup'),
+    path('verificar-cpf/', v.verificar_cpf, name='verificar_cpf'),
+    path('password_reset/', v.MyPasswordResetView.as_view(), name='password_reset'),
+    path('users/', include(user_management_patterns)),
+]
+```
+
+**Dependências**
+- **Brevo (via API)**: Utilizado para o envio de todos os e-mails transacionais, configurado em `brevo_service.py`.
+
+---
+
+## 💡 Casos de Uso
+
+**Cenário Típico**: Um militar ativo que nunca acessou o sistema entra na página inicial e clica em "Criar Conta". Ele digita seu CPF. O sistema valida o CPF no `efetivo`, confirma que ele está ativo e o redireciona para a tela de cadastro. Seus dados (nome, RE, etc.) já aparecem na tela. Ele lê os termos, assina digitalmente e finaliza. Em instantes, recebe um e-mail com uma senha temporária. Ele faz o primeiro login e o sistema o força a criar uma nova senha pessoal antes de poder navegar.
+
+**Benefícios**:
+- **🎯 Segurança**: Garante que apenas pessoas autorizadas e com status válido tenham acesso ao sistema.
+- **⚙️ Automação**: O fluxo de cadastro e envio de senha é 100% automatizado, reduzindo a carga sobre os administradores.
+- **📊 Controle e Rastreabilidade**: Todas as ações e acessos são registrados, fornecendo uma trilha de auditoria clara.
+- **📈 Experiência do Usuário**: Oferece um processo de autoatendimento para cadastro e recuperação de senha, moderno e eficiente.
