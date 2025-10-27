@@ -68,6 +68,7 @@ from reportlab.platypus import Image as ReportLabImage
 
 import os
 from backend.core.utils import filter_by_user_sgb
+from backend.core.monitoring_decorators import track_function_latency
 
 
 # Configuração de logging
@@ -1325,9 +1326,14 @@ def get_image_path(file):
     return path
 
 def pagina_buscar_militar(request):
+
     return render(request, 'buscar_militar.html')
 
 
+
+
+
+@track_function_latency
 
 def gerar_etiqueta_pdf(request):
     if request.method == 'GET':

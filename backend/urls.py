@@ -18,5 +18,6 @@ urlpatterns = [
     path('cursos/', include('backend.cursos.urls', namespace='cursos')),  # noqa E501
     path('agenda/', include('backend.agenda.urls', namespace='agenda')),  # noqa E501
     path('calculadora/', include('backend.calculadora.urls', namespace='calculadora')),  # noqa E501
+    path('prometheus/', include('django_prometheus.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

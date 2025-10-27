@@ -6,4 +6,5 @@ class AccountsConfig(AppConfig):
     name = 'backend.accounts'
 
     def ready(self):
-     import backend.accounts.signals
+        # Importa e conecta os sinais de métricas do Prometheus
+        import backend.accounts.signals

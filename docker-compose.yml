@@ -56,6 +56,7 @@ services:
       - '8000'
     volumes:
       - .env.docker:/app/.env
+      - ./logs:/var/log/django_app # Monta o diretório de logs do Django
     command: bash -c "gunicorn backend.wsgi:application -b 0.0.0.0:8000"
     depends_on:
       - db
@@ -76,10 +77,93 @@ services:
     networks:
        - siscoe-network
 
+  # --- STACK DE MONITORAMENTO ---
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: siscoe_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/rules:/etc/prometheus/rules
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    networks:
+      - siscoe-network
+    depends_on:
+      - app
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: siscoe_alertmanager
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+    ports:
+      - "9093:9093"
+    networks:
+      - siscoe-network
+
+  telegram-bridge:
+    image: incaller/prometheus_alertmanager_telegram:latest
+    container_name: siscoe_telegram_bridge
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.docker # Aponta para o arquivo .env.docker
+    environment:
+      # O TELEGRAM_BOT_TOKEN será lido do arquivo .env.docker
+      - TELEGRAM_CHAT_ID=-4958407274
+    networks:
+      - siscoe-network
+
+  # --- STACK ELK (LOGGING E ANÁLISE) ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    container_name: siscoe_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - siscoe-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.9
+    container_name: siscoe_logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline # Configuração do Logstash
+      - ./logs:/var/log/django_app # Monta o diretório de logs do Django
+    ports:
+      - "5044:5044" # Porta para Beats (opcional)
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    depends_on:
+      - elasticsearch
+    networks:
+      - siscoe-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.9
+    container_name: siscoe_kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - siscoe-network
 
 volumes:
   pgdata:  # mesmo nome do volume externo definido na linha 10
   pgadmin:
+  esdata:
 
 networks:
   siscoe-network:

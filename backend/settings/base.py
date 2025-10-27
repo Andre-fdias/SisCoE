@@ -13,6 +13,7 @@ ALLOWED_HOSTS = []
 
 # Aplicativos instalados
 INSTALLED_APPS = [
+    'django_prometheus',
     'backend.accounts',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -57,6 +59,7 @@ MIDDLEWARE = [
     'backend.core.middleware.JSONMessagesMiddleware',
     'backend.accounts.middleware.ForcePasswordChangeMiddleware',
     'backend.accounts.middleware.UpdateLastActivityMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -120,6 +123,10 @@ LOGGING = {
     'formatters': {
         'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
         'simple': {'format': '{levelname} {message}', 'style': '{'},
+        'json_formatter': {
+            '()': 'python_json_logger.json_logger.JsonFormatter',
+            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s'
+        },
     },
     'handlers': {
         'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
@@ -131,10 +138,18 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'verbose',
         },
+        'json_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'app.json.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'json_formatter',
+        },
     },
-    'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
+    'root': {'handlers': ['console', 'file', 'json_file'], 'level': 'INFO'},
     'loggers': {
-        'django': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        'django': {'handlers': ['console', 'file', 'json_file'], 'level': 'INFO', 'propagate': False},
     },
 }
 
