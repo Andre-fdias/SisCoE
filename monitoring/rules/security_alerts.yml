@@ -1,0 +1,23 @@
+groups:
+- name: SecurityAlerts
+  rules:
+  - alert: TaxaElevadaDeFalhasDeLogin
+    # Expressão do Prometheus para calcular a taxa de falhas de login por minuto.
+    # rate(metric[5m]) calcula a taxa por segundo em uma janela de 5 minutos.
+    # Multiplicamos por 60 para obter a taxa por minuto.
+    expr: rate(accounts_login_failures_total[5m]) * 60 > 5
+    
+    # Duração que a condição precisa ser verdadeira para o alerta disparar.
+    # Ajuda a evitar falsos positivos para picos rápidos.
+    for: 2m
+    
+    # Labels adicionais para categorizar o alerta.
+    labels:
+      severity: critical
+      
+    # Anotações com informações para quem recebe o alerta.
+    annotations:
+      summary: "Taxa elevada de falhas de login detectada no SisCoE"
+      description: "O sistema detectou uma taxa de {{ $value | printf \"%.2f\" }} falhas de login por minuto nos últimos 2 minutos. Isso pode indicar um ataque de força bruta em andamento."
+      action: "Verifique os logs de acesso do servidor web e do Django para identificar os IPs de origem e os nomes de usuário que estão falhando. Considere bloquear os IPs suspeitos."
+

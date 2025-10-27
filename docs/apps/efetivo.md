@@ -39,7 +39,7 @@ flowchart TD
     F --> I[(HistoricoPromocao)]
     G --> J[(HistoricoCatEfetivo)]
     D --> K[Profile<br/>accounts.core]
-```
+t67```
 
 ## 🧬 Modelos de Dados
 

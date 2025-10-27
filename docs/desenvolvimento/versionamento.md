@@ -1,106 +1,109 @@
-# Versionamento e Fluxo de Trabalho Git
+# 📜 Estratégia de Versionamento Semântico (SemVer)
 
-Para garantir a estabilidade, a rastreabilidade e a colaboração eficaz no desenvolvimento do SisCoE, adotamos um conjunto de padrões para versionamento de software e para o fluxo de trabalho com o Git.
+Este documento detalha a estratégia de versionamento semântico para o SisCoE, adaptada para atender aos rigorosos requisitos de compliance, auditoria e criticidade de um sistema de gestão de efetivo militar.
 
----
+## 🎯 Visão Geral
 
-## Versionamento Semântico (SemVer)
+O versionamento semântico (SemVer) é um conjunto de regras que dita como os números de versão são atribuídos e incrementados. No contexto do SisCoE, ele não apenas comunica a natureza das mudanças, mas também serve como um pilar para a governança de dados e conformidade legal.
 
-O projeto utiliza o **Versionamento Semântico 2.0.0**. Todas as releases devem seguir o formato `MAJOR.MINOR.PATCH`.
+A estrutura de versão adotada é: `MAJOR.MINOR.PATCH`.
 
--   **`MAJOR`**: Incrementada para mudanças incompatíveis de API (que quebram a retrocompatibilidade).
--   **`MINOR`**: Incrementada para adicionar funcionalidades de maneira retrocompatível.
--   **`PATCH`**: Incrementada para correções de bugs retrocompatíveis.
+### Formato da Versão: `MAJOR.MINOR.PATCH`
 
-!!! info "Onde encontrar a versão?"
-    A versão oficial do projeto é definida pelas **tags do Git** na branch `main`.
+- **MAJOR**: Incrementado para mudanças que quebram a compatibilidade da API, a estrutura legal dos dados ou os requisitos de compliance. Essas são mudanças que exigem atenção máxima durante a atualização.
+- **MINOR**: Incrementado para adição de novas funcionalidades de forma retrocompatível. O sistema expande suas capacidades sem invalidar o que já existe.
+- **PATCH**: Incrementado para correções de bugs e falhas de segurança que são retrocompatíveis. Essencial para garantir a estabilidade e a segurança dos dados críticos.
 
----
+Adicionalmente, metadados de build podem ser adicionados com um `+`, como `1.0.0+202310231400.a1b2c3d`.
 
-## Fluxo de Trabalho Git (Git Flow)
+- **Build Metadata**: Contém informações como timestamp do deploy, hash do commit Git e ambiente de destino (e.g., `dev`, `staging`, `prod`). Não indica precedência de versão.
 
-Utilizamos uma adaptação do **Git Flow** como nosso fluxo de trabalho de ramificação (branching model). Este modelo isola o trabalho em andamento do código de produção.
+## 🏛️ Definição de Mudanças
 
-```mermaid
-graph LR
-    subgraph "Produção"
-        A(main)
-    end
-    subgraph "Desenvolvimento"
-        B(develop)
-    end
-    subgraph "Features & Fixes"
-        C(feature/nova-tela)
-        D(fix/bug-relatorio)
-    end
-    subgraph "Releases"
-        E(release/v1.2.0)
-    end
-    subgraph "Hotfixes"
-        F(hotfix/bug-critico)
-    end
+### `MAJOR` - Mudanças de Quebra de Conformidade
 
-    B --> C;
-    B --> D;
-    C --> B;
-    D --> B;
-    B --> E;
-    E --> A;
-    E --> B;
-    A --> F;
-    F --> A;
-    F --> B;
+Exemplos:
+- Alteração na estrutura de um campo que armazena um dado pessoal regulado por lei (e.g., formato do RE, CPF).
+- Modificação em um fluxo de trabalho que impacta um requisito de auditoria legal.
+- Remoção de um endpoint de API usado por sistemas integrados.
+- Atualização de uma regra de negócio que altera a forma como a situação funcional de um militar é calculada, se isso tiver implicação legal.
+
+**Impacto**: Exige planejamento cuidadoso, comunicação com stakeholders e, possivelmente, um processo de migração de dados.
+
+### `MINOR` - Novas Funcionalidades
+
+Exemplos:
+- Adição de um novo relatório de efetivo.
+- Criação de um novo dashboard de BI.
+- Inclusão de novos campos não-obrigatórios em um modelo.
+- Exposição de um novo endpoint de API para consulta de dados.
+
+**Impacto**: Permite a evolução contínua do sistema com baixo risco de regressão.
+
+### `PATCH` - Correções Críticas
+
+Exemplos:
+- Correção de uma vulnerabilidade de segurança (e.g., SQL Injection, XSS).
+- Ajuste em um cálculo que produzia resultados incorretos, mas sem impacto legal.
+- Correção de um bug na interface que impedia o cadastro de um militar.
+- Otimização de uma query lenta que não altera a lógica de negócio.
+
+**Impacto**: Essencial para a manutenção da saúde e segurança do sistema. Devem ser aplicados com agilidade.
+
+## ⚙️ Implementação no Fluxo de Trabalho Git
+
+O versionamento será gerenciado através de tags no Git e um arquivo `CHANGELOG.md`.
+
+1.  **Branching Model**: Recomenda-se o uso de um modelo como o GitFlow (`main`, `develop`, `feature/*`, `release/*`, `hotfix/*`).
+2.  **Tags Git**: Cada release no branch `main` deve ser marcada com uma tag de versão anotada.
+    ```bash
+    # Exemplo de criação de tag para um release minor
+    git tag -a v1.2.0 -m "Release 1.2.0: Adiciona funcionalidade de relatórios customizados"
+    ```
+3.  **Changelog**: Todas as mudanças devem ser documentadas no arquivo `CHANGELOG.md`, seguindo o padrão "Keep a Changelog". Isso cria um histórico legível por humanos das mudanças em cada versão.
+
+### Exemplo de `CHANGELOG.md`
+
+```markdown
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [1.2.0] - 2023-10-23
+
+### Added
+- Funcionalidade de geração de relatórios customizados.
+- Novo endpoint `/api/v1/efetivo/estatisticas`.
+
+### Changed
+- Melhoria na performance da listagem de militares.
+
+## [1.1.1] - 2023-10-15
+
+### Fixed
+- Correção em bug crítico que permitia cadastro de RE duplicado.
+
+## [1.1.0] - 2023-10-10
+
+### Added
+- Módulo de gestão de afastamentos.
+
+## [1.0.0] - 2023-09-01
+
+### Added
+- Lançamento inicial do SisCoE.
 ```
 
-### Branches Principais
+## 🤖 Automação
 
--   **`main`**: Reflete o código em **produção**. Todo commit na `main` é uma nova release e deve ser tagueado. Apenas branches de `release` ou `hotfix` podem ser mescladas aqui.
--   **`develop`**: É a branch de **integração** para o desenvolvimento. Contém as funcionalidades mais recentes que serão incluídas na próxima release.
+Para garantir a consistência, o processo de versionamento e geração de changelog pode ser automatizado com ferramentas como:
 
-### Fluxo de Desenvolvimento
+-   **Conventional Commits**: Um padrão de mensagens de commit que permite a automação da determinação da versão e do changelog.
+-   **standard-version** (ou similar): Uma ferramenta que lê os commits, determina a próxima versão, cria a tag e atualiza o `CHANGELOG.md` automaticamente.
 
-1.  **Crie uma Branch a partir de `develop`**: Nunca trabalhe diretamente na `main` ou `develop`.
-
-    ```bash
-    # Para novas funcionalidades
-    git checkout develop
-    git pull
-    git checkout -b feature/nome-da-sua-feature
-
-    # Para correções de bugs não-urgentes
-    git checkout develop
-    git pull
-    git checkout -b fix/descricao-do-bug
-    ```
-
-2.  **Desenvolva e Faça Commits**: Trabalhe na sua branch e faça commits pequenos e coesos usando o padrão de Commits Convencionais (veja abaixo).
-
-3.  **Abra um Pull Request (PR)**: Ao concluir, envie sua branch para o repositório remoto e abra um Pull Request (PR) com a branch `develop` como destino.
-
-4.  **Revisão e Merge**: Após a aprovação da revisão de código, seu PR será mesclado na `develop`.
-
-!!! tip "Mantenha-se Atualizado"
-    Mantenha sua branch sempre atualizada com a `develop` para evitar conflitos. Use `git pull origin develop` regularmente.
-
----
-
-## Padrão de Commits (Conventional Commits)
-
-Para manter um histórico de commits limpo e legível, seguimos a especificação [Conventional Commits](https://www.conventionalcommits.org/).
-
-A estrutura é: `<tipo>[escopo opcional]: <descrição>`.
-
-### Tipos de Commit Mais Comuns:
-
--   `feat`: Uma nova funcionalidade.
--   `fix`: Uma correção de bug.
--   `docs`: Mudanças apenas na documentação.
--   `style`: Mudanças que não afetam o significado do código (formatação, etc).
--   `refactor`: Uma alteração de código que não corrige um bug nem adiciona uma funcionalidade.
--   `test`: Adicionando ou corrigindo testes.
--   `chore`: Mudanças no processo de build ou em ferramentas auxiliares.
-
-!!! example "Exemplos de Mensagens de Commit"
-    - `feat(accounts): adicionar login social com Google`
-    - `fix(efetivo): corrigir cálculo de idade do servidor`
-    - `docs(arquitetura): adicionar diagrama de fluxo de requisição`
+A adoção desta estratégia de versionamento garante um controle de mudanças robusto, essencial para a governança, segurança e conformidade do SisCoE.

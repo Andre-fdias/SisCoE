@@ -1,0 +1,31 @@
+# prometheus.yml
+
+global:
+  scrape_interval: 15s # A cada 15 segundos, o Prometheus coletará as métricas.
+  evaluation_interval: 15s # A cada 15 segundos, o Prometheus avaliará as regras de alerta.
+
+# Configuração de regras de alerta
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+           # O nome 'alertmanager' será resolvido pelo Docker Compose para o container correspondente.
+          - alertmanager:9093
+
+# Carrega arquivos de regras de alerta
+rule_files:
+  - "monitoring/rules/security_alerts.yml"
+
+# Configuração dos alvos (targets) de onde o Prometheus coletará as métricas.
+scrape_configs:
+  # O próprio Prometheus (para monitorar sua própria saúde)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # A aplicação Django (SisCoE)
+  - job_name: 'siscoe_django_app'
+    # O Prometheus buscará as métricas no caminho /prometheus/metrics
+    metrics_path: /prometheus/metrics
+    static_configs:
+      - targets: ['app:8000'] # Aponta para o serviço 'app' do Docker Compose

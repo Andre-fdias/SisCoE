@@ -1,0 +1,18 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  # Rota principal que captura todos os alertas.
+  receiver: 'telegram-webhook'
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+
+receivers:
+  - name: 'telegram-webhook'
+    webhook_configs:
+      # A URL para onde o Alertmanager enviará os alertas.
+      # O nome 'telegram-bridge' será resolvido pelo Docker Compose para o container da nossa ponte.
+      - url: 'http://telegram-bridge:8080/alert'
+        send_resolved: true # Envia uma notificação quando o alerta for resolvido.
