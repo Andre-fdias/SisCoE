@@ -1,22 +1,29 @@
-version: "3.8"
+
+#version: "3.8"
 
 services:
   db:
     container_name: siscoe.db
     image: postgres:17-alpine
     restart: always
-    user: postgres  # importante definir o usuário
+    user: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
       - LC_ALL=C.UTF-8
-      - POSTGRES_PASSWORD=davi2807  # senha padrão
-      - POSTGRES_USER=postgres  # usuário padrão
-      - POSTGRES_DB=siscoe_db  # necessário porque foi configurado assim no settings
+      - POSTGRES_PASSWORD=davi2807
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=siscoe_db
     ports:
-      - 5431:5432  # repare na porta externa 5431
+      - 5431:5432
     networks:
       - siscoe-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   pgadmin:
     container_name: siscoe_pgadmin
@@ -55,23 +62,32 @@ services:
     expose:
       - '8000'
     volumes:
-      - .env.docker:/app/.env
-      - ./logs:/var/log/django_app # Monta o diretório de logs do Django
-    command: bash -c "gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+      - .env.docker:/app/.env  # Este monta o arquivo .env.docker como .env no container
+      - ./logs:/var/log/django_app
+    command: >
+      bash -c "
+        echo 'Aguardando banco de dados...' &&
+        sleep 10 &&
+        python manage.py migrate &&
+        python manage.py create_superuser &&
+        gunicorn backend.wsgi:application -b 0.0.0.0:8000
+      "
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - siscoe-network
 
 
   nginx:
     container_name: siscoe_nginx
-    image: nginx
+    image: nginx:alpine
     hostname: nginx
     ports:
       - '80:8000'
     volumes:
       - ./docker/config/nginx/:/etc/nginx/conf.d/
+      - ./staticfiles:/app/staticfiles:ro  # Adicione esta linha
     depends_on:
       - app
     networks:

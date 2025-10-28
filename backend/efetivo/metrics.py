@@ -1,4 +1,4 @@
-from django_prometheus.models import model_signals
+
 from prometheus_client import Counter, Gauge
 
 # ==============================================================================

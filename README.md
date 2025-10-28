@@ -1,5 +1,9 @@
 # 🧭 SisCoE — Sistema de Controle de Efetivo
 
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](VERSION)
+![CI](https://github.com/Andre-fdias/SisCoE/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/Andre-fdias/SisCoE/actions/workflows/cd.yml/badge.svg)
+
 > **SisCoE** é uma plataforma completa de gestão operacional e administrativa, projetada para otimizar o controle de efetivo, escalas, documentos, treinamentos e muito mais — centralizando todas as operações em um único sistema integrado.
 
 ---
@@ -10,6 +14,7 @@
 - [Instalação e Configuração](#instalação-e-configuração)
 - [Uso e Execução](#uso-e-execução)
 - [Estrutura do Projeto](#estrutura-do-projeto)
+- [Versionamento Automático](#versionamento-automático)
 - [Funcionalidades Principais](#funcionalidades-principais)
 - [Testes e Qualidade de Código](#testes-e-qualidade-de-código)
 - [Contribuição](#contribuição)
@@ -98,6 +103,9 @@ Acesse em: 👉 http://127.0.0.1:8000
 
 ```
 .
+├── .github/            # Workflows do GitHub Actions
+│   └── workflows/
+│       └── versioning.yml
 ├── backend/            # Contém toda a lógica principal da aplicação Django
 │   ├── accounts/       # Gestão de usuários, autenticação e perfis
 │   ├── adicional/      # Lógica para adicionais e benefícios
@@ -117,6 +125,8 @@ Acesse em: 👉 http://127.0.0.1:8000
 │   └── templates/      # Templates HTML globais do backend
 ├── docs/               # Arquivos da documentação do projeto (MkDocs)
 ├── node_modules/       # Dependências do frontend (gerenciado pelo npm)
+├── scripts/            # Scripts de automação e utilitários
+│   └── bump_version.py # Script para incrementar a versão
 ├── static/             # Arquivos estáticos coletados para produção
 ├── venv/               # Ambiente virtual do Python
 ├── .env.example        # Arquivo de exemplo para variáveis de ambiente
@@ -125,6 +135,26 @@ Acesse em: 👉 http://127.0.0.1:8000
 ├── manage.py           # Utilitário de linha de comando do Django
 └── README.md           # Este arquivo
 ```
+
+---
+
+## 🚀 Versionamento Automático
+
+Este projeto utiliza um sistema de **versionamento semântico (SemVer)** automatizado com GitHub Actions.
+
+A cada `push` ou `merge` na branch `main` (ou `master`), a pipeline:
+1.  **Analisa a mensagem do último commit**.
+2.  **Incrementa a versão** no arquivo `VERSION` com base no tipo de commit:
+    - `feat:` → incrementa **minor** (ex: `1.2.0` → `1.3.0`)
+    - `fix:` ou `refactor:` → incrementa **patch** (ex: `1.2.0` → `1.2.1`)
+    - `BREAKING CHANGE:` → incrementa **major** (ex: `1.2.0` → `2.0.0`)
+3.  **Cria um novo commit** com a atualização do arquivo `VERSION`.
+4.  **Gera uma nova tag Git** (ex: `v1.3.0`).
+5.  **Exibe a versão** automaticamente no rodapé da aplicação.
+
+O workflow responsável por esta automação está em `.github/workflows/versioning.yml`.
+
+---
 
 ## 🔍 Funcionalidades Principais
 
@@ -170,6 +200,8 @@ git commit -m "feat(efetivo): adiciona cálculo de adicionais"
 # Push e criação de PR
 git push origin feature/nome-da-feature
 ```
+
+> **Nota:** O formato do seu commit (`feat`, `fix`, etc.) é crucial, pois ele alimenta diretamente o sistema de versionamento automático.
 
 Antes de abrir o PR:
 

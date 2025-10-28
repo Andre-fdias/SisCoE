@@ -3,15 +3,50 @@ from pathlib import Path
 from django.contrib.messages import constants
 from decouple import config, Csv
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # Ajuste para 3 níveis (settings dentro de pasta)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = config('SECRET_KEY')
+# SECURITY: Use config com valor padrão para desenvolvimento
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-only')
 
-DEBUG = False  # Definido apenas em dev ou prod
+# DEBUG deve ser configurável por ambiente
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS deve ser configurável
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
-# Aplicativos instalados
+# Configuração de banco de dados - compatível com Docker e local
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'NAME': config('DB_NAME', default=config('DATABASE_URL', default='siscoe_db')),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
+}
+
+# Se DATABASE_URL estiver definida, usa ela (para compatibilidade)
+if config('DATABASE_URL', default=None):
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+
+# Configurações de email - compatível com Docker (MailHog) e produção (Brevo)
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default=config('BREVO_API_KEY', default=''))
+
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='siscoe.suporte@gmail.com')
+DEFAULT_FROM_NAME = config('DEFAULT_FROM_NAME', default='SisCoE Sistema')
+
+# Restante das configurações permanecem iguais...
 INSTALLED_APPS = [
     'django_prometheus',
     'backend.accounts',
@@ -75,6 +110,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'backend.core.context_processors.version_context_processor',
             ],
         },
     },
@@ -116,17 +152,23 @@ MESSAGE_TAGS = {
     constants.WARNING: 'alert-warning',
 }
 
-# Logging com rotação
+# APIs
+GROQ_API_KEY = config('GROQ_API_KEY', default=None)
+WEATHER_API_KEY = config('WEATHER_API_KEY', default=None)
+
+# Telegram (para alertas)
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default=None)
+TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID', default=None)
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
         'simple': {'format': '{levelname} {message}', 'style': '{'},
-        'json_formatter': {
-            '()': 'python_json_logger.json_logger.JsonFormatter',
-            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s'
-        },
     },
     'handlers': {
         'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
@@ -134,30 +176,13 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'debug.log',
-            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'maxBytes': 5 * 1024 * 1024,
             'backupCount': 5,
             'formatter': 'verbose',
         },
-        'json_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'app.json.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'json_formatter',
-        },
     },
-    'root': {'handlers': ['console', 'file', 'json_file'], 'level': 'INFO'},
+    'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
     'loggers': {
-        'django': {'handlers': ['console', 'file', 'json_file'], 'level': 'INFO', 'propagate': False},
+        'django': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
     },
 }
-
-# Configurações comuns de e-mail
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='siscoe.suporte@gmail.com')
-
-# APIs
-GROQ_API_KEY = config('GROQ_API_KEY', default=None)
-WEATHER_API_KEY = config('WEATHER_API_KEY', default=None)
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

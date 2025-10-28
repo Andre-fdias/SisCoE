@@ -763,19 +763,22 @@
                 }
     
                 // Se for válido, envia o formulário
-                if (isValid) {
-                    form.submit();
-                } else {
-                    // Rola até o primeiro erro
-                    if (firstErrorElement) {
-                        firstErrorElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-                    // Exibe mensagem geral de erro
-                    showToast('Por favor, corrija os campos destacados em vermelho', 'error');
-                }
+if (isValid) {
+    console.log('Formulário válido, enviando...');
+    militarForm.submit(); // CORREÇÃO PRINCIPAL
+} else {
+    // Rola até o primeiro erro
+    if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+    // Exibe mensagem geral de erro
+    showToast('Por favor, corrija os campos destacados em vermelho', 'error');
+    // Remove classe de submitting se houver erro
+    militarForm.classList.remove('submitting');
+}
             });
         }
     
