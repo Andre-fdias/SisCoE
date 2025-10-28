@@ -223,21 +223,6 @@
   <!-- AlpineJS para o dropdown -->
   <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 
-  <script>
-    
-
-      // Mobile menu toggle
-      const mobileMenuButton = document.getElementById('mobileMenuButton');
-      const mobileMenu = document.getElementById('mobileMenu');
-      
-      if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.addEventListener('click', function() {
-          mobileMenu.classList.toggle('hidden');
-        });
-      }
-    
-  </script>
-
   <!-- Hero Section -->
   <section class="relative py-16 md:py-24 lg:py-32 overflow-hidden">
     <div class="absolute inset-0 z-0">
@@ -376,8 +361,6 @@
     </div>
   </section>
 
-
-
   <!-- CTA Section -->
   <section class="py-16 md:py-24 bg-gradient-to-r from-primary-600 to-secondary-500 text-white">
     <div class="container mx-auto px-4 text-center">
@@ -464,103 +447,77 @@
       <hr class="border-gray-200 dark:border-gray-700 my-6">
       
       <div class="flex flex-col md:flex-row justify-between items-center">
-      <!-- Modal de Login Superuser (escondido no footer) -->
-<!-- Modal de Login Superuser (manter exatamente onde está no seu footer) -->
-<div id="superuserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white">
-                <i class="fas fa-user-shield mr-2 text-purple-600"></i> Acesso Administrativo
-            </h3>
-            <button onclick="document.getElementById('superuserModal').classList.add('hidden')" 
-                    class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-                  
-        <form id="superuserLoginForm" action="{% url 'accounts:admin_login' %}" method="POST">
-            {% csrf_token %}
-            
-            <!-- Mensagens de erro/sucesso -->
-            {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            
-            <div class="space-y-4">
-                <!-- Campo Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail Administrativo</label>
-                    <div class="relative">
-                        <input name="username" type="email" required
-                            class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
-                            placeholder="admin@dominio.com"
-                            value="{{ request.GET.username|default:'' }}">
-                        <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
-                    </div>
-                </div>
-                
-                <!-- Campo Senha -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
-                    <div class="relative">
-                        <input name="password" type="password" required
-                            class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
-                            placeholder="••••••••">
-                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
-                    </div>
-                </div>
-                
-                <!-- Botão de Submit -->
-                <div class="pt-2">
-                    <button type="submit" 
-                            class="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
-                        <i class="fas fa-sign-in-alt mr-2"></i> Acessar como Admin
+        <!-- Modal de Login Superuser (escondido no footer) -->
+        <div id="superuserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                        <i class="fas fa-user-shield mr-2 text-purple-600"></i> Acesso Administrativo
+                    </h3>
+                    <button onclick="document.getElementById('superuserModal').classList.add('hidden')" 
+                            class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
+                          
+                <form id="superuserLoginForm" action="{% url 'accounts:admin_login' %}" method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- Mensagens de erro/sucesso -->
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="space-y-4">
+                        <!-- Campo Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail Administrativo</label>
+                            <div class="relative">
+                                <input name="username" type="email" required
+                                    class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
+                                    placeholder="admin@dominio.com"
+                                    value="{{ request.GET.username|default:'' }}">
+                                <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Campo Senha -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
+                            <div class="relative">
+                                <input name="password" type="password" required
+                                    class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700"
+                                    placeholder="••••••••">
+                                <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Botão de Submit -->
+                        <div class="pt-2">
+                            <button type="submit" 
+                                    class="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Acessar como Admin
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
 
-          <!-- Ativador escondido no copyright -->
-<!-- Na seção de copyright do footer -->
-<div class="text-gray-600 dark:text-gray-300 text-sm mb-4 md:mb-0">
-    &copy; 
-    <span onclick="document.getElementById('superuserModal').classList.remove('hidden')" 
-          class="hidden cursor-pointer text-purple-600 hover:underline" 
-          id="superuserTrigger">
-        2025 
-    </span>SisCoE. Todos os direitos reservados.
-</div>
-
-<script>
-    // Ativa o trigger apenas em ambiente de desenvolvimento
-    document.addEventListener('DOMContentLoaded', function() {
-        const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-        const isDev = window.location.hostname.includes('.dev') || window.location.hostname.includes('.test');
-        
-        if (isLocalhost || isDev) {
-            document.getElementById('superuserTrigger').classList.remove('hidden');
-        }
-    });
-</script>
-
-          <script>
-            // Mostra o link de acesso admin apenas para desenvolvedores
-            document.addEventListener('DOMContentLoaded', function() {
-              // Verifica se é localhost ou IP de desenvolvimento
-              if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                document.getElementById('superuserTrigger').classList.remove('hidden');
-              }
-            });
-          </script>
-
+        <div class="text-gray-600 dark:text-gray-300 text-sm mb-4 md:mb-0">
+            &copy; 
+            <span onclick="document.getElementById('superuserModal').classList.remove('hidden')" 
+                  class="hidden cursor-pointer text-purple-600 hover:underline" 
+                  id="superuserTrigger">
+                2025 
+            </span>SisCoE. Todos os direitos reservados.
+        </div>
 
         <div class="text-gray-600 dark:text-gray-300 text-sm">
           Desenvolvido por <a href="https://www.linkedin.com/in/andre-fonseca-dias-814a91243/" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">André Fonseca Dias</a>
@@ -574,11 +531,117 @@
     <i class="fas fa-arrow-up"></i>
   </button>
 
+  <!-- Fale Conosco Section - Badge Flutuante (Lado Esquerdo) -->
+  <button onclick="openModal()" class="fixed bottom-6 left-6 w-16 h-16 rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-white text-2xl animate-bounce z-40">
+      ✉️
+  </button>
+  
+  <!-- Modal Fale Conosco -->
+  <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl relative">
+          <!-- Botão Fechar -->
+          <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+              ✕
+          </button>
+          
+          <!-- Conteúdo do Modal -->
+          <div class="p-8 bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 rounded-lg">
+              <h2 class="text-3xl font-bold text-gray-800 mb-6">Fale Conosco</h2>
+              
+              <form action="{% url 'crm:send_contact' %}" method="POST" class="space-y-6">
+                  {% csrf_token %}
+                  
+                  <div class="space-y-4">
+                      <div>
+                          <label for="id_name" class="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
+                          <input
+                              id="id_name"
+                              name="name"
+                              type="text"
+                              required
+                              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              placeholder="Ex: João da Silva"
+                          />
+                      </div>
+  
+                      <div>
+                          <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                          <input
+                              id="id_email"
+                              name="email"
+                              type="email"
+                              required
+                              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              placeholder="seu.email@exemplo.com"
+                          />
+                      </div>
+  
+                      <div>
+                          <label for="id_title" class="block text-sm font-medium text-gray-700 mb-1">Assunto</label>
+                          <input
+                              id="id_title"
+                              name="title"
+                              type="text"
+                              required
+                              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              placeholder="Título da mensagem"
+                          />
+                      </div>
+  
+                      <div>
+                          <label for="id_body" class="block text-sm font-medium text-gray-700 mb-1">Mensagem</label>
+                          <textarea
+                              id="id_body"
+                              name="body"
+                              required
+                              rows="5"
+                              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              placeholder="Informe seu Posto/Graduação, RE, Nome completo e local de trabalho"
+                          ></textarea>
+                      </div>
+                  </div>
+  
+                  <button
+                      type="submit"
+                      class="w-full px-6 py-3 bg-gradient-to-r from-cyan-400 to-cyan-600 hover:from-cyan-500 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02]"
+                  >
+                      Enviar Mensagem
+                  </button>
+              </form>
+          </div>
+      </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   
   <script>
+    // Functions for Contact Modal
+    function openModal() {
+        document.getElementById('contactModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('contactModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // Fechar modal ao clicar fora
+    document.getElementById('contactModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
     // Initialize Swiper
     const swiper = new Swiper('.testimonials-swiper', {
       loop: true,
@@ -703,6 +766,14 @@
           
           particlesContainer.appendChild(particle);
         }
+      }
+
+      // Ativa o trigger apenas em ambiente de desenvolvimento
+      const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const isDev = window.location.hostname.includes('.dev') || window.location.hostname.includes('.test');
+      
+      if (isLocalhost || isDev) {
+          document.getElementById('superuserTrigger').classList.remove('hidden');
       }
     });
   </script>

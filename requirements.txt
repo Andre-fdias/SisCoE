@@ -9,18 +9,26 @@ django-extensions==4.1
 django-fontawesome-5==1.0.18
 django-seed==0.3.1
 django-widget-tweaks==1.5.0
+django-import-export==3.3.8
+django-prometheus==2.4.1
 whitenoise==6.9.0
+
+# ==============================================
+# SERVIDOR DE PRODUÇÃO
+# ==============================================
+gunicorn==21.2.0
 
 # ==============================================
 # BANCO DE DADOS E ARMAZENAMENTO
 # ==============================================
 psycopg2-binary==2.9.10
+dj-database-url==3.0.1
 pandas==2.2.3
 openpyxl==3.1.5
 orjson==3.10.16
 reportlab==4.4.0
 pillow==11.2.1
-redis
+redis==7.0.1
 
 # ==============================================
 # AUTENTICAÇÃO E SEGURANÇA
@@ -73,8 +81,8 @@ six==1.17.0
 sqlparse==0.5.3
 tqdm==4.67.1
 typing_extensions==4.13.2
-django-import-export==3.3.8
 brevo-python==1.2.0
+semver==3.0.2
 
 # ==============================================
 # COMPRESSÃO E OTIMIZAÇÃO
@@ -109,23 +117,31 @@ tenacity==9.1.2
 threadpoolctl==3.6.0
 toposort==1.10
 
-geopy==2.4.1
-dj-database-url
 # ==============================================
+# GEO LOCALIZAÇÃO
+# ==============================================
+geopy==2.4.1
 
 # ==============================================
 # MONITORAMENTO E OBSERVABILIDADE
 # ==============================================
-django-prometheus
-prometheus-client
+prometheus-client==0.23.1
 
 # ==============================================
 # LOGGING
 # ==============================================
-python-json-logger
+python-json-logger==4.0.0
 
 # ==============================================
 # DOCUMENTAÇÃO
 # ==============================================
-mkdocs-material>=9.5
-mkdocstrings[python]>=0.26
+mkdocs-material==9.6.22
+mkdocstrings==0.30.1
+mkdocstrings-python==1.18.2
+
+# ==============================================
+# TESTES
+# ==============================================
+pytest
+pytest-django
+pytest-cov

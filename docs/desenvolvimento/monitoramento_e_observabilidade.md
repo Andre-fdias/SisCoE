@@ -101,11 +101,24 @@ Além das métricas padrão, criamos métricas específicas para os requisitos d
 
 ---
 
-## 7. Logging Estruturado com ELK Stack
+## 7. Indicador de Versionamento na Interface
+
+Para facilitar a identificação da versão da aplicação em execução, um indicador de versionamento foi adicionado à interface do usuário.
+
+### 7.1. Implementação
+
+1.  **`backend/__version__.py`:** Criado para armazenar a string da versão (ex: `"1.0.0"`).
+2.  **`backend/core/context_processors.py`:** Criado para ler o valor de `__version__` e injetá-lo no contexto de todos os templates como `app_version`.
+3.  **`backend/settings/base.py`:** O context processor `backend.core.context_processors.version_indicator` foi adicionado à lista `TEMPLATES['OPTIONS']['context_processors']`.
+4.  **`backend/core/templates/landing.html`:** O valor `v{{ app_version }}` foi adicionado ao rodapé da página, próximo à informação de copyright.
+
+---
+
+## 8. Logging Estruturado com ELK Stack
 
 Para uma observabilidade completa, configuramos o Django para gerar logs estruturados (JSON), que podem ser facilmente ingeridos e analisados por um ELK Stack (Elasticsearch, Logstash, Kibana).
 
-### 7.1. Configuração no Django
+### 8.1. Configuração no Django
 
 -   **Dependência:** A biblioteca `python-json-logger` foi adicionada ao `requirements.txt`.
 -   **`backend/settings/base.py`:** O dicionário `LOGGING` foi atualizado para incluir:
@@ -114,7 +127,7 @@ Para uma observabilidade completa, configuramos o Django para gerar logs estrutu
     -   O handler `json_file` foi adicionado aos `handlers` do logger `root` e do logger `django`.
 -   **Diretório de Logs:** O diretório `logs/` foi criado na raiz do projeto para armazenar os logs JSON.
 
-### 7.2. Integração com Docker Compose (ELK Stack)
+### 8.2. Integração com Docker Compose (ELK Stack)
 
 Os seguintes serviços foram adicionados ao `docker-compose.yml` para orquestrar o ELK Stack:
 
@@ -124,7 +137,7 @@ Os seguintes serviços foram adicionados ao `docker-compose.yml` para orquestrar
     -   O arquivo de configuração `monitoring/logstash/pipeline/logstash.conf` foi criado para definir o pipeline de ingestão.
 -   **`kibana`:** Fornece a interface de usuário para buscar, visualizar e criar dashboards com os logs.
 
-### 7.3. Configuração do Logstash (`monitoring/logstash/pipeline/logstash.conf`)
+### 8.3. Configuração do Logstash (`monitoring/logstash/pipeline/logstash.conf`)
 
 Este arquivo define o pipeline de ingestão do Logstash:
 
@@ -168,7 +181,7 @@ output {
 }
 ```
 
-### 7.4. Como Usar o ELK Stack
+### 8.4. Como Usar o ELK Stack
 
 1.  **Inicie os serviços Docker:**
     ```bash

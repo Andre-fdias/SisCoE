@@ -3,7 +3,7 @@ name: Django CD
 on:
   push:
     tags:
-      - 'v*.*.*'   # dispara quando nova versão é tagueada
+      - 'v*.*.*'
 
 jobs:
   deploy:
@@ -23,11 +23,12 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          VERSION=$(cat VERSION)
-          docker build -t your-docker-org/your-app-name:$VERSION .
-          docker push your-docker-org/your-app-name:$VERSION
-          docker tag your-docker-org/your-app-name:$VERSION your-docker-org/your-app-name:latest
-          docker push your-docker-org/your-app-name:latest
+          # Use a tag do git como versão
+          VERSION=${GITHUB_REF#refs/tags/}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/siscoe:$VERSION .
+          docker push ${{ secrets.DOCKER_USERNAME }}/siscoe:$VERSION
+          docker tag ${{ secrets.DOCKER_USERNAME }}/siscoe:$VERSION ${{ secrets.DOCKER_USERNAME }}/siscoe:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/siscoe:latest
 
       - name: Deploy to production
         uses: appleboy/ssh-action@v1.0.3
@@ -36,44 +37,53 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /var/www/your-app-name
+            cd /var/www/siscoe
             
-            # Cria o arquivo .env.docker com os secrets do GitHub
-            echo "Criando arquivo de ambiente..."
-            cat << EOF > .env.docker
-# Arquivo gerado pelo GitHub Actions
+            echo "Criando arquivo .env..."
+            cat << EOF > .env
+# Arquivo gerado pelo GitHub Actions - $(date)
 
 # Django
-SECRET_KEY=${{ secrets.SECRET_KEY }}
+SECRET_KEY='${{ secrets.SECRET_KEY }}'
 DEBUG=False
-ALLOWED_HOSTS=${{ secrets.SERVER_HOST }}
+ALLOWED_HOSTS=${{ secrets.SERVER_HOST }},localhost,127.0.0.1
 
 # Database
-DATABASE_URL=${{ secrets.DATABASE_URL }}
+DB_NAME=${{ secrets.DB_NAME }}
+DB_USER=${{ secrets.DB_USER }}
+DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+DB_HOST=${{ secrets.DB_HOST }}
+DB_PORT=${{ secrets.DB_PORT }}
 
 # Email (Brevo)
-BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+BREVO_API_KEY='${{ secrets.BREVO_API_KEY }}'
 DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
 DEFAULT_FROM_NAME='SisCoE Sistema'
 
 # APIs
-GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
-WEATHER_API_KEY=${{ secrets.WEATHER_API_KEY }}
+GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}'
+WEATHER_API_KEY='${{ secrets.WEATHER_API_KEY }}'
 
-# Telegram para notificações do Alertmanager
-TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
+# Telegram para notificações
+TELEGRAM_BOT_TOKEN='${{ secrets.TELEGRAM_BOT_TOKEN }}'
+TELEGRAM_CHAT_ID='${{ secrets.TELEGRAM_CHAT_ID }}'
 
 EOF
 
             echo "Fazendo pull das imagens Docker..."
-            docker-compose pull
+            docker-compose pull app
             
             echo "Recriando os containers..."
             docker-compose down
             docker-compose up -d
             
-            echo "Deploy da versão $(cat VERSION) concluído!"
+            echo "Executando migrações..."
+            docker-compose exec -T app python manage.py migrate --noinput
+            
+            echo "Coletando arquivos estáticos..."
+            docker-compose exec -T app python manage.py collectstatic --noinput --clear
+            
+            echo "Deploy da versão ${GITHUB_REF#refs/tags/} concluído!"
 
       - name: Notify via Telegram
         if: always()
@@ -83,7 +93,8 @@ EOF
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🚀 Deploy Status: ${{ job.status }}
-            ✅ Version: $(cat VERSION)
+            ✅ Version: ${GITHUB_REF#refs/tags/}
             🔗 Branch: ${{ github.ref_name }}
             👤 By: ${{ github.actor }}
-            See changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+            📝 Commit: ${GITHUB_SHA:0:7}
+            🔍 Details: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
