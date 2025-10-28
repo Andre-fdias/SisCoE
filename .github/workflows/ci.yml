@@ -1,0 +1,70 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-django pytest-cov semver
+
+      - name: Run tests
+        run: |
+          pytest --disable-warnings
+
+      - name: Upload coverage to GitHub summary
+        run: |
+          coverage=$(pytest --cov=backend --disable-warnings | grep "TOTAL")
+          echo "### ✅ Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo "$coverage" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+
+  versioning:
+    needs: test
+    if: github.ref == 'refs/heads/main' or github.ref == 'refs/heads/master' # Só roda em push para main/master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }} # Necessário para push
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Install semver
+        run: pip install semver
+      - name: Bump version
+        id: bump_version
+        run: python scripts/bump_version.py
+      - name: Commit and Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions"
+          VERSION=$(cat VERSION)
+          git add VERSION
+          # Verifica se há mudanças para commitar
+          if git diff --staged --quiet; then
+            echo "Nenhuma mudança de versão para commitar."
+          else
+            git commit -m "chore(release): v$VERSION"
+            git tag v$VERSION
+            git push
+            git push origin v$VERSION
+          fi
