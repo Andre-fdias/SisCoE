@@ -1,21 +1,29 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserActionLog, SearchableUserActionLog, SearchableUser
+from .models import User, UserActionLog, SearchableUserActionLog, SearchableUser, Profile
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
-# Removendo o ProfileAdmin se existia
+# Define o inline para o Profile
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+    verbose_name_plural = 'Profile'
+    fk_name = 'user'
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
+    inlines = (ProfileInline,)
 
     list_display = ('email', 'first_name', 'last_name', 'is_admin', 'is_active', 'permissoes', 'cadastro_link')
     list_filter = ('is_admin', 'is_active', 'permissoes')
     search_fields = ('email', 'first_name', 'last_name', 'cadastro__cpf', 'cadastro__nome_de_guerra')
     ordering = ('email',)
     filter_horizontal = ()
+
+    readonly_fields = ('last_login', 'date_joined') # Adicionado para corrigir o erro
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
@@ -30,6 +38,11 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('email', 'first_name', 'last_name', 'password', 'password2', 'permissoes', 'cadastro'), # Adiciona 'cadastro'
         }),
     )
+
+    def get_inline_instances(self, request, obj=None):
+        if not obj:
+            return list()
+        return super(UserAdmin, self).get_inline_instances(request, obj)
 
     def cadastro_link(self, obj):
         if obj.cadastro:
