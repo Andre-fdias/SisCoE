@@ -14,73 +14,53 @@ import requests
 import json
 from django.utils import timezone
 
+# Importar o serviço Brevo corrigido
+from .brevo_service import send_brevo_email
+
 # Importar o modelo Cadastro
 from backend.efetivo.models import Cadastro 
 
 # Importar o signal user_logged_in e o decorador receiver
 from django.contrib.auth.signals import user_logged_in
-from django.dispatch import receiver # <-- Adicionado esta linha
+from django.dispatch import receiver
 
-import socket # Para get_computer_name
+import socket
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
-
 
 def send_email(subject, html_content, recipient_email):
     """
     Função auxiliar para enviar e-mails usando a API do Brevo.
     """
-    brevo_api_url = "https://api.brevo.com/v3/smtp/email"
-    headers = {
-        "api-key": settings.BREVO_API_KEY,
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
-
-    sender_name = "SisCoE Suporte"
-    sender_email = settings.DEFAULT_FROM_EMAIL
-
-    payload = {
-        "sender": {
-            "name": sender_name,
-            "email": sender_email
-        },
-        "to": [
-            {
-                "email": recipient_email
-            }
-        ],
-        "subject": subject,
-        "htmlContent": html_content
-    }
-
+    logger.info(f"🔄 Iniciando envio de email para: {recipient_email}")
+    
     try:
-        response = requests.post(brevo_api_url, headers=headers, data=json.dumps(payload))
-        response.raise_for_status()
-        logger.info(f"E-mail enviado com sucesso para {recipient_email} via API do Brevo. Resposta: {response.json()}")
-        return True
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Erro ao enviar e-mail para {recipient_email} via API do Brevo: {e}", exc_info=True)
-        if hasattr(e, 'response') and e.response is not None:
-            try:
-                error_details = e.response.json()
-                logger.error(f"Detalhes do erro da API do Brevo: {error_details}")
-            except json.JSONDecodeError:
-                logger.error(f"Resposta de erro da API do Brevo não é JSON: {e.response.text}")
-        return False
+        result = send_brevo_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=recipient_email,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_name=settings.DEFAULT_FROM_NAME
+        )
+        
+        if result:
+            logger.info(f"✅ Email enviado com sucesso para {recipient_email}")
+        else:
+            logger.error(f"❌ Falha no envio do email para {recipient_email}")
+            
+        return result
+        
     except Exception as e:
-        logger.error(f"Erro inesperado ao enviar e-mail para {recipient_email}: {e}", exc_info=True)
+        logger.error(f"❌ Erro inesperado em send_email: {str(e)}", exc_info=True)
         return False
-
 
 def send_mail_to_user(request, user):
     """
     Envia e-mail de redefinição de senha.
     """
     current_site = get_current_site(request)
-    subject = 'Redefinição de senha'
+    subject = 'Redefinição de senha - SisCoE'
     html_content = render_to_string('email/password_reset_email.html', {
         'user': user,
         'protocol': 'https' if request.is_secure() else 'http',
@@ -95,49 +75,48 @@ def send_generated_password_email(request, user, password):
     """
     Envia e-mail com senha gerada para novo usuário
     """
+    logger.info(f"🔄 Preparando email de senha para: {user.email}")
+    
     current_site = get_current_site(request)
     subject = 'Sua Nova Senha de Acesso ao SisCoE'
 
     # Tentar obter o objeto Cadastro associado ao usuário
     cadastro_data = None
     try:
-        # Assumindo que o Profile do usuário tem um campo 'cadastro' que aponta para o modelo Cadastro
-        # Ou que o User tem um OneToOneField para Cadastro, ou que o Cadastro tem um ForeignKey para User
-        # Se o seu modelo User tem um campo 'cadastro' diretamente:
-        # cadastro_data = user.cadastro 
-        
-        # Se o Profile está linkado ao User e o Profile tem o campo 'cadastro':
         if hasattr(user, 'profile') and user.profile.cadastro:
             cadastro_data = user.profile.cadastro
         else:
-            # Fallback: tentar encontrar Cadastro pelo email do usuário, se não houver profile ou link direto
             cadastro_data = Cadastro.objects.filter(email=user.email).first()
-
-    except Cadastro.DoesNotExist:
-        logger.warning(f"Cadastro não encontrado para o usuário {user.email} ao enviar e-mail de senha.")
     except Exception as e:
-        logger.error(f"Erro ao buscar dados de Cadastro para o usuário {user.email}: {e}", exc_info=True)
+        logger.warning(f"⚠️ Não foi possível obter dados do cadastro: {e}")
 
     html_content = render_to_string('email/account_activated_with_password.html', {
         'user': user,
         'password': password,
         'protocol': 'https' if request.is_secure() else 'http',
         'domain': current_site.domain,
-        'cadastro_data': cadastro_data, # Passa o objeto cadastro_data para o template
+        'cadastro_data': cadastro_data,
     })
     
+    # Log da ação
     log_user_action(
         user=user,
         action=f"Envio de e-mail com senha temporária para {user.email}",
         request=request
     )
     
+    # Enviar email
     try:
-        return send_email(subject, html_content, user.email)
+        result = send_email(subject, html_content, user.email)
+        if result:
+            logger.info(f"✅ Email de senha enviado com sucesso para {user.email}")
+        else:
+            logger.error(f"❌ Falha ao enviar email de senha para {user.email}")
+        return result
     except Exception as e:
-        logger.error(f"Erro ao enviar e-mail de senha: {str(e)}", exc_info=True)
+        logger.error(f"❌ Erro ao enviar e-mail de senha: {str(e)}", exc_info=True)
         return False
-
+    
 def log_user_action(user, action, request=None):
     """
     Registra ações do usuário no sistema

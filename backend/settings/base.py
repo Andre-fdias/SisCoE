@@ -35,16 +35,23 @@ if config('DATABASE_URL', default=None):
         conn_health_checks=True,
     )
 
-# Configurações de email - compatível com Docker (MailHog) e produção (Brevo)
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+# ============ CONFIGURAÇÕES DE EMAIL CORRIGIDAS ============
+
+# Configuração específica para Brevo API (usada pelo seu código)
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
+
+# Configurações SMTP para fallback (se necessário)
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default=config('BREVO_API_KEY', default=''))
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='andrefonsecadias21@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default=BREVO_API_KEY)  # Usa a mesma API Key
 
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='siscoe.suporte@gmail.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='andrefonsecadias21@gmail.com')
 DEFAULT_FROM_NAME = config('DEFAULT_FROM_NAME', default='SisCoE Sistema')
+
+# ============ FIM DAS CONFIGURAÇÕES DE EMAIL ============
 
 # Restante das configurações permanecem iguais...
 INSTALLED_APPS = [
@@ -184,5 +191,10 @@ LOGGING = {
     'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
     'loggers': {
         'django': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        'backend.accounts': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }

@@ -224,7 +224,6 @@ def signup(request):
             # Verifica se já existe um usuário com este cadastro
             if User.objects.filter(cadastro=cadastro_obj).exists():
                 messages.error(request, 'Já existe uma conta associada a este cadastro militar. Por favor, faça login ou recupere sua senha.')
-                # Redireciona para landing com parâmetro para abrir modal de login
                 return redirect(reverse('core:capa') + '?open_login_modal=true')
 
             detalhes_situacao = DetalhesSituacao.objects.filter(cadastro=cadastro_obj).first()
@@ -238,6 +237,8 @@ def signup(request):
                 return redirect('accounts:verificar_cpf')
 
             generated_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            
+            logger.info(f"🔄 Criando usuário para email: {cadastro_obj.email}")
 
             user = User.objects.create_user(
                 email=cadastro_obj.email,
@@ -245,10 +246,12 @@ def signup(request):
                 first_name=cadastro_obj.nome,
                 last_name=cadastro_obj.nome_de_guerra,
                 cadastro=cadastro_obj,
-                must_change_password=True # NOVO: Força a troca de senha no primeiro login
+                must_change_password=True
             )
             user.is_active = True
             user.save()
+
+            logger.info(f"✅ Usuário criado: {user.email}")
 
             TermosAceite.objects.create(
                 usuario=user,
@@ -257,21 +260,29 @@ def signup(request):
                 versao_termos="1.0"
             )
 
-            send_generated_password_email(request, user, generated_password)
+            logger.info(f"🔄 Enviando email com senha para: {user.email}")
+            
+            # Enviar email com senha
+            email_result = send_generated_password_email(request, user, generated_password)
+            
+            if email_result:
+                logger.info(f"✅ Email enviado com sucesso para {user.email}")
+                messages.success(request, 'Sua conta foi criada com sucesso! Uma senha foi enviada para o seu e-mail.')
+            else:
+                logger.error(f"❌ Falha no envio do email para {user.email}")
+                messages.warning(request, 'Sua conta foi criada, mas houve um problema no envio do email. Entre em contato com o administrador.')
 
-            messages.success(request, 'Sua conta foi criada com sucesso! Uma senha foi enviada para o seu e-mail.')
             if 'cadastro_data_for_signup' in request.session:
                 del request.session['cadastro_data_for_signup']
-            # Redireciona para landing com parâmetro para abrir modal de login
+                
             return redirect(reverse('core:capa') + '?open_login_modal=true')
 
         except Exception as e:
-            logger.error(f"Erro ao criar conta ou enviar e-mail: {e}", exc_info=True)
+            logger.error(f"❌ Erro ao criar conta ou enviar e-mail: {e}", exc_info=True)
             messages.error(request, f'Erro ao criar a conta: {str(e)}. Por favor, tente novamente ou entre em contato com o suporte.')
             return render(request, 'registration/registration_form.html', {'cadastro_data': cadastro_data})
     else:
         return render(request, 'registration/registration_form.html', {'cadastro_data': cadastro_data})
-    
 
 @login_required
 def change_password_view(request, pk):
