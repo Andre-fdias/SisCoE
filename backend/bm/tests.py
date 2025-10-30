@@ -23,14 +23,12 @@ class BmTestSetup(TestCase):
     """
     def setUp(self):
         self.client = Client()
-        # Cria um usuário comum para testes que não requerem permissões de superusuário
-        self.user = User.objects.create_user(username='testuser', email='test@example.com', password='password123')
-        # Cria um superusuário para testes que requerem acesso de admin
-        self.admin_user = User.objects.create_superuser(username='admin', email='admin@example.com', password='adminpassword')
-
+        # Cria um usuário comum SEM username (apenas email)
+        self.user = User.objects.create_user(email='test@example.com', password='password123')
+        # Cria um superusuário SEM username
+        self.admin_user = User.objects.create_superuser(email='admin@example.com', password='adminpassword')
         # Loga com o usuário comum por padrão para a maioria dos testes de view
-        self.client.login(username='testuser', password='password123')
-
+        self.client.login(email='test@example.com', password='password123')
         # Criar uma instância de Cadastro_bm para testes recorrentes
         self.cadastro_bm = Cadastro_bm.objects.create(
             nome="João Silva",
@@ -158,7 +156,7 @@ class BmViewsTest(BmTestSetup):
     def test_cadastrar_bm_post_valid(self):
         """Testa o POST da view cadastrar_bm com dados válidos."""
         # É importante estar logado como um usuário que pode cadastrar (admin ou com permissão)
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         initial_count = Cadastro_bm.objects.count()
         response = self.client.post(reverse('bm:cadastrar_bm'), {
             'nome': 'Maria Souza',
@@ -186,7 +184,7 @@ class BmViewsTest(BmTestSetup):
 
     def test_cadastrar_bm_post_invalid(self):
         """Testa o POST da view cadastrar_bm com dados inválidos (ex: CPF duplicado)."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         initial_count = Cadastro_bm.objects.count()
         response = self.client.post(reverse('bm:cadastrar_bm'), {
             'nome': 'João Silva Duplicate',
@@ -230,7 +228,7 @@ class BmViewsTest(BmTestSetup):
 
     def test_editar_bm_post_valid(self):
         """Testa o POST da view editar_bm com dados válidos."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         new_name = "João Silva Atualizado"
         response = self.client.post(reverse('bm:editar_bm', args=[self.cadastro_bm.pk]), {
             'nome': new_name,
@@ -260,7 +258,7 @@ class BmViewsTest(BmTestSetup):
 
     def test_excluir_bm_view_authenticated(self):
         """Testa a view excluir_bm para usuário autenticado."""
-        self.client.login(username='admin', password='adminpassword') # Login como admin para ter permissão de exclusão
+        self.client.login(email='admin@example.com', password='adminpassword') # Login como admin para ter permissão de exclusão
         initial_count = Cadastro_bm.objects.count()
         response = self.client.post(reverse('bm:excluir_bm', args=[self.cadastro_bm.pk]))
         self.assertEqual(Cadastro_bm.objects.count(), initial_count - 1)
@@ -316,7 +314,7 @@ class BmViewsTest(BmTestSetup):
 
     def test_importar_bm_post_valid_csv(self):
         """Testa o POST da view importar_bm com um CSV válido."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         initial_count = Cadastro_bm.objects.count()
         csv_data = (
             "nome,nome_de_guerra,situacao,sgb,posto_secao,cpf,rg,cnh,cat_cnh,esb,ovb,admissao,nasc,email,telefone,apresentacao_na_unidade,saida_da_unidade,funcao,genero\n"
@@ -332,7 +330,7 @@ class BmViewsTest(BmTestSetup):
 
     def test_importar_bm_post_invalid_csv_duplicate_cpf(self):
         """Testa o POST da view importar_bm com um CSV contendo CPF duplicado."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         initial_count = Cadastro_bm.objects.count()
         # CSV com um CPF que já existe (o do self.cadastro_bm)
         csv_data = (
@@ -398,25 +396,25 @@ class AdminTest(BmTestSetup):
     """
     def test_cadastro_bm_admin_list_view(self):
         """Testa a visualização da lista de Cadastro_bm no admin."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         response = self.client.get(reverse('admin:bm_cadastro_bm_changelist'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.cadastro_bm.nome)
 
     def test_cadastro_bm_admin_add_view(self):
         """Testa a página de adicionar Cadastro_bm no admin."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         response = self.client.get(reverse('admin:bm_cadastro_bm_add'))
         self.assertEqual(response.status_code, 200)
 
     def test_cadastro_bm_admin_change_view(self):
         """Testa a página de alteração de Cadastro_bm no admin."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         response = self.client.get(reverse('admin:bm_cadastro_bm_change', args=[self.cadastro_bm.pk]))
         self.assertEqual(response.status_code, 200)
 
     def test_imagem_bm_admin_list_view(self):
         """Testa a visualização da lista de Imagem_bm no admin."""
-        self.client.login(username='admin', password='adminpassword')
+        self.client.login(email='admin@example.com', password='adminpassword')
         response = self.client.get(reverse('admin:bm_imagem_bm_changelist'))
         self.assertEqual(response.status_code, 200)
