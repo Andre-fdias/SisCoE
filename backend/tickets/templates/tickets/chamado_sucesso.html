@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Chamado Aberto com Sucesso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center">
+        <div class="mb-4">
+            <svg class="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Chamado Aberto com Sucesso!</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Seu chamado foi registrado em nosso sistema.</p>
+        
+        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+            <p class="text-lg text-gray-700 dark:text-gray-300">Seu número de protocolo é:</p>
+            <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider">{{ protocolo }}</p>
+        </div>
+
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-6">
+            Guarde este número. Você receberá atualizações sobre o seu chamado no email informado.
+        </p>
+
+        <div class="mt-8">
+            <a href="{% url 'core:index' %}" class="text-blue-600 hover:underline">Voltar para a Página Inicial</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

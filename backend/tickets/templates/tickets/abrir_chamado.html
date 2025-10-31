@@ -1,0 +1,101 @@
+{% extends 'core/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Abrir Novo Chamado{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Abertura de Chamado Técnico</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Preencha o formulário abaixo para registrar um novo chamado.</p>
+
+        <form method="post" enctype="multipart/form-data" id="chamado-form">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- CPF -->
+                <div class="md:col-span-1">
+                    <label for="{{ form.solicitante_cpf.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CPF</label>
+                    {% render_field form.solicitante_cpf id="cpf-input" %}
+                    <button type="button" id="buscar-cpf-btn" class="mt-2 text-sm text-blue-600 hover:underline">Buscar por CPF</button>
+                </div>
+
+                <!-- Nome Completo -->
+                <div class="md:col-span-1">
+                    <label for="{{ form.solicitante_nome.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
+                    {% render_field form.solicitante_nome id="nome-input" %}
+                </div>
+
+                <!-- Email -->
+                <div class="md:col-span-1">
+                    <label for="{{ form.solicitante_email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                    {% render_field form.solicitante_email id="email-input" %}
+                </div>
+
+                <!-- Telefone -->
+                <div class="md:col-span-1">
+                    <label for="{{ form.solicitante_telefone.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone</label>
+                    {% render_field form.solicitante_telefone id="telefone-input" %}
+                </div>
+            </div>
+
+            <hr class="my-6 border-gray-200 dark:border-gray-700">
+
+            <div class="space-y-6">
+                <!-- Categoria -->
+                <div>
+                    <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoria</label>
+                    {% render_field form.categoria %}
+                </div>
+
+                <!-- Assunto -->
+                <div>
+                    <label for="{{ form.assunto.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assunto</label>
+                    {% render_field form.assunto %}
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label for="{{ form.descricao.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição do Problema</label>
+                    {% render_field form.descricao %}
+                </div>
+
+                <!-- Anexos -->
+                <div>
+                    <label for="{{ form.anexos.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anexos</label>
+                    {% render_field form.anexos multiple="multiple" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" %}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Você pode selecionar múltiplos arquivos.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out">
+                    Abrir Chamado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('buscar-cpf-btn').addEventListener('click', function() {
+    const cpf = document.getElementById('cpf-input').value;
+    if (cpf) {
+        // A URL para a busca de dados do usuário precisa ser criada.
+        // Por enquanto, esta é uma funcionalidade placeholder.
+        // fetch(`/api/user-data-by-cpf/${cpf}/`)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         if (data.success) {
+        //             document.getElementById('nome-input').value = data.nome;
+        //             document.getElementById('email-input').value = data.email;
+        //             document.getElementById('telefone-input').value = data.telefone;
+        //         }
+        //     });
+        console.log("Funcionalidade de busca por CPF a ser implementada com uma API.");
+        alert("A busca por CPF será implementada em uma próxima etapa com uma API interna.");
+    }
+});
+</script>
+{% endblock %}
