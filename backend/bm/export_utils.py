@@ -39,7 +39,7 @@ def export_to_pdf_military(request, data):
     
     buffer = io.BytesIO()
     user = request.user
-    usuario = user.get_full_name() or user.username
+    usuario = user.get_full_name() or user.email or str(user)
 
     # Configurar estilos
     styles = getSampleStyleSheet()
@@ -188,15 +188,16 @@ def export_to_pdf_military(request, data):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         
-        # Obter informações do usuário
-        posto_grad = request.user.profile.posto_grad if hasattr(request.user, 'profile') and request.user.profile else ''
-        re = request.user.profile.re if hasattr(request.user, 'profile') and request.user.profile else ''
-        dig = request.user.profile.dig if hasattr(request.user, 'profile') and request.user.profile else ''
-        last_name = request.user.last_name if hasattr(request.user, 'last_name') else ''
-        cpf = request.user.profile.cpf if hasattr(request.user, 'profile') and request.user.profile else ''
-        
-        # Formatar informações do usuário
-        user_info = f"{posto_grad} {re}-{dig} {last_name}"
+        # CORREÇÃO: Verificar se profile existe de forma mais segura
+        user_info = ""
+        if hasattr(request.user, 'profile') and request.user.profile:
+            posto_grad = getattr(request.user.profile, 'posto_grad', '')
+            re = getattr(request.user.profile, 're', '')
+            dig = getattr(request.user.profile, 'dig', '')
+            cpf = getattr(request.user.profile, 'cpf', '')
+            user_info = f"{posto_grad} {re}-{dig} {request.user.last_name}"
+        else:
+            user_info = f"{request.user.get_full_name() or request.user.username}"
         
         canvas.drawCentredString(
             A4[0]/2, 
