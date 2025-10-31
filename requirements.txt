@@ -82,7 +82,6 @@ sqlparse==0.5.3
 tqdm==4.67.1
 typing_extensions==4.13.2
 brevo-python==1.2.0
-semver==3.0.2
 
 # ==============================================
 # COMPRESSÃO E OTIMIZAÇÃO
@@ -138,10 +137,3 @@ python-json-logger==4.0.0
 mkdocs-material==9.6.22
 mkdocstrings==0.30.1
 mkdocstrings-python==1.18.2
-
-# ==============================================
-# TESTES
-# ==============================================
-pytest
-pytest-django
-pytest-cov

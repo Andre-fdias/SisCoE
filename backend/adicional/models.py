@@ -122,7 +122,8 @@ class Cadastro_adicional(models.Model):
         if self.user_created and hasattr(self.user_created, 'profile'):
             return f"{self.user_created.profile.posto_grad} {self.user_created.profile.re}-{self.user_created.profile.dig} {self.user_created.last_name}"
         elif self.user_created:
-            return self.user_created.get_full_name() or self.user_created.username
+            # Use email em vez de username
+            return self.user_created.get_full_name() or self.user_created.email
         return "-"
 
     def user_updated_display(self):

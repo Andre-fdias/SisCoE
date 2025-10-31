@@ -123,7 +123,7 @@ def editar_bm(request, pk):
         try:
             cadastro.nome = request.POST.get('nome')
             cadastro.nome_de_guerra = request.POST.get('nome_de_guerra')
-            cadastro.situacao = request.POST.get('status')
+            cadastro.situacao = request.POST.get('situacao') or request.POST.get('status')
             cadastro.sgb = request.POST.get('sgb')
             cadastro.posto_secao = request.POST.get('posto_secao')
             cadastro.cpf = request.POST.get('cpf')
