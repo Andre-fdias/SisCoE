@@ -17,7 +17,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 # Configuração de banco de dados - compatível com Docker e local
 DATABASES = {
     'default': {
-        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'ENGINE': config('DB_ENGINE', default='django_prometheus.db.backends.postgresql'),
         'NAME': config('DB_NAME', default=config('DATABASE_URL', default='siscoe_db')),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default=''),
