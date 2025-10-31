@@ -24,9 +24,9 @@ class GlobalSearch:
         # Accounts
         'user': {
             'app': 'accounts',
-            'model': 'User', # Agora o User tem a relação direta com Cadastro
-            'fields': ['email', 'first_name', 'last_name', 'cadastro__cpf', 'cadastro__nome_completo', 'cadastro__nome_de_guerra'],
-            'url': lambda obj: reverse('accounts:user_detail', args=[obj.pk]) # Corrigido para 'accounts:user_detail'
+            'model': 'User',
+            'fields': ['email', 'first_name', 'last_name'],  # Removido campos que não existem
+            'url': lambda obj: reverse('accounts:user_detail', args=[obj.pk])
         },
         'useractionlog': {
             'app': 'accounts',
