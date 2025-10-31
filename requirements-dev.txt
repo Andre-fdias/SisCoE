@@ -1,5 +1,15 @@
-pytest
-pytest-django
-pytest-cov
-semver
-psycopg2-binary
+# Testes
+pytest==7.4.0
+pytest-django==4.5.2
+pytest-cov==4.1.0
+coverage==7.2.7
+
+# Versionamento
+semver==3.0.2
+
+# Banco de dados
+psycopg2-binary==2.9.10
+
+# Desenvolvimento
+django-debug-toolbar==4.4.5
+ipdb==0.13.13
