@@ -62,7 +62,7 @@ jobs:
 
   versioning:
     needs: test
-    if: github.ref == 'refs/heads/main' or github.ref == 'refs/heads/master' # Só roda em push para main/master
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' # Só roda em push para main/master
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
