@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import Truncator  # Adicione esta importação
 
 User = get_user_model()
 
@@ -65,7 +66,8 @@ class Tarefa(models.Model):
         """
         super().clean()  # Chama o método clean da classe pai
 
-        if self.data_fim < self.data_inicio:
+        # Verifica se ambas as datas existem antes de comparar
+        if self.data_inicio and self.data_fim and self.data_fim < self.data_inicio:
             raise ValidationError(_('A data de término não pode ser anterior à data de início.'))
         
 
