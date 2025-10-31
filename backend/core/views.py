@@ -24,12 +24,20 @@ def capa(request):
     template_name = 'landing.html'
     return render(request, template_name)
 
-login_required
+
+# backend/core/views.py (correção na função index)
+@login_required
 def index(request):
     hoje = datetime.now()
     mes_atual = hoje.month
 
-    cadastro_do_usuario = request.user.cadastro 
+    # Verifica se o usuário está autenticado antes de acessar atributos
+    cadastro_do_usuario = None
+    user_permissoes = None
+    
+    if request.user.is_authenticated:
+        cadastro_do_usuario = getattr(request.user, 'cadastro', None)
+        user_permissoes = getattr(request.user, 'permissoes', None)
 
     # Removido o retorno precoce para permitir que a página seja renderizada
     # mesmo que o usuário não tenha um cadastro militar vinculado.
@@ -81,7 +89,7 @@ def index(request):
     
     # Aplica filtro por SGB se o usuário tem permissão 'sgb' E um cadastro associado.
     # Caso contrário, mostra todos os aniversariantes do mês (não filtra por SGB).
-    if request.user.permissoes == 'sgb' and cadastro_do_usuario:
+    if user_permissoes == 'sgb' and cadastro_do_usuario:
         user_sgb = None
         latest_situacao = DetalhesSituacao.objects.filter(
             cadastro=cadastro_do_usuario
@@ -93,7 +101,7 @@ def index(request):
             aniversariantes = aniversariantes_qs.filter(detalhes_situacao__sgb=user_sgb).distinct()
         else:
             aniversariantes = Cadastro.objects.none() # Sem SGB associado para usuário 'sgb', não mostra nenhum
-    elif request.user.is_superuser or request.user.permissoes in ['admin', 'gestor']:
+    elif request.user.is_superuser or user_permissoes in ['admin', 'gestor']:
         # Superusuários, admin e gestores veem todos os aniversariantes sem filtro de SGB
         aniversariantes = aniversariantes_qs
     else:
@@ -127,19 +135,19 @@ def index(request):
 
     documentos = Documento.objects.all().order_by('-data_criacao')[:100]
 
-    user_action_logs = request.user.useractionlog_set.all().order_by('-timestamp')[:10] # Exemplo de query
+    user_action_logs = request.user.useractionlog_set.all().order_by('-timestamp')[:10] if request.user.is_authenticated else []
 
     lembretes = Lembrete.objects.filter(
         user=request.user,
         data__year=hoje.year,
         data__month=hoje.month
-    ).order_by('data')
+    ).order_by('data') if request.user.is_authenticated else []
 
     tarefas = Tarefa.objects.filter(
         user=request.user,
         data_inicio__year=hoje.year,
         data_inicio__month=hoje.month
-    ).order_by('data_inicio')
+    ).order_by('data_inicio') if request.user.is_authenticated else []
 
     context = {
         'aniversariantes': aniversariantes,
@@ -163,6 +171,7 @@ def index(request):
     }
     
     return render(request, 'index.html', context)
+
 
 @login_required
 @permissao_necessaria(level='admin')
