@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'backend.agenda',
     'backend.calculadora',
     'backend.cursos',
+    'backend.tickets',
 ]
 
 MIDDLEWARE = [
