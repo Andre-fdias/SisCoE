@@ -1,101 +1,358 @@
-{% extends 'core/base.html' %}
+{% load static %}
 {% load widget_tweaks %}
 
-{% block title %}Abrir Novo Chamado{% endblock %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'img\favicon.ico' %}">
+    <title>Abrir Novo Chamado - SisCoE</title>
 
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Abertura de Chamado Técnico</h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">Preencha o formulário abaixo para registrar um novo chamado.</p>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1f2937',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        <form method="post" enctype="multipart/form-data" id="chamado-form">
+    <style>
+        body { background-color: #f3f4f6; color: #1f2937; }
+        body.dark { background-color: #1f2937; color: #e5e7eb; }
+        .loading-spinner { display: none; }
+        .loading-spinner.active { display: inline-block; }
+        .data-section { transition: all 0.3s ease-in-out; }
+        .success-message, .error-message { display: none; padding: 12px; margin: 10px 0; border-radius: 8px; }
+        .success-message.show, .error-message.show { display: block; }
+        .success-message { background-color: #d1fae5; border: 1px solid #10b981; color: #065f46; }
+        .error-message { background-color: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+        .file-counter { font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; }
+        .form-error { color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; }
+        .btn-disabled { opacity: 0.6; cursor: not-allowed; }
+    </style>
+</head>
+
+<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div class="container mx-auto p-5 max-w-6xl">
+        <!-- Cabeçalho -->
+        <section class="w-full bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Abertura de Chamado Técnico</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">Preencha o formulário abaixo para registrar um novo chamado.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:index' %}" class="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 flex items-center dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </a>
+                    <button id="darkModeToggle" class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg focus:outline-none dark:bg-gray-700">
+                        <i id="sunIcon" class="fas fa-sun w-5 h-5 text-yellow-500 hidden"></i>
+                        <i id="moonIcon" class="fas fa-moon w-5 h-5 text-indigo-600 hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mensagens do Django -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %} px-4 py-3 rounded mb-4">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Mensagens JavaScript -->
+        <div id="successMessage" class="success-message"><i class="fas fa-check-circle mr-2"></i><span id="successText"></span></div>
+        <div id="errorMessage" class="error-message"><i class="fas fa-exclamation-circle mr-2"></i><span id="errorText"></span></div>
+
+        <!-- Formulário -->
+        <form method="post" enctype="multipart/form-data" id="chamado-form" class="bg-white rounded-lg p-6 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
             {% csrf_token %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- CPF -->
-                <div class="md:col-span-1">
-                    <label for="{{ form.solicitante_cpf.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CPF</label>
-                    {% render_field form.solicitante_cpf id="cpf-input" %}
-                    <button type="button" id="buscar-cpf-btn" class="mt-2 text-sm text-blue-600 hover:underline">Buscar por CPF</button>
+            <!-- Erros não relacionados a campos -->
+            {% if form.non_field_errors %}
+                <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                    {% for error in form.non_field_errors %}
+                        <span class="font-medium">Erro de Validação:</span> {{ error }}
+                    {% endfor %}
                 </div>
+            {% endif %}
 
-                <!-- Nome Completo -->
-                <div class="md:col-span-1">
-                    <label for="{{ form.solicitante_nome.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
-                    {% render_field form.solicitante_nome id="nome-input" %}
+            <!-- Dados do Solicitante -->
+            <fieldset class="mb-8">
+                <legend class="text-xl font-bold text-gray-900 px-2 dark:text-white">Dados do Solicitante</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="md:col-span-2">
+                        <label for="{{ form.solicitante_cpf.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CPF *</label>
+                        <div class="flex items-center space-x-4">
+                            {% render_field form.solicitante_cpf id="cpf-input" class="flex-1 w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400 cpf-mask" placeholder="000.000.000-00" %}
+                            <button type="button" id="buscar-cpf-btn" data-url="{% url 'tickets:buscar_dados_cpf' %}" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center dark:bg-blue-700 dark:hover:bg-blue-600">
+                                <i class="fas fa-search mr-2"></i> Buscar
+                                <i class="fas fa-spinner fa-spin ml-2 loading-spinner" id="loading-spinner"></i>
+                            </button>
+                        </div>
+                        <div class="form-error">{{ form.solicitante_cpf.errors }}</div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i> Digite o CPF para buscar os dados automaticamente.</p>
+                    </div>
                 </div>
-
-                <!-- Email -->
-                <div class="md:col-span-1">
-                    <label for="{{ form.solicitante_email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                    {% render_field form.solicitante_email id="email-input" %}
+                <div id="dados-militar" class="data-section bg-gray-50 rounded-lg p-6 mt-6 border border-gray-200 dark:bg-gray-700 dark:border-gray-600" style="display: none;">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-600 pb-2"><i class="fas fa-user-check mr-2 text-green-500"></i>Dados do Militar Encontrados</h3>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome Completo</label><div id="nome-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label><div id="email-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telefone</label><div id="telefone-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RE</label><div id="re-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Posto/Graduação</label><div id="posto-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SGB</label><div id="sgb-display" class="w-full px-4 py-3 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600"></div></div>
+                    </div>
                 </div>
+            </fieldset>
 
-                <!-- Telefone -->
-                <div class="md:col-span-1">
-                    <label for="{{ form.solicitante_telefone.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone</label>
-                    {% render_field form.solicitante_telefone id="telefone-input" %}
+            <!-- Dados do Chamado -->
+            <fieldset>
+                <legend class="text-xl font-bold text-gray-900 px-2 dark:text-white">Dados do Chamado</legend>
+                <div class="space-y-6 mt-4">
+                    <div>
+                        <label for="id_categoria_principal" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categoria *</label>
+                        {% render_field form.categoria_principal class="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" %}
+                        <div class="form-error">{{ form.categoria_principal.errors }}</div>
+                    </div>
+                    <div>
+                        <label for="id_subcategoria" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subcategoria *</label>
+                        {% render_field form.subcategoria class="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" %}
+                        <div class="form-error">{{ form.subcategoria.errors }}</div>
+                    </div>
+                    <div>
+                        <label for="{{ form.assunto.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assunto *</label>
+                        {% render_field form.assunto class="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Breve descrição do problema" %}
+                        <div class="form-error">{{ form.assunto.errors }}</div>
+                    </div>
+                    <div>
+                        <label for="{{ form.descricao.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema *</label>
+                        {% render_field form.descricao class="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400" rows="5" placeholder="Descreva o problema em detalhes..." %}
+                        <div class="form-error">{{ form.descricao.errors }}</div>
+                    </div>
+                    <div>
+                        <label for="anexos" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexos</label>
+                        {% render_field form.anexos id="anexos" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400" %}
+                        <div class="form-error">{{ form.anexos.errors }}</div>
+                        <div id="file-counter" class="file-counter"><i class="fas fa-info-circle mr-1"></i><span id="file-count">0</span> arquivo(s) selecionado(s) - Máximo 10 (2MB total)</div>
+                    </div>
                 </div>
-            </div>
+            </fieldset>
 
-            <hr class="my-6 border-gray-200 dark:border-gray-700">
-
-            <div class="space-y-6">
-                <!-- Categoria -->
-                <div>
-                    <label for="{{ form.categoria.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoria</label>
-                    {% render_field form.categoria %}
-                </div>
-
-                <!-- Assunto -->
-                <div>
-                    <label for="{{ form.assunto.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assunto</label>
-                    {% render_field form.assunto %}
-                </div>
-
-                <!-- Descrição -->
-                <div>
-                    <label for="{{ form.descricao.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição do Problema</label>
-                    {% render_field form.descricao %}
-                </div>
-
-                <!-- Anexos -->
-                <div>
-                    <label for="{{ form.anexos.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anexos</label>
-                    {% render_field form.anexos multiple="multiple" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" %}
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Você pode selecionar múltiplos arquivos.</p>
-                </div>
-            </div>
-
-            <div class="mt-8 flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out">
-                    Abrir Chamado
+            <div class="flex justify-end mt-8">
+                <button type="submit" id="submit-btn" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition duration-300 ease-in-out flex items-center dark:bg-blue-700 dark:hover:bg-blue-600 btn-disabled" disabled>
+                    <i class="fas fa-ticket-alt mr-2"></i> Abrir Chamado
                 </button>
             </div>
         </form>
     </div>
-</div>
 
-{% block extra_js %}
-<script>
-document.getElementById('buscar-cpf-btn').addEventListener('click', function() {
-    const cpf = document.getElementById('cpf-input').value;
-    if (cpf) {
-        // A URL para a busca de dados do usuário precisa ser criada.
-        // Por enquanto, esta é uma funcionalidade placeholder.
-        // fetch(`/api/user-data-by-cpf/${cpf}/`)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         if (data.success) {
-        //             document.getElementById('nome-input').value = data.nome;
-        //             document.getElementById('email-input').value = data.email;
-        //             document.getElementById('telefone-input').value = data.telefone;
-        //         }
-        //     });
-        console.log("Funcionalidade de busca por CPF a ser implementada com uma API.");
-        alert("A busca por CPF será implementada em uma próxima etapa com uma API interna.");
-    }
-});
-</script>
-{% endblock %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("=== INICIANDO SCRIPT DO FORMULÁRIO ===");
+            
+            // --- Mapa de Categorias ---
+            const categoriaMap = {{ categoria_map|safe }};
+            console.log("Mapa de categorias carregado:", categoriaMap);
+
+            // --- Seletores de Elementos ---
+            const categoriaSelect = document.getElementById('id_categoria_principal');
+            const subcategoriaSelect = document.getElementById('id_subcategoria');
+            const cpfInput = document.getElementById('cpf-input');
+            const buscarCpfBtn = document.getElementById('buscar-cpf-btn');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+            const assuntoInput = document.getElementById('assunto-input');
+            const descricaoInput = document.getElementById('descricao-input');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // --- Funções de Utilidade ---
+            function showMessage(type, message) {
+                console.log(`${type.toUpperCase()}: ${message}`);
+                const messageElement = document.getElementById(type + 'Message');
+                const textElement = document.getElementById(type + 'Text');
+                if (textElement) textElement.textContent = message;
+                if (messageElement) {
+                    messageElement.classList.add('show');
+                    setTimeout(() => { messageElement.classList.remove('show'); }, 5000);
+                }
+            }
+
+            function updateSubmitButton() {
+                const cpfPreenchido = cpfInput.value.length === 14;
+                const categoriaPreenchida = categoriaSelect.value !== '';
+                const subcategoriaPreenchida = subcategoriaSelect.value !== '';
+                const assuntoPreenchido = assuntoInput.value.trim() !== '';
+                const descricaoPreenchida = descricaoInput.value.trim() !== '';
+                const dadosMilitarCarregados = document.getElementById('dados-militar').style.display === 'block';
+                
+                const formValido = cpfPreenchido && categoriaPreenchida && subcategoriaPreenchida && 
+                                  assuntoPreenchido && descricaoPreenchida && dadosMilitarCarregados;
+                
+                console.log("Validação do formulário:", {
+                    cpfPreenchido,
+                    categoriaPreenchida,
+                    subcategoriaPreenchida,
+                    assuntoPreenchido,
+                    descricaoPreenchida,
+                    dadosMilitarCarregados,
+                    formValido
+                });
+
+                if (formValido) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('btn-disabled');
+                    console.log("✅ Botão HABILITADO");
+                } else {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('btn-disabled');
+                    console.log("❌ Botão DESABILITADO");
+                }
+                
+                return formValido;
+            }
+
+            // --- Lógica de Dropdowns em Cascata ---
+            categoriaSelect.addEventListener('change', function() {
+                console.log("Categoria selecionada:", this.value);
+                const selectedCategoria = this.value;
+                const subcategorias = categoriaMap[selectedCategoria] || [];
+                
+                subcategoriaSelect.innerHTML = '<option value="">Selecione uma subcategoria</option>';
+                
+                if (subcategorias.length > 0) {
+                    subcategoriaSelect.disabled = false;
+                    subcategorias.forEach(function(sub) {
+                        subcategoriaSelect.add(new Option(sub.display, sub.value));
+                    });
+                    console.log(`Subcategorias carregadas: ${subcategorias.length}`);
+                } else {
+                    subcategoriaSelect.disabled = true;
+                    console.log("Nenhuma subcategoria encontrada");
+                }
+                
+                updateSubmitButton();
+            });
+
+            // --- Lógica de Busca de CPF ---
+            function aplicarMascaraCPF(cpf) {
+                return cpf.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            }
+
+            cpfInput.addEventListener('input', (e) => { 
+                e.target.value = aplicarMascaraCPF(e.target.value);
+                console.log("CPF digitado:", e.target.value);
+                updateSubmitButton();
+            });
+
+            buscarCpfBtn.addEventListener('click', function() {
+                const cpf = cpfInput.value;
+                console.log("Buscando dados para CPF:", cpf);
+                
+                if (cpf.length !== 14) {
+                    showMessage('error', 'Por favor, digite um CPF válido no formato XXX.XXX.XXX-XX.');
+                    return;
+                }
+                
+                const spinner = document.getElementById('loading-spinner');
+                this.disabled = true;
+                spinner.classList.add('active');
+
+                fetch(this.dataset.url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ cpf: cpf })
+                })
+                .then(response => {
+                    console.log("Resposta da API:", response.status);
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Dados recebidos da API:", data);
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    document.getElementById('dados-militar').style.display = 'block';
+                    document.getElementById('nome-display').textContent = data.nome || 'N/A';
+                    document.getElementById('email-display').textContent = data.email || 'N/A';
+                    document.getElementById('telefone-display').textContent = data.telefone || 'N/A';
+                    document.getElementById('re-display').textContent = data.re || 'N/A';
+                    document.getElementById('posto-display').textContent = data.posto_grad || 'N/A';
+                    document.getElementById('sgb-display').textContent = data.sgb || 'N/A';
+                    
+                    updateSubmitButton();
+                    showMessage('success', 'Dados do militar carregados com sucesso!');
+                })
+                .catch(error => {
+                    console.error("Erro na busca:", error);
+                    showMessage('error', 'Erro ao buscar dados: ' + (error.message || 'Erro de comunicação.'));
+                    document.getElementById('dados-militar').style.display = 'none';
+                    updateSubmitButton();
+                })
+                .finally(() => {
+                    this.disabled = false;
+                    spinner.classList.remove('active');
+                });
+            });
+
+            // Event listeners para validação em tempo real
+            assuntoInput.addEventListener('input', updateSubmitButton);
+            descricaoInput.addEventListener('input', updateSubmitButton);
+            subcategoriaSelect.addEventListener('change', updateSubmitButton);
+
+            // --- Lógica do Dark Mode ---
+            function enableDarkMode() {
+                body.classList.add('dark');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+            darkModeToggle.addEventListener('click', () => {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+            
+            if (localStorage.getItem('darkMode') === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+
+            // Validação inicial
+            updateSubmitButton();
+            console.log("=== SCRIPT INICIALIZADO ===");
+        });
+    </script>
+</body>
+</html>

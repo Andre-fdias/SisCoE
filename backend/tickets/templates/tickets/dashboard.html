@@ -1,10 +1,15 @@
-{% extends 'core/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard de Chamados{% endblock %}
 
-{% block content %}
+{% block 'body' %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">Dashboard de Chamados</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard de Chamados</h1>
+        <a href="{% url 'tickets:abrir_chamado' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+            <i class="fas fa-plus mr-2"></i> Abrir Novo Chamado
+        </a>
+    </div>
 
     <!-- Estatísticas -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
