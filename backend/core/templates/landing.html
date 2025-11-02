@@ -247,9 +247,8 @@
             <a href="{% url 'accounts:login' %}" class="btn-primary">
               <i class="fas fa-sign-in-alt mr-2"></i> Acessar Sistema
             </a>
-            
-            <a href="#features" class="btn-secondary">
-              <i class="fas fa-info-circle mr-2"></i> Saiba Mais
+            <a href="{% url 'tickets:abrir_chamado' %}" class="btn-secondary">
+                <i class="fas fa-ticket-alt mr-2"></i> Abrir Chamado
             </a>
           </div>
           
@@ -372,8 +371,8 @@
         <a href="{% url 'accounts:login' %}" class="btn-white">
           <i class="fas fa-sign-in-alt mr-2"></i> Acessar Agora
         </a>
-        <a href="#contact" class="btn-outline-white">
-          <i class="fas fa-envelope mr-2"></i> Fale Conosco
+        <a href="{% url 'tickets:abrir_chamado' %}" class="btn-outline-white">
+            <i class="fas fa-ticket-alt mr-2"></i> Abrir Chamado
         </a>
       </div>
     </div>

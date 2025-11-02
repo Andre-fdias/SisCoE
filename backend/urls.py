@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('backend.core.urls', namespace='core')),  # noqa E501
     path('admin/', admin.site.urls),  # noqa E501
     path('crm/', include('backend.crm.urls', namespace='crm')),  # noqa E501
     path('tickets/', include('backend.tickets.urls', namespace='tickets')),  # noqa E501
@@ -20,5 +19,6 @@ urlpatterns = [
     path('agenda/', include('backend.agenda.urls', namespace='agenda')),  # noqa E501
     path('calculadora/', include('backend.calculadora.urls', namespace='calculadora')),  # noqa E501
     path('prometheus/', include('django_prometheus.urls')),
+    path('', include('backend.core.urls', namespace='core')),  # noqa E501
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
