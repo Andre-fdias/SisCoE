@@ -119,6 +119,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'backend.core.context_processors.version_context_processor',
+                'backend.tickets.context_processors.tickets_count',
             ],
         },
     },

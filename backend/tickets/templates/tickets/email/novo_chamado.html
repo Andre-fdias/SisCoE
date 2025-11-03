@@ -1,0 +1,115 @@
+{% load static %}
+{% autoescape off %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f8fafc;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc">
+      <tr>
+        <td align="center">
+          <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:13px;line-height:1.4;border:1px solid #e5e7eb;">
+            <!-- Cabeçalho -->
+            <tr>
+              <td align="center" bgcolor="#1e3a8a" style="padding:16px 0;">
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">Sis</span>
+                <span style="font-size:20px;font-weight:bold;color:#facc15;">Co</span>
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">E</span>
+              </td>
+            </tr>
+
+            <!-- Conteúdo - Novo Chamado -->
+            <tr>
+              <td style="padding:16px;">
+                <h2 style="color:#1e3a8a;font-size:16px;margin:0 0 12px 0;font-weight:600;">🎫 Novo Chamado Aberto</h2>
+                
+                <table width="100%" style="margin:8px 0;">
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <strong>Prezado(a):</strong> {{ chamado.solicitante_nome }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;">
+                      Seu chamado foi registrado com sucesso
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Protocolo -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0;">
+                  <tr>
+                    <td align="center" bgcolor="#1e40af" style="color:#ffffff;font-weight:bold;padding:8px;border-radius:4px;font-size:12px;">
+                      🔐 Protocolo: {{ chamado.protocolo }}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Detalhes do Chamado -->
+                <table width="100%" style="background:#f8fafc;padding:12px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:6px;">📋 Detalhes do Chamado</strong>
+                      <strong>Assunto:</strong> {{ chamado.assunto }}<br>
+                      <strong>Categoria:</strong> {{ chamado.categoria.get_categoria_display }}<br>
+                      <strong>Subcategoria:</strong> {{ chamado.categoria.get_subcategoria_display }}<br>
+                      <strong>Descrição:</strong> {{ chamado.descricao|linebreaksbr }}<br>
+                      <strong>Aberto em:</strong> {{ chamado.criado_em|date:"d/m/Y H:i" }}<br>
+                      <strong>Status:</strong> <span style="color:#166534;">🟢 {{ chamado.get_status_display }}</span>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Informações do Solicitante -->
+                <table width="100%" style="background:#f0f9ff;padding:10px;border-radius:4px;margin:10px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:4px;">👤 Informações do Solicitante</strong>
+                      <strong>Nome:</strong> {{ chamado.solicitante_nome }}<br>
+                      <strong>RE:</strong> {{ chamado.re }}<br>
+                      <strong>Posto/Graduação:</strong> {{ chamado.posto_grad }}<br>
+                      <strong>SGB:</strong> {{ chamado.sgb }}<br>
+                      <strong>Posto/Seção:</strong> {{ chamado.posto_secao }}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Próximos Passos -->
+                <table width="100%" style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#92400e;display:block;margin-bottom:4px;">💡 Próximos Passos</strong>
+                      • Guarde o número de protocolo<br>
+                      • Você receberá atualizações por e-mail<br>
+                      • Nossa equipe entrará em contato em breve
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Assinatura -->
+                <table width="100%" style="margin:16px 0 0 0;padding-top:12px;border-top:1px solid #e5e7eb;">
+                  <tr>
+                    <td style="font-size:12px;">
+                      Atenciosamente,<br>
+                      <strong>15º Grupamento de Bombeiros</strong><br>
+                      Polícia Militar do Estado de São Paulo
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Rodapé -->
+            <tr>
+              <td align="center" bgcolor="#f1f5f9" style="font-size:11px;color:#6b7280;padding:12px;line-height:1.4;">
+                <em>"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"</em><br>
+                📧 E-mail automático — não responda<br>
+                SisCoE Sistema &copy; 2024 - 15º GBM
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+{% endautoescape %}
