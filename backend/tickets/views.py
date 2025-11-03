@@ -228,7 +228,15 @@ def abrir_chamado(request):
 
 
 def chamado_sucesso(request, protocolo):
-    return render(request, 'tickets/chamado_sucesso.html', {'protocolo': protocolo})
+    # Determinar a origem baseado no usuário autenticado
+    origem = 'dashboard' if request.user.is_authenticated else 'landing'
+    
+    context = {
+        'protocolo': protocolo,
+        'origem': origem
+    }
+    return render(request, 'tickets/chamado_sucesso.html', context)
+
 
 @login_required
 def meus_chamados(request):
@@ -279,52 +287,118 @@ def dashboard(request):
     }
     return render(request, 'tickets/dashboard.html', context)
 
+
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
 @login_required
+def meus_chamados_api(request):
+    """API para retornar os chamados do usuário em formato JSON"""
+    chamados = Chamado.objects.filter(usuario=request.user).order_by('-criado_em')[:5]  # Últimos 5
+    
+    chamados_data = []
+    for chamado in chamados:
+        chamados_data.append({
+            'id': chamado.id,
+            'protocolo': chamado.protocolo,
+            'assunto': chamado.assunto,
+            'status': chamado.get_status_display(),
+            'status_cor': get_status_color(chamado.status),
+            'criado_em': chamado.criado_em.strftime('%d/%m/%Y %H:%M'),
+            'categoria': str(chamado.categoria),
+            'descricao': chamado.descricao[:100] + '...' if len(chamado.descricao) > 100 else chamado.descricao,
+        })
+    
+    return JsonResponse({
+        'chamados': chamados_data,
+        'total': len(chamados_data)
+    })
+
+def get_status_color(status):
+    """Retorna a cor do status baseado no estado"""
+    colors = {
+        'aberto': 'bg-green-100 text-green-800',
+        'em_atendimento': 'bg-blue-100 text-blue-800',
+        'aguardando_usuario': 'bg-yellow-100 text-yellow-800',
+        'resolvido': 'bg-purple-100 text-purple-800',
+        'fechado': 'bg-gray-100 text-gray-800',
+    }
+    return colors.get(status, 'bg-gray-100 text-gray-800')
+
+
+
 def chamado_detail(request, chamado_id):
-    chamado = get_object_or_404(Chamado, id=chamado_id)
+    """
+    View para detalhes do chamado
+    Admin: mostra detalhes de um chamado específico com funcionalidades completas
+    Usuário comum: mostra detalhes do seu próprio chamado (apenas leitura)
+    """
+    print(f"Usuário: {request.user}")
+    print(f"É admin: {request.user.is_admin}")
+    print(f"Chamado ID: {chamado_id}")
     
-    if not request.user.is_staff and chamado.usuario != request.user:
-        return HttpResponseForbidden("Você não tem permissão para ver este chamado.")
-
-    anexos = chamado.anexos.all()
-    comentarios = chamado.comentarios.all()
+    # Busca o chamado
+    chamado = get_object_or_404(Chamado, pk=chamado_id)
     
-    if request.method == 'POST' and request.user.is_staff:
-        action = request.POST.get('action')
-        if action == 'add_comment':
-            comentario_form = ComentarioForm(request.POST)
-            if comentario_form.is_valid():
-                novo_comentario = comentario_form.save(commit=False)
-                novo_comentario.chamado = chamado
-                novo_comentario.autor = request.user
-                novo_comentario.save()
-                messages.success(request, 'Comentário adicionado com sucesso.')
-                return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-        
-        elif action == 'update_status':
-            status_form = UpdateStatusForm(request.POST, instance=chamado)
-            if status_form.is_valid():
-                status_form.save()
-                messages.success(request, 'Status do chamado atualizado.')
-                return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-
-        elif action == 'assign_tecnico':
-            assign_form = AssignTecnicoForm(request.POST, instance=chamado)
-            if assign_form.is_valid():
-                assign_form.save()
-                messages.success(request, 'Técnico atribuído com sucesso.')
-                return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-
-    comentario_form = ComentarioForm()
-    status_form = UpdateStatusForm(instance=chamado)
-    assign_form = AssignTecnicoForm(instance=chamado)
-
+    # Verifica permissões
+    if not request.user.is_admin and chamado.usuario != request.user:
+        return HttpResponseForbidden("Você não tem permissão para acessar este chamado.")
+    
+    # Prepara o contexto base
     context = {
         'chamado': chamado,
-        'anexos': anexos,
-        'comentarios': comentarios,
-        'comentario_form': comentario_form,
-        'status_form': status_form,
-        'assign_form': assign_form,
+        'comentarios': chamado.comentarios.all().order_by('criado_em'),
+        'anexos': chamado.anexos.all().order_by('-enviado_em'),
     }
-    return render(request, 'tickets/chamado_detail.html', context)
+    
+    # Lógica para admin
+    if request.user.is_admin:
+        template_name = 'tickets/chamado_detail_admin.html'
+        
+        # Adiciona forms para admin
+        context.update({
+            'comentario_form': ComentarioForm(),
+            'status_form': UpdateStatusForm(instance=chamado),
+            'assign_form': AssignTecnicoForm(instance=chamado),
+        })
+        
+        # Lógica de POST (para admin)
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'add_comment':
+                comentario_form = ComentarioForm(request.POST)
+                if comentario_form.is_valid():
+                    comentario = comentario_form.save(commit=False)
+                    comentario.chamado = chamado
+                    comentario.autor = request.user
+                    comentario.save()
+                    messages.success(request, 'Comentário adicionado com sucesso!')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+            
+            elif action == 'update_status':
+                status_form = UpdateStatusForm(request.POST, instance=chamado)
+                if status_form.is_valid():
+                    status_form.save()
+                    messages.success(request, 'Status atualizado com sucesso!')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+            
+            elif action == 'assign_tecnico':
+                assign_form = AssignTecnicoForm(request.POST, instance=chamado)
+                if assign_form.is_valid():
+                    assign_form.save()
+                    messages.success(request, 'Técnico atribuído com sucesso!')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+    
+    else:
+        # Template para usuário comum
+        template_name = 'tickets/chamado_detail_user.html'
+    
+    # RETORNA SEMPRE um HttpResponse
+    return render(request, template_name, context)
+
+@login_required
+def meus_chamados_lista(request):
+    """View específica para lista de chamados do usuário comum"""
+    chamados = Chamado.objects.filter(usuario=request.user).order_by('-criado_em')
+    return render(request, 'tickets/meus_chamados.html', {'chamados': chamados})
