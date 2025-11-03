@@ -128,5 +128,6 @@ class AssignTecnicoForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['tecnico_responsavel'].queryset = User.objects.filter(is_staff=True)
+        # CORREÇÃO: Use is_admin em vez de is_staff
+        self.fields['tecnico_responsavel'].queryset = User.objects.filter(is_admin=True)
         self.fields['tecnico_responsavel'].label = "Atribuir Técnico"

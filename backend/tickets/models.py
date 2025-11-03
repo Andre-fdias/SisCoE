@@ -136,7 +136,8 @@ class Chamado(models.Model):
         null=True, 
         blank=True, 
         related_name='chamados_atribuidos',
-        limit_choices_to={'is_staff': True},
+        # CORREÇÃO: Use is_admin em vez de is_staff
+        limit_choices_to={'is_admin': True},
         verbose_name="Técnico Responsável"
     )
     
