@@ -1,170 +1,464 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% load static %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+{% now "Y-m-d" as current_date %}
 {% block title %}Dashboard de Chamados{% endblock %}
 
 {% block 'body' %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard de Chamados</h1>
-        <a href="{% url 'tickets:abrir_chamado' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
-            <i class="fas fa-plus mr-2"></i> Abrir Novo Chamado
-        </a>
-    </div>
 
-    <!-- Estatísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center">
-            <div class="bg-blue-500 text-white rounded-full p-3 mr-4">
-                <i class="fas fa-ticket-alt fa-2x"></i>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Total de Chamados</p>
-                <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ stats.total_chamados }}</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-center">
-            <div class="bg-green-500 text-white rounded-full p-3 mr-4">
-                <i class="fas fa-calendar-day fa-2x"></i>
-            </div>
-            <div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Abertos Hoje</p>
-                <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ stats.chamados_abertos_hoje }}</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold mb-2 text-gray-700 dark:text-white">Chamados por Status</h3>
-            <canvas id="statusChart"></canvas>
-        </div>
-    </div>
+<body class="bg-gray-50">
+    <div class="md:items-center md:justify-between rounded-lg w-full mt-2" id="dashboard_chamados">
+        <!-- Cabeçalho -->
+        <fieldset class="p-4 rounded-md w-full">
+            <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 border-0">
+                <div class="p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <h1 class="text-2xl font-bold text-white tracking-tight">Dashboard de Chamados</h1>
+                            <p class="text-gray-300 text-sm mt-1">Gerencie e acompanhe todos os chamados técnicos do sistema.</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                            <a href="{% url 'tickets:abrir_chamado' %}" 
+                            class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                                <i class="fas fa-plus-circle mr-2"></i> Abrir Novo Chamado
+                            </a>
+                            
+                            <a href="{% url 'tickets:meus_chamados' %}" 
+                            class="flex items-center justify-center px-6 py-3 border border-green-600 text-base font-medium rounded-md text-white bg-green-700 hover:bg-green-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                                <i class="fas fa-ticket-alt mr-2"></i> Meus Chamados
+                            </a>
+                            
+                            {% if user.is_staff %}
+                            <a href="{% url 'tickets:dashboard' %}" 
+                            class="flex items-center justify-center px-6 py-3 border border-purple-600 text-base font-medium rounded-md text-white bg-purple-700 hover:bg-purple-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                                <i class="fas fa-chart-bar mr-2"></i> Dashboard Geral
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
 
-    <!-- Filtros -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600">
-                    <option value="">Todos</option>
-                    {% for value, display in status_choices %}
-                        <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>{{ display }}</option>
+        <!-- Mensagens -->
+        <fieldset class="rounded-md">
+            {% if messages %}
+                <div id="django-messages" style="display:none;" data-messages='[
+                    {% for message in messages %}
+                        {
+                            "tags": "{{ message.tags|upper }}",
+                            "message": "{{ message|escapejs }}"
+                        }{% if not forloop.last %},{% endif %}
                     {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="categoria" class="text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
-                <select name="categoria" id="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600">
-                    <option value="">Todas</option>
-                    {% for categoria in categorias %}
-                        <option value="{{ categoria.id }}" {% if current_filters.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>{{ categoria.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="tecnico" class="text-sm font-medium text-gray-700 dark:text-gray-300">Técnico</label>
-                <select name="tecnico" id="tecnico" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600">
-                    <option value="">Todos</option>
-                    {% for tecnico in tecnicos %}
-                        <option value="{{ tecnico.id }}" {% if current_filters.tecnico == tecnico.id|stringformat:"s" %}selected{% endif %}>{{ tecnico.get_full_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="flex items-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Filtrar</button>
-                <a href="{% url 'tickets:dashboard' %}" class="ml-2 text-sm text-gray-600 hover:underline">Limpar</a>
-            </div>
-        </form>
-    </div>
+                ]'></div>
+            {% endif %}
+            {% include 'modals/alert_modal.html' %}
+        </fieldset>
 
-    <!-- Tabela de Chamados -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assunto</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Técnico</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
-                    <th scope="col" class="relative px-6 py-3">
-                        <span class="sr-only">Ações</span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {% for chamado in chamados %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ chamado.protocolo }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ chamado.assunto|truncatechars:30 }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ chamado.solicitante_nome }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            {% with status=chamado.get_status_display %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if chamado.status == 'aberto' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                                    {% elif chamado.status == 'em_atendimento' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                                    {% elif chamado.status == 'resolvido' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                                    {% elif chamado.status == 'fechado' %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                                    {% else %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                                    {% endif %}">
-                                    {{ status }}
+        <!-- Cards de Estatísticas -->
+        <fieldset class="p-4 rounded-md w-full">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <!-- Total de Chamados -->
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium opacity-90">Total de Chamados</p>
+                            <p class="text-2xl font-bold">{{ stats.total_chamados }}</p>
+                        </div>
+                        <div class="bg-blue-400 rounded-full p-3">
+                            <i class="fas fa-ticket-alt text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Abertos Hoje -->
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium opacity-90">Abertos Hoje</p>
+                            <p class="text-2xl font-bold">{{ stats.chamados_abertos_hoje }}</p>
+                        </div>
+                        <div class="bg-green-400 rounded-full p-3">
+                            <i class="fas fa-calendar-day text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Em Atendimento -->
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium opacity-90">Em Atendimento</p>
+                            <p class="text-2xl font-bold">
+                                {% for item in chart_data.data %}
+                                    {% if forloop.counter0 == 1 %}{{ item }}{% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div class="bg-yellow-400 rounded-full p-3">
+                            <i class="fas fa-user-cog text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolvidos -->
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium opacity-90">Resolvidos</p>
+                            <p class="text-2xl font-bold">
+                                {% for item in chart_data.data %}
+                                    {% if forloop.counter0 == 3 %}{{ item }}{% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div class="bg-purple-400 rounded-full p-3">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Filtros e Gráfico -->
+        <fieldset class="p-4 rounded-md w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Filtros -->
+                <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-filter mr-2 text-blue-600"></i> Filtros
+                    </h3>
+                    <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Status Filter -->
+                        <div class="flex flex-col">
+                            <label for="status" class="text-sm font-medium text-gray-700 mb-2">
+                                Status
+                            </label>
+                            <select name="status" id="status" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todos os Status</option>
+                                {% for value, display in status_choices %}
+                                    <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Categoria Filter -->
+                        <div class="flex flex-col">
+                            <label for="categoria" class="text-sm font-medium text-gray-700 mb-2">
+                                Categoria
+                            </label>
+                            <select name="categoria" id="categoria" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todas as Categorias</option>
+                                {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}" {% if current_filters.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>{{ categoria }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Técnico Filter -->
+                        <div class="flex flex-col">
+                            <label for="tecnico" class="text-sm font-medium text-gray-700 mb-2">
+                                Técnico
+                            </label>
+                            <select name="tecnico" id="tecnico" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Todos os Técnicos</option>
+                                {% for tecnico in tecnicos %}
+                                    <option value="{{ tecnico.id }}" {% if current_filters.tecnico == tecnico.id|stringformat:"s" %}selected{% endif %}>{{ tecnico.get_full_name|default:tecnico.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="md:col-span-3 flex items-center justify-between pt-4 border-t border-gray-200">
+                            <button type="submit" 
+                                    class="flex items-center justify-center px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                                <i class="fas fa-search mr-2"></i> Aplicar Filtros
+                            </button>
+                            <a href="{% url 'tickets:dashboard' %}" 
+                               class="text-sm text-gray-600 hover:text-gray-800 underline">
+                                Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Gráfico -->
+                <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-chart-pie mr-2 text-purple-600"></i> Distribuição por Status
+                    </h3>
+                    <div class="h-48">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Tabela de Chamados -->
+        <fieldset class="p-4 mb-2 rounded-md w-full">
+            <fieldset class="bg-gray-100 rounded-md shadow-lg mb-2 border-0">
+                <table id="tabelaChamados" class="w-full text-sm text-left text-gray-700">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="p-3">
+                                <div class="flex items-center">
+                                    <input id="checkbox-all" type="checkbox" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
+                                    <label for="checkbox-all" class="sr-only">checkbox</label>
+                                </div>
+                            </th>
+                            <th class="px-4 py-3 text-center">Protocolo</th>
+                            <th class="px-4 py-3 text-center">Assunto</th>
+                            <th class="px-4 py-3 text-center">Solicitante</th>
+                            <th class="px-4 py-3 text-center">Categoria</th>
+                            <th class="px-4 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-center">Técnico</th>
+                            <th class="px-4 py-3 text-center">Data</th>
+                            <th class="px-4 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chamado in chamados %}
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="w-4 p-3">
+                                <div class="flex items-center">
+                                    <input id="checkbox-table-search-{{ forloop.counter }}" type="checkbox" onclick="event.stopPropagation()" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500">
+                                    <label for="checkbox-table-search-{{ forloop.counter }}" class="sr-only">checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="font-mono font-bold text-blue-600">
+                                    {{ chamado.protocolo }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-gray-900 max-w-xs truncate">
+                                    {{ chamado.assunto }}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1 truncate">
+                                    {{ chamado.descricao|truncatechars:50 }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ chamado.solicitante_nome }}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {{ chamado.solicitante_email }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                    {{ chamado.categoria }}
                                 </span>
-                            {% endwith %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ chamado.tecnico_responsavel.get_full_name|default:"---" }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ chamado.criado_em|date:"d/m/Y" }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'tickets:chamado_detail' chamado.id %}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Detalhes</a>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">Nenhum chamado encontrado.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+                                    {% if chamado.status == 'aberto' %} 
+                                        bg-green-100 text-green-800
+                                    {% elif chamado.status == 'em_atendimento' %} 
+                                        bg-yellow-100 text-yellow-800
+                                    {% elif chamado.status == 'aguardando_usuario' %} 
+                                        bg-orange-100 text-orange-800
+                                    {% elif chamado.status == 'resolvido' %} 
+                                        bg-blue-100 text-blue-800
+                                    {% elif chamado.status == 'fechado' %} 
+                                        bg-gray-100 text-gray-800
+                                    {% else %} 
+                                        bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    <i class="fas fa-circle mr-1 text-xs"></i>
+                                    {{ chamado.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="text-sm text-gray-900">
+                                    {{ chamado.tecnico_responsavel.get_full_name|default:"---" }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium">{{ chamado.criado_em|date:"d/m/Y" }}</span>
+                                    <span class="text-xs text-gray-500">{{ chamado.criado_em|date:"H:i" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{% url 'tickets:chamado_detail' chamado.id %}" 
+                                   class="text-gray-100 bg-gradient-to-r from-purple-700 to-purple-600 hover:bg-gradient-to-br
+                                          focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg 
+                                          text-xs px-3 py-1.5 text-center inline-flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="px-6 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500">
+                                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                                    <p class="text-lg font-medium">Nenhum chamado encontrado</p>
+                                    <p class="text-sm mt-2">Tente ajustar os filtros ou abrir um novo chamado</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('statusChart').getContext('2d');
-    const statusChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ chart_data.labels|safe }},
-            datasets: [{
-                label: 'Chamados por Status',
-                data: {{ chart_data.data|safe }},
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.7)', // blue
-                    'rgba(245, 158, 11, 0.7)', // amber
-                    'rgba(16, 185, 129, 0.7)', // green
-                    'rgba(107, 114, 128, 0.7)', // gray
-                    'rgba(239, 68, 68, 0.7)', // red
-                ],
-                borderColor: [
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(245, 158, 11, 1)',
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(107, 114, 128, 1)',
-                    'rgba(239, 68, 68, 1)',
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                title: {
-                    display: false,
+                <!-- Exportar/Estatísticas -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-gray-100 rounded-lg">
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-600">
+                            Total de registros: {{ chamados|length }}
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Botão Exportar -->
+                        <div class="relative">
+                            <button id="exportButton" type="button" 
+                                    class="text-gray-900 bg-gradient-to-r from-yellow-300 to-yellow-400 hover:bg-gradient-to-br 
+                                        focus:ring-4 focus:outline-none focus:ring-yellow-200 font-medium rounded-lg 
+                                        text-xs px-4 py-2 text-center inline-flex items-center">
+                                <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                </svg>
+                                Exportar
+                            </button>
+                            
+                            <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                <div class="py-1">
+                                    <button type="button" onclick="exportTable('pdf')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
+                                        <i class="fas fa-file-pdf mr-2 text-red-500"></i> PDF
+                                    </button>
+                                    <button type="button" onclick="exportTable('xlsx')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
+                                        <i class="fas fa-file-excel mr-2 text-green-500"></i> Excel
+                                    </button>
+                                    <button type="button" onclick="exportTable('csv')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">
+                                        <i class="fas fa-file-csv mr-2 text-blue-500"></i> CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializa a tabela de dados
+            const dataTable = new simpleDatatables.DataTable("#tabelaChamados", {
+                perPage: 10,
+                perPageSelect: [5, 10, 15, 20, 25],
+                labels: {
+                    placeholder: "Pesquisar...",
+                    perPage: "{select} por página",
+                    noRows: "Nenhum registro encontrado",
+                    info: "Mostrando {start}-{end} de {rows}",
+                    noResults: "Nenhum resultado corresponde à sua pesquisa",
+                    loading: "Carregando...",
+                    infoFiltered: "(filtrado de {rowsTotal} registros)",
+                    previous: "Anterior",
+                    next: "Próximo",
+                    first: "Primeiro",
+                    last: "Último"
                 }
+            });
+
+            // Gráfico de Status
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            const statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ chart_data.labels|safe }},
+                    datasets: [{
+                        data: {{ chart_data.data|safe }},
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',   // green - aberto
+                            'rgba(234, 179, 8, 0.8)',   // yellow - em atendimento
+                            'rgba(249, 115, 22, 0.8)',  // orange - aguardando usuário
+                            'rgba(59, 130, 246, 0.8)',  // blue - resolvido
+                            'rgba(107, 114, 128, 0.8)', // gray - fechado
+                        ],
+                        borderColor: [
+                            'rgb(34, 197, 94)',
+                            'rgb(234, 179, 8)',
+                            'rgb(249, 115, 22)',
+                            'rgb(59, 130, 246)',
+                            'rgb(107, 114, 128)',
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Lógica para o menu de exportação
+            const exportButton = document.getElementById('exportButton');
+            const exportMenu = document.getElementById('exportMenu');
+
+            if (exportButton && exportMenu) {
+                exportButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    exportMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function() {
+                    exportMenu.classList.add('hidden');
+                });
+
+                exportMenu.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
             }
-        }
-    });
-</script>
+
+            function exportTable(type) {
+                // Implemente sua lógica de exportação aqui
+                console.log('Exportando como:', type);
+                alert(`Exportando dados como ${type.toUpperCase()}`);
+                // Você pode adicionar chamadas AJAX para views Django que geram os arquivos
+            }
+
+            // Checkbox principal
+            const checkboxAll = document.getElementById('checkbox-all');
+            if (checkboxAll) {
+                checkboxAll.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="checkbox-table-search-"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = checkboxAll.checked;
+                    });
+                });
+            }
+        });
+    </script>
+</body>
 {% endblock %}
