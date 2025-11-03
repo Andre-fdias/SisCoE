@@ -1,0 +1,119 @@
+{% load static %}
+{% autoescape off %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f8fafc;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc">
+      <tr>
+        <td align="center">
+          <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:13px;line-height:1.4;border:1px solid #e5e7eb;">
+            <!-- Cabeçalho -->
+            <tr>
+              <td align="center" bgcolor="#1e3a8a" style="padding:16px 0;">
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">Sis</span>
+                <span style="font-size:20px;font-weight:bold;color:#facc15;">Co</span>
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">E</span>
+              </td>
+            </tr>
+
+            <!-- Conteúdo - Novo Comentário -->
+            <tr>
+              <td style="padding:16px;">
+                <h2 style="color:#1e3a8a;font-size:16px;margin:0 0 12px 0;font-weight:600;">💬 Novo Comentário</h2>
+                
+                <table width="100%" style="margin:8px 0;">
+                  <tr>
+                    <td style="padding:6px 0;">
+                      <strong>Prezado(a):</strong> {{ chamado.solicitante_nome }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;">
+                      Um novo comentário foi adicionado ao seu chamado
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Protocolo -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0;">
+                  <tr>
+                    <td align="center" bgcolor="#1e40af" style="color:#ffffff;font-weight:bold;padding:8px;border-radius:4px;font-size:12px;">
+                      🔐 Protocolo: {{ chamado.protocolo }}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Comentário -->
+                <table width="100%" style="background:#ecfdf5;border:1px solid #10b981;padding:10px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong>{{ comentario.autor.get_full_name|default:comentario.autor.email }}</strong><br>
+                      <em style="color:#6b7280;font-size:11px;">
+                        {{ comentario.criado_em|date:"d/m/Y H:i" }}
+                      </em>
+                      <div style="margin-top:6px;">
+                        {{ comentario.texto|linebreaksbr }}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Detalhes do Chamado -->
+                <table width="100%" style="background:#f8fafc;padding:10px;border-radius:4px;margin:10px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:4px;">📋 Detalhes do Chamado</strong>
+                      <strong>Assunto:</strong> {{ chamado.assunto }}<br>
+                      <strong>Status:</strong> {{ chamado.get_status_display }}<br>
+                      <strong>Atualizado em:</strong> {{ chamado.atualizado_em|date:"d/m/Y H:i" }}
+                    </td>
+                  </tr>
+                </table>
+
+                {% if comentarios %}
+                <!-- Histórico -->
+                <table width="100%" style="margin:12px 0;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:6px;font-size:12px;">📝 Histórico de Comentários</strong>
+                      {% for comentario_hist in comentarios %}
+                      <div style="border-left:2px solid #1e3a8a;padding:6px 0 6px 10px;margin:6px 0;font-size:11px;">
+                        <strong>{{ comentario_hist.autor.get_full_name|default:comentario_hist.autor.email }}</strong>
+                        <span style="color:#6b7280;">em {{ comentario_hist.criado_em|date:"d/m/Y H:i" }}</span><br>
+                        {{ comentario_hist.texto|linebreaksbr }}
+                      </div>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                </table>
+                {% endif %}
+
+                <!-- Assinatura -->
+                <table width="100%" style="margin:16px 0 0 0;padding-top:12px;border-top:1px solid #e5e7eb;">
+                  <tr>
+                    <td style="font-size:12px;">
+                      Atenciosamente,<br>
+                      <strong>15º Grupamento de Bombeiros</strong><br>
+                      Polícia Militar do Estado de São Paulo
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Rodapé -->
+            <tr>
+              <td align="center" bgcolor="#f1f5f9" style="font-size:11px;color:#6b7280;padding:12px;line-height:1.4;">
+                <em>"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"</em><br>
+                📧 E-mail automático — não responda<br>
+                SisCoE Sistema &copy; 2024 - 15º GBM
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+{% endautoescape %}

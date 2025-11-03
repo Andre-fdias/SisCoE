@@ -1,0 +1,130 @@
+{% load static %}
+{% autoescape off %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <body style="margin:0;padding:0;background-color:#f8fafc;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f8fafc">
+      <tr>
+        <td align="center">
+          <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:13px;line-height:1.4;border:1px solid #e5e7eb;">
+            <!-- Cabeçalho -->
+            <tr>
+              <td align="center" bgcolor="#1e3a8a" style="padding:16px 0;">
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">Sis</span>
+                <span style="font-size:20px;font-weight:bold;color:#facc15;">Co</span>
+                <span style="font-size:20px;font-weight:bold;color:#ffffff;">E</span>
+              </td>
+            </tr>
+
+            <!-- Conteúdo - Atualização de Chamado -->
+            <tr>
+              <td style="padding:16px;">
+                <h2 style="color:#1e3a8a;font-size:16px;margin:0 0 12px 0;font-weight:600;">🔄 Atualização de Chamado</h2>
+                
+                <table width="100%" style="margin:8px 0;">
+                  <tr>
+                    <td style="padding:8px 0;">
+                      <strong>Prezado(a):</strong> {{ chamado.solicitante_nome }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:4px 0;">
+                      O status do seu chamado foi atualizado
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Protocolo -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0;">
+                  <tr>
+                    <td align="center" bgcolor="#1e40af" style="color:#ffffff;font-weight:bold;padding:8px;border-radius:4px;font-size:12px;">
+                      🔐 Protocolo: {{ chamado.protocolo }}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Status Update -->
+                <table width="100%" cellpadding="6" cellspacing="0" border="0" style="text-align:center;margin:8px 0;font-size:12px;">
+                  <tr>
+                    <td width="45%" bgcolor="#fef3c7" style="color:#b45309;border-radius:4px;padding:6px;">
+                      {{ old_status_display }}
+                    </td>
+                    <td width="10%" style="font-size:14px;color:#6b7280;">→</td>
+                    <td width="45%" bgcolor="#dcfce7" style="color:#166534;border-radius:4px;padding:6px;">
+                      {{ new_status_display }}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Detalhes do Chamado -->
+                <table width="100%" style="background:#f8fafc;padding:12px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:6px;">📋 Detalhes do Chamado</strong>
+                      <strong>Assunto:</strong> {{ chamado.assunto }}<br>
+                      <strong>Descrição:</strong> {{ chamado.descricao|linebreaksbr }}<br>
+                      <strong>Atualizado em:</strong> {{ chamado.atualizado_em|date:"d/m/Y H:i" }}
+                    </td>
+                  </tr>
+                </table>
+
+                {% if comentario %}
+                <!-- Comentário da Equipe -->
+                <table width="100%" style="background:#eff6ff;border:1px solid #93c5fd;padding:10px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong style="color:#1e3a8a;display:block;margin-bottom:4px;">💬 Comentário da Equipe</strong>
+                      {{ comentario.texto|linebreaksbr }}<br>
+                      <em style="color:#6b7280;font-size:11px;">
+                        Por: {{ comentario.autor.get_full_name }} em {{ comentario.criado_em|date:"d/m/Y H:i" }}
+                      </em>
+                    </td>
+                  </tr>
+                </table>
+                {% endif %}
+
+                <!-- Status Info -->
+                <table width="100%" style="background:#e0f2fe;padding:10px;border-radius:4px;margin:12px 0;font-size:12px;">
+                  <tr>
+                    <td>
+                      <strong>Status atual:</strong> {{ new_status_display }}
+                      {% if new_status == 'aguardando_usuario' %}
+                      <br><span style="color:#b45309;">⚠️ Aguardamos sua resposta</span>
+                      {% elif new_status == 'resolvido' %}
+                      <br><span style="color:#166534;">✅ Problema resolvido</span>
+                      {% elif new_status == 'fechado' %}
+                      <br><span style="color:#374151;">🔒 Chamado encerrado</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Assinatura -->
+                <table width="100%" style="margin:16px 0 0 0;padding-top:12px;border-top:1px solid #e5e7eb;">
+                  <tr>
+                    <td style="font-size:12px;">
+                      Atenciosamente,<br>
+                      <strong>15º Grupamento de Bombeiros</strong><br>
+                      Polícia Militar do Estado de São Paulo
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Rodapé -->
+            <tr>
+              <td align="center" bgcolor="#f1f5f9" style="font-size:11px;color:#6b7280;padding:12px;line-height:1.4;">
+                <em>"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"</em><br>
+                📧 E-mail automático — não responda<br>
+                SisCoE Sistema &copy; 2024 - 15º GBM
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+{% endautoescape %}

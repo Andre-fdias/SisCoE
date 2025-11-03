@@ -153,6 +153,35 @@ class Chamado(models.Model):
 
     def __str__(self):
         return f'{self.protocolo} - {self.assunto}'
+    
+
+    def save(self, *args, **kwargs):
+        # Verifica se é uma atualização e se o status mudou
+        if self.pk:
+            old_chamado = Chamado.objects.get(pk=self.pk)
+            if old_chamado.status != self.status:
+                # Status mudou, vamos registrar para envio de email
+                self._status_changed = True
+                self._old_status = old_chamado.status
+            else:
+                self._status_changed = False
+        else:
+            self._status_changed = False
+            
+        super().save(*args, **kwargs)
+    
+    def get_status_display_color(self):
+        """Retorna a cor do status para exibição"""
+        colors = {
+            'aberto': '🟢 Aberto',
+            'em_atendimento': '🔵 Em Atendimento', 
+            'aguardando_usuario': '🟡 Aguardando Usuário',
+            'resolvido': '🟣 Resolvido',
+            'fechado': '⚫ Fechado',
+        }
+        return colors.get(self.status, self.get_status_display())
+    
+    
 
 class Anexo(models.Model):
     chamado = models.ForeignKey(Chamado, on_delete=models.CASCADE, related_name='anexos')
