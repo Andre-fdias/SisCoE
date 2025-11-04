@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SisCoE Zap - Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos WhatsApp-like */
+:root {
+    --whatsapp-green: #128C7E;
+    --whatsapp-green-dark: #075E54;
+    --whatsapp-green-light: #25D366;
+    --whatsapp-chat-bg: #E5DDD5;
+    --whatsapp-message-sent: #DCF8C6;
+    --whatsapp-message-received: #FFFFFF;
+    --whatsapp-timestamp: #999999;
+    --whatsapp-typing: #8696a0;
+}
+
+.chat-container {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-color: var(--whatsapp-chat-bg);
+}
+
+.message-sent {
+    background-color: var(--whatsapp-message-sent) !important;
+    border-radius: 7.5px 0 7.5px 7.5px;
+}
+
+.message-received {
+    background-color: var(--whatsapp-message-received) !important;
+    border-radius: 0 7.5px 7.5px 7.5px;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+}
+
+.message-timestamp {
+    font-size: 0.6875rem;
+    color: var(--whatsapp-timestamp);
+    margin-top: 2px;
+}
+
+.typing-indicator {
+    background-color: var(--whatsapp-message-received);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: inline-block;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+}
+
+.typing-dots {
+    display: flex;
+    gap: 2px;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--whatsapp-typing);
+    animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingAnimation {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+.conversation-item.active {
+    background-color: #f0f0f0;
+}
+
+.conversation-item.unread {
+    background-color: #e8f4fd;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.status-online { background-color: var(--whatsapp-green-light); }
+.status-offline { background-color: #ddd; }
+.status-away { background-color: #ffb347; }
+
+/* Scrollbar personalizado */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Animações */
+.message-enter {
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block 'body' %}
+<div class="h-screen flex flex-col bg-gray-100" id="chat-container" 
+     data-user-id="{{ user.id }}" 
+     data-username="{{ user.get_full_name|default:user.email }}"
+     data-csrf-token="{{ csrf_token }}">
+
+    <!-- Header Principal -->
+    <div class="bg-[var(--whatsapp-green)] text-white p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-semibold">SisCoE Zap</h1>
+                <div class="text-sm opacity-90">
+                    <span id="connection-status" class="bg-green-500 px-2 py-1 rounded-full text-xs">
+                        ● Online
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="search-toggle" class="p-2 hover:bg-[var(--whatsapp-green-dark)] rounded-full transition-colors">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="menu-toggle" class="p-2 hover:bg-[var(--whatsapp-green-dark)] rounded-full transition-colors">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Barra de Pesquisa -->
+        <div id="search-bar" class="mt-3 hidden">
+            <div class="relative">
+                <input type="text" id="global-search" 
+                       class="w-full p-2 pl-10 rounded-lg bg-[var(--whatsapp-green-dark)] text-white placeholder-gray-300 border-none focus:ring-2 focus:ring-white"
+                       placeholder="Pesquisar conversas ou mensagens...">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-300"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar - Lista de Conversas -->
+        <div class="w-1/3 bg-white border-r border-gray-300 flex flex-col md:flex hidden" id="conversations-sidebar">
+            <!-- Header da Sidebar -->
+            <div class="p-4 border-b border-gray-300 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <img class="w-10 h-10 rounded-full object-cover" 
+                             src="{% if user.profile.photo %}{{ user.profile.photo.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             alt="{{ user.get_full_name }}">
+                        <span class="font-semibold text-gray-800">{{ user.get_full_name|default:user.email }}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="new-conversation-btn" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors" title="Nova conversa">
+                            <i class="fas fa-comment-medical"></i>
+                        </button>
+                        <button id="sidebar-toggle" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors md:hidden" title="Fechar sidebar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Conversas -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar" id="conversations-container">
+                <div id="conversation-list" class="divide-y divide-gray-100">
+                    <!-- As conversas serão carregadas aqui via JavaScript -->
+                    <div class="p-8 text-center text-gray-500">
+                        <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
+                        <p>Carregando conversas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Principal do Chat -->
+        <div class="flex-1 flex flex-col md:w-2/3 w-full">
+            <!-- Estado Inicial - Nenhuma conversa selecionada -->
+            <div id="no-conversation-selected" class="flex-1 flex flex-col items-center justify-center bg-gray-100 p-8 chat-container">
+                <div class="text-center max-w-md">
+                    <div class="bg-white rounded-full p-6 inline-block mb-4 shadow-lg">
+                        <i class="fas fa-comments text-4xl text-[var(--whatsapp-green)]"></i>
+                    </div>
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">SisCoE Zap</h2>
+                    <p class="text-gray-600 mb-6">Envie e receba mensagens sem manter seu celular conectado à internet.</p>
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <p class="text-sm text-gray-600 mb-4">Use o SisCoE no seu computador:</p>
+                        <ul class="text-sm text-gray-600 space-y-2 text-left">
+                            <li class="flex items-center">
+                                <i class="fas fa-laptop text-[var(--whatsapp-green)] mr-3"></i>
+                                <span>Clique em uma conversa para começar</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-users text-[var(--whatsapp-green)] mr-3"></i>
+                                <span>Converse com seus colegas em tempo real</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-paper-plane text-[var(--whatsapp-green)] mr-3"></i>
+                                <span>Envie mensagens, arquivos e muito mais</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Conversa Ativa (inicialmente oculta) -->
+            <div id="active-conversation" class="hidden flex-1 flex flex-col">
+                <!-- Header da Conversa -->
+                <div class="bg-gray-100 px-4 py-3 border-b border-gray-300 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button id="back-to-conversations" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full md:hidden">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="flex items-center space-x-3">
+                            <div class="relative">
+                                <img id="conversation-avatar" class="w-10 h-10 rounded-full object-cover" 
+                                     src="{% static 'images/default-group.png' %}" 
+                                     alt="Conversation">
+                                <span id="conversation-status" class="status-indicator status-offline absolute bottom-0 right-0 border-2 border-white"></span>
+                            </div>
+                            <div>
+                                <h3 id="conversation-name" class="font-semibold text-gray-800">Nome da Conversa</h3>
+                                <p id="conversation-presence" class="text-xs text-gray-600">
+                                    <span id="presence-text">carregando...</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
+                            <i class="fas fa-phone-alt"></i>
+                        </button>
+                        <button class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button id="conversation-info" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Área de Mensagens -->
+                <div id="message-area" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar chat-container">
+                    <div id="message-list" class="space-y-2">
+                        <!-- Mensagens serão carregadas aqui -->
+                    </div>
+                    
+                    <!-- Indicador de Digitação -->
+                    <div id="typing-indicator" class="hidden fade-in">
+                        <div class="flex justify-start">
+                            <div class="typing-indicator">
+                                <div class="typing-dots">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input de Mensagem -->
+                <div class="bg-gray-100 p-4 border-t border-gray-300">
+                    <form id="message-form" class="flex items-center space-x-2">
+                        <button type="button" id="attach-btn" class="p-3 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        
+                        <div class="flex-1 relative">
+                            <input type="text" id="message-input" 
+                                   class="w-full p-3 pr-12 rounded-full border border-gray-300 focus:ring-2 focus:ring-[var(--whatsapp-green)] focus:border-transparent"
+                                   placeholder="Digite uma mensagem" 
+                                   maxlength="1000">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
+                                <button type="button" class="p-1 text-gray-400 hover:text-gray-600">
+                                    <i class="far fa-smile"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" id="send-btn" class="p-3 bg-[var(--whatsapp-green)] text-white rounded-full hover:bg-[var(--whatsapp-green-dark)] transition-colors">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    
+                    <!-- Área de Anexos (oculta inicialmente) -->
+                    <div id="attachment-area" class="mt-3 hidden">
+                        <div class="bg-white rounded-lg p-4 shadow-lg">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-semibold">Anexar arquivo</h4>
+                                <button type="button" id="close-attach" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-image text-blue-500 mb-1"></i>
+                                    <span class="text-xs block">Foto</span>
+                                </button>
+                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-camera text-green-500 mb-1"></i>
+                                    <span class="text-xs block">Câmera</span>
+                                </button>
+                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-file text-orange-500 mb-1"></i>
+                                    <span class="text-xs block">Documento</span>
+                                </button>
+                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
+                                    <i class="fas fa-microphone text-red-500 mb-1"></i>
+                                    <span class="text-xs block">Áudio</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Conversa -->
+<div id="new-conversation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Nova Conversa</h3>
+                <button type="button" id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <input type="text" id="group-name-input" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--whatsapp-green)] focus:border-transparent"
+                       placeholder="Nome do grupo (opcional)">
+            </div>
+            
+            <div class="max-h-60 overflow-y-auto mb-4 border border-gray-200 rounded-lg">
+                <div id="modal-user-list" class="divide-y divide-gray-100">
+                    {% for u in all_users %}
+                    <div class="flex items-center p-3 hover:bg-gray-50 cursor-pointer user-item">
+                        <input type="checkbox" id="user-{{ u.id }}" value="{{ u.id }}" 
+                               class="w-4 h-4 text-[var(--whatsapp-green)] border-gray-300 rounded focus:ring-[var(--whatsapp-green)]">
+                        <label for="user-{{ u.id }}" class="ml-3 flex-1 cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ u.get_full_name|default:u.email }}
+                                </span>
+                                <span class="status-indicator status-offline" data-user-id="{{ u.id }}"></span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancel-modal" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="create-conversation-btn" 
+                        class="px-4 py-2 bg-[var(--whatsapp-green)] text-white rounded-lg hover:bg-[var(--whatsapp-green-dark)] transition-colors">
+                    Criar Conversa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner -->
+<div id="loading-spinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--whatsapp-green)]"></div>
+        <span class="text-gray-700">Carregando...</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'chat/chat.js' %}"></script>
+{% endblock %}
