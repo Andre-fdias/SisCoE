@@ -1,5 +1,7 @@
 import logging
 from django.template.loader import render_to_string
+from django.db.models import Q
+from backend.accounts.models import User
 from backend.accounts.brevo_service import send_brevo_email, test_brevo_connection
 
 logger = logging.getLogger(__name__)
@@ -24,11 +26,99 @@ def verificar_configuracao_email():
     logger.info("✅ Configuração de email: OK")
     return True
 
+def enviar_email_atualizacao_consolidada(chamado, changes_data):
+    """
+    Envia email consolidado com todas as atualizações do chamado (Admin → Usuário)
+    """
+    # Verifica configuração antes de tentar enviar
+    if not verificar_configuracao_email():
+        logger.warning("⚠️ Serviço de email não configurado, pulando envio")
+        return False
+    
+    try:
+        subject = f'🔄 Atualização do Chamado {chamado.protocolo} - SisCoE'
+        
+        context = {
+            'chamado': chamado,
+            'status_changed': changes_data.get('status_changed', False),
+            'tecnico_changed': changes_data.get('tecnico_changed', False),
+            'old_status_display': changes_data.get('old_status_display', ''),
+            'new_status_display': changes_data.get('new_status_display', ''),
+            'novo_tecnico': changes_data.get('novo_tecnico', ''),
+            'novo_comentario': changes_data.get('novo_comentario'),
+        }
+        
+        html_content = render_to_string('tickets/email/atualizacao_consolidada.html', context)
+        
+        result = send_brevo_email(
+            subject=subject,
+            html_content=html_content,
+            to_email=chamado.solicitante_email,
+            from_name='SisCoE - Sistema de Chamados'
+        )
+        
+        if result:
+            logger.info(f"✅ Email de atualização consolidada enviado para {chamado.solicitante_email}")
+        else:
+            logger.error(f"❌ Falha ao enviar email de atualização consolidada para {chamado.solicitante_email}")
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email de atualização consolidada: {str(e)}", exc_info=True)
+        return False
+
+def enviar_email_comentario_usuario(chamado, comentario):
+    """
+    Envia email quando um usuário adiciona um comentário ao chamado (Usuário → Admin)
+    """
+    if not verificar_configuracao_email():
+        logger.warning("⚠️ Serviço de email não configurado, pulando envio")
+        return False
+        
+    try:
+        # Busca todos os técnicos/admin para notificar
+        tecnicos = User.objects.filter(Q(is_admin=True) | Q(is_superuser=True))
+        emails_tecnicos = [tecnico.email for tecnico in tecnicos if tecnico.email]
+        
+        if not emails_tecnicos:
+            logger.warning("Nenhum técnico encontrado para notificação")
+            return False
+        
+        subject = f'💬 Resposta do Usuário - Chamado {chamado.protocolo}'
+        
+        html_content = render_to_string('tickets/email/resposta_usuario.html', {
+            'chamado': chamado,
+            'comentario': comentario,
+            'comentarios': chamado.comentarios.all().order_by('criado_em'),
+        })
+        
+        # Envia para todos os técnicos
+        success_count = 0
+        for email_tecnico in emails_tecnicos:
+            result = send_brevo_email(
+                subject=subject,
+                html_content=html_content,
+                to_email=email_tecnico,
+                from_name='SisCoE - Sistema de Chamados'
+            )
+            
+            if result:
+                logger.info(f"✅ Email de resposta do usuário enviado para {email_tecnico}")
+                success_count += 1
+            else:
+                logger.error(f"❌ Falha ao enviar email de resposta do usuário para {email_tecnico}")
+        
+        return success_count > 0
+                
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email de resposta do usuário: {str(e)}", exc_info=True)
+        return False
+
 def enviar_email_chamado_aberto(chamado):
     """
     Envia email quando um chamado é aberto com histórico
     """
-    # Verifica configuração antes de tentar enviar
     if not verificar_configuracao_email():
         logger.warning("⚠️ Serviço de email não configurado, pulando envio")
         return False

@@ -1,0 +1,165 @@
+{% load static %}
+{% autoescape off %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atualização do Chamado {{ chamado.protocolo }} - SisCoE</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f3f4f6; font-family: Arial, sans-serif; color: #1f2937; width: 100% !important; min-width: 100%; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; overflow-x: hidden;">
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0; padding: 0; background: #f3f4f6;">
+        <tr>
+            <td align="center" style="padding: 30px 0;">
+                
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="width: 600px; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                    
+                    <tr>
+                        <td align="center" style="background: #1e3a8a; color: white; text-align: center; padding: 30px 20px;">
+                            
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="width: 100%; max-width: 600px;">
+                                <tr>
+                                    <td align="center">
+                                        <div style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">
+                                            <span>Sis</span><span style="color: #facc15;">Co</span><span>E</span>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 6px 16px; border-radius: 30px; font-size: 14px; margin-top: 0; white-space: nowrap; max-width: 100%;">
+                                            🔐 {{ chamado.protocolo }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 30px 30px 10px 30px;">
+                            <h2 style="font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 6px; margin-top: 0;">Olá, {{ chamado.solicitante_nome }}! 👋</h2>
+                            <p style="font-size: 14px; color: #4b5563; margin-top: 0; margin-bottom: 20px; line-height: 1.5;">Seu chamado foi atualizado pela nossa equipe. Verifique as alterações abaixo.</p>
+
+                            {% if status_changed %}
+                                <div style="border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; padding: 16px 20px; background: #f9fafb;">
+                                    <div style="font-weight: 600; margin-bottom: 10px; font-size: 15px; color: #111827; display: block;">
+                                        <span style="margin-right: 8px; font-size: 18px;">🔄</span>Status Atualizado
+                                    </div>
+                                    
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-size: 14px;">
+                                        <tr>
+                                            <td align="center" style="width: 45%; padding: 10px 0; border-right: 1px solid #e5e7eb;">
+                                                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Status Anterior</div>
+                                                <div style="padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; display: inline-block; background: #fef3c7; color: #92400e;">{{ old_status_display }}</div>
+                                            </td>
+                                            
+                                            <td align="center" style="width: 10%; font-size: 20px; color: #9ca3af;">
+                                                →
+                                            </td>
+                                            
+                                            <td align="center" style="width: 45%; padding: 10px 0; border-left: 1px solid #e5e7eb;">
+                                                <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Novo Status</div>
+                                                <div style="padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; display: inline-block; background: #dcfce7; color: #166534;">{{ new_status_display }}</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            {% endif %}
+
+                            {% if novo_comentario %}
+                                <div style="border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; padding: 16px 20px; background: #ffffff;">
+                                    <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: #111827; display: block;">
+                                        <span style="margin-right: 8px; font-size: 18px; color: #3b82f6;">💬</span>Novo Comentário
+                                    </div>
+                                    <div style="background: #f9fafb; padding: 14px 16px; border-radius: 10px; font-size: 14px; color: #374151; line-height: 1.5; border: 1px dashed #e5e7eb;">
+                                        {{ novo_comentario.texto|linebreaksbr }}
+                                    </div>
+                                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; text-align: right;">
+                                        Por: <strong style="color: #374151;">{{ novo_comentario.autor.get_full_name }}</strong>
+                                        em {{ novo_comentario.criado_em|date:"d/m/Y H:i" }}
+                                        {% if novo_comentario.privado %}
+                                            <span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:10px; font-weight: 600; margin-left: 5px;">🔒 Privado</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; padding: 16px 20px; background: #ffffff;">
+                                <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: #111827; display: block;">
+                                    <span style="margin-right: 8px; font-size: 18px; color: #6d28d9;">📋</span>Informações Essenciais
+                                </div>
+
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-size: 13px;">
+                                    <tr>
+                                        <td width="50%" style="padding-right: 5px; vertical-align: top;">
+                                            <div style="background: #f0f9ff; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0f2fe;">
+                                                <strong style="display: block; color: #075985; margin-bottom: 4px; font-size: 13px;"><span style="color: #3b82f6;">👤</span> Técnico Responsável:</strong>
+                                                <span style="color: #111827; font-weight: 600;">{{ chamado.tecnico_responsavel.get_full_name|default:"Não atribuído" }}</span>
+                                            </div>
+                                        </td>
+                                        <td width="50%" style="padding-left: 5px; vertical-align: top;">
+                                            <div style="background: #ecfdf5; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 1px solid #d1fae5;">
+                                                <strong style="display: block; color: #065f46; margin-bottom: 4px; font-size: 13px;"><span style="color: #10b981;">📞</span> Telefone:</strong>
+                                                <span style="color: #111827; font-weight: 600;">{{ chamado.solicitante_telefone|default:"Não informado" }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+
+                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; padding: 16px 20px; background: #ffffff;">
+                                <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: #111827; display: block;">
+                                    <span style="margin-right: 8px; font-size: 18px; color: #f97316;">📁</span>Detalhes do Chamado
+                                </div>
+                                
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-size: 13px;">
+                                    <tr>
+                                        <td width="50%" style="padding-right: 5px; vertical-align: top;">
+                                            <div style="background: #f9fafb; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; color: #4b5563;">
+                                                <strong style="display: block; color: #111827; margin-bottom: 4px; font-size: 13px;">Assunto:</strong>
+                                                {{ chamado.assunto }}
+                                            </div>
+                                        </td>
+                                        <td width="50%" style="padding-left: 5px; vertical-align: top;">
+                                            <div style="background: #f9fafb; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 13px; color: #4b5563;">
+                                                <strong style="display: block; color: #111827; margin-bottom: 4px; font-size: 13px;">Categoria:</strong>
+                                                {{ chamado.categoria }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="50%" style="padding-right: 5px; vertical-align: top;">
+                                            <div style="background: #f9fafb; border-radius: 8px; padding: 10px; font-size: 13px; color: #4b5563;">
+                                                <strong style="display: block; color: #111827; margin-bottom: 4px; font-size: 13px;">Data de Abertura:</strong>
+                                                {{ chamado.criado_em|date:"d/m/Y H:i" }}
+                                            </div>
+                                        </td>
+                                        <td width="50%" style="padding-left: 5px; vertical-align: top;">
+                                            <div style="background: #f9fafb; border-radius: 8px; padding: 10px; font-size: 13px; color: #4b5563;">
+                                                <strong style="display: block; color: #111827; margin-bottom: 4px; font-size: 13px;">Última Atualização:</strong>
+                                                {{ chamado.atualizado_em|date:"d/m/Y H:i" }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="text-align: center; background: #f9fafb; padding: 20px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+                            <span style="font-style: italic; margin-bottom: 8px; display: block; color: #374151;">"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"</span>
+                            <div style="margin-top: 10px; font-weight: 600; color: #1f2937;">SisCoE Sistema &copy; 2024 - 15º GB</div>
+                            <div style="margin-top: 4px;">📧 E-mail automático — não responda</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+</body>
+</html>
+{% endautoescape %}

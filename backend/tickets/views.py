@@ -13,11 +13,144 @@ from .forms import ChamadoForm, ComentarioForm, UpdateStatusForm, AssignTecnicoF
 from .models import Chamado, Anexo, Categoria, Comentario
 from backend.accounts.models import User
 from backend.efetivo.models import Cadastro, DetalhesSituacao, Promocao, Imagem
-from .email_service import enviar_email_chamado_aberto, enviar_email_mudanca_status, enviar_email_comentario_adicionado
-from .api_views import buscar_dados_cpf
+from .email_service import (
+    enviar_email_chamado_aberto, 
+    enviar_email_atualizacao_consolidada,
+    enviar_email_comentario_usuario
+)
 
 logger = logging.getLogger(__name__)
+@login_required
+def chamado_detail(request, chamado_id):
+    """
+    View para detalhes do chamado com sistema de email bidirecional
+    """
+    chamado = get_object_or_404(Chamado, pk=chamado_id)
+    
+    # Verifica permissões
+    if not request.user.is_admin and chamado.usuario != request.user:
+        return HttpResponseForbidden("Você não tem permissão para acessar este chamado.")
+    
+    # Verifica se o chamado está fechado ou resolvido
+    chamado_finalizado = chamado.status in ['resolvido', 'fechado']
+    
+    context = {
+        'chamado': chamado,
+        'comentarios': chamado.comentarios.all().order_by('criado_em'),
+        'anexos': chamado.anexos.all().order_by('-enviado_em'),
+        'chamado_finalizado': chamado_finalizado,
+    }
+    
+    # Lógica para admin
+    if request.user.is_admin:
+        template_name = 'tickets/chamado_detail_admin.html'
+        
+        # Inicializa os forms com a instância atual do chamado
+        context.update({
+            'comentario_form': ComentarioForm(),
+            'status_form': UpdateStatusForm(instance=chamado),
+            'assign_form': AssignTecnicoForm(instance=chamado),
+        })
+        
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'save_all':
+                # Se o chamado está finalizado, não permite alterações
+                if chamado_finalizado:
+                    messages.error(request, 'Este chamado está finalizado. Não é possível fazer alterações.')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+                
+                # Processa todas as alterações de uma vez
+                changes_made = False
+                changes_data = {
+                    'status_changed': False,
+                    'tecnico_changed': False,
+                    'novo_comentario': None,
+                }
+                
+                # Salva status antigo para comparação
+                old_status = chamado.status
+                old_tecnico = chamado.tecnico_responsavel
+                
+                # Processa mudança de status
+                status_form = UpdateStatusForm(request.POST, instance=chamado)
+                if status_form.is_valid():
+                    new_status = status_form.cleaned_data['status']
+                    if new_status != old_status:
+                        chamado.status = new_status
+                        changes_data['status_changed'] = True
+                        changes_data['old_status_display'] = dict(Chamado.STATUS_CHOICES).get(old_status, old_status)
+                        changes_data['new_status_display'] = dict(Chamado.STATUS_CHOICES).get(new_status, new_status)
+                        changes_made = True
+                
+                # Processa atribuição de técnico
+                assign_form = AssignTecnicoForm(request.POST, instance=chamado)
+                if assign_form.is_valid():
+                    new_tecnico = assign_form.cleaned_data['tecnico_responsavel']
+                    if new_tecnico != old_tecnico:
+                        chamado.tecnico_responsavel = new_tecnico
+                        changes_data['tecnico_changed'] = True
+                        changes_data['novo_tecnico'] = new_tecnico.get_full_name() if new_tecnico else "Não atribuído"
+                        changes_made = True
+                
+                # Processa novo comentário
+                comentario_form = ComentarioForm(request.POST)
+                if comentario_form.is_valid() and comentario_form.cleaned_data['texto'].strip():
+                    novo_comentario = comentario_form.save(commit=False)
+                    novo_comentario.chamado = chamado
+                    novo_comentario.autor = request.user
+                    novo_comentario.save()
+                    changes_data['novo_comentario'] = novo_comentario
+                    changes_made = True
+                
+                # Se houve alterações, salva o chamado e envia email
+                if changes_made:
+                    chamado.save()
+                    
+                    # Envia email consolidado
+                    enviar_email_atualizacao_consolidada(chamado, changes_data)
+                    
+                    messages.success(request, 'Todas as alterações foram salvas e o solicitante foi notificado!')
+                else:
+                    messages.info(request, 'Nenhuma alteração foi realizada.')
+                
+                return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+    
+    else:
+        template_name = 'tickets/chamado_detail_user.html'
+        
+        # Lógica para usuário comum adicionar comentários
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'add_comment':
+                # Se o chamado está finalizado, não permite comentários
+                if chamado_finalizado:
+                    messages.error(request, 'Este chamado está finalizado. Não é possível adicionar comentários.')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+                
+                comentario_form = ComentarioForm(request.POST)
+                if comentario_form.is_valid():
+                    comentario = comentario_form.save(commit=False)
+                    comentario.chamado = chamado
+                    comentario.autor = request.user
+                    # Usuários comuns não podem criar comentários privados
+                    comentario.privado = False
+                    comentario.save()
+                    
+                    # Envia email de notificação para a equipe
+                    enviar_email_comentario_usuario(chamado, comentario)
+                    
+                    messages.success(request, 'Sua mensagem foi enviada para a equipe de suporte!')
+                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
+                else:
+                    messages.error(request, 'Erro ao enviar mensagem. Verifique o formulário.')
+    
+    return render(request, template_name, context)
 
+
+# Mantenha as outras views existentes (abrir_chamado, meus_chamados, etc.)
 def abrir_chamado(request):
     """
     View para abertura de chamados com sistema de email
@@ -210,73 +343,3 @@ def dashboard(request):
         'chart_data': chart_data,
     }
     return render(request, 'tickets/dashboard.html', context)
-
-@login_required
-def chamado_detail(request, chamado_id):
-    """
-    View para detalhes do chamado com sistema de email para mudanças de status
-    """
-    chamado = get_object_or_404(Chamado, pk=chamado_id)
-    
-    # Verifica permissões
-    if not request.user.is_admin and chamado.usuario != request.user:
-        return HttpResponseForbidden("Você não tem permissão para acessar este chamado.")
-    
-    context = {
-        'chamado': chamado,
-        'comentarios': chamado.comentarios.all().order_by('criado_em'),
-        'anexos': chamado.anexos.all().order_by('-enviado_em'),
-    }
-    
-    # Lógica para admin
-    if request.user.is_admin:
-        template_name = 'tickets/chamado_detail_admin.html'
-        
-        context.update({
-            'comentario_form': ComentarioForm(),
-            'status_form': UpdateStatusForm(instance=chamado),
-            'assign_form': AssignTecnicoForm(instance=chamado),
-        })
-        
-        if request.method == 'POST':
-            action = request.POST.get('action')
-            
-            if action == 'add_comment':
-                comentario_form = ComentarioForm(request.POST)
-                if comentario_form.is_valid():
-                    comentario = comentario_form.save(commit=False)
-                    comentario.chamado = chamado
-                    comentario.autor = request.user
-                    comentario.save()
-                    
-                    # Envia email de comentário (apenas se não for privado)
-                    if not comentario.privado:
-                        enviar_email_comentario_adicionado(chamado, comentario)
-                    
-                    messages.success(request, 'Comentário adicionado com sucesso!')
-                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-            
-            elif action == 'update_status':
-                status_form = UpdateStatusForm(request.POST, instance=chamado)
-                if status_form.is_valid():
-                    old_status = chamado.status
-                    status_form.save()
-                    
-                    # Verifica se o status mudou e envia email
-                    if hasattr(chamado, '_status_changed') and chamado._status_changed:
-                        enviar_email_mudanca_status(chamado, old_status, chamado.status)
-                    
-                    messages.success(request, 'Status atualizado com sucesso!')
-                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-            
-            elif action == 'assign_tecnico':
-                assign_form = AssignTecnicoForm(request.POST, instance=chamado)
-                if assign_form.is_valid():
-                    assign_form.save()
-                    messages.success(request, 'Técnico atribuído com sucesso!')
-                    return redirect('tickets:chamado_detail', chamado_id=chamado.id)
-    
-    else:
-        template_name = 'tickets/chamado_detail_user.html'
-    
-    return render(request, template_name, context)
