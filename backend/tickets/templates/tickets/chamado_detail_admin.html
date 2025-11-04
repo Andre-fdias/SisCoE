@@ -6,7 +6,7 @@
 
 {% block 'body' %}
 <div class="container mx-auto px-4 py-8">
-    <!-- Cabeçalho -->
+    <!-- Cabeçalho (mantido igual) -->
     <section class="w-full bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-300 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -17,6 +17,14 @@
                     Protocolo: {{ chamado.protocolo }} • Aberto em: {{ chamado.criado_em|date:"d/m/Y à\s H:i" }}
                 </p>
             </div>
+            <!-- No cabeçalho do card principal, após o protocolo -->
+            {% if chamado_finalizado %}
+            <div class="mt-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                    <i class="fas fa-lock mr-1"></i> FINALIZADO
+                </span>
+            </div>
+            {% endif %}
             <div class="flex items-center space-x-4">
                 <a href="{% url 'tickets:dashboard' %}" 
                    class="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 flex items-center dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200">
@@ -30,290 +38,328 @@
         </div>
     </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Coluna Principal (2/3) -->
-        <div class="lg:col-span-2 space-y-6">
-            
-            <!-- Card Principal do Chamado -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-300 dark:border-gray-700">
-                <!-- Header do Card -->
-                <div class="bg-gradient-to-r 
-                    {% if chamado.status == 'aberto' %} from-green-500 to-green-600
-                    {% elif chamado.status == 'em_atendimento' %} from-yellow-500 to-yellow-600
-                    {% elif chamado.status == 'aguardando_usuario' %} from-orange-500 to-orange-600
-                    {% elif chamado.status == 'resolvido' %} from-blue-500 to-blue-600
-                    {% elif chamado.status == 'fechado' %} from-gray-500 to-gray-600
-                    {% else %} from-gray-500 to-gray-600
-                    {% endif %} 
-                    p-6 text-white">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="font-mono text-lg font-bold tracking-wider">{{ chamado.protocolo }}</p>
-                            <p class="text-sm opacity-90 mt-1">{{ chamado.get_status_display }}</p>
-                        </div>
-                        <span class="px-4 py-2 text-sm font-semibold rounded-full bg-white bg-opacity-20 backdrop-blur-sm">
-                            {{ chamado.categoria }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Corpo do Card -->
-                <div class="p-6">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">{{ chamado.assunto }}</h2>
-                    
-                    <div class="prose dark:prose-invert max-w-none mb-6">
-                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ chamado.descricao|linebreaks }}</p>
-                    </div>
-
-                    <!-- Informações Rápidas -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                            <i class="fas fa-user mr-3 text-blue-500"></i>
-                            <div>
-                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.solicitante_nome }}</p>
-                                <p>{{ chamado.solicitante_email }}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                            <i class="fas fa-phone mr-3 text-green-500"></i>
-                            <div>
-                                <p class="font-semibold text-gray-800 dark:text-white">Contato</p>
-                                <p>{{ chamado.solicitante_telefone|default:"Não informado" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Histórico de Comentários -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
-                    <i class="fas fa-comments mr-3 text-blue-500"></i>
-                    Histórico de Interações
-                </h3>
+    <form method="post" id="chamadoForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Coluna Principal (2/3) -->
+            <div class="lg:col-span-2 space-y-6">
                 
-                <div class="space-y-6">
-                    {% for comentario in comentarios %}
-                        <div class="flex items-start space-x-4 {% if comentario.privado %}border-l-4 border-yellow-400 pl-4{% endif %}">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center font-bold text-white text-sm">
-                                    {{ comentario.autor.first_name|first|upper }}{{ comentario.autor.last_name|first|upper }}
+                <!-- Card Principal do Chamado (mantido igual) -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-300 dark:border-gray-700">
+                    <!-- Header do Card -->
+                    <div class="bg-gradient-to-r 
+                        {% if chamado.status == 'aberto' %} from-green-500 to-green-600
+                        {% elif chamado.status == 'em_atendimento' %} from-yellow-500 to-yellow-600
+                        {% elif chamado.status == 'aguardando_usuario' %} from-orange-500 to-orange-600
+                        {% elif chamado.status == 'resolvido' %} from-blue-500 to-blue-600
+                        {% elif chamado.status == 'fechado' %} from-gray-500 to-gray-600
+                        {% else %} from-gray-500 to-gray-600
+                        {% endif %} 
+                        p-6 text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-mono text-lg font-bold tracking-wider">{{ chamado.protocolo }}</p>
+                                <p class="text-sm opacity-90 mt-1">{{ chamado.get_status_display }}</p>
+                            </div>
+                            <span class="px-4 py-2 text-sm font-semibold rounded-full bg-white bg-opacity-20 backdrop-blur-sm">
+                                {{ chamado.categoria }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Corpo do Card -->
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">{{ chamado.assunto }}</h2>
+                        
+                        <div class="prose dark:prose-invert max-w-none mb-6">
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ chamado.descricao|linebreaks }}</p>
+                        </div>
+
+                        <!-- Informações Rápidas -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-user mr-3 text-blue-500"></i>
+                                <div>
+                                    <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.solicitante_nome }}</p>
+                                    <p>{{ chamado.solicitante_email }}</p>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-                                    <p class="text-gray-800 dark:text-gray-200 leading-relaxed">{{ comentario.texto|linebreaks }}</p>
+                            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-phone mr-3 text-green-500"></i>
+                                <div>
+                                    <p class="font-semibold text-gray-800 dark:text-white">Contato</p>
+                                    <p>{{ chamado.solicitante_telefone|default:"Não informado" }}</p>
                                 </div>
-                                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-2 space-x-3">
-                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ comentario.autor.get_full_name }}</span>
-                                    <span class="text-gray-400">•</span>
-                                    <span>{{ comentario.criado_em|date:"d/m/Y H:i" }}</span>
-                                    {% if comentario.privado %}
-                                        <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                                            <i class="fas fa-lock mr-1"></i>Privado
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Comentários -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
+                        <i class="fas fa-comments mr-3 text-blue-500"></i>
+                        Histórico de Interações
+                    </h3>
+                    
+                    <div class="space-y-6" id="chatContainer">
+                        {% for comentario in comentarios %}
+                            <div class="flex items-start space-x-4 {% if comentario.autor == request.user %}justify-end{% endif %}">
+                                {% if comentario.autor != request.user %}
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center font-bold text-white text-sm">
+                                        {{ comentario.autor.first_name|first|upper }}{{ comentario.autor.last_name|first|upper }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="flex-1 {% if comentario.autor == request.user %}text-right{% endif %}">
+                                    <div class="{% if comentario.autor == request.user %}bg-blue-500 text-white{% else %}bg-gray-100 dark:bg-gray-700{% endif %} rounded-2xl p-4 inline-block max-w-3/4">
+                                        <p class="leading-relaxed">{{ comentario.texto|linebreaks }}</p>
+                                    </div>
+                                    <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-2 space-x-3 {% if comentario.autor == request.user %}justify-end{% endif %}">
+                                        <span class="font-medium {% if comentario.autor == request.user %}text-blue-100{% else %}text-gray-700 dark:text-gray-300{% endif %}">
+                                            {{ comentario.autor.get_full_name }}
                                         </span>
-                                    {% endif %}
+                                        <span class="text-gray-400">•</span>
+                                        <span>{{ comentario.criado_em|date:"d/m/Y H:i" }}</span>
+                                        {% if comentario.privado %}
+                                            <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                                                <i class="fas fa-lock mr-1"></i>Privado
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
+
+                                {% if comentario.autor == request.user %}
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center font-bold text-white text-sm">
+                                        {{ comentario.autor.first_name|first|upper }}{{ comentario.autor.last_name|first|upper }}
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
-                        </div>
-                    {% empty %}
-                        <div class="text-center py-8">
-                            <i class="fas fa-comment-slash text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
-                            <p class="text-gray-500 dark:text-gray-400">Nenhum comentário ainda.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-                
-                <!-- Formulário de Comentário -->
-                <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                        <i class="fas fa-plus-circle mr-2 text-green-500"></i>
-                        Adicionar Comentário
-                    </h4>
-                    <form method="post" class="space-y-4">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="add_comment">
-                        
-                        <div>
-                            {% render_field comentario_form.texto class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Digite seu comentário..." %}
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                {% render_field comentario_form.privado class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %} 
-                                <label for="{{ comentario_form.privado.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                                    <i class="fas fa-lock mr-1"></i>Comentário privado
-                                </label>
+                        {% empty %}
+                            <div class="text-center py-8">
+                                <i class="fas fa-comment-slash text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                <p class="text-gray-500 dark:text-gray-400">Nenhum comentário ainda.</p>
                             </div>
-                            <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center shadow-lg">
-                                <i class="fas fa-paper-plane mr-2"></i> Enviar Comentário
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Coluna Lateral (1/3) -->
-        <div class="space-y-6">
-            
-            <!-- Card de Status e Ações -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <i class="fas fa-cogs mr-3 text-purple-500"></i>
-                    Status & Ações
-                </h3>
-                
-                <div class="mb-6">
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Status Atual</p>
-                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold 
-                        {% if chamado.status == 'aberto' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                        {% elif chamado.status == 'em_atendimento' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                        {% elif chamado.status == 'aguardando_usuario' %} bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300
-                        {% elif chamado.status == 'resolvido' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                        {% elif chamado.status == 'fechado' %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                        {% else %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
-                        {% endif %}">
-                        <i class="fas fa-circle mr-2 text-xs"></i>
-                        {{ chamado.get_status_display }}
-                    </span>
-                </div>
-                
-                <!-- Progresso Visual -->
-                <div class="mb-6">
-                    <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <span>Progresso do Chamado</span>
-                        <span class="font-semibold">
-                            {% if chamado.status == 'aberto' %}25%
-                            {% elif chamado.status == 'em_atendimento' %}50%
-                            {% elif chamado.status == 'aguardando_usuario' %}75%
-                            {% elif chamado.status == 'resolvido' %}100%
-                            {% elif chamado.status == 'fechado' %}100%
-                            {% else %}0%
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
-                        <div class="h-3 rounded-full 
-                            {% if chamado.status == 'aberto' %} bg-green-500 w-1/4
-                            {% elif chamado.status == 'em_atendimento' %} bg-yellow-500 w-1/2
-                            {% elif chamado.status == 'aguardando_usuario' %} bg-orange-500 w-3/4
-                            {% elif chamado.status == 'resolvido' %} bg-blue-500 w-full
-                            {% elif chamado.status == 'fechado' %} bg-gray-500 w-full
-                            {% else %} bg-gray-400 w-0
-                            {% endif %}">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <!-- Formulário de Status -->
-                    <form method="post" class="space-y-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="update_status">
-                        <label for="{{ status_form.status.id_for_label }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">Alterar Status</label>
-                        {% render_field status_form.status class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %}
-                        <button type="submit" class="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-sync-alt mr-2"></i> Atualizar Status
-                        </button>
-                    </form>
-
-                    <!-- Formulário de Atribuição -->
-                    <form method="post" class="space-y-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="assign_tecnico">
-                        <label for="{{ assign_form.tecnico_responsavel.id_for_label }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ assign_form.tecnico_responsavel.label }}</label>
-                        {% render_field assign_form.tecnico_responsavel class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %}
-                        <button type="submit" class="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-user-cog mr-2"></i> Atribuir Técnico
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Card de Informações Detalhadas -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <i class="fas fa-info-circle mr-3 text-blue-500"></i>
-                    Informações Detalhadas
-                </h3>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center text-sm">
-                        <i class="fas fa-user-tie mr-3 text-gray-500"></i>
-                        <div>
-                            <p class="text-gray-500 dark:text-gray-400">Técnico Responsável</p>
-                            <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.tecnico_responsavel.get_full_name|default:"Não atribuído" }}</p>
-                        </div>
+                        {% endfor %}
                     </div>
                     
-                    <div class="flex items-center text-sm">
-                        <i class="fas fa-tag mr-3 text-gray-500"></i>
-                        <div>
-                            <p class="text-gray-500 dark:text-gray-400">Categoria</p>
-                            <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.categoria }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center text-sm">
-                        <i class="fas fa-id-card mr-3 text-gray-500"></i>
-                        <div>
-                            <p class="text-gray-500 dark:text-gray-400">CPF do Solicitante</p>
-                            <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.solicitante_cpf|default:"Não informado" }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center text-sm">
-                        <i class="fas fa-calendar-plus mr-3 text-gray-500"></i>
-                        <div>
-                            <p class="text-gray-500 dark:text-gray-400">Data de Abertura</p>
-                            <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.criado_em|date:"d/m/Y H:i" }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center text-sm">
-                        <i class="fas fa-calendar-check mr-3 text-gray-500"></i>
-                        <div>
-                            <p class="text-gray-500 dark:text-gray-400">Última Atualização</p>
-                            <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.atualizado_em|date:"d/m/Y H:i" }}</p>
-                        </div>
-                    </div>
-                </div>
+<!-- Formulário de Comentário -->
+<div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+        <i class="fas fa-plus-circle mr-2 text-green-500"></i>
+        Adicionar Comentário
+    </h4>
+    
+    {% if chamado_finalizado %}
+    <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4">
+        <div class="flex items-center">
+            <i class="fas fa-lock text-yellow-500 mr-3"></i>
+            <div>
+                <p class="text-yellow-800 dark:text-yellow-200 font-medium">Chamado Finalizado</p>
+                <p class="text-yellow-700 dark:text-yellow-300 text-sm">Este chamado está {{ chamado.get_status_display|lower }}. Não é possível adicionar comentários.</p>
             </div>
-
-            <!-- Card de Anexos -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-                    <i class="fas fa-paperclip mr-3 text-orange-500"></i>
-                    Anexos
-                </h3>
-                
-                <div class="space-y-3">
-                    {% for anexo in anexos %}
-                        <a href="{{ anexo.arquivo.url }}" target="_blank" 
-                           class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group">
-                            <i class="fas fa-file text-blue-500 mr-3 group-hover:text-blue-600"></i>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                                    {{ anexo.arquivo.name|cut:"chamados_anexos/" }}
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ anexo.enviado_em|date:"d/m/Y H:i" }}
-                                </p>
-                            </div>
-                            <i class="fas fa-download text-gray-400 group-hover:text-gray-600 ml-2"></i>
-                        </a>
-                    {% empty %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-file-excel text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm">Nenhum anexo enviado.</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
         </div>
     </div>
+    {% else %}
+    <div class="space-y-4">
+        <div>
+            {% render_field comentario_form.texto class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Digite seu comentário..." %}
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                {% render_field comentario_form.privado class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" %} 
+                <label for="{{ comentario_form.privado.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    <i class="fas fa-lock mr-1"></i>Comentário privado
+                </label>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+                </div>
+
+            </div>
+
+            <!-- Coluna Lateral (1/3) -->
+            <div class="space-y-6">
+                
+                <!-- Card de Status e Ações -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-cogs mr-3 text-purple-500"></i>
+                        Status & Ações
+                    </h3>
+                    
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Status Atual</p>
+                        <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold 
+                            {% if chamado.status == 'aberto' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                            {% elif chamado.status == 'em_atendimento' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
+                            {% elif chamado.status == 'aguardando_usuario' %} bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300
+                            {% elif chamado.status == 'resolvido' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                            {% elif chamado.status == 'fechado' %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                            {% else %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                            {% endif %}">
+                            <i class="fas fa-circle mr-2 text-xs"></i>
+                            {{ chamado.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Progresso Visual -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <span>Progresso do Chamado</span>
+                            <span class="font-semibold">
+                                {% if chamado.status == 'aberto' %}25%
+                                {% elif chamado.status == 'em_atendimento' %}50%
+                                {% elif chamado.status == 'aguardando_usuario' %}75%
+                                {% elif chamado.status == 'resolvido' %}100%
+                                {% elif chamado.status == 'fechado' %}100%
+                                {% else %}0%
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
+                            <div class="h-3 rounded-full 
+                                {% if chamado.status == 'aberto' %} bg-green-500 w-1/4
+                                {% elif chamado.status == 'em_atendimento' %} bg-yellow-500 w-1/2
+                                {% elif chamado.status == 'aguardando_usuario' %} bg-orange-500 w-3/4
+                                {% elif chamado.status == 'resolvido' %} bg-blue-500 w-full
+                                {% elif chamado.status == 'fechado' %} bg-gray-500 w-full
+                                {% else %} bg-gray-400 w-0
+                                {% endif %}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <!-- Formulário de Status -->
+                        <div class="space-y-3">
+                            <label for="{{ status_form.status.id_for_label }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">Alterar Status</label>
+                            {% render_field status_form.status class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %}
+                        </div>
+
+                        <!-- Formulário de Atribuição -->
+                        <div class="space-y-3">
+                            <label for="{{ assign_form.tecnico_responsavel.id_for_label }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ assign_form.tecnico_responsavel.label }}</label>
+                            {% render_field assign_form.tecnico_responsavel class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %}
+                        </div>
+
+<!-- Botão Salvar Alterações -->
+{% if chamado_finalizado %}
+<div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center">
+    <i class="fas fa-lock text-gray-400 text-lg mb-2"></i>
+    <p class="text-gray-600 dark:text-gray-400 text-sm">Chamado finalizado</p>
+    <p class="text-gray-500 dark:text-gray-500 text-xs">Não é possível fazer alterações</p>
+</div>
+{% else %}
+<button type="submit" name="action" value="save_all" 
+        class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg mt-6">
+    <i class="fas fa-save mr-2"></i> Salvar Todas as Alterações
+</button>
+{% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de Informações Detalhadas (mantido igual) -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-info-circle mr-3 text-blue-500"></i>
+                        Informações Detalhadas
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-user-tie mr-3 text-gray-500"></i>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Técnico Responsável</p>
+                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.tecnico_responsavel.get_full_name|default:"Não atribuído" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-tag mr-3 text-gray-500"></i>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Categoria</p>
+                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.categoria }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-id-card mr-3 text-gray-500"></i>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">CPF do Solicitante</p>
+                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.solicitante_cpf|default:"Não informado" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-calendar-plus mr-3 text-gray-500"></i>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Data de Abertura</p>
+                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.criado_em|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-calendar-check mr-3 text-gray-500"></i>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Última Atualização</p>
+                                <p class="font-semibold text-gray-800 dark:text-white">{{ chamado.atualizado_em|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card de Anexos (mantido igual) -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-300 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-paperclip mr-3 text-orange-500"></i>
+                        Anexos
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        {% for anexo in anexos %}
+                            <a href="{{ anexo.arquivo.url }}" target="_blank" 
+                               class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 group">
+                                <i class="fas fa-file text-blue-500 mr-3 group-hover:text-blue-600"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                        {{ anexo.arquivo.name|cut:"chamados_anexos/" }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ anexo.enviado_em|date:"d/m/Y H:i" }}
+                                    </p>
+                                </div>
+                                <i class="fas fa-download text-gray-400 group-hover:text-gray-600 ml-2"></i>
+                            </a>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-file-excel text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Nenhum anexo enviado.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Scroll automático para o final do chat
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chatContainer');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+});
+</script>
 {% endblock %}
