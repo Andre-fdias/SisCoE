@@ -2,9 +2,12 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from backend.chat.views import ChatView
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # noqa E501
+    path('chat/', ChatView.as_view(), name='chat-page'), # Página do Chat
+    path('api/chat/', include('backend.chat.urls')), # API do Chat
     path('crm/', include('backend.crm.urls', namespace='crm')),  # noqa E501
     path('tickets/', include('backend.tickets.urls', namespace='tickets')),  # noqa E501
     path('efetivo/', include('backend.efetivo.urls', namespace='efetivo')),  # noqa E501
