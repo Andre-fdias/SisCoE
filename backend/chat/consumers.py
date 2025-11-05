@@ -320,9 +320,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def serialize_message(self, message):
-        """ Serializa mensagem para JSON. """
-        from .serializers import MessageSerializer
-        return MessageSerializer(message).data
+        """
+        Serializa uma instância de mensagem em um dicionário para transmissão via WebSocket.
+        Evita o uso do DRF Serializer para desacoplar do contexto de request.
+        """
+        sender_data = {
+            'id': message.sender.id,
+            'display_name': message.sender.get_full_name() or message.sender.email
+        }
+
+        conversation_data = {
+            'id': message.conversation.id,
+            'is_group': message.conversation.is_group
+        }
+
+        return {
+            'id': message.id,
+            'conversation': conversation_data,
+            'sender': sender_data,
+            'text': message.text,
+            'created_at': message.created_at.isoformat(),
+            # 'updated_at': message.updated_at.isoformat(), # Removido, pois o modelo Message não possui este campo
+            # Adicione outros campos necessários
+        }
 
     @database_sync_to_async
     def mark_as_delivered(self, message):
