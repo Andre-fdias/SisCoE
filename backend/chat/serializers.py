@@ -1,7 +1,7 @@
-# backend/chat/serializers.py
 from rest_framework import serializers
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from .models import Conversation, Message, Participant, Attachment, MessageStatus, Reaction, Presence
 
 User = get_user_model()
@@ -13,6 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'presence', 'display_name']
+        read_only_fields = ['id', 'email', 'first_name', 'last_name']
     
     def get_presence(self, obj):
         try:
@@ -30,7 +31,6 @@ class UserSerializer(serializers.ModelSerializer):
         full_name = f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         return full_name or obj.email
 
-
 class AttachmentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
@@ -38,6 +38,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
         fields = ['id', 'file_type', 'file_url', 'thumbnail_url', 'file_size', 'duration', 'uploaded_at']
+        read_only_fields = ['id', 'file_type', 'file_size', 'duration', 'uploaded_at']
     
     def get_file_url(self, obj):
         if obj.file:
@@ -55,6 +56,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reaction
         fields = ['id', 'user', 'emoji', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
 
 class MessageStatusSerializer(serializers.ModelSerializer):
     participant = serializers.StringRelatedField(read_only=True)
@@ -62,6 +64,7 @@ class MessageStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = MessageStatus
         fields = ['id', 'participant', 'status', 'delivered_at', 'read_at']
+        read_only_fields = ['id', 'participant', 'delivered_at', 'read_at']
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
@@ -79,7 +82,7 @@ class MessageSerializer(serializers.ModelSerializer):
             'edited', 'parent_message', 'quoted_text', 'attachments', 'reactions', 
             'statuses', 'is_own', 'status'
         ]
-        read_only_fields = ['conversation', 'sender', 'created_at']
+        read_only_fields = ['id', 'conversation', 'sender', 'created_at', 'edited_at']
     
     def get_parent_message(self, obj):
         if obj.parent_message:
@@ -121,6 +124,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = ['id', 'user', 'is_admin', 'muted_until', 'joined_at', 'last_read_message', 'unread_count']
+        read_only_fields = ['id', 'user', 'joined_at']
     
     def get_unread_count(self, obj):
         if obj.last_read_message:
@@ -129,12 +133,15 @@ class ParticipantSerializer(serializers.ModelSerializer):
             ).exclude(sender=obj.user).count()
         return obj.conversation.messages.exclude(sender=obj.user).count()
 
+
 class ConversationSerializer(serializers.ModelSerializer):
     participants = ParticipantSerializer(many=True, read_only=True)
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     participants_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True, required=False
+        child=serializers.IntegerField(), 
+        write_only=True, 
+        required=True
     )
     
     class Meta:
@@ -143,11 +150,45 @@ class ConversationSerializer(serializers.ModelSerializer):
             'id', 'name', 'is_group', 'photo', 'created_at', 'updated_at', 
             'participants', 'last_message', 'unread_count', 'participants_ids'
         ]
-    
+        read_only_fields = ['id', 'created_at', 'updated_at', 'participants']
+
+    def validate(self, data):
+        """Validação cruzada de campos."""
+        participants_ids = data.get('participants_ids', [])
+        request = self.context.get('request')
+        current_user = request.user
+
+        # Garante que o usuário atual esteja na lista e remove duplicatas
+        if current_user.id not in participants_ids:
+            participants_ids.append(current_user.id)
+        
+        unique_participants = list(set(participants_ids))
+
+        if len(unique_participants) < 2:
+            raise serializers.ValidationError({
+                "participants_ids": "São necessários pelo menos dois participantes para uma conversa."
+            })
+        
+        # Adiciona a lista final de participantes de volta aos dados para uso no método create
+        data['final_participants'] = unique_participants
+        return data
+
     def get_last_message(self, obj):
-        last_message = obj.messages.order_by('-created_at').first()
-        if last_message:
-            return MessageSerializer(last_message, context=self.context).data
+        """Busca a última mensagem de forma segura."""
+        try:
+            last_message = obj.messages.select_related('sender').order_by('-created_at').first()
+            if last_message:
+                return {
+                    'id': last_message.id,
+                    'text': last_message.text,
+                    'created_at': last_message.created_at,
+                    'sender': {
+                        'id': last_message.sender.id,
+                        'name': last_message.sender.get_full_name() or last_message.sender.email
+                    }
+                }
+        except Exception:
+            pass
         return None
     
     def get_unread_count(self, obj):
@@ -166,3 +207,43 @@ class ConversationSerializer(serializers.ModelSerializer):
             except Participant.DoesNotExist:
                 return 0
         return 0
+    
+    def create(self, validated_data):
+        """
+        Cria uma nova conversa ou retorna uma existente se for 1:1.
+        Retorna uma tupla (conversation, created).
+        """
+        participants_ids = validated_data.pop('final_participants')
+        validated_data.pop('participants_ids') # Remove o campo original
+        is_group = validated_data.get('is_group', False)
+        request = self.context.get('request')
+        current_user = request.user
+
+        # Evita duplicar conversas 1:1
+        if not is_group and len(participants_ids) == 2:
+            conversations = Conversation.objects.filter(
+                is_group=False
+            ).annotate(
+                num_participants=Count('participants')
+            ).filter(
+                num_participants=2
+            ).filter(
+                participants__user_id=participants_ids[0]
+            ).filter(
+                participants__user_id=participants_ids[1]
+            )
+            if conversations.exists():
+                return conversations.first(), False  # Retorna conversa existente
+
+        # Cria a conversa
+        conversation = Conversation.objects.create(**validated_data)
+
+        # Adiciona participantes individualmente
+        for user_id in participants_ids:
+            Participant.objects.create(
+                conversation=conversation, 
+                user_id=user_id,
+                is_admin=(user_id == current_user.id) # Criador é admin
+            )
+
+        return conversation, True  # Retorna nova conversa

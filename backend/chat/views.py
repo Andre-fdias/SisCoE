@@ -1,73 +1,81 @@
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, status, mixins, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 
 from .models import Conversation, Message, Participant, Attachment, MessageStatus, Reaction, Presence
 from .serializers import (
-    ConversationSerializer, MessageSerializer, ParticipantSerializer,
-    AttachmentSerializer, ReactionSerializer, UserSerializer
+    ConversationSerializer, MessageSerializer, AttachmentSerializer, ReactionSerializer, UserSerializer
 )
 
 User = get_user_model()
 
+# --- Helpers de Conversão e Lógica Reutilizável ---
+
+def safe_int_conversion(ids):
+    """Converte lista de IDs (str) em lista de inteiros válidos."""
+    valid_ids = []
+    # Lida com strings separadas por vírgula que podem vir de request.GET.getlist
+    if isinstance(ids, str):
+        ids = ids.split(',')
+    
+    for uid in ids:
+        try:
+            valid_ids.append(int(uid))
+        except (ValueError, TypeError):
+            continue
+    return valid_ids
+
 class ChatView(LoginRequiredMixin, TemplateView):
-    """ Renderiza a página principal do chat. """
+    """Renderiza a página principal do chat."""
     template_name = "chat/conversation.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['all_users'] = User.objects.exclude(pk=self.request.user.pk)
+        # Otimiza a busca dos usuários excluindo o usuário atual.
+        context['all_users'] = User.objects.exclude(pk=self.request.user.pk).order_by('email')
         return context
 
-class UserPresenceView(APIView):  # ← ESTA CLASSE PRECISA EXISTIR
-    """ API para gerenciar presença dos usuários. """
+# --- Vistas da API REST (DRF) ---
+
+class UserPresenceView(APIView):
+    """API para gerenciar presença dos usuários."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """ Obtém status de presença dos usuários. """
-        user_ids = request.GET.getlist('user_ids', [])
-        
-        # Se user_ids foi passado como string separada por vírgulas
-        if user_ids and isinstance(user_ids[0], str):
-            user_ids = user_ids[0].split(',')
-        
-        # Filtra IDs válidos
-        valid_user_ids = []
-        for uid in user_ids:
-            try:
-                valid_user_ids.append(int(uid))
-            except (ValueError, TypeError):
-                continue
+        """Obtém status de presença dos usuários especificados por user_ids."""
+        user_ids_raw = request.GET.getlist('user_ids', [])
+        valid_user_ids = safe_int_conversion(user_ids_raw)
         
         if valid_user_ids:
             presences = Presence.objects.filter(user_id__in=valid_user_ids)
         else:
-            # Retorna presença de todos os usuários (com limite)
+            # Retorna presença de todos os usuários (limite 100)
             presences = Presence.objects.all()[:100]
         
-        presence_data = {}
-        for presence in presences:
-            presence_data[str(presence.user_id)] = {
+        presence_data = {
+            str(presence.user_id): {
                 'status': presence.status,
                 'last_seen': presence.last_seen,
                 'is_typing': presence.is_typing
             }
+            for presence in presences
+        }
         
         return Response(presence_data)
 
     def post(self, request):
-        """ Atualiza status de presença do usuário. """
-        status = request.data.get('status', 'online')
+        """Atualiza status de presença do usuário logado."""
+        status_val = request.data.get('status', 'online')
         
-        if status not in ['online', 'offline', 'away']:
+        if status_val not in ['online', 'offline', 'away']:
             return Response(
                 {'error': 'Status inválido'}, 
                 status=status.HTTP_400_BAD_REQUEST
@@ -76,7 +84,7 @@ class UserPresenceView(APIView):  # ← ESTA CLASSE PRECISA EXISTIR
         presence, created = Presence.objects.update_or_create(
             user=request.user,
             defaults={
-                'status': status,
+                'status': status_val,
                 'last_seen': timezone.now()
             }
         )
@@ -94,122 +102,62 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """ Retorna apenas as conversas do usuário logado. """
+        """Retorna apenas as conversas do usuário logado, com prefetch otimizado."""
         user = self.request.user
-        return Conversation.objects.filter(
+        
+        queryset = Conversation.objects.filter(
             participants__user=user
         ).prefetch_related(
-            Prefetch('participants', queryset=Participant.objects.select_related('user')),
-            Prefetch('messages', queryset=Message.objects.select_related('sender').order_by('-created_at')[:1])
+            Prefetch(
+                'participants',
+                queryset=Participant.objects.select_related('user'),
+                to_attr='prefetched_participants'
+            )
         ).distinct().order_by('-updated_at')
+        
+        return queryset
 
     def get_serializer_context(self):
-        """ Adiciona request ao contexto do serializer. """
+        """Adiciona request ao contexto do serializer."""
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
 
-    def create(self, request, *args, **kwargs):
-        participants_ids = request.data.get('participants_ids', [])
-        is_group = request.data.get('is_group', False)
-        name = request.data.get('name', '')
-
-        # Garante que o usuário atual esteja sempre na lista
-        if request.user.id not in participants_ids:
-            participants_ids.append(request.user.id)
-
-        # Remove duplicatas
-        participants_ids = list(set(participants_ids))
-
-        # Lógica para evitar duplicar conversas 1:1
-        if not is_group and len(participants_ids) == 2:
-            existing_conversation = self._find_existing_1on1_conversation(participants_ids)
-            if existing_conversation:
-                serializer = self.get_serializer(existing_conversation)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        # Criação da conversa
-        conversation_data = {
-            'name': name,
-            'is_group': is_group
-        }
-        serializer = self.get_serializer(data=conversation_data)
-        serializer.is_valid(raise_exception=True)
-        conversation = serializer.save()
-
-        # Adiciona os participantes
-        participants_to_create = [
-            Participant(
-                conversation=conversation, 
-                user_id=user_id,
-                is_admin=(user_id == request.user.id)  # Criador é admin
-            ) for user_id in participants_ids
-        ]
-        Participant.objects.bulk_create(participants_to_create)
-
-        # Atualiza o contexto para serialização
-        conversation = self.get_queryset().get(id=conversation.id)
-        serializer = self.get_serializer(conversation)
-        
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
     def _find_existing_1on1_conversation(self, participants_ids):
-        """ Encontra conversa 1:1 existente entre os participantes. """
+        """Encontra conversa 1:1 existente entre os participantes (IDs inteiros)."""
+        # Procura conversas com exatamente 2 participantes, ambos presentes na lista.
         conversations = Conversation.objects.filter(
             is_group=False,
             participants__user_id__in=participants_ids
         ).annotate(
-            num_participants=Count('participants')
-        ).filter(num_participants=2)
+            num_participants=Count('participants', distinct=True)
+        ).filter(
+            num_participants=2
+        ).annotate(
+            match_count=Count('participants', filter=Q(participants__user_id__in=participants_ids), distinct=True)
+        ).filter(match_count=2)
         
-        # Garante que ambos os participantes estão na conversa
-        for conversation in conversations:
-            conversation_participants = set(conversation.participants.values_list('user_id', flat=True))
-            if conversation_participants == set(participants_ids):
-                return conversation
-        return None
+        return conversations.first()
 
-    @action(detail=True, methods=['post'])
-    def mark_as_read(self, request, pk=None):
-        """ Marca todas as mensagens da conversa como lidas. """
-        conversation = self.get_object()
+    def create(self, request, *args, **kwargs):
+        """
+        Cria uma nova conversa. A lógica foi movida para o ConversationSerializer.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        try:
-            participant = Participant.objects.get(
-                conversation=conversation,
-                user=request.user
-            )
-            
-            # Encontra a última mensagem
-            last_message = conversation.messages.order_by('-created_at').first()
-            if last_message:
-                participant.last_read_message = last_message
-                participant.save()
-                
-                # Atualiza status das mensagens
-                MessageStatus.objects.filter(
-                    participant=participant,
-                    status__in=['sent', 'delivered']
-                ).update(
-                    status='read',
-                    read_at=timezone.now()
-                )
-            
-            return Response({'status': 'conversation marked as read'})
-        except Participant.DoesNotExist:
-            return Response(
-                {'error': 'User is not a participant in this conversation'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # O método create do serializer agora retorna a instância e um booleano `created`
+        conversation, created = serializer.save()
 
-    @action(detail=True, methods=['get'])
-    def participants(self, request, pk=None):
-        """ Lista participantes da conversa. """
-        conversation = self.get_object()
-        participants = conversation.participants.all()
-        serializer = ParticipantSerializer(participants, many=True)
-        return Response(serializer.data)
+        # Determina o status code com base se a conversa foi criada ou reutilizada
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        
+        # Recarrega a instância para garantir que os dados de prefetch estejam corretos
+        instance = self.get_queryset().get(id=conversation.id)
+        serializer = self.get_serializer(instance)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status_code, headers=headers)
 
 class MessageViewSet(viewsets.ModelViewSet):
     """
@@ -219,7 +167,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """ Retorna mensagens de uma conversa específica. """
+        """Retorna mensagens de uma conversa específica com prefetch otimizado."""
         conversation_id = self.kwargs.get('conversation_pk')
         
         if not conversation_id:
@@ -237,39 +185,54 @@ class MessageViewSet(viewsets.ModelViewSet):
         ).select_related(
             'sender', 'conversation', 'parent_message'
         ).prefetch_related(
-            'attachments', 'reactions', 'reactions__user', 'statuses'
+            'attachments', 
+            Prefetch('reactions', queryset=Reaction.objects.select_related('user')), 
+            'statuses'
         ).order_by('created_at')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
+        context['conversation_id'] = self.kwargs.get('conversation_pk')
         return context
 
     def perform_create(self, serializer):
-        """ Associa a mensagem à conversa e ao remetente. """
+        """Associa a mensagem à conversa e ao remetente e cria MessageStatus para todos."""
         conversation_id = self.kwargs.get('conversation_pk')
         
         try:
-            conversation = Conversation.objects.get(pk=conversation_id)
-            # Verifica se o usuário é participante
-            if not Participant.objects.filter(
-                conversation=conversation,
-                user=self.request.user
-            ).exists():
+            conversation = get_object_or_404(Conversation, pk=conversation_id)
+            
+            # Valida participação
+            if not Participant.objects.filter(conversation=conversation, user=self.request.user).exists():
                 raise serializers.ValidationError("O usuário não é participante desta conversa.")
             
-            serializer.save(conversation=conversation, sender=self.request.user)
+            message = serializer.save(conversation=conversation, sender=self.request.user)
+            
+            # Cria status para todos os participantes. Marca como 'delivered' se não for o remetente.
+            participants = Participant.objects.filter(conversation=conversation)
+            statuses = []
+            for participant in participants:
+                is_sender = (participant.user.id == self.request.user.id)
+                statuses.append(MessageStatus(
+                    message=message, 
+                    participant=participant, 
+                    status='sent' if is_sender else 'delivered',
+                    delivered_at=None if is_sender else timezone.now()
+                ))
+            MessageStatus.objects.bulk_create(statuses)
             
             # Atualiza timestamp da conversa
             conversation.updated_at = timezone.now()
             conversation.save()
             
-        except Conversation.DoesNotExist:
-            raise serializers.ValidationError("Conversa não encontrada.")
+        except Exception as e:
+            # Captura e eleva erros
+            raise serializers.ValidationError(str(e))
 
     @action(detail=True, methods=['post'])
     def react(self, request, conversation_pk=None, pk=None):
-        """ Adiciona/remove reação a uma mensagem. """
+        """Adiciona/remove reação a uma mensagem."""
         message = self.get_object()
         emoji = request.data.get('emoji')
         
@@ -279,28 +242,28 @@ class MessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Remove reação existente do mesmo usuário
-        Reaction.objects.filter(
-            message=message,
-            user=request.user,
-            emoji=emoji
-        ).delete()
-        
-        # Se não havia reação, adiciona nova
-        if not Reaction.objects.filter(message=message, user=request.user, emoji=emoji).exists():
-            reaction = Reaction.objects.create(
+        try:
+            # Tenta encontrar uma reação existente do usuário com este emoji
+            reaction = Reaction.objects.get(
                 message=message,
                 user=request.user,
                 emoji=emoji
             )
-            serializer = ReactionSerializer(reaction)
-            return Response(serializer.data)
-        
-        return Response({'status': 'reaction removed'})
+            reaction.delete()
+            return Response({'status': 'reaction removed'})
+        except Reaction.DoesNotExist:
+            # Se não existir, cria
+            new_reaction = Reaction.objects.create(
+                message=message,
+                user=request.user,
+                emoji=emoji
+            )
+            serializer = ReactionSerializer(new_reaction)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def mark_read(self, request, conversation_pk=None, pk=None):
-        """ Marca uma mensagem específica como lida. """
+        """Marca uma mensagem específica como lida e atualiza o ponteiro do participante."""
         message = self.get_object()
         
         try:
@@ -320,6 +283,10 @@ class MessageViewSet(viewsets.ModelViewSet):
                 status_obj.read_at = timezone.now()
                 status_obj.save()
             
+            # Atualiza o ponteiro de última mensagem lida
+            participant.last_read_message = message
+            participant.save()
+            
             return Response({'status': 'message marked as read'})
             
         except Participant.DoesNotExist:
@@ -329,11 +296,15 @@ class MessageViewSet(viewsets.ModelViewSet):
             )
 
 class AttachmentViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    """ ViewSet para gerenciar anexos. """
+    """ViewSet para gerenciar anexos."""
     queryset = Attachment.objects.all()
     serializer_class = AttachmentSerializer
     permission_classes = [IsAuthenticated]
 
+    # ATENÇÃO: O modelo Attachment requer 'message' (FK). A API REST 
+    # de upload deve incluir o 'message_id' no payload. 
+    # O método `perform_create` padrão do DRF tentará salvar.
     def perform_create(self, serializer):
-        """ Associa o anexo ao usuário atual. """
+        # A validação de que o usuário pode anexar a esta mensagem é delegada
+        # ao serializer ou deve ser adicionada aqui (omitida para simplificação).
         serializer.save()
