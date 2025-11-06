@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, mixins, serializers
+from rest_framework import viewsets, status, mixins, serializers, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -12,7 +12,8 @@ from django.shortcuts import get_object_or_404
 
 from .models import Conversation, Message, Participant, Attachment, MessageStatus, Reaction, Presence
 from .serializers import (
-    ConversationSerializer, MessageSerializer, AttachmentSerializer, ReactionSerializer, UserSerializer
+    ConversationSerializer, MessageSerializer, AttachmentSerializer, 
+    ReactionSerializer, UserSerializer, UserProfileSerializer
 )
 
 User = get_user_model()
@@ -44,6 +45,33 @@ class ChatView(LoginRequiredMixin, TemplateView):
         return context
 
 # --- Vistas da API REST (DRF) ---
+
+class UserListView(generics.ListAPIView):
+    """API para listar usuários para a lista de contatos."""
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Exclui o usuário atual da lista
+        return User.objects.exclude(pk=self.request.user.pk).order_by('first_name', 'last_name')
+
+class UserProfileAPIView(APIView):
+    """API para buscar o perfil de um usuário."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id, *args, **kwargs):
+        try:
+            user = User.objects.select_related('cadastro').prefetch_related(
+                'cadastro__promocoes', 
+                'cadastro__detalhes_situacao', 
+                'cadastro__imagens'
+            ).get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Usuário não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
 
 class UserPresenceView(APIView):
     """API para gerenciar presença dos usuários."""
@@ -109,8 +137,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
             participants__user=user
         ).prefetch_related(
             Prefetch(
-                'participants',
-                queryset=Participant.objects.select_related('user'),
+                'participants', 
+                queryset=Participant.objects.select_related('user'), 
                 to_attr='prefetched_participants'
             )
         ).distinct().order_by('-updated_at')
@@ -158,6 +186,42 @@ class ConversationViewSet(viewsets.ModelViewSet):
         
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status_code, headers=headers)
+
+    @action(detail=False, methods=['post'], url_path='create_or_open')
+    def create_or_open_private_conversation(self, request):
+        """
+        Encontra ou cria uma conversa 1:1 com um usuário específico.
+        Espera {'user_id': <id>} no corpo da requisição.
+        """
+        target_user_id = request.data.get('user_id')
+        if not target_user_id:
+            return Response({'error': 'user_id é obrigatório'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target_user = User.objects.get(pk=target_user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Usuário não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        participants_ids = [user.id, target_user.id]
+
+        # Usa o helper para encontrar conversa 1:1
+        conversation = self._find_existing_1on1_conversation(participants_ids)
+        
+        status_code = status.HTTP_200_OK
+        if not conversation:
+            # Cria a conversa se não existir
+            conversation = Conversation.objects.create(is_group=False)
+            Participant.objects.bulk_create([
+                Participant(user=user, conversation=conversation),
+                Participant(user=target_user, conversation=conversation)
+            ])
+            status_code = status.HTTP_201_CREATED
+
+        # Recarrega e serializa a resposta
+        instance = self.get_queryset().get(id=conversation.id)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status_code)
 
 class MessageViewSet(viewsets.ModelViewSet):
     """

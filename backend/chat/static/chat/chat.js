@@ -1,926 +1,696 @@
-
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- ELEMENTOS DA UI ---
-
+    // --- UI ELEMENTS ---
     const ui = {
-
         chatContainer: document.getElementById('chat-container'),
-
-        conversations: {
-
-            sidebar: document.getElementById('conversations-sidebar'),
-
-            list: document.getElementById('conversation-list'),
-
-            loading: document.getElementById('conversation-loading'),
-
-            empty: document.getElementById('conversation-empty'),
-
-            container: document.getElementById('conversations-container'),
-
-            refreshBtn: document.getElementById('refresh-conversations'),
-
+        sidebar: {
+            container: document.getElementById('conversations-sidebar'),
+            newConversationBtn: document.getElementById('new-conversation-btn'),
+            tabs: document.querySelectorAll('.sidebar-tab'),
+            searchInput: document.getElementById('sidebar-search'),
+            conversationList: document.getElementById('conversation-list-container'),
+            groupList: document.getElementById('group-list-container'),
+            contactList: document.getElementById('contact-list-container'),
         },
-
+        main: document.querySelector('.flex-1.flex-col'), // Main chat area container
         activeConversation: {
-
             container: document.getElementById('active-conversation'),
-
-            name: document.getElementById('conversation-name'),
-
-            avatar: document.getElementById('conversation-avatar'),
-
-            presence: document.getElementById('conversation-presence'),
-
-            status: document.getElementById('conversation-status'),
-
             backBtn: document.getElementById('back-to-conversations'),
-
+            avatar: document.getElementById('conversation-avatar'),
+            status: document.getElementById('conversation-status'),
+            name: document.getElementById('conversation-name'),
+            presence: document.getElementById('conversation-presence'),
+            infoBtn: document.getElementById('conversation-info-btn'),
         },
-
-        messages: {
-
-            area: document.getElementById('message-area'),
-
-            list: document.getElementById('message-list'),
-
-            form: document.getElementById('message-form'),
-
-            input: document.getElementById('message-input'),
-
-            sendBtn: document.getElementById('send-btn'),
-
-        },
-
-        modal: {
-
-            container: document.getElementById('new-conversation-modal'),
-
-            openBtns: document.querySelectorAll('#new-conversation-btn, #empty-new-conversation-btn, #quick-new-conversation'),
-
-            closeBtns: document.querySelectorAll('#close-modal, #cancel-modal'),
-
-            createBtn: document.getElementById('create-conversation-btn'),
-
-            groupNameInput: document.getElementById('group-name-input'),
-
-            userList: document.getElementById('modal-user-list'),
-
-            selectedCount: document.getElementById('selected-count'),
-
-        },
-
         initialScreen: document.getElementById('no-conversation-selected'),
-
-        connectionStatus: document.getElementById('connection-status'),
-
+        message: {
+            area: document.getElementById('message-area'),
+            list: document.getElementById('message-list'),
+            form: document.getElementById('message-form'),
+            input: document.getElementById('message-input'),
+            sendBtn: document.getElementById('send-btn'),
+            attachFileBtn: document.getElementById('attach-file-btn'),
+            fileInput: document.getElementById('file-input'),
+        },
+        filePreview: {
+            container: document.getElementById('file-preview-container'),
+            name: document.getElementById('file-preview-name'),
+            removeBtn: document.getElementById('remove-file-btn'),
+        },
+        infoModal: {
+            container: document.getElementById('conversation-info-modal'),
+            content: document.getElementById('info-modal-content'),
+            closeBtn: document.getElementById('close-info-modal-btn'),
+            loading: document.getElementById('info-modal-loading'),
+            data: document.getElementById('info-modal-data'),
+            img: document.getElementById('info-modal-img'),
+            avatarPlaceholder: document.getElementById('info-modal-avatar-placeholder'),
+            avatarInitial: document.getElementById('info-modal-avatar-initial'),
+            name: document.getElementById('info-modal-name'),
+            posto: document.getElementById('info-modal-posto'),
+            re: document.getElementById('info-modal-re'),
+            nomeCompleto: document.getElementById('info-modal-nome-completo'),
+            sgb: document.getElementById('info-modal-sgb'),
+            secao: document.getElementById('info-modal-secao'),
+        },
         typingIndicator: {
-
             container: document.getElementById('typing-indicator'),
-
             user: document.getElementById('typing-user'),
-
         },
-
-        loadingSpinner: document.getElementById('loading-spinner'),
-
         toastContainer: document.getElementById('toast-container'),
-
+        templates: {
+            conversation: document.getElementById('conversation-item-template'),
+            contact: document.getElementById('contact-item-template'),
+            group: document.getElementById('group-item-template'),
+            messageSent: document.getElementById('message-sent-template'),
+            messageReceived: document.getElementById('message-received-template'),
+            toast: document.getElementById('toast-template'),
+            placeholder: document.getElementById('list-placeholder-template'),
+        },
     };
 
-
-
-    // --- DADOS E ESTADO DA APLICAÇÃO ---
-
+    // --- APPLICATION STATE ---
     const state = {
-
         currentUser: {
-
             id: ui.chatContainer.dataset.userId,
-
             username: ui.chatContainer.dataset.username,
-
             csrfToken: ui.chatContainer.dataset.csrfToken,
-
         },
-
         socket: null,
-
         activeConversationId: null,
-
+        activeTab: 'conversations', // conversations, groups, contacts
         conversations: new Map(),
-
+        contacts: [],
+        groups: [],
         typingTimeout: null,
-
-        reconnect: {
-
-            attempts: 0,
-
-            maxAttempts: 5,
-
-            delay: 1000,
-
-        },
-
+        selectedFile: null,
+        reconnect: { attempts: 0, maxAttempts: 5, delay: 1000 },
     };
 
-
-
-    // --- FUNÇÕES DE API ---
-
-
-
+    // --- API & HELPERS ---
     async function apiFetch(url, options = {}) {
-
         const defaultHeaders = {
-
             'X-Requested-With': 'XMLHttpRequest',
-
-            'Content-Type': 'application/json',
-
             'X-CSRFToken': state.currentUser.csrfToken,
-
         };
-
-        const response = await fetch(url, {
-
-            ...options,
-
-            headers: { ...defaultHeaders, ...options.headers },
-
-        });
-
-
-
-        if (!response.ok) {
-
-            const errorText = await response.text();
-
-            console.error("Server error response:", errorText);
-
-            try {
-
-                const errorData = JSON.parse(errorText);
-
-                throw new Error(errorData.detail || 'Falha na requisição API.');
-
-            } catch (e) {
-
-                throw new Error(errorText || 'Falha na requisição API.');
-
-            }
-
+        if (!(options.body instanceof FormData)) {
+            defaultHeaders['Content-Type'] = 'application/json';
         }
-
-
-
-        return response.status === 204 ? null : response.json();
-
-    }
-
-
-
-    // --- FUNÇÕES DE UI ---
-
-
-
-    function showToast(message, isError = false) {
-
-        const toast = document.createElement('div');
-
-        toast.className = `p-4 rounded-lg shadow-xl text-white fade-in max-w-sm ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-
-        toast.textContent = message;
-
-        ui.toastContainer.appendChild(toast);
-
-        setTimeout(() => toast.remove(), 5000);
-
-    }
-
-
-
-    function toggleLoading(show) {
-
-        ui.loadingSpinner.classList.toggle('hidden', !show);
-
-    }
-
-
-
-    function formatTime(timestamp) {
-
-        if (!timestamp) return '';
-
-        return new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-    }
-
-
-
-    function scrollToBottom() {
-
-        ui.messages.area.scrollTop = ui.messages.area.scrollHeight;
-
-    }
-
-
-
-    // --- LÓGICA DE CONVERSAS ---
-
-
-
-    async function fetchConversations() {
-
-        toggleLoading(true);
-
-        ui.conversations.loading.classList.remove('hidden');
-
-        ui.conversations.list.innerHTML = '';
 
         try {
-
-            const convs = await apiFetch('/api/chat/conversations/');
-
-            state.conversations.clear();
-
-            convs.forEach(conv => state.conversations.set(conv.id, conv));
-
-            renderConversationList();
-
-        } catch (error) {
-
-            showToast(error.message, true);
-
-            ui.conversations.empty.classList.remove('hidden');
-
-        } finally {
-
-            toggleLoading(false);
-
-            ui.conversations.loading.classList.add('hidden');
-
-        }
-
-    }
-
-
-
-    function renderConversationList() {
-
-        ui.conversations.list.innerHTML = '';
-
-        if (state.conversations.size === 0) {
-
-            ui.conversations.empty.classList.remove('hidden');
-
-            return;
-
-        }
-
-        ui.conversations.empty.classList.add('hidden');
-
-
-
-        const sortedConversations = [...state.conversations.values()].sort((a, b) => 
-
-            new Date(b.updated_at) - new Date(a.updated_at)
-
-        );
-
-
-
-        sortedConversations.forEach(conv => {
-
-            const otherParticipant = conv.participants.find(p => p.user.id != state.currentUser.id);
-
-            const displayName = conv.is_group ? conv.name : (otherParticipant?.user.display_name || 'Conversa');
-
-            const lastMessage = conv.last_message;
-
-            const unreadCount = conv.unread_count || 0;
-
-
-
-            const item = document.createElement('div');
-
-            item.className = `conversation-item p-3 cursor-pointer flex items-center space-x-3 ${conv.id === state.activeConversationId ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}`;
-
-            item.dataset.conversationId = conv.id;
-
-            item.innerHTML = `
-
-                <div class="relative flex-shrink-0">
-
-                    <div class="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-
-                        <i class="fas ${conv.is_group ? 'fa-users' : 'fa-user'} text-white"></i>
-
-                    </div>
-
-                </div>
-
-                <div class="flex-1 min-w-0">
-
-                    <div class="flex justify-between items-start">
-
-                        <h4 class="font-semibold text-gray-900 truncate">${displayName}</h4>
-
-                        <span class="text-xs text-gray-500 whitespace-nowrap">${lastMessage ? formatTime(lastMessage.created_at) : ''}</span>
-
-                    </div>
-
-                    <div class="flex justify-between items-center">
-
-                        <p class="text-sm text-gray-600 truncate flex-1 pr-2">${lastMessage ? lastMessage.text : 'Nenhuma mensagem'}</p>
-
-                        ${unreadCount > 0 ? `<span class="bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${unreadCount}</span>` : ''}
-
-                    </div>
-
-                </div>
-
-            `;
-
-            item.addEventListener('click', () => selectConversation(conv.id));
-
-            ui.conversations.list.appendChild(item);
-
-        });
-
-    }
-
-
-
-    function selectConversation(conversationId) {
-
-        console.log('Selecionando conversa com ID:', conversationId);
-
-        if (state.activeConversationId === conversationId) return;
-
-        state.activeConversationId = conversationId;
-
-        const conversation = state.conversations.get(conversationId);
-
-
-
-        if (!conversation) {
-
-            state.activeConversationId = null;
-
-            return;
-
-        }
-
-
-
-        ui.initialScreen.classList.add('hidden');
-
-        ui.activeConversation.container.classList.remove('hidden');
-
-
-
-        const otherParticipant = conversation.participants.find(p => p.user.id != state.currentUser.id);
-
-        ui.activeConversation.name.textContent = conversation.is_group ? conversation.name : (otherParticipant?.user.display_name || 'Conversa');
-
-        
-
-        renderConversationList(); // Para destacar a conversa ativa
-
-        fetchMessages(conversationId);
-
-        connectWebSocket(conversationId);
-
-
-
-        if (window.innerWidth < 768) { // Em mobile, esconde a lista
-
-            ui.conversations.sidebar.classList.add('hidden');
-
-        }
-
-    }
-
-    
-
-    function showConversationsSidebar() {
-
-        if (window.innerWidth < 768) {
-
-            ui.conversations.sidebar.classList.remove('hidden');
-
-            ui.activeConversation.container.classList.add('hidden');
-
-            state.activeConversationId = null;
-
-            if (state.socket) state.socket.close();
-
-            renderConversationList();
-
-        }
-
-    }
-
-
-
-    // --- LÓGICA DE MENSAGENS ---
-
-
-
-    async function fetchMessages(conversationId) {
-
-        toggleLoading(true);
-
-        ui.messages.list.innerHTML = '<p class="text-center text-gray-500">Carregando mensagens...</p>';
-
-        try {
-
-            const paginatedResponse = await apiFetch(`/api/chat/conversations/${conversationId}/messages/`);
-
-            renderMessages(paginatedResponse);
-
-        } catch (error) {
-
-            showToast(error.message, true);
-
-            ui.messages.list.innerHTML = '<p class="text-center text-red-500">Erro ao carregar mensagens.</p>';
-
-        }
-
-        finally {
-
-            toggleLoading(false);
-
-        }
-
-    }
-
-
-
-    function renderMessages(paginatedResponse) {
-
-        ui.messages.list.innerHTML = '';
-
-        const messages = paginatedResponse.results; // Extrai o array de mensagens
-
-
-
-        if (!messages || messages.length === 0) {
-
-            ui.messages.list.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-comment-dots text-3xl mb-2"></i><p>Nenhuma mensagem ainda</p></div>';
-
-            return;
-
-        }
-
-        messages.forEach(msg => appendMessage(msg, false));
-
-        scrollToBottom();
-
-    }
-
-
-
-    function appendMessage(message, animate = true) {
-
-        const isOwn = message.sender.id == state.currentUser.id;
-
-        const messageEl = document.createElement('div');
-
-        messageEl.className = `flex ${isOwn ? 'justify-end' : 'justify-start'} mb-2 ${animate ? 'message-enter' : ''}`;
-
-        messageEl.dataset.messageId = message.id;
-
-        messageEl.innerHTML = `
-
-            <div class="max-w-xs lg:max-w-md p-3 rounded-lg ${isOwn ? 'message-sent' : 'message-received'}">
-
-                ${!isOwn && message.conversation?.is_group ? `<div class="text-xs font-semibold text-blue-700 mb-1">${message.sender.display_name}</div>` : ''}
-
-                <div class="text-sm text-gray-900">${message.text || ''}</div>
-
-                <div class="text-right text-xs text-gray-500 mt-1">${formatTime(message.created_at)}</div>
-
-            </div>
-
-        `;
-
-        ui.messages.list.appendChild(messageEl);
-
-        scrollToBottom();
-
-    }
-
-    
-
-    function handleSendMessage(e) {
-
-        e.preventDefault();
-
-        const text = ui.messages.input.value.trim();
-
-        if (!text || !state.socket || state.socket.readyState !== WebSocket.OPEN) return;
-
-
-
-        state.socket.send(JSON.stringify({ type: 'message.send', text: text }));
-
-        ui.messages.input.value = '';
-
-        handleTypingStop();
-
-    }
-
-
-
-    // --- LÓGICA DE WEBSOCKET ---
-
-
-
-    function connectWebSocket(conversationId) {
-
-        if (state.socket) state.socket.close();
-
-
-
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-        const wsUrl = `${protocol}//${window.location.host}/ws/chat/${conversationId}/`;
-
-        
-
-        state.socket = new WebSocket(wsUrl);
-
-
-
-        state.socket.onopen = () => {
-
-            console.log('WebSocket connected.');
-
-            updateConnectionStatus('connected');
-
-            state.reconnect.attempts = 0;
-
-        };
-
-
-
-        state.socket.onmessage = (e) => {
-
-            const data = JSON.parse(e.data);
-
-            handleWebSocketMessage(data);
-
-        };
-
-
-
-        state.socket.onclose = () => {
-
-            console.log('WebSocket disconnected.');
-
-            updateConnectionStatus('disconnected');
-
-            handleWebSocketClose();
-
-        };
-
-
-
-        state.socket.onerror = (err) => {
-
-            console.error('WebSocket error:', err);
-
-            updateConnectionStatus('error');
-
-        };
-
-    }
-
-
-
-    function handleWebSocketMessage(data) {
-
-        switch (data.type) {
-
-            case 'message.receive':
-
-                appendMessage(data.message);
-
-                // Atualiza a lista de conversas para mostrar a última mensagem
-
-                fetchConversations();
-
-                break;
-
-            case 'typing.indicator':
-
-                if (data.user_id !== state.currentUser.id) {
-
-                    showTypingIndicator(data.user_name, data.action === 'start');
-
-                }
-
-                break;
-
-            case 'presence.update':
-
-                // Lógica para atualizar status de presença na UI
-
-                break;
-
-            case 'error':
-
-                showToast(`Erro do servidor: ${data.message}`, true);
-
-                break;
-
-        }
-
-    }
-
-
-
-    function handleWebSocketClose() {
-
-        if (state.reconnect.attempts < state.reconnect.maxAttempts) {
-
-            state.reconnect.attempts++;
-
-            const delay = state.reconnect.delay * state.reconnect.attempts;
-
-            console.log(`Tentando reconectar em ${delay}ms...`);
-
-            setTimeout(() => {
-
-                if (state.activeConversationId) {
-
-                    connectWebSocket(state.activeConversationId);
-
-                }
-
-            }, delay);
-
-        } else {
-
-            console.error('Máximo de tentativas de reconexão atingido.');
-
-            showToast('Não foi possível conectar ao chat. Verifique sua conexão e atualize a página.', true);
-
-        }
-
-    }
-
-    
-
-    function updateConnectionStatus(status) {
-
-        const statuses = {
-
-            connected: { text: '● Online', color: 'bg-green-500' },
-
-            disconnected: { text: '● Offline', color: 'bg-gray-400' },
-
-            error: { text: '● Erro', color: 'bg-red-500' },
-
-        };
-
-        const current = statuses[status] || statuses.disconnected;
-
-        ui.connectionStatus.textContent = current.text;
-
-        ui.connectionStatus.className = `px-2 py-1 rounded-full text-xs text-white ${current.color}`;
-
-    }
-
-
-
-    // --- INDICADOR "DIGITANDO" ---
-
-
-
-    function handleTyping() {
-
-        if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
-
-        
-
-        if (!state.typingTimeout) {
-
-            state.socket.send(JSON.stringify({ type: 'typing.start' }));
-
-        } else {
-
-            clearTimeout(state.typingTimeout);
-
-        }
-
-
-
-        state.typingTimeout = setTimeout(handleTypingStop, 3000);
-
-    }
-
-
-
-    function handleTypingStop() {
-
-        if (state.typingTimeout) {
-
-            clearTimeout(state.typingTimeout);
-
-            state.typingTimeout = null;
-
-            if (state.socket && state.socket.readyState === WebSocket.OPEN) {
-
-                state.socket.send(JSON.stringify({ type: 'typing.stop' }));
-
-            }
-
-        }
-
-    }
-
-
-
-    function showTypingIndicator(userName, isTyping) {
-
-        if (isTyping) {
-
-            ui.typingIndicator.user.textContent = `${userName} está digitando...`;
-
-            ui.typingIndicator.container.classList.remove('hidden');
-
-        } else {
-
-            ui.typingIndicator.container.classList.add('hidden');
-
-        }
-
-    }
-
-
-
-    // --- MODAL NOVA CONVERSA ---
-
-
-
-    function showNewConversationModal() {
-
-        ui.modal.container.classList.remove('hidden');
-
-        // Limpa seleções anteriores
-
-        ui.modal.userList.querySelectorAll('input:checked').forEach(cb => cb.checked = false);
-
-        ui.modal.groupNameInput.value = '';
-
-        updateCreateButtonState();
-
-    }
-
-
-
-    function hideNewConversationModal() {
-
-        ui.modal.container.classList.add('hidden');
-
-    }
-
-
-
-    function updateCreateButtonState() {
-
-        const selectedCount = ui.modal.userList.querySelectorAll('input:checked').length;
-
-        ui.modal.selectedCount.textContent = selectedCount;
-
-        ui.modal.createBtn.disabled = selectedCount === 0;
-
-    }
-
-
-
-    async function createConversation() {
-
-        console.log("Botão de criar conversa clicado");
-
-        const selectedUserIds = [...ui.modal.userList.querySelectorAll('input:checked')].map(cb => parseInt(cb.value, 10));
-
-        const groupName = ui.modal.groupNameInput.value.trim();
-
-        const isGroup = Boolean(selectedUserIds.length > 1 || (selectedUserIds.length > 0 && groupName));
-
-
-
-        toggleLoading(true);
-
-        try {
-
-            const newConversation = await apiFetch('/api/chat/conversations/', {
-
-                method: 'POST',
-
-                body: JSON.stringify({
-
-                    name: groupName,
-
-                    is_group: isGroup,
-
-                    participants_ids: selectedUserIds,
-
-                }),
-
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers },
             });
 
-            hideNewConversationModal();
-
-
-
-            // Adiciona a nova conversa diretamente ao estado
-
-            state.conversations.set(newConversation.id, newConversation);
-
-            // Renderiza a lista para incluir a nova conversa
-
-            renderConversationList();
-
-            // Seleciona a nova conversa
-
-            selectConversation(newConversation.id);
-
-
-
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
+                throw new Error(errorData.detail);
+            }
+            return response.status === 204 ? null : response.json();
         } catch (error) {
-
-            showToast(error.message, true);
-
+            console.error('API Fetch Error:', error);
+            throw error;
         }
-
-        finally {
-
-            toggleLoading(false);
-
-        }
-
     }
 
-
-
-    // --- INICIALIZAÇÃO ---
-
-
-
-    function setupEventListeners() {
-
-        ui.conversations.refreshBtn.addEventListener('click', fetchConversations);
-
-        ui.messages.form.addEventListener('submit', handleSendMessage);
-
-        ui.messages.input.addEventListener('input', handleTyping);
-
-        ui.activeConversation.backBtn.addEventListener('click', showConversationsSidebar);
-
-
-
-        // Modal
-
-        ui.modal.openBtns.forEach(btn => btn.addEventListener('click', showNewConversationModal));
-
-        ui.modal.closeBtns.forEach(btn => btn.addEventListener('click', hideNewConversationModal));
-
-        ui.modal.createBtn.addEventListener('click', createConversation);
-
-        ui.modal.userList.addEventListener('change', updateCreateButtonState);
-
+    function formatTime(timestamp) {
+        if (!timestamp) return '';
+        return new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
 
+    function scrollToBottom() {
+        ui.message.area.scrollTop = ui.message.area.scrollHeight;
+    }
 
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(message, type = 'info') {
+        const toastConfig = {
+            success: { icon: 'fa-check-circle', color: 'text-green-500' },
+            error: { icon: 'fa-times-circle', color: 'text-red-500' },
+            info: { icon: 'fa-info-circle', color: 'text-blue-500' },
+            warning: { icon: 'fa-exclamation-triangle', color: 'text-yellow-500' },
+        };
+        const config = toastConfig[type];
 
-    function init() {
+        const toastNode = ui.templates.toast.content.cloneNode(true);
+        const toastIcon = toastNode.querySelector('.toast-icon');
+        if (toastIcon) {
+            toastIcon.innerHTML = `<i class="fas ${config.icon} ${config.color}"></i>`;
+        }
+        const textElement = toastNode.querySelector('.pl-4');
+        if (textElement) {
+            textElement.textContent = message;
+        }
+        
+        const toastElement = toastNode.firstElementChild;
+        if (toastElement) {
+            ui.toastContainer.appendChild(toastElement);
+            setTimeout(() => {
+                toastElement.classList.add('opacity-0', 'transform', 'translate-x-full');
+                setTimeout(() => toastElement.remove(), 500);
+            }, 4000);
+        }
+    }
 
-        setupEventListeners();
+    // --- SIDEBAR LOGIC ---
+    function switchTab(tabName) {
+        state.activeTab = tabName;
+        ui.sidebar.tabs.forEach(tab => {
+            const isSelected = tab.dataset.tab === tabName;
+            tab.classList.toggle('text-blue-500', isSelected);
+            tab.classList.toggle('border-blue-500', isSelected);
+            tab.classList.toggle('text-gray-500', !isSelected);
+            tab.classList.toggle('dark:text-gray-400', !isSelected);
+            tab.classList.toggle('border-transparent', !isSelected);
+        });
 
-        fetchConversations();
+        Object.values(ui.sidebar).forEach(el => {
+            if (el.id && el.id.endsWith('-list-container')) {
+                el.classList.add('hidden');
+            }
+        });
 
-        // Responsividade inicial
+        const activeContainerId = `${tabName.slice(0, -1)}-list-container`;
+        const activeContainer = document.getElementById(activeContainerId);
+        if (activeContainer) {
+            activeContainer.classList.remove('hidden');
+        }
 
-        if (window.innerWidth >= 768) {
+        switch (tabName) {
+            case 'conversations': fetchAndRenderConversations(); break;
+            case 'groups': fetchAndRenderGroups(); break;
+            case 'contacts': fetchAndRenderContacts(); break;
+        }
+    }
 
-            ui.conversations.sidebar.classList.remove('hidden');
+    function startNewConversation() {
+        switchTab('contacts');
+    }
 
+    function renderPlaceholder(container, icon, text) {
+        if (!container) return;
+        const placeholder = ui.templates.placeholder.content.cloneNode(true);
+        const iconEl = placeholder.querySelector('.placeholder-icon');
+        if(iconEl) iconEl.className = `placeholder-icon ${icon} text-4xl mb-3`;
+        const textEl = placeholder.querySelector('.placeholder-text');
+        if(textEl) textEl.textContent = text;
+        container.innerHTML = '';
+        container.appendChild(placeholder);
+    }
+
+    // --- CONVERSATIONS ---
+    async function createOrOpenPrivateConversation(userId) {
+        try {
+            const conversation = await apiFetch('/api/chat/conversations/create_or_open/', {
+                method: 'POST',
+                body: JSON.stringify({ user_id: userId }),
+            });
+            await fetchAndRenderConversations();
+            switchTab('conversations');
+            selectConversation(conversation.id);
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    }
+
+    async function fetchAndRenderConversations() {
+        if (!ui.sidebar.conversationList) return;
+        renderPlaceholder(ui.sidebar.conversationList, 'fas fa-spinner fa-spin', 'Carregando conversas...');
+        try {
+            const convs = (await apiFetch('/api/chat/conversations/')).results;
+            state.conversations.clear();
+            convs.forEach(c => state.conversations.set(c.id, c));
+            renderConversationList(Array.from(state.conversations.values()));
+        } catch (e) {
+            showToast(e.message, 'error');
+            renderPlaceholder(ui.sidebar.conversationList, 'fas fa-exclamation-circle', 'Erro ao carregar conversas.');
+        }
+    }
+
+    function renderConversationList(convs) {
+        const container = ui.sidebar.conversationList;
+        if (!container) return;
+        if (convs.length === 0) {
+            renderPlaceholder(container, 'fas fa-comments', 'Nenhuma conversa encontrada.');
+            return;
+        }
+        container.innerHTML = '';
+        convs.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).forEach(conv => {
+            const item = ui.templates.conversation.content.cloneNode(true);
+            const other = conv.participants.find(p => p.user.id != state.currentUser.id);
+            const name = conv.is_group ? conv.name : other?.user.display_name || 'Conversa';
+            
+            const convItem = item.querySelector('.conversation-item');
+            if (!convItem) return;
+            convItem.dataset.conversationId = conv.id;
+            if (conv.id === state.activeConversationId) {
+                convItem.classList.add('active');
+            }
+
+            const avatarImg = item.querySelector('.avatar-img');
+            const avatarPlaceholder = item.querySelector('.avatar-placeholder');
+            const userForAvatar = conv.is_group ? null : other?.user;
+
+            if (userForAvatar && userForAvatar.image_url) {
+                if(avatarImg) {
+                    avatarImg.src = userForAvatar.image_url;
+                    avatarImg.classList.remove('hidden');
+                }
+                if(avatarPlaceholder) avatarPlaceholder.remove();
+            } else {
+                if(avatarPlaceholder) avatarPlaceholder.textContent = name.charAt(0).toUpperCase();
+                if(avatarImg) avatarImg.remove();
+            }
+
+            const h4 = item.querySelector('h4');
+            if(h4) h4.textContent = name;
+            const lastMessage = item.querySelector('.last-message');
+            if(lastMessage) lastMessage.textContent = conv.last_message?.text || 'Nenhuma mensagem';
+            const time = item.querySelector('.time');
+            if(time) time.textContent = conv.last_message ? formatTime(conv.last_message.created_at) : '';
+            
+            const unread = item.querySelector('.unread-count');
+            if (unread) {
+                if (conv.unread_count > 0) unread.textContent = conv.unread_count; else unread.remove();
+            }
+
+            convItem.addEventListener('click', () => selectConversation(conv.id));
+            container.appendChild(item);
+        });
+    }
+
+    // --- CONTACTS ---
+    async function fetchAndRenderContacts() {
+        if (!ui.sidebar.contactList) return;
+        renderPlaceholder(ui.sidebar.contactList, 'fas fa-spinner fa-spin', 'Carregando contatos...');
+        try {
+            const users = (await apiFetch('/api/chat/users/')).results.filter(u => u.id != state.currentUser.id);
+            const presences = await apiFetch(`/api/chat/presence/?user_ids=${users.map(u => u.id).join(',')}`);
+            state.contacts = users.map(u => ({ ...u, presence: presences[u.id] || { status: 'offline' } }));
+            renderContactList(state.contacts);
+        } catch (e) {
+            showToast(e.message, 'error');
+            renderPlaceholder(ui.sidebar.contactList, 'fas fa-user-times', 'Erro ao carregar contatos.');
+        }
+    }
+
+    function renderContactList(contacts) {
+        const container = ui.sidebar.contactList;
+        if (!container) return;
+        if (contacts.length === 0) {
+            renderPlaceholder(container, 'fas fa-users-slash', 'Nenhum contato encontrado.');
+            return;
+        }
+        container.innerHTML = '';
+        contacts.forEach(c => {
+            const item = ui.templates.contact.content.cloneNode(true);
+            const contactItem = item.querySelector('.contact-item');
+            const name = c.display_name || c.email;
+
+            const avatarImg = item.querySelector('.avatar-img');
+            const avatarPlaceholder = item.querySelector('.avatar-placeholder');
+            if (c.image_url) {
+                if(avatarImg) {
+                    avatarImg.src = c.image_url;
+                    avatarImg.classList.remove('hidden');
+                }
+                if(avatarPlaceholder) avatarPlaceholder.remove();
+            } else {
+                if(avatarPlaceholder) avatarPlaceholder.textContent = name.charAt(0).toUpperCase();
+                if(avatarImg) avatarImg.remove();
+            }
+
+            const h4 = item.querySelector('h4');
+            if(h4) h4.textContent = name;
+            const statusText = item.querySelector('.status-text');
+            if(statusText) statusText.textContent = c.presence.status;
+            const statusIndicator = item.querySelector('.status-indicator');
+            if(statusIndicator) {
+                statusIndicator.classList.add(c.presence.status === 'online' ? 'bg-green-500' : 'bg-gray-400');
+                statusIndicator.classList.add('border-white', 'dark:border-gray-900');
+            }
+            
+            if(contactItem) contactItem.addEventListener('click', () => createOrOpenPrivateConversation(c.id));
+            
+            container.appendChild(item);
+        });
+    }
+
+    // --- GROUPS ---
+    async function fetchAndRenderGroups() {
+        if (!ui.sidebar.groupList) return;
+        renderPlaceholder(ui.sidebar.groupList, 'fas fa-spinner fa-spin', 'Carregando grupos...');
+        try {
+            state.groups = (await apiFetch('/api/chat/groups/')).results;
+            renderGroupList(state.groups);
+        } catch (e) {
+            showToast(e.message, 'error');
+            renderPlaceholder(ui.sidebar.groupList, 'fas fa-exclamation-circle', 'Erro ao carregar grupos.');
+        }
+    }
+
+    function renderGroupList(groups) {
+        const container = ui.sidebar.groupList;
+        if (!container) return;
+        if (groups.length === 0) {
+            renderPlaceholder(container, 'fas fa-users', 'Nenhum grupo disponível.');
+            return;
+        }
+        container.innerHTML = '';
+        groups.forEach(g => {
+            const item = ui.templates.group.content.cloneNode(true);
+            const h4 = item.querySelector('h4');
+            if(h4) h4.textContent = g.name;
+            const members = item.querySelector('.members-count');
+            if(members) members.textContent = `${g.participants_count} membros`;
+            container.appendChild(item);
+        });
+    }
+
+    // --- USER INFO MODAL ---
+    function hideInfoModal() {
+        const modal = ui.infoModal.container;
+        if(modal) {
+            const transformEl = modal.querySelector('.transform');
+            if(transformEl) transformEl.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+    }
+
+    async function showInfoModal(userId) {
+        const modal = ui.infoModal.container;
+        if(!modal) return;
+        modal.classList.remove('hidden');
+        const transformEl = modal.querySelector('.transform');
+        if(transformEl) setTimeout(() => transformEl.classList.remove('scale-95', 'opacity-0'), 10);
+
+        if(ui.infoModal.loading) ui.infoModal.loading.classList.remove('hidden');
+        if(ui.infoModal.data) ui.infoModal.data.classList.add('hidden');
+
+        try {
+            const profile = await apiFetch(`/api/chat/users/${userId}/profile/`);
+
+            if(ui.infoModal.name) ui.infoModal.name.textContent = profile.nome_de_guerra || 'N/A';
+            if(ui.infoModal.posto) ui.infoModal.posto.textContent = profile.posto_grad || 'N/A';
+            if(ui.infoModal.re) ui.infoModal.re.textContent = `${profile.re}-${profile.dig}` || 'N/A';
+            if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = profile.nome_completo || 'N/A';
+            if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = profile.sgb || 'N/A';
+            if(ui.infoModal.secao) ui.infoModal.secao.textContent = profile.posto_secao || 'N/A';
+
+            if (profile.image_url) {
+                if(ui.infoModal.img) {
+                    ui.infoModal.img.src = profile.image_url;
+                    ui.infoModal.img.classList.remove('hidden');
+                }
+                if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.add('hidden');
+            } else {
+                if(ui.infoModal.avatarInitial) ui.infoModal.avatarInitial.textContent = (profile.nome_de_guerra || ' ').charAt(0).toUpperCase();
+                if(ui.infoModal.img) ui.infoModal.img.classList.add('hidden');
+                if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.remove('hidden');
+            }
+
+            if(ui.infoModal.loading) ui.infoModal.loading.classList.add('hidden');
+            if(ui.infoModal.data) ui.infoModal.data.classList.remove('hidden');
+
+        } catch (e) {
+            showToast('Não foi possível carregar o perfil. Verifique se a API está configurada.', 'error');
+            hideInfoModal();
+        }
+    }
+
+    // --- ACTIVE CONVERSATION ---
+    function selectConversation(conversationId) {
+        if (state.activeConversationId === conversationId && !ui.activeConversation.container.classList.contains('hidden')) return;
+        
+        state.activeConversationId = conversationId;
+        renderConversationList(Array.from(state.conversations.values()));
+        const conv = state.conversations.get(conversationId);
+        if (!conv) return;
+
+        if(ui.initialScreen) ui.initialScreen.style.display = 'none';
+        if(ui.activeConversation.container) {
+            ui.activeConversation.container.classList.remove('hidden');
+            ui.activeConversation.container.classList.add('flex');
+        }
+
+        const other = conv.participants.find(p => p.user.id != state.currentUser.id);
+        const name = conv.is_group ? conv.name : other?.user.display_name || 'Conversa';
+        if(ui.activeConversation.name) ui.activeConversation.name.textContent = name;
+        if(ui.activeConversation.avatar) ui.activeConversation.avatar.textContent = name.charAt(0).toUpperCase();
+        if(ui.activeConversation.status) ui.activeConversation.status.className = 'absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full border-gray-50 dark:border-gray-800 ';
+
+        if (!conv.is_group && other && ui.activeConversation.infoBtn) {
+            ui.activeConversation.infoBtn.onclick = () => showInfoModal(other.user.id);
+            ui.activeConversation.infoBtn.classList.remove('hidden');
+        } else if (ui.activeConversation.infoBtn) {
+            ui.activeConversation.infoBtn.classList.add('hidden');
+        }
+
+        fetchMessages(conversationId);
+        connectWebSocket(conversationId);
+
+        if (window.innerWidth < 768) {
+            if(ui.sidebar.container) ui.sidebar.container.classList.add('hidden');
+            if(ui.main) ui.main.classList.remove('hidden');
+        }
+    }
+
+    function showConversationsSidebar() {
+        if (window.innerWidth < 768) {
+            if(ui.sidebar.container) ui.sidebar.container.classList.remove('hidden');
+            if(ui.main) ui.main.classList.add('hidden');
+            state.activeConversationId = null;
+            if (state.socket) state.socket.close();
+        }
+    }
+
+    // --- MESSAGES ---
+    async function fetchMessages(conversationId) {
+        if(ui.message.list) ui.message.list.innerHTML = '';
+        try {
+            const data = await apiFetch(`/api/chat/conversations/${conversationId}/messages/`);
+            data.results.forEach(m => appendMessage(m, false));
+            setTimeout(scrollToBottom, 100);
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    }
+
+    function appendMessage(message, animate = true) {
+        if (!message || !message.sender) {
+            console.error('Mensagem inválida recebida, faltando objeto sender:', message);
+            return;
+        }
+    
+        const isOwn = message.sender.id == state.currentUser.id;
+        const templateId = isOwn ? 'message-sent-template' : 'message-received-template';
+        const template = document.getElementById(templateId);
+    
+        if (!template) {
+            console.error(`Template de mensagem não encontrado: #${templateId}`);
+            return;
+        }
+    
+        const item = template.content.cloneNode(true);
+        const messageElement = item.firstElementChild;
+    
+        // --- Popular elementos comuns ---
+        const messageText = messageElement.querySelector('.message-text');
+        const timestamp = messageElement.querySelector('.timestamp');
+        if (messageText) messageText.textContent = message.text;
+        if (timestamp) timestamp.textContent = formatTime(message.created_at);
+    
+        const senderDisplayName = message.sender.display_name || 'Usuário';
+        const senderImageUrl = message.sender.image_url;
+    
+        // --- Lógica específica para avatar ---
+        const setupAvatar = (avatarElement, initial) => {
+            if (!avatarElement) return;
+            if (senderImageUrl) {
+                avatarElement.innerHTML = `<img src="${senderImageUrl}" class="w-full h-full rounded-full object-cover">`;
+            } else {
+                avatarElement.innerHTML = `<span>${initial}</span>`;
+                // Adiciona classes de gradiente para avatares sem imagem
+                avatarElement.classList.add('bg-gradient-to-br', 'from-gray-400', 'to-gray-600');
+            }
+        };
+    
+        if (isOwn) {
+            const userAvatar = messageElement.querySelector('.user-avatar');
+            if (userAvatar) {
+                const initial = (state.currentUser.username || 'U').charAt(0).toUpperCase();
+                setupAvatar(userAvatar, initial);
+            }
+            // A lógica de status de leitura (Lido/Entregue) será adicionada aqui
         } else {
-
-            ui.activeConversation.container.classList.add('hidden');
-
+            const mainAvatar = messageElement.querySelector('.user-avatar');
+            const smallAvatar = messageElement.querySelector('.sender-avatar > div');
+            const senderName = messageElement.querySelector('.sender-name');
+            
+            const initial = senderDisplayName.charAt(0).toUpperCase();
+            if (senderName) senderName.textContent = senderDisplayName;
+            setupAvatar(mainAvatar, initial);
+            setupAvatar(smallAvatar, initial);
         }
-
+    
+        // --- Adicionar ao DOM ---
+        if (ui.message.list) {
+            if (animate) {
+                messageElement.classList.add('animate-fade-in', 'opacity-0');
+                setTimeout(() => messageElement.classList.remove('opacity-0'), 10);
+            }
+            ui.message.list.appendChild(messageElement);
+            if (animate) {
+                scrollToBottom();
+            }
+        } else {
+            console.error("Elemento da lista de mensagens não encontrado!");
+        }
     }
 
+    async function handleSendMessage(e) {
+        e.preventDefault();
+        if (!ui.message.input) return;
+        const text = ui.message.input.value.trim();
+        if (!text && !state.selectedFile) return;
 
+        ui.message.input.focus();
+
+        if (state.selectedFile) {
+            const formData = new FormData();
+            if(text) formData.append('text', text);
+            formData.append('attachment', state.selectedFile);
+            try {
+                await apiFetch(`/api/chat/conversations/${state.activeConversationId}/messages/`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                removeSelectedFile();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        } else if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+            state.socket.send(JSON.stringify({ type: 'message.send', text }));
+        }
+        ui.message.input.value = '';
+    }
+
+    // --- FILE HANDLING ---
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            showToast('O arquivo não pode exceder 5 MB.', 'error');
+            return;
+        }
+        state.selectedFile = file;
+        if(ui.filePreview.name) ui.filePreview.name.textContent = file.name;
+        if(ui.filePreview.container) ui.filePreview.container.classList.remove('hidden');
+    }
+
+    function removeSelectedFile() {
+        state.selectedFile = null;
+        if(ui.message.fileInput) ui.message.fileInput.value = '';
+        if(ui.filePreview.container) ui.filePreview.container.classList.add('hidden');
+    }
+
+    // --- WEBSOCKET ---
+    function connectWebSocket(conversationId) {
+        if (state.socket) state.socket.close();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        state.socket = new WebSocket(`${protocol}//${window.location.host}/ws/chat/${conversationId}/`);
+
+        state.socket.onopen = () => console.log('WebSocket connected.');
+        state.socket.onclose = () => console.log('WebSocket disconnected.');
+        state.socket.onerror = (err) => console.error('WebSocket error:', err);
+        state.socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            switch (data.type) {
+                case 'message.receive':
+                    if (data.message.conversation.id === state.activeConversationId) {
+                        appendMessage(data.message);
+                    }
+                    fetchAndRenderConversations(); // Refresh list
+                    break;
+                case 'typing.indicator':
+                    if (data.user_id !== state.currentUser.id) {
+                        const indicator = ui.typingIndicator.container;
+                        const userSpan = ui.typingIndicator.user;
+                        if (indicator && userSpan) {
+                            if (data.action === 'start') {
+                                userSpan.textContent = data.user_name;
+                                indicator.classList.remove('hidden');
+                            } else {
+                                indicator.classList.add('hidden');
+                            }
+                        }
+                    }
+                    break;
+                case 'presence.update':
+                    if (data.user_id !== state.currentUser.id) {
+                        const presenceText = ui.activeConversation.presence;
+                        const statusDot = ui.activeConversation.status;
+                        if (presenceText && statusDot) {
+                            if (data.status === 'online') {
+                                presenceText.textContent = 'Online';
+                                statusDot.classList.remove('bg-gray-400');
+                                statusDot.classList.add('bg-green-500');
+                            } else {
+                                presenceText.textContent = 'Offline';
+                                statusDot.classList.remove('bg-green-500');
+                                statusDot.classList.add('bg-gray-400');
+                            }
+                        }
+                    }
+                    break;
+            }
+        };
+    }
+
+    // --- EVENT LISTENERS ---
+    function setupEventListeners() {
+        if(ui.sidebar.newConversationBtn) ui.sidebar.newConversationBtn.addEventListener('click', startNewConversation);
+        if(ui.sidebar.tabs) ui.sidebar.tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+        if(ui.activeConversation.backBtn) ui.activeConversation.backBtn.addEventListener('click', showConversationsSidebar);
+        if(ui.message.form) ui.message.form.addEventListener('submit', handleSendMessage);
+        if(ui.message.attachFileBtn) ui.message.attachFileBtn.addEventListener('click', () => ui.message.fileInput.click());
+        if(ui.message.fileInput) ui.message.fileInput.addEventListener('change', handleFileSelect);
+        if(ui.filePreview.removeBtn) ui.filePreview.removeBtn.addEventListener('click', removeSelectedFile);
+        if(ui.infoModal.closeBtn) ui.infoModal.closeBtn.addEventListener('click', hideInfoModal);
+        if(ui.infoModal.container) ui.infoModal.container.addEventListener('click', (e) => {
+            if (e.target === ui.infoModal.container) {
+                hideInfoModal();
+            }
+        });
+
+        if (ui.message.input) {
+            ui.message.input.addEventListener('input', () => {
+                if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+                    if (!state.typingTimeout) {
+                        state.socket.send(JSON.stringify({ type: 'typing.start' }));
+                    }
+                    clearTimeout(state.typingTimeout);
+                    state.typingTimeout = setTimeout(() => {
+                        state.socket.send(JSON.stringify({ type: 'typing.stop' }));
+                        state.typingTimeout = null;
+                    }, 2000); // 2 segundos de inatividade
+                }
+            });
+        }
+    }
+
+    // --- INITIALIZATION ---
+    function init() {
+        setupEventListeners();
+        switchTab('conversations'); // Load initial tab
+        if (window.innerWidth >= 768) {
+            if(ui.main) ui.main.classList.remove('hidden');
+        } else {
+            if(ui.main) ui.main.classList.add('hidden');
+        }
+    }
 
     init();
-
 });
