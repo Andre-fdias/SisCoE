@@ -131,12 +131,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def handle_typing_start(self):
         """ Inicia indicador de digitação. """
-        await self.update_typing_status(True)
         await self.channel_layer.group_send(
             self.conversation_group_name,
             {
                 'type': 'typing.indicator',
-                'user_id': str(self.user.id),
+                'user_id': self.user.id,
                 'user_name': self.user.get_full_name() or self.user.email,
                 'action': 'start'
             }
@@ -144,12 +143,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def handle_typing_stop(self):
         """ Para indicador de digitação. """
-        await self.update_typing_status(False)
         await self.channel_layer.group_send(
             self.conversation_group_name,
             {
                 'type': 'typing.indicator',
-                'user_id': str(self.user.id),
+                'user_id': self.user.id,
                 'user_name': self.user.get_full_name() or self.user.email,
                 'action': 'stop'
             }
@@ -330,12 +328,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
 
         conversation_data = {
-            'id': message.conversation.id,
+            'id': str(message.conversation.id),
             'is_group': message.conversation.is_group
         }
 
         return {
-            'id': message.id,
+            'id': str(message.id),
             'conversation': conversation_data,
             'sender': sender_data,
             'text': message.text,
@@ -462,3 +460,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
         except Message.DoesNotExist:
             return None
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = None
+        self.user_notification_group_name = None
+
+    async def connect(self):
+        self.user = self.scope['user']
+        if self.user.is_anonymous:
+            await self.close()
+            return
+
+        self.user_notification_group_name = f'notifications_{self.user.id}'
+        await self.channel_layer.group_add(
+            self.user_notification_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        if self.user_notification_group_name:
+            await self.channel_layer.group_discard(
+                self.user_notification_group_name,
+                self.channel_name
+            )
+
+    async def receive(self, text_data):
+        # This consumer is for downstream notifications only.
+        pass
+
+    async def notification_new_message(self, event):
+        """
+        Handles the 'notification.new_message' event and sends it to the client.
+        """
+        await self.send(text_data=json.dumps({
+            'type': 'notification.new_message',
+            'message': event['message'],
+            'conversation_id': event['conversation_id']
+        }))

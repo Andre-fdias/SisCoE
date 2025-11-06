@@ -1,414 +1,353 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}SisCoE Zap - Chat{% endblock %}
+{% block title %}SisCoE Zap{% endblock %}
 
 {% block extra_css %}
-<style>
-/* Estilos WhatsApp-like */
-:root {
-    --whatsapp-green: #128C7E;
-    --whatsapp-green-dark: #075E54;
-    --whatsapp-green-light: #25D366;
-    --whatsapp-chat-bg: #E5DDD5;
-    --whatsapp-message-sent: #DCF8C6;
-    --whatsapp-message-received: #FFFFFF;
-    --whatsapp-timestamp: #999999;
-    --whatsapp-typing: #8696a0;
-}
-
-.chat-container {
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
-    background-color: var(--whatsapp-chat-bg);
-}
-
-.message-sent {
-    background-color: var(--whatsapp-message-sent) !important;
-    border-radius: 7.5px 0 7.5px 7.5px;
-}
-
-.message-received {
-    background-color: var(--whatsapp-message-received) !important;
-    border-radius: 0 7.5px 7.5px 7.5px;
-    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-}
-
-.message-timestamp {
-    font-size: 0.6875rem;
-    color: var(--whatsapp-timestamp);
-    margin-top: 2px;
-}
-
-.typing-indicator {
-    background-color: var(--whatsapp-message-received);
-    border-radius: 10px;
-    padding: 8px 12px;
-    display: inline-block;
-    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-}
-
-.typing-dots {
-    display: flex;
-    gap: 2px;
-}
-
-.typing-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--whatsapp-typing);
-    animation: typingAnimation 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typingAnimation {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
-}
-
-.conversation-item.active {
-    background-color: #f0f0f0;
-}
-
-.conversation-item.unread {
-    background-color: #e8f4fd;
-}
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 4px;
-}
-
-.status-online { background-color: var(--whatsapp-green-light); }
-.status-offline { background-color: #ddd; }
-.status-away { background-color: #ffb347; }
-
-/* Scrollbar personalizado */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Animações */
-.message-enter {
-    animation: messageSlideIn 0.3s ease-out;
-}
-
-@keyframes messageSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
+<style type="text/tailwindcss">
+    @layer utilities {
+        .conversation-item.active {
+            @apply bg-gray-200 dark:bg-gray-700 border-l-4 border-blue-500;
+        }
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-gray-600 rounded-full; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-500; }
 </style>
 {% endblock %}
 
 {% block 'body' %}
-<div class="h-screen flex flex-col bg-gray-100" id="chat-container" 
-     data-user-id="{{ user.id }}" 
-     data-username="{{ user.get_full_name|default:user.email }}"
-     data-csrf-token="{{ csrf_token }}">
-
-    <!-- Header Principal -->
-    <div class="bg-[var(--whatsapp-green)] text-white p-4 shadow-lg">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-semibold">SisCoE Zap</h1>
-                <div class="text-sm opacity-90">
-                    <span id="connection-status" class="bg-green-500 px-2 py-1 rounded-full text-xs">
-                        ● Online
-                    </span>
+<div class="p-6 min-h-[85vh] w-full p-1 mx-auto flex items-center justify-center">
+    <div class="h-full w-full flex antialiased text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 overflow-hidden shadow-2xl rounded-lg" id="chat-container"
+        data-user-id="{{ user.id }}"
+        data-username="{{ user.get_full_name|default:user.email }}"
+        data-csrf-token="{{ csrf_token }}">
+        <!-- Sidebar -->
+        <div class="w-full md:w-1/3 lg:w-1/4 h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-700" id="conversations-sidebar">
+            <!-- Sidebar Header -->
+            <div class="p-4 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    {% if request.user.cadastro and request.user.cadastro.imagens.exists %}
+                        <img src="{{ request.user.cadastro.imagens.first.image.url }}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600">
+                    {% else %}
+                        <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-400 dark:border-gray-600">
+                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">{{ user.get_full_name|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-100 block">{{ user.get_full_name|default:user.email }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <button id="new-conversation-btn" class="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all" title="Nova Conversa">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button id="darkModeToggle" class="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all" title="Mudar Tema">
+                        <i id="sunIcon" class="fas fa-sun hidden"></i>
+                        <i id="moonIcon" class="fas fa-moon"></i>
+                    </button>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <button id="search-toggle" class="p-2 hover:bg-[var(--whatsapp-green-dark)] rounded-full transition-colors">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button id="menu-toggle" class="p-2 hover:bg-[var(--whatsapp-green-dark)] rounded-full transition-colors">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Barra de Pesquisa -->
-        <div id="search-bar" class="mt-3 hidden">
-            <div class="relative">
-                <input type="text" id="global-search" 
-                       class="w-full p-2 pl-10 rounded-lg bg-[var(--whatsapp-green-dark)] text-white placeholder-gray-300 border-none focus:ring-2 focus:ring-white"
-                       placeholder="Pesquisar conversas ou mensagens...">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-300"></i>
-            </div>
-        </div>
-    </div>
 
-    <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar - Lista de Conversas -->
-        <div class="w-1/3 bg-white border-r border-gray-300 flex flex-col md:flex hidden" id="conversations-sidebar">
-            <!-- Header da Sidebar -->
-            <div class="p-4 border-b border-gray-300 bg-gray-50">
-                <div class="flex items-center justify-between">
+            <!-- Tab Navigation -->
+            <div class="flex justify-around bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <button data-tab="conversations" class="sidebar-tab flex-1 p-3 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 border-b-2 border-blue-500 text-blue-500">
+                    <i class="fas fa-comment-dots mr-1"></i> Conversas
+                </button>
+                <button data-tab="groups" class="sidebar-tab flex-1 p-3 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 border-b-2 border-transparent">
+                    <i class="fas fa-users mr-1"></i> Grupos
+                </button>
+                <button data-tab="contacts" class="sidebar-tab flex-1 p-3 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 border-b-2 border-transparent">
+                    <i class="fas fa-user-friends mr-1"></i> Contatos
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="p-3 flex-shrink-0">
+                <input type="text" id="sidebar-search" class="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-800 dark:text-gray-200" placeholder="Buscar...">
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div id="conversation-list-container" class="sidebar-content"></div>
+                <div id="group-list-container" class="sidebar-content hidden"></div>
+                <div id="contact-list-container" class="sidebar-content hidden"></div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="flex-1 flex-col bg-gray-100 dark:bg-gray-800 hidden md:flex">
+            <!-- Initial Screen -->
+            <div id="no-conversation-selected" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                <div class="text-center">
+                    <i class="fas fa-comments text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                    <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Bem-vindo ao SisCoE Zap</h2>
+                    <p class="text-gray-500 dark:text-gray-400">Selecione uma conversa para começar.</p>
+                </div>
+            </div>
+
+            <!-- Active Conversation -->
+            <div id="active-conversation" class="hidden flex-1 flex-col">
+                <!-- Chat Header -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center space-x-3">
-                        <img class="w-10 h-10 rounded-full object-cover" 
-                             src="{% if user.profile.photo %}{{ user.profile.photo.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
-                             alt="{{ user.get_full_name }}">
-                        <span class="font-semibold text-gray-800">{{ user.get_full_name|default:user.email }}</span>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button id="new-conversation-btn" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors" title="Nova conversa">
-                            <i class="fas fa-comment-medical"></i>
+                        <button id="back-to-conversations" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full md:hidden">
+                            <i class="fas fa-arrow-left"></i>
                         </button>
-                        <button id="sidebar-toggle" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors md:hidden" title="Fechar sidebar">
+                        <div class="relative">
+                            <div id="conversation-avatar" class="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center text-lg font-bold text-gray-500 dark:text-gray-400"></div>
+                            <span id="conversation-status" class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full"></span>
+                        </div>
+                        <div>
+                            <h3 id="conversation-name" class="font-semibold text-gray-800 dark:text-gray-100"></h3>
+                            <p id="conversation-presence" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                        </div>
+                    </div>
+                    <button id="conversation-info-btn" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full" title="Informações da Conversa">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+
+                <!-- Message Area -->
+                <div id="message-area" class="flex-1 p-4 overflow-y-auto custom-scrollbar relative">
+                    <div id="message-list" class="space-y-1 absolute inset-0"></div>
+                </div>
+                
+                <div id="typing-indicator" class="hidden p-2 px-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span id="typing-user"></span> está digitando...
+                </div>
+
+                <div id="file-preview-container" class="hidden p-2 px-4 bg-gray-100 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center space-x-2 overflow-hidden">
+                            <i class="fas fa-file-alt text-blue-500"></i>
+                            <span id="file-preview-name" class="text-gray-600 dark:text-gray-300 truncate"></span>
+                        </div>
+                        <button id="remove-file-btn" class="p-1 text-red-500 hover:text-red-600 flex-shrink-0">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Lista de Conversas -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar" id="conversations-container">
-                <div id="conversation-list" class="divide-y divide-gray-100">
-                    <!-- As conversas serão carregadas aqui via JavaScript -->
-                    <div class="p-8 text-center text-gray-500">
-                        <i class="fas fa-comments text-4xl mb-4 text-gray-300"></i>
-                        <p>Carregando conversas...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Área Principal do Chat -->
-        <div class="flex-1 flex flex-col md:w-2/3 w-full">
-            <!-- Estado Inicial - Nenhuma conversa selecionada -->
-            <div id="no-conversation-selected" class="flex-1 flex flex-col items-center justify-center bg-gray-100 p-8 chat-container">
-                <div class="text-center max-w-md">
-                    <div class="bg-white rounded-full p-6 inline-block mb-4 shadow-lg">
-                        <i class="fas fa-comments text-4xl text-[var(--whatsapp-green)]"></i>
-                    </div>
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">SisCoE Zap</h2>
-                    <p class="text-gray-600 mb-6">Envie e receba mensagens sem manter seu celular conectado à internet.</p>
-                    <div class="bg-white rounded-lg p-6 shadow-lg">
-                        <p class="text-sm text-gray-600 mb-4">Use o SisCoE no seu computador:</p>
-                        <ul class="text-sm text-gray-600 space-y-2 text-left">
-                            <li class="flex items-center">
-                                <i class="fas fa-laptop text-[var(--whatsapp-green)] mr-3"></i>
-                                <span>Clique em uma conversa para começar</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-users text-[var(--whatsapp-green)] mr-3"></i>
-                                <span>Converse com seus colegas em tempo real</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-paper-plane text-[var(--whatsapp-green)] mr-3"></i>
-                                <span>Envie mensagens, arquivos e muito mais</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Área de Conversa Ativa (inicialmente oculta) -->
-            <div id="active-conversation" class="hidden flex-1 flex flex-col">
-                <!-- Header da Conversa -->
-                <div class="bg-gray-100 px-4 py-3 border-b border-gray-300 flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <button id="back-to-conversations" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full md:hidden">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <div class="flex items-center space-x-3">
-                            <div class="relative">
-                                <img id="conversation-avatar" class="w-10 h-10 rounded-full object-cover" 
-                                     src="{% static 'images/default-group.png' %}" 
-                                     alt="Conversation">
-                                <span id="conversation-status" class="status-indicator status-offline absolute bottom-0 right-0 border-2 border-white"></span>
-                            </div>
-                            <div>
-                                <h3 id="conversation-name" class="font-semibold text-gray-800">Nome da Conversa</h3>
-                                <p id="conversation-presence" class="text-xs text-gray-600">
-                                    <span id="presence-text">carregando...</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <button class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
-                            <i class="fas fa-phone-alt"></i>
-                        </button>
-                        <button class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
-                            <i class="fas fa-video"></i>
-                        </button>
-                        <button id="conversation-info" class="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
-                            <i class="fas fa-info-circle"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Área de Mensagens -->
-                <div id="message-area" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar chat-container">
-                    <div id="message-list" class="space-y-2">
-                        <!-- Mensagens serão carregadas aqui -->
-                    </div>
-                    
-                    <!-- Indicador de Digitação -->
-                    <div id="typing-indicator" class="hidden fade-in">
-                        <div class="flex justify-start">
-                            <div class="typing-indicator">
-                                <div class="typing-dots">
-                                    <div class="typing-dot"></div>
-                                    <div class="typing-dot"></div>
-                                    <div class="typing-dot"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Input de Mensagem -->
-                <div class="bg-gray-100 p-4 border-t border-gray-300">
-                    <form id="message-form" class="flex items-center space-x-2">
-                        <button type="button" id="attach-btn" class="p-3 text-gray-600 hover:bg-gray-200 rounded-full transition-colors">
+                <!-- Message Input Form -->
+                <div id="message-form-container" class="p-4 bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700">
+                    <form id="message-form" class="flex items-center space-x-3">
+                        <input type="file" id="file-input" class="hidden" accept="*/*">
+                        <button type="button" id="attach-file-btn" class="p-3 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        
-                        <div class="flex-1 relative">
-                            <input type="text" id="message-input" 
-                                   class="w-full p-3 pr-12 rounded-full border border-gray-300 focus:ring-2 focus:ring-[var(--whatsapp-green)] focus:border-transparent"
-                                   placeholder="Digite uma mensagem" 
-                                   maxlength="1000">
-                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-1">
-                                <button type="button" class="p-1 text-gray-400 hover:text-gray-600">
-                                    <i class="far fa-smile"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" id="send-btn" class="p-3 bg-[var(--whatsapp-green)] text-white rounded-full hover:bg-[var(--whatsapp-green-dark)] transition-colors">
+                        <input type="text" id="message-input" class="flex-1 p-3 rounded-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200" placeholder="Digite uma mensagem...">
+                        <button type="submit" id="send-btn" class="p-3 w-12 h-12 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-colors disabled:opacity-50">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>
-                    
-                    <!-- Área de Anexos (oculta inicialmente) -->
-                    <div id="attachment-area" class="mt-3 hidden">
-                        <div class="bg-white rounded-lg p-4 shadow-lg">
-                            <div class="flex justify-between items-center mb-3">
-                                <h4 class="font-semibold">Anexar arquivo</h4>
-                                <button type="button" id="close-attach" class="text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-4 gap-2">
-                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
-                                    <i class="fas fa-image text-blue-500 mb-1"></i>
-                                    <span class="text-xs block">Foto</span>
-                                </button>
-                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
-                                    <i class="fas fa-camera text-green-500 mb-1"></i>
-                                    <span class="text-xs block">Câmera</span>
-                                </button>
-                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
-                                    <i class="fas fa-file text-orange-500 mb-1"></i>
-                                    <span class="text-xs block">Documento</span>
-                                </button>
-                                <button type="button" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">
-                                    <i class="fas fa-microphone text-red-500 mb-1"></i>
-                                    <span class="text-xs block">Áudio</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Nova Conversa -->
-<div id="new-conversation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+<!-- User Info Modal -->
+<div id="conversation-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Nova Conversa</h3>
-                <button type="button" id="close-modal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informações do Contato</h3>
+                <button type="button" id="close-info-modal-btn" class="text-gray-500 hover:text-gray-700 p-1">
+                    <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
-            
-            <div class="mb-4">
-                <input type="text" id="group-name-input" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--whatsapp-green)] focus:border-transparent"
-                       placeholder="Nome do grupo (opcional)">
-            </div>
-            
-            <div class="max-h-60 overflow-y-auto mb-4 border border-gray-200 rounded-lg">
-                <div id="modal-user-list" class="divide-y divide-gray-100">
-                    {% for u in all_users %}
-                    <div class="flex items-center p-3 hover:bg-gray-50 cursor-pointer user-item">
-                        <input type="checkbox" id="user-{{ u.id }}" value="{{ u.id }}" 
-                               class="w-4 h-4 text-[var(--whatsapp-green)] border-gray-300 rounded focus:ring-[var(--whatsapp-green)]">
-                        <label for="user-{{ u.id }}" class="ml-3 flex-1 cursor-pointer">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-900">
-                                    {{ u.get_full_name|default:u.email }}
-                                </span>
-                                <span class="status-indicator status-offline" data-user-id="{{ u.id }}"></span>
-                            </div>
-                        </label>
-                    </div>
-                    {% endfor %}
+            <div id="info-modal-content" class="text-center">
+                <!-- Loading state -->
+                <div id="info-modal-loading">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">Carregando...</p>
                 </div>
-            </div>
-            
-            <div class="flex justify-end space-x-3">
-                <button type="button" id="cancel-modal" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-                    Cancelar
-                </button>
-                <button type="button" id="create-conversation-btn" 
-                        class="px-4 py-2 bg-[var(--whatsapp-green)] text-white rounded-lg hover:bg-[var(--whatsapp-green-dark)] transition-colors">
-                    Criar Conversa
-                </button>
+                <!-- Content -->
+                <div id="info-modal-data" class="hidden">
+                    <img id="info-modal-img" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-gray-200 dark:border-gray-700">
+                    <div id="info-modal-avatar-placeholder" class="w-24 h-24 rounded-full mx-auto mb-4 bg-gray-300 dark:bg-gray-700 flex items-center justify-center border-4 border-gray-200 dark:border-gray-700">
+                        <span id="info-modal-avatar-initial" class="text-4xl font-bold text-gray-500 dark:text-gray-400"></span>
+                    </div>
+                    <h4 id="info-modal-name" class="text-xl font-bold text-gray-900 dark:text-white"></h4>
+                    <p id="info-modal-posto" class="text-md text-blue-500"></p>
+                    <hr class="my-4 border-gray-200 dark:border-gray-700">
+                    <div class="text-left space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <p><strong>RE:</strong> <span id="info-modal-re"></span></p>
+                        <p><strong>Nome Completo:</strong> <span id="info-modal-nome-completo"></span></p>
+                        <p><strong>SGB:</strong> <span id="info-modal-sgb"></span></p>
+                        <p><strong>Seção:</strong> <span id="info-modal-secao"></span></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Loading Spinner -->
-<div id="loading-spinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--whatsapp-green)]"></div>
-        <span class="text-gray-700">Carregando...</span>
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-3"></div>
+
+<!-- Templates for JS rendering -->
+<template id="conversation-item-template">
+    <div class="conversation-item flex items-center p-3 space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 border-l-4 transition-all duration-200">
+        <div class="relative flex-shrink-0">
+            <img class="avatar-img w-12 h-12 rounded-full object-cover hidden">
+            <div class="avatar-placeholder w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold"></div>
+            <span class="status-indicator absolute bottom-0 right-0 w-3 h-3 border-2 rounded-full"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-center">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-100 truncate"></h4>
+                <span class="time text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"></span>
+            </div>
+            <div class="flex items-center justify-between">
+                <p class="last-message text-sm text-gray-600 dark:text-gray-400 truncate"></p>
+                <span class="unread-count bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+            </div>
+        </div>
     </div>
-</div>
-{% endblock %}
+</template>
+
+<template id="contact-item-template">
+    <div class="contact-item flex items-center p-3 space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200">
+        <div class="relative flex-shrink-0">
+            <img class="avatar-img w-10 h-10 rounded-full object-cover hidden">
+            <div class="avatar-placeholder w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"></div>
+            <span class="status-indicator absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full"></span>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-semibold text-gray-800 dark:text-gray-100"></h4>
+            <p class="status-text text-xs text-gray-500 dark:text-gray-400"></p>
+        </div>
+        <button class="start-conversation-btn p-2 text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
+            <i class="fas fa-comment-plus"></i>
+        </button>
+    </div>
+</template>
+
+<template id="group-item-template">
+    <div class="group-item flex items-center p-3 space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200">
+        <div class="avatar-placeholder w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center">
+            <i class="fas fa-users text-xl text-gray-500 dark:text-gray-400"></i>
+        </div>
+        <div class="flex-1">
+            <h4 class="font-semibold text-gray-800 dark:text-gray-100"></h4>
+            <p class="members-count text-xs text-gray-500 dark:text-gray-400"></p>
+        </div>
+        <button class="join-group-btn p-2 text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
+            <i class="fas fa-sign-in-alt"></i>
+        </button>
+    </div>
+</template>
+
+<!-- TEMPLATE PARA MENSAGEM ENVIADA -->
+<template id="message-sent-template">
+    <div class="flex w-full justify-end mb-4">
+        <div class="flex flex-col max-w-[70%]">
+            <div class="flex items-center justify-end gap-2 mb-1">
+                <span class="sender-name text-xs text-gray-500 dark:text-gray-400 font-medium">Você</span>
+                <div class="read-status flex items-center gap-1"></div>
+            </div>
+            <div class="flex gap-3">
+                <div class="flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span class="timestamp text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"></span>
+                </div>
+                <div class="group relative">
+                    <div class="message-bubble bg-blue-500 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-sm">
+                        <p class="message-text text-sm leading-relaxed"></p>
+                    </div>
+                    <div class="absolute -bottom-1 right-0 w-3 h-3 bg-blue-500 transform rotate-45"></div>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="user-avatar w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- TEMPLATE PARA MENSAGEM RECEBIDA -->
+<template id="message-received-template">
+    <div class="flex w-full justify-start mb-4">
+        <div class="flex flex-col max-w-[70%]">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="sender-avatar flex-shrink-0">
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    </div>
+                </div>
+                <span class="sender-name text-xs text-gray-500 dark:text-gray-400 font-medium"></span>
+            </div>
+            <div class="flex gap-3">
+                <div class="flex-shrink-0">
+                    <div class="user-avatar w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    </div>
+                </div>
+                <div class="group relative">
+                    <div class="message-bubble bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                        <p class="message-text text-sm text-gray-800 dark:text-gray-200 leading-relaxed"></p>
+                    </div>
+                    <div class="absolute -bottom-1 left-0 w-3 h-3 bg-white dark:bg-gray-700 border-l border-b border-gray-200 dark:border-gray-600 transform rotate-45"></div>
+                </div>
+                <div class="flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span class="timestamp text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="toast-template">
+    <div class="toast-item flex items-center w-full max-w-xs p-4 space-x-4 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 divide-x divide-gray-200 dark:divide-gray-700 rounded-lg shadow-lg" role="alert">
+        <div class="toast-icon text-2xl"></div>
+        <div class="pl-4 text-sm font-normal"></div>
+    </div>
+</template>
+
+<template id="list-placeholder-template">
+    <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+        <i class="placeholder-icon text-4xl mb-3"></i>
+        <p class="placeholder-text"></p>
+    </div>
+</template>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const body = document.body;
+
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark');
+                if (sunIcon) sunIcon.classList.remove('hidden');
+                if (moonIcon) moonIcon.classList.add('hidden');
+            } else {
+                body.classList.remove('dark');
+                if (sunIcon) sunIcon.classList.add('hidden');
+                if (moonIcon) moonIcon.classList.remove('hidden');
+            }
+        };
+
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', function() {
+                const isDarkMode = body.classList.contains('dark');
+                const newTheme = isDarkMode ? 'light' : 'dark';
+                localStorage.setItem('darkMode', newTheme);
+                applyTheme(newTheme);
+            });
+        }
+
+        // Apply saved theme on initial load
+        const savedMode = localStorage.getItem('darkMode');
+        applyTheme(savedMode || 'light'); // Default to light mode
+    });
+</script>
 
 {% block extra_js %}
 <script src="{% static 'chat/chat.js' %}"></script>
+{% endblock %}
 {% endblock %}
