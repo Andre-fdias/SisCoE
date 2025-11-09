@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from .models import Conversation, Message, Participant, Attachment, MessageStatus, Reaction, Presence
+from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem
 
 User = get_user_model()
 
@@ -27,7 +28,22 @@ class UserSerializer(serializers.ModelSerializer):
             return {'status': 'offline', 'last_seen': None, 'is_typing': False}
     
     def get_display_name(self, obj):
-        """Retorna o nome para exibição (full name ou email)"""
+        """
+        Retorna o nome de exibição no formato: posto_grad re-dig nome_de_guerra.
+        Fallback para nome completo ou email se os dados do cadastro não estiverem disponíveis.
+        """
+        try:
+            if hasattr(obj, 'cadastro') and obj.cadastro:
+                cadastro = obj.cadastro
+                promocao = cadastro.promocoes.order_by('-ultima_promocao').first()
+                
+                if promocao and cadastro.re and cadastro.dig and cadastro.nome_de_guerra:
+                    return f"{promocao.posto_grad} {cadastro.re}-{cadastro.dig} {cadastro.nome_de_guerra}"
+        except Exception:
+            # Em caso de qualquer erro ao acessar os modelos relacionados, use o fallback.
+            pass
+
+        # Fallback
         full_name = f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         return full_name or obj.email
 
@@ -86,12 +102,15 @@ class MessageSerializer(serializers.ModelSerializer):
     
     def get_parent_message(self, obj):
         if obj.parent_message:
-            return {
-                'id': obj.parent_message.id,
-                'sender_name': obj.parent_message.sender.get_full_name() or obj.parent_message.sender.email,
-                'text': obj.parent_message.text,
-                'has_attachments': obj.parent_message.attachments.exists()
-            }
+            try:
+                return {
+                    'id': obj.parent_message.id,
+                    'sender_name': obj.parent_message.sender.get_full_name() or obj.parent_message.sender.email,
+                    'text': obj.parent_message.text,
+                    'has_attachments': obj.parent_message.attachments.exists()
+                }
+            except Exception:
+                return None
         return None
     
     def get_is_own(self, obj):
@@ -247,3 +266,82 @@ class ConversationSerializer(serializers.ModelSerializer):
             )
 
         return conversation, True  # Retorna nova conversa
+
+
+# --- Serializers para Perfil de Usuário ---
+
+class ImagemSerializer(serializers.ModelSerializer):
+    """Serializer para o modelo de Imagem do efetivo."""
+    class Meta:
+        model = Imagem
+        fields = ['image']
+
+class PromocaoSerializer(serializers.ModelSerializer):
+    """Serializer para o modelo de Promoção do efetivo."""
+    class Meta:
+        model = Promocao
+        fields = ['posto_grad', 'ultima_promocao']
+
+class DetalhesSituacaoSerializer(serializers.ModelSerializer):
+    """Serializer para os detalhes da situação do efetivo."""
+    class Meta:
+        model = DetalhesSituacao
+        fields = ['situacao', 'sgb', 'funcao']
+
+class CadastroSerializer(serializers.ModelSerializer):
+    """Serializer para o modelo de Cadastro básico do efetivo."""
+    class Meta:
+        model = Cadastro
+        fields = ['re', 'dig', 'nome_de_guerra']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer completo para o perfil de um usuário, agregando dados
+    de `accounts` e `efetivo`.
+    """
+    cadastro = CadastroSerializer(read_only=True)
+    promocao = serializers.SerializerMethodField()
+    situacao = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'full_name',
+            'cadastro', 'promocao', 'situacao', 'avatar'
+        ]
+
+    def get_promocao(self, obj):
+        """Retorna a promoção mais recente do usuário."""
+        if hasattr(obj, 'cadastro') and obj.cadastro:
+            promocao = obj.cadastro.promocoes.order_by('-ultima_promocao').first()
+            if promocao:
+                return PromocaoSerializer(promocao).data
+        return None
+
+    def get_situacao(self, obj):
+        """Retorna a situação funcional mais recente do usuário."""
+        if hasattr(obj, 'cadastro') and obj.cadastro:
+            situacao = obj.cadastro.detalhes_situacao.order_by('-data_alteracao').first()
+            if situacao:
+                return DetalhesSituacaoSerializer(situacao).data
+        return None
+
+    def get_avatar(self, obj):
+        """
+        Retorna a URL absoluta do avatar do usuário, buscando primeiro no
+        perfil de `accounts` e depois nas imagens de `efetivo`.
+        """
+        request = self.context.get('request')
+        # Tenta buscar no modelo Profile do app accounts
+        if hasattr(obj, 'profile') and obj.profile and obj.profile.avatar:
+            return request.build_absolute_uri(obj.profile.avatar.url)
+        
+        # Se não encontrar, tenta buscar no modelo Imagem do app efetivo
+        if hasattr(obj, 'cadastro') and obj.cadastro:
+            imagem = obj.cadastro.imagens.order_by('-create_at').first()
+            if imagem and imagem.image:
+                return request.build_absolute_uri(imagem.image.url)
+        
+        return None

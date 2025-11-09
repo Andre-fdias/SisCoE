@@ -15,6 +15,8 @@ messages_router.register(r'messages', views.MessageViewSet, basename='conversati
 # Este arquivo deve conter apenas as URLs da API para o app de chat.
 # A URL da view principal (ChatView) deve ser gerenciada no urls.py raiz do projeto.
 urlpatterns = router.urls + messages_router.urls + [
+    path('users/', views.UserListView.as_view(), name='user-list'),
+    path('users/<int:user_id>/profile/', views.UserProfileAPIView.as_view(), name='user-profile'),
     path('presence/', views.UserPresenceView.as_view(), name='user-presence'),
     path('attachments/', views.AttachmentViewSet.as_view({'post': 'create'}), name='attachment-create'),
 ]

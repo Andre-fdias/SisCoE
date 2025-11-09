@@ -52,8 +52,16 @@ class UserListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Exclui o usuário atual da lista
-        return User.objects.exclude(pk=self.request.user.pk).order_by('first_name', 'last_name')
+        """
+        Filtra a lista de contatos para incluir apenas usuários com permissões
+        'sgb', 'gestor', ou 'admin', e exclui o usuário atual.
+        """
+        allowed_permissions = ['sgb', 'gestor', 'admin']
+        return User.objects.filter(
+            permissoes__in=allowed_permissions
+        ).exclude(
+            pk=self.request.user.pk
+        ).order_by('first_name', 'last_name')
 
 class UserProfileAPIView(APIView):
     """API para buscar o perfil de um usuário."""
