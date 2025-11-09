@@ -10,10 +10,11 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     presence = serializers.SerializerMethodField()
     display_name = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'presence', 'display_name']
+        fields = ['id', 'email', 'first_name', 'last_name', 'presence', 'display_name', 'image_url']
         read_only_fields = ['id', 'email', 'first_name', 'last_name']
     
     def get_presence(self, obj):
@@ -26,6 +27,18 @@ class UserSerializer(serializers.ModelSerializer):
             }
         except Presence.DoesNotExist:
             return {'status': 'offline', 'last_seen': None, 'is_typing': False}
+
+    def get_image_url(self, obj):
+        """
+        Retorna a URL absoluta do avatar do usuário.
+        """
+        request = self.context.get('request')
+        if request:
+            if hasattr(obj, 'cadastro') and obj.cadastro:
+                imagem = obj.cadastro.imagens.order_by('-create_at').first()
+                if imagem and imagem.image:
+                    return request.build_absolute_uri(imagem.image.url)
+        return None
     
     def get_display_name(self, obj):
         """
@@ -90,23 +103,27 @@ class MessageSerializer(serializers.ModelSerializer):
     parent_message = serializers.SerializerMethodField()
     is_own = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    
+    text = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
         fields = [
-            'id', 'conversation', 'sender', 'text', 'created_at', 'edited_at', 
-            'edited', 'parent_message', 'quoted_text', 'attachments', 'reactions', 
+            'id', 'conversation', 'sender', 'text', 'created_at', 'edited_at',
+            'edited', 'parent_message', 'quoted_text', 'attachments', 'reactions',
             'statuses', 'is_own', 'status'
         ]
         read_only_fields = ['id', 'conversation', 'sender', 'created_at', 'edited_at']
-    
+
+    def get_text(self, obj):
+        return obj.decrypted_text
+
     def get_parent_message(self, obj):
         if obj.parent_message:
             try:
                 return {
                     'id': obj.parent_message.id,
                     'sender_name': obj.parent_message.sender.get_full_name() or obj.parent_message.sender.email,
-                    'text': obj.parent_message.text,
+                    'text': obj.parent_message.decrypted_text,
                     'has_attachments': obj.parent_message.attachments.exists()
                 }
             except Exception:
@@ -199,7 +216,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             if last_message:
                 return {
                     'id': last_message.id,
-                    'text': last_message.text,
+                    'text': last_message.decrypted_text,
                     'created_at': last_message.created_at,
                     'sender': {
                         'id': last_message.sender.id,

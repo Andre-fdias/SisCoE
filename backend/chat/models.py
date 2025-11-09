@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 import uuid
+from .encryption import encrypt_message, decrypt_message
 
 class Conversation(models.Model):
     """
@@ -46,7 +47,7 @@ class Participant(models.Model):
         ordering = ('-joined_at',)
 
     def __str__(self):
-        return f"{self.user.username} in {self.conversation}"
+        return f"{(self.user.get_full_name() or self.user.email)} in {self.conversation}"
 
 class Message(models.Model):
     """
@@ -62,6 +63,17 @@ class Message(models.Model):
     parent_message = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name="replies")
     quoted_text = models.TextField(blank=True, null=True, help_text="Snapshot do texto da mensagem respondida")
 
+    def save(self, *args, **kwargs):
+        """Sobrescreve o método save para criptografar a mensagem."""
+        if self.text:
+            self.text = encrypt_message(self.text)
+        super().save(*args, **kwargs)
+
+    @property
+    def decrypted_text(self):
+        """Retorna o texto da mensagem descriptografado."""
+        return decrypt_message(self.text)
+
     class Meta:
         ordering = ('created_at',)
         indexes = [
@@ -69,7 +81,7 @@ class Message(models.Model):
         ]
 
     def __str__(self):
-        return f"Message from {self.sender.username} at {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        return f"Message from {(self.sender.get_full_name() or self.sender.email)} at {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
 class Attachment(models.Model):
     """
@@ -121,7 +133,7 @@ class MessageStatus(models.Model):
         ordering = ('-timestamp',)
 
     def __str__(self):
-        return f"{self.message.id} - {self.participant.user.username}: {self.get_status_display()}"
+        return f"{self.message.id} - {(self.participant.user.get_full_name() or self.participant.user.email)}: {self.get_status_display()}"
 
 class Reaction(models.Model):
     """
@@ -138,7 +150,7 @@ class Reaction(models.Model):
         ordering = ('created_at',)
 
     def __str__(self):
-        return f"{self.emoji} by {self.user.username}"
+        return f"{self.emoji} by {(self.user.get_full_name() or self.user.email)}"
 
 class Presence(models.Model):
     """
@@ -160,4 +172,4 @@ class Presence(models.Model):
         ordering = ('-last_seen',)
 
     def __str__(self):
-        return f"{self.user.username} - {self.status}"
+        return f"{(self.user.get_full_name() or self.user.email)} - {self.status}"

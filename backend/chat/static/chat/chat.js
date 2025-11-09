@@ -37,22 +37,24 @@ document.addEventListener('DOMContentLoaded', function() {
             name: document.getElementById('file-preview-name'),
             removeBtn: document.getElementById('remove-file-btn'),
         },
-        infoModal: {
-            container: document.getElementById('conversation-info-modal'),
-            content: document.getElementById('info-modal-content'),
-            closeBtn: document.getElementById('close-info-modal-btn'),
-            loading: document.getElementById('info-modal-loading'),
-            data: document.getElementById('info-modal-data'),
-            img: document.getElementById('info-modal-img'),
-            avatarPlaceholder: document.getElementById('info-modal-avatar-placeholder'),
-            avatarInitial: document.getElementById('info-modal-avatar-initial'),
-            name: document.getElementById('info-modal-name'),
-            posto: document.getElementById('info-modal-posto'),
-            re: document.getElementById('info-modal-re'),
-            nomeCompleto: document.getElementById('info-modal-nome-completo'),
-            sgb: document.getElementById('info-modal-sgb'),
-            secao: document.getElementById('info-modal-secao'),
-        },
+    infoModal: {
+        container: document.getElementById('conversation-info-modal'),
+        content: document.getElementById('info-modal-content'),
+        closeBtn: document.getElementById('close-info-modal-btn'),
+        loading: document.getElementById('info-modal-loading'),
+        data: document.getElementById('info-modal-data'),
+        img: document.getElementById('info-modal-img'),
+        avatarPlaceholder: document.getElementById('info-modal-avatar-placeholder'),
+        avatarInitial: document.getElementById('info-modal-avatar-initial'),
+        name: document.getElementById('info-modal-name'),
+        posto: document.getElementById('info-modal-posto'),
+        // ADICIONE ESTA LINHA
+        sgbDisplay: document.getElementById('info-modal-sgb-display'),
+        re: document.getElementById('info-modal-re'),
+        nomeCompleto: document.getElementById('info-modal-nome-completo'),
+        sgb: document.getElementById('info-modal-sgb'),
+        secao: document.getElementById('info-modal-secao'),
+    },
         typingIndicator: {
             container: document.getElementById('typing-indicator'),
             user: document.getElementById('typing-user'),
@@ -64,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             group: document.getElementById('group-item-template'),
             messageSent: document.getElementById('message-sent-template'),
             messageReceived: document.getElementById('message-received-template'),
+            dateSeparator: document.getElementById('date-separator-template'),
             toast: document.getElementById('toast-template'),
             placeholder: document.getElementById('list-placeholder-template'),
         },
@@ -74,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUser: {
             id: ui.chatContainer.dataset.userId,
             username: ui.chatContainer.dataset.username,
+            imageUrl: ui.chatContainer.dataset.userImageUrl,
             csrfToken: ui.chatContainer.dataset.csrfToken,
         },
         socket: null,
@@ -84,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         groups: [],
         typingTimeout: null,
         selectedFile: null,
+        lastMessageDate: null,
         reconnect: { attempts: 0, maxAttempts: 5, delay: 1000 },
     };
 
@@ -117,6 +122,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatTime(timestamp) {
         if (!timestamp) return '';
         return new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDateSeparator(date) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return 'Hoje';
+        }
+        if (date.toDateString() === yesterday.toDateString()) {
+            return 'Ontem';
+        }
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     }
 
     function scrollToBottom() {
@@ -378,46 +397,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function showInfoModal(userId) {
-        const modal = ui.infoModal.container;
-        if(!modal) return;
-        modal.classList.remove('hidden');
-        const transformEl = modal.querySelector('.transform');
-        if(transformEl) setTimeout(() => transformEl.classList.remove('scale-95', 'opacity-0'), 10);
+async function showInfoModal(userId) {
+    const modal = ui.infoModal.container;
+    if(!modal) return;
+    modal.classList.remove('hidden');
+    const transformEl = modal.querySelector('.transform');
+    if(transformEl) setTimeout(() => transformEl.classList.remove('scale-95', 'opacity-0'), 10);
 
-        if(ui.infoModal.loading) ui.infoModal.loading.classList.remove('hidden');
-        if(ui.infoModal.data) ui.infoModal.data.classList.add('hidden');
+    if(ui.infoModal.loading) ui.infoModal.loading.classList.remove('hidden');
+    if(ui.infoModal.data) ui.infoModal.data.classList.add('hidden');
 
-        try {
-            const profile = await apiFetch(`/api/chat/users/${userId}/profile/`);
+    try {
+        const profile = await apiFetch(`/api/chat/users/${userId}/profile/`);
 
-            if(ui.infoModal.name) ui.infoModal.name.textContent = profile.nome_de_guerra || 'N/A';
-            if(ui.infoModal.posto) ui.infoModal.posto.textContent = profile.posto_grad || 'N/A';
-            if(ui.infoModal.re) ui.infoModal.re.textContent = `${profile.re}-${profile.dig}` || 'N/A';
-            if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = profile.nome_completo || 'N/A';
-            if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = profile.sgb || 'N/A';
-            if(ui.infoModal.secao) ui.infoModal.secao.textContent = profile.posto_secao || 'N/A';
-
-            if (profile.image_url) {
-                if(ui.infoModal.img) {
-                    ui.infoModal.img.src = profile.image_url;
-                    ui.infoModal.img.classList.remove('hidden');
-                }
-                if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.add('hidden');
-            } else {
-                if(ui.infoModal.avatarInitial) ui.infoModal.avatarInitial.textContent = (profile.nome_de_guerra || ' ').charAt(0).toUpperCase();
-                if(ui.infoModal.img) ui.infoModal.img.classList.add('hidden');
-                if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.remove('hidden');
-            }
-
-            if(ui.infoModal.loading) ui.infoModal.loading.classList.add('hidden');
-            if(ui.infoModal.data) ui.infoModal.data.classList.remove('hidden');
-
-        } catch (e) {
-            showToast('Não foi possível carregar o perfil. Verifique se a API está configurada.', 'error');
-            hideInfoModal();
+        if(ui.infoModal.name) ui.infoModal.name.textContent = profile.nome_de_guerra || 'N/A';
+        if(ui.infoModal.posto) ui.infoModal.posto.textContent = profile.posto_grad || 'N/A';
+        
+        // ADICIONE ESTAS LINHAS PARA EXIBIR O SGB NO CABEÇALHO
+        if(ui.infoModal.sgbDisplay) {
+            ui.infoModal.sgbDisplay.textContent = profile.sgb || 'N/A';
         }
+        
+        if(ui.infoModal.re) ui.infoModal.re.textContent = `${profile.re}-${profile.dig}` || 'N/A';
+        if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = profile.nome_completo || 'N/A';
+        if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = profile.sgb || 'N/A';
+        if(ui.infoModal.secao) ui.infoModal.secao.textContent = profile.posto_secao || 'N/A';
+
+        if (profile.image_url) {
+            if(ui.infoModal.img) {
+                ui.infoModal.img.src = profile.image_url;
+                ui.infoModal.img.classList.remove('hidden');
+            }
+            if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.add('hidden');
+        } else {
+            if(ui.infoModal.avatarInitial) ui.infoModal.avatarInitial.textContent = (profile.nome_de_guerra || ' ').charAt(0).toUpperCase();
+            if(ui.infoModal.img) ui.infoModal.img.classList.add('hidden');
+            if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.remove('hidden');
+        }
+
+        if(ui.infoModal.loading) ui.infoModal.loading.classList.add('hidden');
+        if(ui.infoModal.data) ui.infoModal.data.classList.remove('hidden');
+
+    } catch (e) {
+        showToast('Não foi possível carregar o perfil. Verifique se a API está configurada.', 'error');
+        hideInfoModal();
     }
+}
 
     // --- ACTIVE CONVERSATION ---
     function selectConversation(conversationId) {
@@ -468,6 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- MESSAGES ---
     async function fetchMessages(conversationId) {
         if(ui.message.list) ui.message.list.innerHTML = '';
+        state.lastMessageDate = null;
         try {
             const data = await apiFetch(`/api/chat/conversations/${conversationId}/messages/`);
             data.results.forEach(m => appendMessage(m, false));
@@ -477,77 +503,105 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function appendMessage(message, animate = true) {
-        if (!message || !message.sender) {
-            console.error('Mensagem inválida recebida, faltando objeto sender:', message);
-            return;
+function appendMessage(message, animate = true) {
+    if (!message || !message.sender) {
+        console.error('Mensagem inválida recebida, faltando objeto sender:', message);
+        return;
+    }
+
+    const messageDate = new Date(message.created_at);
+    
+    // CORREÇÃO: Resetar state.lastMessageDate se for null ou verificar mudança de data
+    if (!state.lastMessageDate || messageDate.toDateString() !== state.lastMessageDate.toDateString()) {
+        const separator = ui.templates.dateSeparator.content.cloneNode(true);
+        const separatorSpan = separator.querySelector('span');
+        if (separatorSpan) {
+            separatorSpan.textContent = formatDateSeparator(messageDate);
         }
-    
-        const isOwn = message.sender.id == state.currentUser.id;
-        const templateId = isOwn ? 'message-sent-template' : 'message-received-template';
-        const template = document.getElementById(templateId);
-    
-        if (!template) {
-            console.error(`Template de mensagem não encontrado: #${templateId}`);
-            return;
-        }
-    
-        const item = template.content.cloneNode(true);
-        const messageElement = item.firstElementChild;
-    
-        // --- Popular elementos comuns ---
-        const messageText = messageElement.querySelector('.message-text');
-        const timestamp = messageElement.querySelector('.timestamp');
-        if (messageText) messageText.textContent = message.text;
-        if (timestamp) timestamp.textContent = formatTime(message.created_at);
-    
-        const senderDisplayName = message.sender.display_name || 'Usuário';
-        const senderImageUrl = message.sender.image_url;
-    
-        // --- Lógica específica para avatar ---
-        const setupAvatar = (avatarElement, initial) => {
-            if (!avatarElement) return;
-            if (senderImageUrl) {
-                avatarElement.innerHTML = `<img src="${senderImageUrl}" class="w-full h-full rounded-full object-cover">`;
-            } else {
-                avatarElement.innerHTML = `<span>${initial}</span>`;
-                // Adiciona classes de gradiente para avatares sem imagem
-                avatarElement.classList.add('bg-gradient-to-br', 'from-gray-400', 'to-gray-600');
-            }
-        };
-    
-        if (isOwn) {
-            const userAvatar = messageElement.querySelector('.user-avatar');
-            if (userAvatar) {
-                const initial = (state.currentUser.username || 'U').charAt(0).toUpperCase();
-                setupAvatar(userAvatar, initial);
-            }
-            // A lógica de status de leitura (Lido/Entregue) será adicionada aqui
-        } else {
-            const mainAvatar = messageElement.querySelector('.user-avatar');
-            const smallAvatar = messageElement.querySelector('.sender-avatar > div');
-            const senderName = messageElement.querySelector('.sender-name');
-            
-            const initial = senderDisplayName.charAt(0).toUpperCase();
-            if (senderName) senderName.textContent = senderDisplayName;
-            setupAvatar(mainAvatar, initial);
-            setupAvatar(smallAvatar, initial);
-        }
-    
-        // --- Adicionar ao DOM ---
         if (ui.message.list) {
-            if (animate) {
-                messageElement.classList.add('animate-fade-in', 'opacity-0');
-                setTimeout(() => messageElement.classList.remove('opacity-0'), 10);
-            }
-            ui.message.list.appendChild(messageElement);
-            if (animate) {
-                scrollToBottom();
-            }
-        } else {
-            console.error("Elemento da lista de mensagens não encontrado!");
+            ui.message.list.appendChild(separator);
         }
     }
+    state.lastMessageDate = messageDate;
+
+    const isOwn = message.sender.id == state.currentUser.id;
+    const templateId = isOwn ? 'message-sent-template' : 'message-received-template';
+    const template = document.getElementById(templateId);
+
+    if (!template) {
+        console.error(`Template de mensagem não encontrado: #${templateId}`);
+        return;
+    }
+
+    const item = template.content.cloneNode(true);
+    const messageElement = item.firstElementChild;
+
+    // --- Selecionar elementos do template ---
+    const senderNameEl = messageElement.querySelector('.sender-name');
+    const messageTextEl = messageElement.querySelector('.message-text');
+    const userAvatarEl = messageElement.querySelector('.user-avatar');
+    const timestampEl = messageElement.querySelector('.timestamp');
+    const readStatusEl = messageElement.querySelector('.read-status');
+
+    // --- Preencher dados ---
+    if (messageTextEl) messageTextEl.innerHTML = message.text;
+    if (timestampEl) timestampEl.textContent = formatTime(message.created_at);
+
+    // --- Lógica de Avatar ---
+    const setupAvatar = (element, imageUrl, initial) => {
+        if (!element) return;
+        if (imageUrl) {
+            element.innerHTML = `<img src="${imageUrl}" class="w-full h-full rounded-full object-cover">`;
+        } else {
+            element.innerHTML = `<span>${initial}</span>`;
+            // Adiciona um gradiente genérico se não houver imagem
+            element.classList.add('bg-gradient-to-br', 'from-gray-500', 'to-gray-600');
+        }
+    };
+
+    if (isOwn) {
+        const initial = (state.currentUser.username || 'V').charAt(0).toUpperCase();
+        setupAvatar(userAvatarEl, state.currentUser.imageUrl, initial);
+        
+        // --- Lógica de Status ---
+        if (readStatusEl) {
+            let statusIcon = '';
+            switch (message.status) {
+                case 'sent':
+                    statusIcon = '<i class="fas fa-check text-gray-400"></i>'; // Cinza
+                    break;
+                case 'delivered':
+                    statusIcon = '<i class="fas fa-check-double text-gray-400"></i>'; // Cinza
+                    break;
+                case 'read':
+                    statusIcon = '<i class="fas fa-check-double text-blue-400"></i>'; // Azul
+                    break;
+                default:
+                    statusIcon = '<i class="far fa-clock text-gray-400"></i>'; // Enviando
+            }
+            readStatusEl.innerHTML = statusIcon;
+        }
+    } else {
+        const senderDisplayName = message.sender.display_name || 'Usuário';
+        const initial = senderDisplayName.charAt(0).toUpperCase();
+        if (senderNameEl) senderNameEl.textContent = senderDisplayName;
+        setupAvatar(userAvatarEl, message.sender.image_url, initial);
+    }
+
+    // --- Adicionar ao DOM ---
+    if (ui.message.list) {
+        if (animate) {
+            messageElement.classList.add('opacity-0');
+            setTimeout(() => messageElement.classList.remove('opacity-0'), 10);
+        }
+        ui.message.list.appendChild(messageElement);
+        if (animate) {
+            scrollToBottom();
+        }
+    } else {
+        console.error("Elemento da lista de mensagens não encontrado!");
+    }
+}
 
     async function handleSendMessage(e) {
         e.preventDefault();

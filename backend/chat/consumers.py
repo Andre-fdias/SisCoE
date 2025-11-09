@@ -336,7 +336,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'id': str(message.id),
             'conversation': conversation_data,
             'sender': sender_data,
-            'text': message.text,
+            'text': message.decrypted_text,
             'created_at': message.created_at.isoformat(),
             # 'updated_at': message.updated_at.isoformat(), # Removido, pois o modelo Message não possui este campo
             # Adicione outros campos necessários
