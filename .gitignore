@@ -136,4 +136,4 @@ staticfiles/
 .idea
 .ipynb_checkpoints/
 .vscode
-*.cast
+*.cast.env.backup
