@@ -1,9 +1,10 @@
-from rest_framework import viewsets, status, mixins, serializers, generics
-from rest_framework.permissions import IsAuthenticated
+# backend/chat/views.py
+from rest_framework import viewsets, status, mixins, serializers, generics, permissions
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, Max
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
@@ -55,15 +56,22 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         """
-        Filtra a lista de contatos para incluir apenas usuários com permissões
-        'sgb', 'gestor', ou 'admin', e exclui o usuário atual.
+        CORREÇÃO: Filtra usuários de forma mais flexível
         """
-        allowed_permissions = ['sgb', 'gestor', 'admin']
-        return User.objects.filter(
-            permissoes__in=allowed_permissions
-        ).exclude(
-            pk=self.request.user.pk
-        ).order_by('first_name', 'last_name')
+        # Opção 1: Todos os usuários (exceto o atual)
+        queryset = User.objects.exclude(pk=self.request.user.pk)
+        
+        # Opção 2: Se você tem um campo de permissões específico
+        # try:
+        #     queryset = User.objects.filter(
+        #         profile__is_active=True  # ou outro campo de perfil
+        #     ).exclude(pk=self.request.user.pk)
+        # except:
+        #     queryset = User.objects.exclude(pk=self.request.user.pk)
+        
+        return queryset.order_by('first_name', 'last_name', 'email')
+    
+    
 
 class UserProfileAPIView(APIView):
     """API para buscar o perfil de um usuário."""
@@ -233,6 +241,23 @@ class ConversationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status_code)
 
+    @action(detail=True, methods=['delete'], url_path='delete-conversation')
+    def delete_conversation(self, request, pk=None):
+        """Exclui conversa permanentemente"""
+        conversation = self.get_object()
+        
+        # Verifica se usuário é participante
+        if not conversation.participants.filter(user=request.user).exists():
+            return Response(
+                {'error': 'Você não é participante desta conversa'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        conversation_id = str(conversation.id)
+        conversation.delete()
+        
+        return Response({'status': 'conversa excluída'})
+
 class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet para gerenciar mensagens dentro de uma conversa.
@@ -369,16 +394,248 @@ class MessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+    @action(detail=True, methods=['delete'], url_path='delete-message')
+    def delete_message(self, request, conversation_pk=None, pk=None):
+        """Exclui mensagem individual"""
+        message = self.get_object()
+        
+        # Verifica permissão: apenas remetente ou admin
+        if message.sender != request.user and not request.user.is_staff:
+            return Response(
+                {'error': 'Sem permissão para excluir esta mensagem'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        message_id = str(message.id)
+        message.delete()
+        
+        # Notifica via WebSocket sobre a exclusão
+        try:
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'chat_{conversation_pk}',
+                {
+                    'type': 'message.delete',
+                    'message_id': message_id
+                }
+            )
+        except Exception as e:
+            print(f"Erro ao notificar WebSocket: {e}")
+        
+        return Response({'status': 'mensagem excluída'})
+
 class AttachmentViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """ViewSet para gerenciar anexos."""
     queryset = Attachment.objects.all()
     serializer_class = AttachmentSerializer
     permission_classes = [IsAuthenticated]
 
-    # ATENÇÃO: O modelo Attachment requer 'message' (FK). A API REST 
-    # de upload deve incluir o 'message_id' no payload. 
-    # O método `perform_create` padrão do DRF tentará salvar.
     def perform_create(self, serializer):
-        # A validação de que o usuário pode anexar a esta mensagem é delegada
-        # ao serializer ou deve ser adicionada aqui (omitida para simplificação).
+        """Valida que o usuário pode anexar à mensagem."""
+        message_id = self.request.data.get('message')
+        if message_id:
+            try:
+                message = Message.objects.get(id=message_id)
+                # Verifica se o usuário é participante da conversa
+                if not Participant.objects.filter(
+                    conversation=message.conversation,
+                    user=self.request.user
+                ).exists():
+                    raise serializers.ValidationError("Você não tem permissão para anexar arquivos nesta conversa.")
+            except Message.DoesNotExist:
+                raise serializers.ValidationError("Mensagem não encontrada.")
+        
         serializer.save()
+
+# --- Views para Grupos ---
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """ViewSet para gerenciar grupos de conversa."""
+    serializer_class = ConversationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Retorna apenas grupos onde o usuário é participante."""
+        user = self.request.user
+        return Conversation.objects.filter(
+            participants__user=user,
+            is_group=True
+        ).prefetch_related(
+            Prefetch(
+                'participants',
+                queryset=Participant.objects.select_related('user'),
+                to_attr='prefetched_participants'
+            )
+        ).distinct().order_by('-updated_at')
+
+    @action(detail=True, methods=['post'])
+    def add_member(self, request, pk=None):
+        """Adiciona membro a um grupo."""
+        conversation = self.get_object()
+        user_id = request.data.get('user_id')
+        
+        if not user_id:
+            return Response({'error': 'user_id é obrigatório'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Usuário não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Verifica se o usuário atual é admin do grupo
+        participant = Participant.objects.get(conversation=conversation, user=request.user)
+        if not participant.is_admin:
+            return Response({'error': 'Apenas administradores podem adicionar membros'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Adiciona o usuário ao grupo
+        Participant.objects.get_or_create(
+            conversation=conversation,
+            user=user,
+            defaults={'is_admin': False}
+        )
+        
+        return Response({'status': 'Membro adicionado com sucesso'})
+
+    @action(detail=True, methods=['post'])
+    def remove_member(self, request, pk=None):
+        """Remove membro de um grupo."""
+        conversation = self.get_object()
+        user_id = request.data.get('user_id')
+        
+        if not user_id:
+            return Response({'error': 'user_id é obrigatório'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verifica se o usuário atual é admin do grupo
+        participant = Participant.objects.get(conversation=conversation, user=request.user)
+        if not participant.is_admin:
+            return Response({'error': 'Apenas administradores podem remover membros'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Remove o usuário do grupo (não pode remover a si mesmo)
+        if int(user_id) == request.user.id:
+            return Response({'error': 'Não é possível remover a si mesmo'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        Participant.objects.filter(conversation=conversation, user_id=user_id).delete()
+        
+        return Response({'status': 'Membro removido com sucesso'})
+
+# --- Views para estatísticas e relatórios ---
+
+class ChatStatisticsView(APIView):
+    """API para obter estatísticas do chat."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna estatísticas do chat para o usuário atual."""
+        user = request.user
+        
+        total_conversations = Conversation.objects.filter(participants__user=user).count()
+        total_messages_sent = Message.objects.filter(sender=user).count()
+        unread_messages_count = MessageStatus.objects.filter(
+            participant__user=user,
+            status='delivered'
+        ).count()
+        
+        # Conversas mais ativas
+        active_conversations = Conversation.objects.filter(
+            participants__user=user
+        ).annotate(
+            message_count=Count('messages'),
+            last_activity=Max('messages__created_at')
+        ).order_by('-last_activity')[:5]
+        
+        active_conversations_data = [
+            {
+                'id': conv.id,
+                'name': conv.name or f"Conversa com {conv.participants.exclude(user=user).first().user.display_name if conv.participants.exclude(user=user).exists() else 'Usuário'}",
+                'message_count': conv.message_count,
+                'last_activity': conv.last_activity
+            }
+            for conv in active_conversations
+        ]
+        
+        return Response({
+            'total_conversations': total_conversations,
+            'total_messages_sent': total_messages_sent,
+            'unread_messages': unread_messages_count,
+            'active_conversations': active_conversations_data
+        })
+
+# --- Views para administração ---
+
+class AdminChatView(APIView):
+    """API para administração do chat (apenas staff)."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        """Retorna estatísticas administrativas do chat."""
+        total_conversations = Conversation.objects.count()
+        total_messages = Message.objects.count()
+        total_users = User.objects.count()
+        active_today = Message.objects.filter(
+            created_at__date=timezone.now().date()
+        ).count()
+        
+        return Response({
+            'total_conversations': total_conversations,
+            'total_messages': total_messages,
+            'total_users': total_users,
+            'messages_today': active_today,
+            'storage_used': f"{(total_messages * 0.1):.2f} KB"  # Estimativa
+        })
+
+    def post(self, request):
+        """Executa ações administrativas."""
+        action_type = request.data.get('action')
+        
+        if action_type == 'cleanup_old_messages':
+            from .tasks import delete_old_messages
+            result = delete_old_messages.delay()
+            return Response({'status': 'Limpeza iniciada', 'task_id': result.id})
+        
+        elif action_type == 'export_statistics':
+            # Lógica para exportar estatísticas
+            return Response({'status': 'Exportação em desenvolvimento'})
+        
+        return Response({'error': 'Ação não reconhecida'}, status=status.HTTP_400_BAD_REQUEST)
+
+# --- Views para busca e filtros ---
+
+class SearchView(APIView):
+    """API para busca de mensagens e conversas."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Busca mensagens e conversas baseado no termo de busca."""
+        search_term = request.GET.get('q', '').strip()
+        if not search_term:
+            return Response({'error': 'Termo de busca é obrigatório'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        
+        # Busca em conversas do usuário
+        conversations = Conversation.objects.filter(
+            participants__user=user
+        ).filter(
+            Q(name__icontains=search_term) |
+            Q(participants__user__first_name__icontains=search_term) |
+            Q(participants__user__last_name__icontains=search_term) |
+            Q(participants__user__email__icontains=search_term)
+        ).distinct()
+        
+        # Busca em mensagens do usuário
+        messages = Message.objects.filter(
+            conversation__participants__user=user,
+            text__icontains=search_term
+        ).select_related('sender', 'conversation').order_by('-created_at')[:50]
+        
+        conversation_serializer = ConversationSerializer(conversations, many=True, context={'request': request})
+        message_serializer = MessageSerializer(messages, many=True, context={'request': request})
+        
+        return Response({
+            'conversations': conversation_serializer.data,
+            'messages': message_serializer.data,
+            'search_term': search_term
+        })

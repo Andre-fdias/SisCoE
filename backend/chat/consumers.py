@@ -342,7 +342,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'text': message.decrypted_text,
             'created_at': message.created_at.isoformat(),
             # 'updated_at': message.updated_at.isoformat(), # Removido, pois o modelo Message não possui este campo
-            # Adicione outros campos necessários
+            'edited': message.edited,
+            'edited_at': message.edited_at.isoformat() if message.edited_at else None
         }
 
     @database_sync_to_async

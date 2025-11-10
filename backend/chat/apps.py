@@ -1,3 +1,4 @@
+# backend/chat/apps.py - CORRIGIDO
 from django.apps import AppConfig
 
 class ChatConfig(AppConfig):
@@ -5,6 +6,5 @@ class ChatConfig(AppConfig):
     name = 'backend.chat'
     
     def ready(self):
-        # Remova ou comente esta linha por enquanto
-        # import backend.chat.signals
-        pass
+        # Descomente esta linha para ativar os signals
+        import backend.chat.signals

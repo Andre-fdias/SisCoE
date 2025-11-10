@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants
 from decouple import config, Csv
+from celery.schedules import crontab
+
+
 
 # ============ CONFIGURAÇÕES DE CAMINHOS ============
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -351,3 +354,24 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Configurações de timezone para Brasil
 USE_L10N = True
+
+# ============ CONFIGURAÇÕES DO CELERY ============
+from celery.schedules import crontab
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_BEAT_SCHEDULE = {
+    'delete-old-messages-daily': {
+        'task': 'backend.chat.tasks.delete_old_messages',
+        'schedule': crontab(hour=18, minute=0),  # Diariamente às 18h
+    },
+    'cleanup-old-attachments-weekly': {
+        'task': 'backend.chat.tasks.cleanup_old_attachments', 
+        'schedule': crontab(day_of_week=1, hour=3, minute=0),  # Toda segunda às 3h
+    },
+}

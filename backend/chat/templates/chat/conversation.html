@@ -10,24 +10,12 @@
             @apply bg-gray-200 dark:bg-gray-700 border-l-4 border-blue-500;
         }
     }
+    
     /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-gray-300 dark:bg-gray-600 rounded-full; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-500; }
-    
-    /* Responsividade para os balões */
-    @media (max-width: 768px) {
-        .w-2\/5 {
-            width: 75% !important;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .w-2\/5 {
-            width: 85% !important;
-        }
-    }
 </style>
 {% endblock %}
 
@@ -35,9 +23,10 @@
 <div class="p-6 min-h-[85vh] w-full p-1 mx-auto flex items-center justify-center">
     <div class="h-full w-full flex antialiased text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 overflow-hidden shadow-2xl rounded-lg" id="chat-container"
         data-user-id="{{ user.id }}"
-        data-username="{{ user_display_name }}"
+        data-username="{{ user.get_full_name|default:user.email }}"
         data-user-image-url="{% if request.user.cadastro and request.user.cadastro.imagens.exists %}{{ request.user.cadastro.imagens.first.image.url }}{% endif %}"
         data-csrf-token="{{ csrf_token }}">
+        
         <!-- Sidebar -->
         <div class="w-full md:w-1/3 lg:w-1/4 h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-700" id="conversations-sidebar">
             <!-- Sidebar Header -->
@@ -47,11 +36,11 @@
                         <img src="{{ request.user.cadastro.imagens.first.image.url }}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600">
                     {% else %}
                         <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-400 dark:border-gray-600">
-                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">{{ user_display_name|first|upper }}</span>
+                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">{{ user.get_full_name|first|upper }}</span>
                         </div>
                     {% endif %}
                     <div>
-                        <span class="font-semibold text-gray-800 dark:text-gray-100 block">{{ user_display_name }}</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-100 block">{{ user.get_full_name|default:user.email }}</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-1">
@@ -125,8 +114,8 @@
                 </div>
 
                 <!-- Message Area -->
-                <div id="message-area" class="flex-1 p-4 overflow-y-auto custom-scrollbar relative">
-                    <div id="message-list" class="space-y-1 absolute inset-0 px-4"></div>
+                <div id="message-area" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
+                    <div id="message-list" class="space-y-2"></div>
                 </div>
                 
                 <div id="typing-indicator" class="hidden p-2 px-4 text-sm text-gray-500 dark:text-gray-400">
@@ -187,7 +176,6 @@
                     </div>
                     <h4 id="info-modal-name" class="text-xl font-bold text-gray-900 dark:text-white"></h4>
                     <p id="info-modal-posto" class="text-md text-blue-500"></p>
-                    <!-- ADICIONE ESTA LINHA PARA O SGB -->
                     <p id="info-modal-sgb-display" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
                     <hr class="my-4 border-gray-200 dark:border-gray-700">
                     <div class="text-left space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -206,8 +194,10 @@
 <div id="toast-container" class="fixed top-5 right-5 z-[100] space-y-3"></div>
 
 <!-- Templates for JS rendering -->
+
+<!-- Template de Item de Conversa COM BOTÃO FLOWBITE -->
 <template id="conversation-item-template">
-    <div class="conversation-item flex items-center p-3 space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 border-l-4 transition-all duration-200">
+    <div class="conversation-item flex items-center p-3 space-x-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 border-l-4 transition-all duration-200 relative">
         <div class="relative flex-shrink-0">
             <img class="avatar-img w-12 h-12 rounded-full object-cover hidden">
             <div class="avatar-placeholder w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold"></div>
@@ -221,6 +211,25 @@
             <div class="flex items-center justify-between">
                 <p class="last-message text-sm text-gray-600 dark:text-gray-400 truncate"></p>
                 <span class="unread-count bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+            </div>
+        </div>
+        
+        <!-- Botão de Ações da Conversa - ESTILO FLOWBITE -->
+        <div class="conversation-actions relative">
+            <button class="conversation-menu-btn inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 4 15">
+                    <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"/>
+                </svg>
+            </button>
+            <div class="conversation-dropdown z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600 absolute right-0 top-full mt-1">
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                    <li>
+                        <button class="delete-conversation-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Excluir Conversa</button>
+                    </li>
+                    <li>
+                        <button class="copy-conversation-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Copiar ID</button>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
@@ -238,7 +247,7 @@
             <p class="status-text text-xs text-gray-500 dark:text-gray-400"></p>
         </div>
         <button class="start-conversation-btn p-2 text-blue-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
-            <i class="fas fa-comment-plus"></i>
+            <i class="fas fa-comment"></i>
         </button>
     </div>
 </template>
@@ -258,59 +267,92 @@
     </div>
 </template>
 
-
-<!-- TEMPLATE PARA MENSAGEM ENVIADA -->
+<!-- Template para Mensagem Enviada COM BOTÃO FLOWBITE -->
 <template id="message-sent-template">
-    <div class="flex justify-end w-full animate-fade-in">
-        <div class="flex flex-col items-end w-2/5 min-w-[200px]"> <!-- ALTERADO: w-2/5 (40%) -->
-            <!-- NOME DO REMETENTE -->
-            <span class="sender-name text-xs font-bold text-purple-600 dark:text-purple-400 mb-1 mr-2">Você</span>
+    <div class="flex justify-end w-full animate-fade-in mb-3 group">
+        <div class="flex flex-col items-end max-w-[80%]">
             <div class="flex items-end gap-2 w-full">
-                <!-- BALÃO DA MENSAGEM -->
-                <div class="relative group flex-1 min-w-0">
+                <!-- Balão da Mensagem -->
+                <div class="relative flex-1 min-w-0">
                     <div class="message-bubble text-white p-3 rounded-2xl rounded-br-none shadow-md bg-gradient-to-br from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 break-words w-full">
                         <p class="message-text text-sm leading-relaxed"></p>
                     </div>
                 </div>
-                <!-- AVATAR -->
-                <div class="flex-shrink-0">
-                    <div class="user-avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                        <!-- O JS irá preencher isso -->
+                
+                <!-- Menu de Ações da Mensagem - ESTILO FLOWBITE -->
+                <div class="message-actions relative">
+                    <button class="message-menu-btn inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" type="button">
+                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
+                            <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+                        </svg>
+                    </button>
+                    <div class="message-dropdown z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600 absolute right-0 bottom-full mb-1">
+                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                            <li>
+                                <button class="delete-message-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Excluir</button>
+                            </li>
+                            <li>
+                                <button class="copy-message-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Copiar</button>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
+            
             <!-- HORA E STATUS -->
-            <div class="flex items-center justify-end gap-2 mt-1 mr-10">
+            <div class="flex items-center justify-end gap-2 mt-1 mr-12">
                 <span class="timestamp text-xs text-gray-500 dark:text-gray-400"></span>
                 <div class="read-status text-xs text-gray-500 dark:text-gray-400">
-                    <!-- O JS irá preencher com ícones de status -->
+                    <i class="fas fa-check-double text-blue-400"></i>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
-<!-- TEMPLATE PARA MENSAGEM RECEBIDA -->
+<!-- Template para Mensagem Recebida COM BOTÃO FLOWBITE (ATUALIZADO) -->
 <template id="message-received-template">
-    <div class="flex justify-start w-full animate-fade-in">
-        <div class="flex items-start gap-2 w-2/5 min-w-[200px]"> <!-- ALTERADO: w-2/5 (40%) -->
+    <div class="flex justify-start w-full animate-fade-in mb-3 group">
+        <div class="flex items-start gap-2 max-w-[80%]">
             <!-- AVATAR -->
             <div class="flex-shrink-0">
-                <div class="user-avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                    <!-- O JS irá preencher isso -->
-                </div>
+                <div class="user-avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm"></div>
             </div>
+            
             <div class="flex flex-col items-start flex-1 min-w-0">
                 <!-- NOME DO REMETENTE -->
-                <span class="sender-name text-xs font-bold text-blue-600 dark:text-blue-400 mb-1 ml-2"></span>
-                <!-- BALÃO DA MENSAGEM -->
-                <div class="relative group w-full">
-                    <div class="message-bubble bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-bl-none shadow-md break-words w-full">
-                        <p class="message-text text-sm text-gray-800 dark:text-gray-200 leading-relaxed"></p>
+                <span class="sender-name text-xs font-bold text-blue-600 dark:text-blue-400 mb-1 ml-1"></span>
+                
+                <div class="flex items-start gap-2 w-full">
+                    <!-- Balão da Mensagem -->
+                    <div class="relative flex-1 min-w-0">
+                        <div class="message-bubble bg-white dark:bg-gray-700 p-3 rounded-2xl rounded-bl-none shadow-md break-words w-full">
+                            <p class="message-text text-sm text-gray-800 dark:text-gray-200 leading-relaxed"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu de Ações da Mensagem - ESTILO FLOWBITE (ATUALIZADO) -->
+                    <div class="message-actions relative">
+                        <button class="message-menu-btn inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" type="button">
+                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
+                                <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+                            </svg>
+                        </button>
+                        <div class="message-dropdown z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600 absolute right-0 bottom-full mb-1">
+                            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                                <li>
+                                    <button class="delete-message-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Excluir</button>
+                                </li>
+                                <li>
+                                    <button class="copy-message-btn w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Copiar</button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+                
                 <!-- HORA -->
-                <div class="mt-1 ml-2">
+                <div class="mt-1 ml-1">
                     <span class="timestamp text-xs text-gray-500 dark:text-gray-400"></span>
                 </div>
             </div>
@@ -318,6 +360,7 @@
     </div>
 </template>
 
+<!-- OS DEMAIS TEMPLATES PERMANECEM IGUAIS -->
 <template id="date-separator-template">
     <div class="date-separator flex items-center justify-center my-4">
         <span class="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-200 dark:bg-gray-700 dark:text-gray-300 rounded-full"></span>
@@ -337,6 +380,61 @@
         <p class="placeholder-text"></p>
     </div>
 </template>
+
+
+
+
+<!-- Modal de Confirmação de Exclusão de Mensagem -->
+<div id="deleteMessageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">🗑️ Excluir Mensagem</h3>
+                <button type="button" class="text-gray-500 hover:text-gray-700 p-1" onclick="hideModal('deleteMessageModal')">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-700 dark:text-gray-300">Tem certeza que deseja excluir esta mensagem?</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" onclick="hideModal('deleteMessageModal')">
+                    Cancelar
+                </button>
+                <button type="button" id="confirmDeleteMessage" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-300">
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão de Conversa -->
+<div id="deleteConversationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">🗑️ Apagar Conversa</h3>
+                <button type="button" class="text-gray-500 hover:text-gray-700 p-1" onclick="hideModal('deleteConversationModal')">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-700 dark:text-gray-300">Tem certeza que deseja apagar esta conversa completamente?</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Todas as mensagens serão excluídas permanentemente. Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600" onclick="hideModal('deleteConversationModal')">
+                    Cancelar
+                </button>
+                <button type="button" id="confirmDeleteConversation" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-300">
+                    Apagar Conversa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -368,7 +466,7 @@
 
         // Apply saved theme on initial load
         const savedMode = localStorage.getItem('darkMode');
-        applyTheme(savedMode || 'light'); // Default to light mode
+        applyTheme(savedMode || 'light');
     });
 </script>
 

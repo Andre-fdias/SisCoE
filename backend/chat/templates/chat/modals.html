@@ -1,0 +1,69 @@
+{% load static %}
+<!-- Modal de Confirmação de Exclusão de Mensagem -->
+<div class="modal fade" id="deleteMessageModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🗑️ Excluir Mensagem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir esta mensagem?</p>
+        <p class="text-muted small">Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteMessage">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão de Conversa -->
+<div class="modal fade" id="deleteConversationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🗑️ Apagar Conversa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja apagar esta conversa completamente?</p>
+        <p class="text-muted small">Todas as mensagens serão excluídas permanentemente. Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteConversation">Apagar Conversa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Informativo sobre Política de Retenção -->
+<div class="modal fade" id="retentionPolicyModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">📋 Política de Retenção de Mensagens</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="retention-info">
+          <p><strong>Para garantir sua privacidade e otimizar o armazenamento:</strong></p>
+          <ul>
+            <li>✅ Todas as mensagens são excluídas automaticamente após <strong>2 dias</strong></li>
+            <li>✅ A limpeza automática ocorre diariamente às <strong>18h</strong></li>
+            <li>✅ Mensagens excluídas <strong>não podem ser recuperadas</strong></li>
+            <li>✅ Você pode excluir mensagens manualmente a qualquer momento</li>
+          </ul>
+          <p class="text-muted mt-3">
+            Esta política segue as melhores práticas de segurança e privacidade de dados.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
+      </div>
+    </div>
+  </div>
+</div>
