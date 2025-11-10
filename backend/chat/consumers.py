@@ -120,9 +120,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message': serialized_message
             }
         )
-        
-        # Marca como entregue para todos os participantes online
-        await self.mark_as_delivered(message)
 
     async def handle_message_read(self, data):
         """ Marca mensagem como lida. """
@@ -283,15 +280,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_message(self, text, reply_to=None, attachments=None):
-        """ Cria e salva uma nova mensagem. """
-        from .serializers import MessageSerializer
-        
+        """ Cria e salva uma nova mensagem com lógica unificada. """
         conversation = Conversation.objects.get(id=self.conversation_id)
         parent_message = None
+        quoted_text_content = None
         
         if reply_to:
             try:
                 parent_message = Message.objects.get(id=reply_to)
+                # CORREÇÃO: Usa decrypted_text para o snapshot da citação
+                quoted_text_content = parent_message.decrypted_text
             except Message.DoesNotExist:
                 pass
         
@@ -300,15 +298,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender=self.user,
             text=text,
             parent_message=parent_message,
-            quoted_text=parent_message.text if parent_message else None
+            quoted_text=quoted_text_content
         )
         
-        # Cria status para todos os participantes
+        # Lógica de criação de status (unificada com a ViewSet)
         participants = Participant.objects.filter(conversation=conversation)
-        statuses = [
-            MessageStatus(message=message, participant=participant)
-            for participant in participants
-        ]
+        statuses = []
+        for participant in participants:
+            is_sender = (participant.user.id == self.user.id)
+            statuses.append(MessageStatus(
+                message=message, 
+                participant=participant, 
+                status='sent' if is_sender else 'delivered',
+                delivered_at=None if is_sender else timezone.now()
+            ))
         MessageStatus.objects.bulk_create(statuses)
         
         # Atualiza conversation updated_at
@@ -341,24 +344,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # 'updated_at': message.updated_at.isoformat(), # Removido, pois o modelo Message não possui este campo
             # Adicione outros campos necessários
         }
-
-    @database_sync_to_async
-    def mark_as_delivered(self, message):
-        """ Marca mensagem como entregue para participantes online. """
-        participants = Participant.objects.filter(conversation_id=self.conversation_id)
-        for participant in participants:
-            if participant.user != self.user:  # Não marca para o remetente
-                try:
-                    status = MessageStatus.objects.get(
-                        message=message,
-                        participant=participant
-                    )
-                    if status.status == 'sent':
-                        status.status = 'delivered'
-                        status.delivered_at = timezone.now()
-                        status.save()
-                except MessageStatus.DoesNotExist:
-                    pass
 
     @database_sync_to_async
     def mark_as_read(self, message_id):

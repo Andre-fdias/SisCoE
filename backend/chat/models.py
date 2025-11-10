@@ -71,7 +71,9 @@ class Message(models.Model):
 
     @property
     def decrypted_text(self):
-        """Retorna o texto da mensagem descriptografado."""
+        """Retorna o texto da mensagem descriptografado de forma segura."""
+        if not self.text:
+            return self.text
         return decrypt_message(self.text)
 
     class Meta:

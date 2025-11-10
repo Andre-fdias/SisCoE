@@ -321,12 +321,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     situacao = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    nome_de_guerra = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'full_name',
-            'cadastro', 'promocao', 'situacao', 'avatar'
+            'cadastro', 'promocao', 'situacao', 'avatar', 'nome_de_guerra'
         ]
 
     def get_promocao(self, obj):
@@ -361,4 +362,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             if imagem and imagem.image:
                 return request.build_absolute_uri(imagem.image.url)
         
+        return None
+
+    def get_nome_de_guerra(self, obj):
+        """Retorna o nome de guerra do usuário."""
+        if hasattr(obj, 'cadastro') and obj.cadastro:
+            return obj.cadastro.nome_de_guerra
         return None

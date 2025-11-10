@@ -410,27 +410,36 @@ async function showInfoModal(userId) {
     try {
         const profile = await apiFetch(`/api/chat/users/${userId}/profile/`);
 
-        if(ui.infoModal.name) ui.infoModal.name.textContent = profile.nome_de_guerra || 'N/A';
-        if(ui.infoModal.posto) ui.infoModal.posto.textContent = profile.posto_grad || 'N/A';
+        // Extrair dados com segurança usando encadeamento opcional
+        const nomeDeGuerra = profile.nome_de_guerra || 'N/A';
+        const postoGrad = profile.promocao?.posto_grad || '';
+        const sgb = profile.situacao?.sgb || '';
+        const re = profile.cadastro?.re || 'N/A';
+        const dig = profile.cadastro?.dig || '';
+        const nomeCompleto = profile.full_name || 'N/A';
+        const secao = profile.situacao?.funcao || 'N/A';
+        const imageUrl = profile.avatar; // A API envia 'avatar'
+
+        if(ui.infoModal.name) ui.infoModal.name.textContent = nomeDeGuerra;
+        if(ui.infoModal.posto) ui.infoModal.posto.textContent = postoGrad;
         
-        // ADICIONE ESTAS LINHAS PARA EXIBIR O SGB NO CABEÇALHO
         if(ui.infoModal.sgbDisplay) {
-            ui.infoModal.sgbDisplay.textContent = profile.sgb || 'N/A';
+            ui.infoModal.sgbDisplay.textContent = sgb ? `SGB: ${sgb}` : '';
         }
         
-        if(ui.infoModal.re) ui.infoModal.re.textContent = `${profile.re}-${profile.dig}` || 'N/A';
-        if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = profile.nome_completo || 'N/A';
-        if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = profile.sgb || 'N/A';
-        if(ui.infoModal.secao) ui.infoModal.secao.textContent = profile.posto_secao || 'N/A';
+        if(ui.infoModal.re) ui.infoModal.re.textContent = (re && dig) ? `${re}-${dig}` : re;
+        if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = nomeCompleto;
+        if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = sgb || 'N/A';
+        if(ui.infoModal.secao) ui.infoModal.secao.textContent = secao;
 
-        if (profile.image_url) {
+        if (imageUrl) {
             if(ui.infoModal.img) {
-                ui.infoModal.img.src = profile.image_url;
+                ui.infoModal.img.src = imageUrl;
                 ui.infoModal.img.classList.remove('hidden');
             }
             if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.add('hidden');
         } else {
-            if(ui.infoModal.avatarInitial) ui.infoModal.avatarInitial.textContent = (profile.nome_de_guerra || ' ').charAt(0).toUpperCase();
+            if(ui.infoModal.avatarInitial) ui.infoModal.avatarInitial.textContent = (nomeDeGuerra || ' ').charAt(0).toUpperCase();
             if(ui.infoModal.img) ui.infoModal.img.classList.add('hidden');
             if(ui.infoModal.avatarPlaceholder) ui.infoModal.avatarPlaceholder.classList.remove('hidden');
         }
@@ -496,7 +505,7 @@ async function showInfoModal(userId) {
         state.lastMessageDate = null;
         try {
             const data = await apiFetch(`/api/chat/conversations/${conversationId}/messages/`);
-            data.results.forEach(m => appendMessage(m, false));
+            data.results.reverse().forEach(m => appendMessage(m, false));
             setTimeout(scrollToBottom, 100);
         } catch (e) {
             showToast(e.message, 'error');

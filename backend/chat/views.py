@@ -260,7 +260,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             'attachments', 
             Prefetch('reactions', queryset=Reaction.objects.select_related('user')), 
             'statuses'
-        ).order_by('created_at')
+        ).order_by('-created_at')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
