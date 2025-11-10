@@ -15,6 +15,7 @@ from .serializers import (
     ConversationSerializer, MessageSerializer, AttachmentSerializer, 
     ReactionSerializer, UserSerializer, UserProfileSerializer
 )
+from backend.accounts.utils import get_user_display_name
 
 User = get_user_model()
 
@@ -42,6 +43,7 @@ class ChatView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         # Otimiza a busca dos usuários excluindo o usuário atual.
         context['all_users'] = User.objects.exclude(pk=self.request.user.pk).order_by('email')
+        context['user_display_name'] = get_user_display_name(self.request.user)
         return context
 
 # --- Vistas da API REST (DRF) ---

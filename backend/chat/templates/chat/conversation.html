@@ -35,7 +35,7 @@
 <div class="p-6 min-h-[85vh] w-full p-1 mx-auto flex items-center justify-center">
     <div class="h-full w-full flex antialiased text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 overflow-hidden shadow-2xl rounded-lg" id="chat-container"
         data-user-id="{{ user.id }}"
-        data-username="{{ user.get_full_name|default:user.email }}"
+        data-username="{{ user_display_name }}"
         data-user-image-url="{% if request.user.cadastro and request.user.cadastro.imagens.exists %}{{ request.user.cadastro.imagens.first.image.url }}{% endif %}"
         data-csrf-token="{{ csrf_token }}">
         <!-- Sidebar -->
@@ -47,11 +47,11 @@
                         <img src="{{ request.user.cadastro.imagens.first.image.url }}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600">
                     {% else %}
                         <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-400 dark:border-gray-600">
-                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">{{ user.get_full_name|first|upper }}</span>
+                            <span class="text-lg font-bold text-gray-600 dark:text-gray-400">{{ user_display_name|first|upper }}</span>
                         </div>
                     {% endif %}
                     <div>
-                        <span class="font-semibold text-gray-800 dark:text-gray-100 block">{{ user.get_full_name|default:user.email }}</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-100 block">{{ user_display_name }}</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-1">

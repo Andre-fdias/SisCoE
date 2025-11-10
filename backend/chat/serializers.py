@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count
 from .models import Conversation, Message, Participant, Attachment, MessageStatus, Reaction, Presence
 from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem
+from backend.accounts.utils import get_user_display_name
 
 User = get_user_model()
 
@@ -42,23 +43,9 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_display_name(self, obj):
         """
-        Retorna o nome de exibição no formato: posto_grad re-dig nome_de_guerra.
-        Fallback para nome completo ou email se os dados do cadastro não estiverem disponíveis.
+        Retorna o nome de exibição formatado chamando a função utilitária.
         """
-        try:
-            if hasattr(obj, 'cadastro') and obj.cadastro:
-                cadastro = obj.cadastro
-                promocao = cadastro.promocoes.order_by('-ultima_promocao').first()
-                
-                if promocao and cadastro.re and cadastro.dig and cadastro.nome_de_guerra:
-                    return f"{promocao.posto_grad} {cadastro.re}-{cadastro.dig} {cadastro.nome_de_guerra}"
-        except Exception:
-            # Em caso de qualquer erro ao acessar os modelos relacionados, use o fallback.
-            pass
-
-        # Fallback
-        full_name = f"{obj.first_name or ''} {obj.last_name or ''}".strip()
-        return full_name or obj.email
+        return get_user_display_name(obj)
 
 class AttachmentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
@@ -122,7 +109,7 @@ class MessageSerializer(serializers.ModelSerializer):
             try:
                 return {
                     'id': obj.parent_message.id,
-                    'sender_name': obj.parent_message.sender.get_full_name() or obj.parent_message.sender.email,
+                    'sender_name': get_user_display_name(obj.parent_message.sender),
                     'text': obj.parent_message.decrypted_text,
                     'has_attachments': obj.parent_message.attachments.exists()
                 }
@@ -220,7 +207,7 @@ class ConversationSerializer(serializers.ModelSerializer):
                     'created_at': last_message.created_at,
                     'sender': {
                         'id': last_message.sender.id,
-                        'name': last_message.sender.get_full_name() or last_message.sender.email
+                        'name': get_user_display_name(last_message.sender)
                     }
                 }
         except Exception:
