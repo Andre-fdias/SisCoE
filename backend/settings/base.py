@@ -4,10 +4,15 @@ from django.contrib.messages import constants
 from decouple import config, Csv
 from celery.schedules import crontab
 
-
-
 # ============ CONFIGURAÇÕES DE CAMINHOS ============
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Lendo a versão do arquivo VERSION
+try:
+    with open(os.path.join(BASE_DIR, 'VERSION')) as f:
+        VERSION = f.read().strip()
+except FileNotFoundError:
+    VERSION = 'N/A'
 
 # ============ CONFIGURAÇÕES BÁSICAS ============
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-in-production')
@@ -53,11 +58,13 @@ INSTALLED_APPS = [
     'backend.cursos',
     'backend.tickets',
     'backend.chat',
+    'backend.control_panel',  # APP DO PAINEL DE CONTROLE
 ]
 
 # ============ MIDDLEWARES ============
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'backend.control_panel.middleware.PerformanceMetricsMiddleware', # Adicionado
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -79,7 +86,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # ADICIONADO: diretório global de templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,7 +112,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [config('REDIS_URL', default=('127.0.0.1', 6379))],  # CORRIGIDO
         },
     },
 }
@@ -117,7 +124,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME', default='siscoe_db'),
         'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
+        'PASSWORD': config('DB_PASSWORD', default='davi2807'),  # CORRIGIDO: valor padrão
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
         'CONN_MAX_AGE': 60,
@@ -248,8 +255,11 @@ SECURE_SSL_REDIRECT = False
 # ============ CONFIGURAÇÕES DE CACHE ============
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-siscoe',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',  # CORRIGIDO
+        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
 
@@ -323,6 +333,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'backend.control_panel': {  # ADICIONADO: Logger para painel de controle
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
     'root': {
         'handlers': ['console'],
@@ -356,10 +371,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 USE_L10N = True
 
 # ============ CONFIGURAÇÕES DO CELERY ============
-from celery.schedules import crontab
-
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://127.0.0.1:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
