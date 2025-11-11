@@ -1,185 +1,165 @@
-
-#version: "3.8"
+# docker-compose.yml - VERSÃO MELHORADA
+version: '3.8'
 
 services:
-  db:
-    container_name: siscoe.db
-    image: postgres:17-alpine
-    restart: always
-    user: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  # Aplicação Django
+  web:
+    build: .
+    ports:
+      - "8000:8000"
     environment:
-      - LC_ALL=C.UTF-8
-      - POSTGRES_PASSWORD=davi2807
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=siscoe_db
-    ports:
-      - 5431:5432
-    networks:
-      - siscoe-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  pgadmin:
-    container_name: siscoe_pgadmin
-    image: dpage/pgadmin4
-    restart: unless-stopped
-    volumes:
-       - pgadmin:/var/lib/pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: andrefonsecadias21@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: davi280711
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - 5051:80
-    networks:
-      - siscoe-network
-
-  mailhog:
-    container_name: siscoe_mailhog
-    image: mailhog/mailhog
-    restart: always
-    logging:
-      driver: 'none'
-    ports:
-      - 1025:1025
-      - 8025:8025
-    networks:
-       - siscoe-network
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: siscoe_app
-    hostname: app
-    stdin_open: true
-    expose:
-      - '8000'
-    volumes:
-      - .env.docker:/app/.env  # Este monta o arquivo .env.docker como .env no container
-      - ./logs:/var/log/django_app
-    command: >
-      bash -c "
-        echo 'Aguardando banco de dados...' &&
-        sleep 10 &&
-        python manage.py migrate &&
-        python manage.py create_superuser &&
-        gunicorn backend.wsgi:application -b 0.0.0.0:8000
-      "
+      - DEBUG=${DEBUG:-False}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - siscoe-network
-
-
-  nginx:
-    container_name: siscoe_nginx
-    image: nginx:alpine
-    hostname: nginx
-    ports:
-      - '80:8000'
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
-      - ./docker/config/nginx/:/etc/nginx/conf.d/
-      - ./staticfiles:/app/staticfiles:ro  # Adicione esta linha
-    depends_on:
-      - app
-    networks:
-       - siscoe-network
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
 
-  # --- STACK DE MONITORAMENTO ---
-  prometheus:
-    image: prom/prometheus:v2.47.2
-    container_name: siscoe_prometheus
-    restart: unless-stopped
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/rules:/etc/prometheus/rules
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    ports:
-      - "9090:9090"
-    networks:
-      - siscoe-network
-    depends_on:
-      - app
-
-  alertmanager:
-    image: prom/alertmanager:v0.26.0
-    container_name: siscoe_alertmanager
-    restart: unless-stopped
-    volumes:
-      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-    ports:
-      - "9093:9093"
-    networks:
-      - siscoe-network
-
-  telegram-bridge:
-    image: incaller/prometheus_alertmanager_telegram:latest
-    container_name: siscoe_telegram_bridge
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env.docker # Aponta para o arquivo .env.docker
+  # Celery Worker
+  celery:
+    build: .
+    command: celery -A SISCOE worker -l info --concurrency=4
     environment:
-      # O TELEGRAM_BOT_TOKEN será lido do arquivo .env.docker
-      - TELEGRAM_CHAT_ID=-4958407274
-    networks:
-      - siscoe-network
-
-  # --- STACK ELK (LOGGING E ANÁLISE) ---
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
-    container_name: siscoe_elasticsearch
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    networks:
-      - siscoe-network
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.9
-    container_name: siscoe_logstash
-    volumes:
-      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline # Configuração do Logstash
-      - ./logs:/var/log/django_app # Monta o diretório de logs do Django
-    ports:
-      - "5044:5044" # Porta para Beats (opcional)
-    environment:
-      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+      - DEBUG=${DEBUG:-False}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
-      - elasticsearch
-    networks:
-      - siscoe-network
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "celery", "-A", "SISCOE", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.9
-    container_name: siscoe_kibana
-    ports:
-      - "5601:5601"
+  # Celery Beat
+  celery-beat:
+    build: .
+    command: celery -A SISCOE beat -l info
+    environment:
+      - DEBUG=${DEBUG:-False}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - CELERY_BROKER_URL=redis://redis:6379/0
     depends_on:
-      - elasticsearch
-    networks:
-      - siscoe-network
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  # PostgreSQL com health check
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis com health check
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # --- FERRAMENTAS DE ADMINISTRAÇÃO ---
+  
+  # Portainer - Gestão de Containers
+  portainer:
+    image: portainer/portainer-ce:latest
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+
+  # pgAdmin - Administração PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # Flower - Monitoramento Celery
+  flower:
+    image: mher/flower:latest
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery
+    restart: unless-stopped
+
+  # Redis Commander - Gestão Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
 
 volumes:
-  pgdata:  # mesmo nome do volume externo definido na linha 10
-  pgadmin:
-  esdata:
-
-networks:
-  siscoe-network:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  static_volume:
+  media_volume:
+  portainer_data:
+  pgadmin_data:
