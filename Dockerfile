@@ -1,34 +1,35 @@
-FROM python:3.11-slim-bookworm
+# Dockerfile - VERSÃO MELHORADA
+FROM python:3.11-slim
 
-# Configuração do locale
-RUN apt-get update && apt-get install -y locales && \
-    sed -i '/pt_BR.UTF-8/s/^# //g' /etc/locale.gen && \
-    locale-gen
-ENV LANG pt_BR.UTF-8
-ENV LC_ALL pt_BR.UTF-8
-
+# Evita que o Python escreve arquivos .pyc
+ENV PYTHONDONTWRITEBYTECODE 1
+# Garante que a saída do python seja logada
 ENV PYTHONUNBUFFERED 1
-ENV DJANGO_ENV dev
-ENV DOCKER_CONTAINER 1
 
-RUN mkdir /app
-WORKDIR /app
-EXPOSE 8000
-
-# Instala dependências do sistema para PostgreSQL
+# Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
-    libpq-dev \
+    curl \
     gcc \
+    postgresql-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Cria a pasta de logs
-RUN mkdir -p /app/logs
+# Cria diretório da aplicação
+WORKDIR /app
 
+# Instala dependências Python
 COPY requirements.txt .
-RUN pip install -U pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY manage.py .
-COPY backend backend
+# Copia o projeto
+COPY . .
 
-# Comando único (tudo no runtime)
-CMD bash -c "python manage.py collectstatic --noinput && python manage.py migrate && python manage.py create_superuser && gunicorn backend.wsgi:application -b 0.0.0.0:8000"
+# Cria usuário não-root para segurança
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Comando para rodar a aplicação
+CMD ["gunicorn", "SISCOE.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
