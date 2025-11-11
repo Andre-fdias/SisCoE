@@ -76,6 +76,9 @@
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold">🚀 Painel de Controle</h1>
         <div class="flex items-center space-x-4">
+            <a href="{% url 'core:index' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar para Home
+            </a>
             <span class="text-sm text-gray-400">Atualizado em: <span id="last-updated">--:--:--</span></span>
             <button id="refresh-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 <i class="fas fa-sync-alt"></i> Atualizar
