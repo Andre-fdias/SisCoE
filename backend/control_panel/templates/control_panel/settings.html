@@ -1,0 +1,118 @@
+
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Configurações | Painel de Controle | SisCoE{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --header-bg: #1f2937;
+            --body-bg: #111827;
+            --card-bg: #1f2937;
+            --text-color: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+        }
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-color);
+        }
+        .form-input {
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            width: 100%;
+        }
+        .form-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="p-6 space-y-6">
+    
+    <!-- CABEÇALHO -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold"><i class="fas fa-cog mr-2"></i>Configurações do Sistema</h1>
+        <a href="{% url 'control_panel:dashboard' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar ao Dashboard
+        </a>
+    </div>
+
+    <!-- SEÇÃO DE CONFIGURAÇÕES -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Informações Gerais</h2>
+        <form method="post" action="{% url 'control_panel:settings' %}">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Nome da Aplicação -->
+                <div>
+                    <label for="app_name" class="form-label">Nome da Aplicação</label>
+                    <input type="text" id="app_name" name="app_name" value="{{ settings.app_name }}" class="form-input" readonly>
+                </div>
+                <!-- Versão -->
+                <div>
+                    <label for="version" class="form-label">Versão</label>
+                    <input type="text" id="version" name="version" value="{{ settings.version }}" class="form-input" readonly>
+                </div>
+                <!-- Ambiente -->
+                <div>
+                    <label for="environment" class="form-label">Ambiente</label>
+                    <input type="text" id="environment" name="environment" value="{{ settings.environment }}" class="form-input" readonly>
+                </div>
+                <!-- Modo Debug -->
+                <div>
+                    <label for="debug_mode" class="form-label">Modo Debug</label>
+                    <input type="text" id="debug_mode" name="debug_mode" value="{% if settings.debug_mode %}Ativo{% else %}Inativo{% endif %}" class="form-input" readonly>
+                </div>
+                <!-- Fuso Horário -->
+                <div>
+                    <label for="time_zone" class="form-label">Fuso Horário</label>
+                    <input type="text" id="time_zone" name="time_zone" value="{{ settings.time_zone }}" class="form-input" readonly>
+                </div>
+                <!-- Código do Idioma -->
+                <div>
+                    <label for="language_code" class="form-label">Idioma</label>
+                    <input type="text" id="language_code" name="language_code" value="{{ settings.language_code }}" class="form-input" readonly>
+                </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-gray-700">
+                <h2 class="text-xl font-semibold mb-4">Configurações Editáveis (Exemplo)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Exemplo de campo editável -->
+                    <div>
+                        <label for="example_setting" class="form-label">Configuração de Exemplo</label>
+                        <input type="text" id="example_setting" name="example_setting" value="Valor de Exemplo" class="form-input">
+                    </div>
+                    <!-- Outro campo editável -->
+                    <div>
+                        <label for="another_setting" class="form-label">Outra Configuração</label>
+                        <select id="another_setting" name="another_setting" class="form-input">
+                            <option value="option1">Opção 1</option>
+                            <option value="option2">Opção 2</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-save mr-2"></i>Salvar Configurações
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

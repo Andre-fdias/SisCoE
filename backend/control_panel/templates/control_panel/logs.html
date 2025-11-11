@@ -1,0 +1,112 @@
+
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Logs | Painel de Controle | SisCoE{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --header-bg: #1f2937;
+            --body-bg: #111827;
+            --card-bg: #1f2937;
+            --text-color: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --healthy-color: #22c55e;
+            --warning-color: #f59e0b;
+            --down-color: #ef4444;
+        }
+        .theme-light {
+            --header-bg: #ffffff;
+            --body-bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-color);
+        }
+        .log-entry {
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap; /* Preserves whitespace and wraps text */
+            word-break: break-all; /* Breaks words if necessary */
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-level-DEBUG { color: #60a5fa; } /* blue-400 */
+        .log-level-INFO { color: #34d399; } /* emerald-400 */
+        .log-level-WARNING { color: #fbbf24; } /* amber-400 */
+        .log-level-ERROR { color: #ef4444; } /* red-500 */
+        .log-level-CRITICAL { color: #dc2626; font-weight: bold; } /* red-600 */
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="p-6 space-y-6">
+    
+    <!-- CABEÇALHO -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold"><i class="fas fa-clipboard-list mr-2"></i>Logs Recentes</h1>
+        <div class="flex items-center space-x-4">
+            <form method="get" action="{% url 'control_panel:logs' %}" class="flex items-center space-x-2">
+                <label for="log-level-select" class="text-gray-400">Nível:</label>
+                <select id="log-level-select" name="level" onchange="this.form.submit()"
+                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                    {% for level in log_levels %}
+                        <option value="{{ level }}" {% if level == selected_level %}selected{% endif %}>{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            <button id="download-logs-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-download mr-2"></i>Download
+            </button>
+        </div>
+    </div>
+
+    <!-- SEÇÃO DE LOGS -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Logs (Últimos 50)</h2>
+        <div id="log-entries" class="max-h-96 overflow-y-auto bg-gray-900 p-4 rounded-md">
+            {% if recent_logs %}
+                {% for log_entry in recent_logs %}
+                    <div class="log-entry log-level-{{ log_entry.level }}">
+                        {{ log_entry.message }}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-400">Nenhum log encontrado para o nível selecionado.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadLogsBtn = document.getElementById('download-logs-btn');
+
+    downloadLogsBtn.addEventListener('click', function() {
+        const logContent = document.getElementById('log-entries').innerText;
+        const blob = new Blob([logContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'application_logs_{{ selected_level|lower }}.log';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+});
+</script>
+{% endblock %}

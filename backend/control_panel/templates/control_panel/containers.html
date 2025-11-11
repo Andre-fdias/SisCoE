@@ -1,0 +1,267 @@
+
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Containers | Painel de Controle | SisCoE{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --header-bg: #1f2937;
+            --body-bg: #111827;
+            --card-bg: #1f2937;
+            --text-color: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --healthy-color: #22c55e;
+            --warning-color: #f59e0b;
+            --down-color: #ef4444;
+        }
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-color);
+        }
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        .status-badge.running { background-color: var(--healthy-color); }
+        .status-badge.exited { background-color: var(--text-muted); }
+        .status-badge.restarting { background-color: var(--warning-color); }
+        .status-badge.paused { background-color: #60a5fa; } /* blue-400 */
+        .status-badge.dead { background-color: var(--down-color); }
+        .status-badge.created { background-color: #a78bfa; } /* violet-400 */
+        .status-badge.error { background-color: var(--down-color); }
+
+        .progress-bar { background-color: #374151; }
+        .progress-fill.healthy { background-color: var(--healthy-color); }
+        .progress-fill.warning { background-color: var(--warning-color); }
+        .progress-fill.down { background-color: var(--down-color); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="p-6 space-y-6">
+    {% csrf_token %}
+    
+    <!-- CABEÇALHO -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold"><i class="fab fa-docker mr-2"></i>Gestão de Containers</h1>
+        <a href="{% url 'control_panel:dashboard' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar ao Dashboard
+        </a>
+    </div>
+
+    <!-- SEÇÃO: STATUS DOS CONTAINERS -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Containers Ativos e Inativos</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left text-gray-400">
+                <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-4 py-2">Nome</th>
+                        <th scope="col" class="px-4 py-2">ID</th>
+                        <th scope="col" class="px-4 py-2">Status</th>
+                        <th scope="col" class="px-4 py-2">Imagem</th>
+                        <th scope="col" class="px-4 py-2">CPU (%)</th>
+                        <th scope="col" class="px-4 py-2">Memória (MB)</th>
+                        <th scope="col" class="px-4 py-2">Portas</th>
+                        <th scope="col" class="px-4 py-2">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for container in containers %}
+                    <tr class="border-b border-gray-700 hover:bg-gray-600">
+                        <td class="px-4 py-2 font-medium text-white">{{ container.name }}</td>
+                        <td class="px-4 py-2">{{ container.id }}</td>
+                        <td class="px-4 py-2">
+                            <span class="status-badge {{ container.status }}">{{ container.status }}</span>
+                        </td>
+                        <td class="px-4 py-2">{{ container.image }}</td>
+                        <td class="px-4 py-2">{{ container.stats.cpu_percent|default:"N/A" }}</td>
+                        <td class="px-4 py-2">{{ container.stats.memory_usage|default:"N/A" }}</td>
+                        <td class="px-4 py-2">
+                            {% for port_map in container.ports.values %}
+                                {% for p in port_map %}
+                                    {{ p.HostPort }}:{{ p.PrivatePort }} ({{ p.Type }})<br>
+                                {% endfor %}
+                            {% empty %}
+                                N/A
+                            {% endfor %}
+                        </td>
+                        <td class="px-4 py-2">
+                            <button data-action="restart-container" data-container-name="{{ container.name }}" 
+                                    class="action-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition">
+                                <i class="fas fa-sync-alt"></i> Reiniciar
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">Nenhum container encontrado ou erro ao carregar.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: IMAGENS DOCKER -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Imagens Docker</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left text-gray-400">
+                <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-4 py-2">Tags</th>
+                        <th scope="col" class="px-4 py-2">ID</th>
+                        <th scope="col" class="px-4 py-2">Criada</th>
+                        <th scope="col" class="px-4 py-2">Tamanho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for image in images %}
+                    <tr class="border-b border-gray-700 hover:bg-gray-600">
+                        <td class="px-4 py-2 font-medium text-white">
+                            {% for tag in image.tags %}
+                                {{ tag }}<br>
+                            {% empty %}
+                                &lt;none&gt;
+                            {% endfor %}
+                        </td>
+                        <td class="px-4 py-2">{{ image.id }}</td>
+                        <td class="px-4 py-2">{{ image.created|date:"Y-m-d H:i" }}</td>
+                        <td class="px-4 py-2">{{ image.size|filesizeformat }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4">Nenhuma imagem Docker encontrada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SEÇÃO: INFORMAÇÕES DO SISTEMA DOCKER -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Informações do Sistema Docker</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Versão do Docker:</span>
+                <span class="font-mono">{{ system_info.ServerVersion|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">OS:</span>
+                <span class="font-mono">{{ system_info.OperatingSystem|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Total de CPUs:</span>
+                <span class="font-mono">{{ system_info.NCPU|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Memória Total:</span>
+                <span class="font-mono">{{ system_info.MemTotal|filesizeformat|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Containers Rodando:</span>
+                <span class="font-mono">{{ system_info.ContainersRunning|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Containers Pausados:</span>
+                <span class="font-mono">{{ system_info.ContainersPaused|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Containers Parados:</span>
+                <span class="font-mono">{{ system_info.ContainersStopped|default:"N/A" }}</span>
+            </div>
+            <div class="flex justify-between border-b border-gray-700 py-1">
+                <span class="text-gray-400">Imagens:</span>
+                <span class="font-mono">{{ system_info.Images|default:"N/A" }}</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    function showToast(message, type = 'success') {
+        const colors = {
+            success: 'linear-gradient(to right, #00b09b, #96c93d)',
+            error: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+            info: 'linear-gradient(to right, #007bff, #00a6ff)',
+        };
+        Toastify({
+            text: message,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            stopOnFocus: true,
+            style: {
+                background: colors[type] || colors.info,
+            },
+        }).showToast();
+    }
+
+    function handleAction(e) {
+        const button = e.target.closest('.action-btn');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const containerName = button.dataset.containerName;
+        let url, body;
+
+        switch(action) {
+            case 'restart-container':
+                url = "{% url 'control_panel:api_restart_container' %}";
+                body = new FormData();
+                body.append('container_name', containerName);
+                break;
+            default:
+                return;
+        }
+
+        button.disabled = true;
+        button.classList.add('opacity-50');
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            body: body || null
+        })
+        .then(response => response.json().then(data => ({ok: response.ok, data})))
+        .then(({ok, data}) => {
+            if (ok) {
+                showToast(data.message || 'Ação executada com sucesso!', 'success');
+                // Recarregar a página ou atualizar a tabela após a ação
+                setTimeout(() => location.reload(), 1000); 
+            } else {
+                throw new Error(data.message || 'Ocorreu um erro.');
+            }
+        })
+        .catch(error => {
+            console.error(`Error performing action ${action}:`, error);
+            showToast(error.message, 'error');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.classList.remove('opacity-50');
+        });
+    }
+
+    // Event Listeners para as ações dos containers
+    document.getElementById('content-main').addEventListener('click', handleAction);
+});
+</script>
+{% endblock %}

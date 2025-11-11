@@ -1,0 +1,122 @@
+<!-- control_panel/templates/control_panel/base.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Painel de Controle - SisCoE{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .status-healthy { background-color: #d1fae5; color: #065f46; }
+        .status-down { background-color: #fee2e2; color: #991b1b; }
+        .status-checking { background-color: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">🚀 Painel de Controle</h1>
+                    <span class="ml-2 text-sm text-gray-500">SisCoE</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-700">Olá, {{ request.user.username }}</span>
+                    <a href="{% url 'admin:logout' %}" class="text-sm text-red-600 hover:text-red-800">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <a href="{% url 'control_panel:dashboard' %}" 
+                   class="{% if request.resolver_match.url_name == 'dashboard' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                    Dashboard
+                </a>
+                <a href="{% url 'control_panel:services' %}" 
+                   class="{% if request.resolver_match.url_name == 'services' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                    Serviços
+                </a>
+                <a href="{% url 'control_panel:performance' %}" 
+                   class="{% if request.resolver_match.url_name == 'performance' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                    Performance
+                </a>
+                <a href="{% url 'control_panel:logs' %}" 
+                   class="{% if request.resolver_match.url_name == 'logs' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                    Logs
+                </a>
+                <a href="/admin/" 
+                   class="border-transparent text-gray-500 hover:text-gray-700 py-4 px-1 border-b-2 font-medium text-sm">
+                    Django Admin
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-8 border-t">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                SisCoE Control Panel • {% now "Y" %}
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Auto-refresh a cada 30 segundos
+        setInterval(() => {
+            fetch('/control-panel/api/health/')
+                .then(response => response.json())
+                .then(data => {
+                    // Atualizar componentes específicos
+                    if (typeof updateMetrics === 'function') {
+                        updateMetrics(data);
+                    }
+                });
+        }, 30000);
+
+        // Funções utilitárias
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / (3600 * 24));
+            const hours = Math.floor((seconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${days}d ${hours}h ${minutes}m`;
+        }
+    </script>
+    
+    {% block extra_scripts %}
+    {% endblock %}
+</body>
+</html>
