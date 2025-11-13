@@ -13,6 +13,11 @@ services:
     networks:
       - siscoe-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:6.2
@@ -20,6 +25,11 @@ services:
     networks:
       - siscoe-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   web:
     build: 
@@ -30,6 +40,8 @@ services:
     volumes:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     ports:
       - "8080:8000"
     environment:
@@ -38,11 +50,18 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - siscoe-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   celery:
     build: .
@@ -55,11 +74,18 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - siscoe-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "celery", "-A", "backend", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   celery-beat:
     build: .
@@ -72,7 +98,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - siscoe-network
     restart: unless-stopped
@@ -180,6 +209,23 @@ services:
     networks:
       - siscoe-network
     restart: unless-stopped
+  
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: siscoe-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - siscoe-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   siscoe-network:
@@ -191,3 +237,7 @@ volumes:
   grafana_data:
   portainer_data:
   pgadmin_data:
+  redis_data:
+  rabbitmq_data:
+  static_volume:
+  media_volume:

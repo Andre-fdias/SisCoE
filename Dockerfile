@@ -1,39 +1,35 @@
+# Dockerfile - VERSÃO MELHORADA
 FROM python:3.11-slim
 
-WORKDIR /app
+# Evita que o Python escreve arquivos .pyc
+ENV PYTHONDONTWRITEBYTECODE 1
+# Garante que a saída do python seja logada
+ENV PYTHONUNBUFFERED 1
 
-# Instalar dependências do sistema INCLUINDO DOCKER CLI
+# Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
-    locales \
-    gcc \
-    g++ \
-    python3-dev \
-    libpq-dev \
     curl \
-    postgresql-client \
-    # INSTALAR DOCKER CLI
-    docker.io \
-    && sed -i -e 's/# pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/' /etc/locale.gen \
-    && dpkg-reconfigure --frontend=noninteractive locales \
+    gcc \
+    postgresql-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Configurar variáveis de ambiente do locale
-ENV LANG=pt_BR.UTF-8
-ENV LANGUAGE=pt_BR:pt
-ENV LC_ALL=pt_BR.UTF-8
+# Cria diretório da aplicação
+WORKDIR /app
 
-# Copiar requirements e instalar dependências Python
+# Instala dependências Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar projeto
+# Copia o projeto
 COPY . .
 
-# Criar diretórios para static e media files
-RUN mkdir -p /app/staticfiles /app/media
+# Cria usuário não-root para segurança
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
 
-# Expor porta
-EXPOSE 8000
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
 
-# Comando padrão
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 backend.asgi:application"]
+# Comando para rodar a aplicação
+CMD ["gunicorn", "SISCOE.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
