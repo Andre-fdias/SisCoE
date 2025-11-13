@@ -1,363 +1,376 @@
-
-{% extends "admin/base_site.html" %}
+{% extends "control_panel/base.html" %}
 {% load static %}
 
 {% block title %}Painel de Controle | SisCoE{% endblock %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <style>
-        :root {
-            --header-bg: #1f2937;
-            --body-bg: #111827;
-            --card-bg: #1f2937;
-            --text-color: #d1d5db;
-            --text-muted: #9ca3af;
-            --border-color: #374151;
-            --healthy-color: #22c55e;
-            --warning-color: #f59e0b;
-            --down-color: #ef4444;
-        }
-        .theme-light {
-            --header-bg: #ffffff;
-            --body-bg: #f9fafb;
-            --card-bg: #ffffff;
-            --text-color: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-        }
-        body {
-            background-color: var(--body-bg);
-            color: var(--text-color);
-        }
-        .status-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-        }
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        .status-indicator.healthy { background-color: var(--healthy-color); }
-        .status-indicator.warning { background-color: var(--warning-color); }
-        .status-indicator.down { background-color: var(--down-color); }
-        .status-indicator.error { background-color: var(--down-color); }
+{% block content %}
+<div class="container mx-auto p-5">
+    <div class="gradient-div-1 rounded-2xl shadow-xl overflow-hidden p-8 mb-8">
+        <!-- CABEÇALHO -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 shadow-md">
+                    <i class="fas fa-tachometer-alt text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Painel de Controle</h1>
+                    <p class="text-gray-600 dark:text-gray-300">Monitoramento em tempo real do sistema</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600 dark:text-gray-300">Atualizado em: <span id="last-updated">--:--:--</span></span>
+                <button id="refresh-btn" class="px-4 py-2 bg-gradient-to-r from-cyan-400 to-cyan-600 text-white rounded-lg hover:from-cyan-500 hover:to-cyan-700 transition shadow-md">
+                    <i class="fas fa-sync-alt mr-2"></i>Atualizar
+                </button>
+            </div>
+        </div>
 
-        .progress-bar { background-color: #374151; }
-        .progress-fill.healthy { background-color: var(--healthy-color); }
-        .progress-fill.warning { background-color: var(--warning-color); }
-        .progress-fill.down { background-color: var(--down-color); }
-        
-        .badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .badge-healthy { background-color: var(--healthy-color); color: white; }
-        .badge-warning { background-color: var(--warning-color); color: white; }
-        .badge-down { background-color: var(--down-color); color: white; }
-        .badge-running { background-color: var(--healthy-color); color: white; }
-        .badge-exited { background-color: var(--text-muted); color: white; }
-        .badge-restarting { background-color: var(--warning-color); color: white; }
-        .badge-error { background-color: var(--down-color); color: white; }
-    </style>
+        <!-- MÉTRICAS RÁPIDAS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Uso de CPU</p>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="cpu-usage">--%</h3>
+                    </div>
+                    <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                        <i class="fas fa-microchip text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div id="cpu-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Uso de Memória</p>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="memory-usage">--%</h3>
+                    </div>
+                    <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                        <i class="fas fa-memory text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div id="memory-bar" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Uso de Disco</p>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="disk-usage">--%</h3>
+                    </div>
+                    <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                        <i class="fas fa-hdd text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div id="disk-bar" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Uptime</p>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="uptime">--</h3>
+                    </div>
+                    <div class="p-3 bg-orange-100 dark:bg-orange-900 rounded-full">
+                        <i class="fas fa-clock text-orange-600 dark:text-orange-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-gray-600 dark:text-gray-400" id="boot-time">
+                    Iniciado em: --
+                </div>
+            </div>
+        </div>
+
+        <!-- SERVIÇOS E CONTAINERS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Status dos Serviços -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-server mr-2 text-blue-500"></i>
+                    Status dos Serviços
+                </h2>
+                <div id="service-status-list" class="space-y-3">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Status dos Containers -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                    <i class="fab fa-docker mr-2 text-blue-500"></i>
+                    Containers Ativos
+                </h2>
+                <div id="container-status-list" class="space-y-3">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- AÇÕES RÁPIDAS -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+                Ações Rápidas
+            </h2>
+            <div id="quick-actions-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <button data-action="clear-cache" 
+                        class="action-btn bg-gradient-to-r from-indigo-400 to-indigo-600 hover:from-indigo-500 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-broom text-xl mb-2"></i>
+                    <span class="text-sm">Limpar Cache</span>
+                </button>
+                
+                <button data-action="send-test-email" 
+                        class="action-btn bg-gradient-to-r from-teal-400 to-teal-600 hover:from-teal-500 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-envelope text-xl mb-2"></i>
+                    <span class="text-sm">Testar Email</span>
+                </button>
+                
+                <button data-action="health-check" 
+                        class="action-btn bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-check-circle text-xl mb-2"></i>
+                    <span class="text-sm">Health Check</span>
+                </button>
+                
+                <button data-action="backup-db" 
+                        class="action-btn bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-database text-xl mb-2"></i>
+                    <span class="text-sm">Backup DB</span>
+                </button>
+                
+                <button data-action="restart-service" data-service="web" 
+                        class="action-btn bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-sync-alt text-xl mb-2"></i>
+                    <span class="text-sm">Reiniciar Web</span>
+                </button>
+                
+                <button data-action="restart-service" data-service="celery" 
+                        class="action-btn bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 flex flex-col items-center justify-center">
+                    <i class="fas fa-sync-alt text-xl mb-2"></i>
+                    <span class="text-sm">Reiniciar Celery</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- LINKS ÚTEIS -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-link mr-2 text-gray-500"></i>
+                Links Úteis
+            </h2>
+            <div id="external-tools-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
-{% block content %}
-<div id="content-main" class="p-6 space-y-6">
-    {% csrf_token %}
-    
-    <!-- CABEÇALHO -->
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">🚀 Painel de Controle</h1>
-        <div class="flex items-center space-x-4">
-            <a href="{% url 'core:index' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                <i class="fas fa-arrow-left mr-2"></i> Voltar para Home
-            </a>
-            <span class="text-sm text-gray-400">Atualizado em: <span id="last-updated">--:--:--</span></span>
-            <button id="refresh-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-sync-alt"></i> Atualizar
-            </button>
-        </div>
-    </div>
-
-    <!-- SEÇÃO A: STATUS EM TEMPO REAL E MÉTRICAS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Card: Status dos Serviços Core -->
-        <div class="lg:col-span-1 bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4"><i class="fas fa-heartbeat mr-2"></i>Status dos Serviços</h2>
-            <div id="service-status-list" class="space-y-4">
-                {% for name, service in service_status.items %}
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="status-indicator {{ service.status }}"></div>
-                        <span class="ml-3 text-lg">{{ name|capfirst }}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="font-mono text-sm text-gray-400">{{ service.message }}</span>
-                        <div class="text-xs text-gray-500">{{ service.version }}</div>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-400">Nenhum serviço para monitorar.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Card: Métricas do Sistema -->
-        <div class="lg:col-span-2 bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4"><i class="fas fa-tachometer-alt mr-2"></i>Métricas do Sistema</h2>
-            <div id="system-metrics-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- CPU -->
-                <div>
-                    <label class="text-sm font-medium text-gray-400">Uso de CPU</label>
-                    <div class="flex items-center mt-1">
-                        <div class="w-full progress-bar rounded-full h-4">
-                            <div id="cpu-progress" class="progress-fill healthy rounded-full h-4" style="width: {{ system_metrics.cpu_usage }}%;"></div>
-                        </div>
-                        <span id="cpu-usage" class="ml-4 font-bold text-lg">{{ system_metrics.cpu_usage|floatformat:1 }}%</span>
-                    </div>
-                </div>
-                <!-- Memória -->
-                <div>
-                    <label class="text-sm font-medium text-gray-400">Uso de Memória</label>
-                    <div class="flex items-center mt-1">
-                        <div class="w-full progress-bar rounded-full h-4">
-                            <div id="mem-progress" class="progress-fill healthy rounded-full h-4" style="width: {{ system_metrics.memory_usage }}%;"></div>
-                        </div>
-                        <span id="mem-usage" class="ml-4 font-bold text-lg">{{ system_metrics.memory_usage|floatformat:1 }}%</span>
-                    </div>
-                    <div class="text-xs text-gray-500 text-right mt-1">
-                        <span id="mem-details">{{ system_metrics.memory_used_gb }}GB / {{ system_metrics.memory_total_gb }}GB</span>
-                    </div>
-                </div>
-                <!-- Disco -->
-                <div>
-                    <label class="text-sm font-medium text-gray-400">Uso de Disco</label>
-                    <div class="flex items-center mt-1">
-                        <div class="w-full progress-bar rounded-full h-4">
-                            <div id="disk-progress" class="progress-fill healthy rounded-full h-4" style="width: {{ system_metrics.disk_usage }}%;"></div>
-                        </div>
-                        <span id="disk-usage" class="ml-4 font-bold text-lg">{{ system_metrics.disk_usage|floatformat:1 }}%</span>
-                    </div>
-                    <div class="text-xs text-gray-500 text-right mt-1">
-                        <span id="disk-details">{{ system_metrics.disk_free_gb }}GB livres / {{ system_metrics.disk_total_gb }}GB</span>
-                    </div>
-                </div>
-                <!-- Uptime -->
-                <div class="flex flex-col justify-center">
-                     <label class="text-sm font-medium text-gray-400">Uptime do Sistema</label>
-                     <span id="uptime-display" class="text-2xl font-bold text-green-400">{{ system_metrics.uptime_display }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SEÇÃO B, C e D: INFO, FERRAMENTAS, AÇÕES -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Card: Status dos Containers -->
-        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4"><i class="fab fa-docker mr-2"></i>Status dos Containers</h2>
-            <div id="container-status-list" class="space-y-3">
-                {% for container in container_status %}
-                <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-700">
-                    <div class="flex items-center">
-                        <i class="fas fa-box-open text-gray-400 mr-3"></i>
-                        <span class="font-medium">{{ container.name }}</span>
-                    </div>
-                    <span class="badge badge-{{ container.status }}">{{ container.status }}</span>
-                </div>
-                {% empty %}
-                <p class="text-gray-400">Não foi possível carregar o status dos containers.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Card: Informações Django -->
-        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4"><i class="fab fa-python mr-2"></i>Informações Django</h2>
-            <div id="django-info-grid" class="grid grid-cols-2 gap-4 text-sm">
-                <div class="flex justify-between border-b border-gray-700 py-1">
-                    <span class="text-gray-400">Versão:</span>
-                    <span class="font-mono">{{ django_info.version|default:"N/A" }}</span>
-                </div>
-                <div class="flex justify-between border-b border-gray-700 py-1">
-                    <span class="text-gray-400">Modo Debug:</span>
-                    {% if django_info.debug %}
-                        <span class="font-bold text-yellow-400">ATIVO</span>
-                    {% else %}
-                        <span class="font-bold text-green-400">INATIVO</span>
-                    {% endif %}
-                </div>
-                <div class="flex justify-between border-b border-gray-700 py-1">
-                    <span class="text-gray-400">Apps Instaladas:</span>
-                    <span class="font-mono">{{ django_info.installed_apps }}</span>
-                </div>
-                <div class="flex justify-between border-b border-gray-700 py-1">
-                    <span class="text-gray-400">Models:</span>
-                    <span class="font-mono">{{ django_info.models_count }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Ações Rápidas -->
-        <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4"><i class="fas fa-bolt mr-2"></i>Ações Rápidas</h2>
-            <div id="quick-actions-grid" class="grid grid-cols-2 gap-4">
-                <button data-action="clear-cache" class="action-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-broom mr-2"></i>Limpar Cache
-                </button>
-                <button data-action="send-test-email" class="action-btn bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-envelope mr-2"></i>Testar Email
-                </button>
-                <button data-action="health-check" class="action-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-check-circle mr-2"></i>Health Check
-                </button>
-                 <button data-action="backup-db" class="action-btn bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-database mr-2"></i>Backup DB
-                </button>
-                <button data-action="restart-service" data-service="web" class="action-btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-sync-alt mr-2"></i>Reiniciar Web
-                </button>
-                <button data-action="restart-service" data-service="celery" class="action-btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition w-full">
-                    <i class="fas fa-sync-alt mr-2"></i>Reiniciar Celery
-                </button>
-            </div>
-        </div>
-
-    <!-- NOVO CARD: Ferramentas Externas Integradas -->
-    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-external-link-alt mr-2"></i>Ferramentas Externas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {% for tool in external_tools %}
-            <a href="{{ tool.url }}" target="_blank" class="flex items-center justify-between p-3 bg-gray-700 rounded-md hover:bg-gray-600 transition">
-                <div class="flex items-center">
-                    <span class="text-lg mr-3">{{ tool.icon }}</span>
-                    <span class="font-medium">{{ tool.name }}</span>
-                </div>
-                <div class="flex items-center">
-                    <div class="status-indicator {{ tool.status }}"></div>
-                    <span class="ml-2 text-sm text-gray-400">{{ tool.status|capfirst }}</span>
-                </div>
-            </a>
-            {% empty %}
-            <p class="text-gray-400 col-span-full">Nenhuma ferramenta externa configurada.</p>
-            {% endfor %}
-        </div>
-    </div>
-    </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+{% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const refreshBtn = document.getElementById('refresh-btn');
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
     const lastUpdatedEl = document.getElementById('last-updated');
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const refreshBtn = document.getElementById('refresh-btn');
 
     function showToast(message, type = 'success') {
-        const colors = {
-            success: 'linear-gradient(to right, #00b09b, #96c93d)',
-            error: 'linear-gradient(to right, #ff5f6d, #ffc371)',
-            info: 'linear-gradient(to right, #007bff, #00a6ff)',
-        };
+        if (typeof Toastify === 'undefined') {
+            console.error("Toastify is not loaded!");
+            alert(message); // Fallback
+            return;
+        }
         Toastify({
-            text: message,
-            duration: 3000,
-            close: true,
-            gravity: "top",
-            position: "right",
-            stopOnFocus: true,
-            style: {
-                background: colors[type] || colors.info,
-            },
+            text: message, duration: 3000, close: true, gravity: "top", position: "right", stopOnFocus: true,
+            style: { background: type === 'error' ? '#ef4444' : '#22c55e', color: "#fff" },
         }).showToast();
     }
 
-    function updateUI(data) {
-        // Update last updated time
-        lastUpdatedEl.textContent = new Date().toLocaleTimeString();
-
-        // Update System Metrics
-        const metrics = data.system_metrics;
-        if (metrics && !metrics.error) {
-            document.getElementById('cpu-usage').textContent = metrics.cpu_usage.toFixed(1) + '%';
-            document.getElementById('cpu-progress').style.width = metrics.cpu_usage + '%';
-            
-            document.getElementById('mem-usage').textContent = metrics.memory_usage.toFixed(1) + '%';
-            document.getElementById('mem-progress').style.width = metrics.memory_usage + '%';
-            document.getElementById('mem-details').textContent = `${metrics.memory_used_gb}GB / ${metrics.memory_total_gb}GB`;
-
-            document.getElementById('disk-usage').textContent = metrics.disk_usage.toFixed(1) + '%';
-            document.getElementById('disk-progress').style.width = metrics.disk_usage + '%';
-            document.getElementById('disk-details').textContent = `${metrics.disk_free_gb}GB livres / ${metrics.disk_total_gb}GB`;
-            
-            document.getElementById('uptime-display').textContent = metrics.uptime_display;
+    function renderIcon(icon) {
+        if (!icon) return '';
+        if (icon.includes('fa-') || icon.includes('fab ') || icon.includes('fas ')) {
+            return `<i class="${icon} text-2xl text-gray-600 dark:text-gray-400 w-8 text-center"></i>`;
         }
-
-        // Update Service Status
-        const services = data.service_status;
-        const serviceList = document.getElementById('service-status-list');
-        if (services && serviceList) {
-            let html = '';
-            for (const [name, service] of Object.entries(services)) {
-                html += `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="status-indicator ${service.status}"></div>
-                        <span class="ml-3 text-lg">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="font-mono text-sm text-gray-400">${service.message}</span>
-                        <div class="text-xs text-gray-500">${service.version}</div>
-                    </div>
-                </div>`;
-            }
-            serviceList.innerHTML = html;
-        }
-        
-        // Update Container Status
-        const containers = data.container_status;
-        const containerList = document.getElementById('container-status-list');
-        if (containers && containerList) {
-            let html = '';
-            containers.forEach(container => {
-                html += `
-                <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-700">
-                    <div class="flex items-center">
-                        <i class="fas fa-box-open text-gray-400 mr-3"></i>
-                        <span class="font-medium">${container.name}</span>
-                    </div>
-                    <span class="badge badge-${container.status}">${container.status}</span>
-                </div>`;
-            });
-            containerList.innerHTML = html || '<p class="text-gray-400">Não foi possível carregar o status dos containers.</p>';
-        }
+        return `<span class="text-2xl w-8 text-center">${icon}</span>`;
     }
 
-    function fetchData() {
-        refreshBtn.disabled = true;
-        refreshBtn.classList.add('opacity-50');
+    function updateDashboard(data) {
+        console.log("Iniciando atualização do UI com os dados:", data);
+        
+        // 1. Atualizar Métricas
+        try {
+            const metrics = data.system_metrics;
+            if (metrics && !metrics.error) {
+                const cpuUsageEl = document.getElementById('cpu-usage');
+                const memoryUsageEl = document.getElementById('memory-usage');
+                const diskUsageEl = document.getElementById('disk-usage');
+                const uptimeEl = document.getElementById('uptime');
+                const bootTimeEl = document.getElementById('boot-time');
+                const cpuBarEl = document.getElementById('cpu-bar');
+                const memoryBarEl = document.getElementById('memory-bar');
+                const diskBarEl = document.getElementById('disk-bar');
 
-        fetch("{% url 'control_panel:api_health' %}")
-            .then(response => response.ok ? response.json() : Promise.reject('Network response was not ok'))
+                if (cpuUsageEl) cpuUsageEl.textContent = `${metrics.cpu_usage.toFixed(1)}%`;
+                if (memoryUsageEl) memoryUsageEl.textContent = `${metrics.memory_usage.toFixed(1)}%`;
+                if (diskUsageEl) diskUsageEl.textContent = `${metrics.disk_usage.toFixed(1)}%`;
+                if (uptimeEl) uptimeEl.textContent = metrics.uptime_display;
+                if (bootTimeEl) bootTimeEl.textContent = `Iniciado em: ${metrics.boot_time}`;
+                
+                if (cpuBarEl) cpuBarEl.style.width = `${metrics.cpu_usage}%`;
+                if (memoryBarEl) memoryBarEl.style.width = `${metrics.memory_usage}%`;
+                if (diskBarEl) diskBarEl.style.width = `${metrics.disk_usage}%`;
+            } else {
+                 console.warn("Dados de métricas do sistema ausentes ou com erro:", metrics ? metrics.error : "N/A");
+            }
+        } catch (e) {
+            console.error("Erro ao atualizar métricas do sistema:", e);
+        }
+
+        // 2. Atualizar Status dos Serviços
+        try {
+            const services = data.service_status;
+            const serviceList = document.getElementById('service-status-list');
+            if (services && serviceList) {
+                serviceList.innerHTML = Object.entries(services).map(([name, service]) => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full ${service.status === 'healthy' ? 'bg-green-500' : service.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'} mr-3"></div>
+                            <span class="font-medium text-gray-800 dark:text-white">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm ${service.status === 'healthy' ? 'text-green-600 dark:text-green-400' : service.status === 'warning' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'} font-medium">
+                                ${service.status.toUpperCase()}
+                            </span>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${service.version || ''}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                if (serviceList) serviceList.innerHTML = '<p class="text-gray-500">Não foi possível carregar os serviços.</p>';
+            }
+        } catch (e) {
+            console.error("Erro ao atualizar status dos serviços:", e);
+        }
+
+        // 3. Atualizar Status dos Containers
+        try {
+            const containers = data.container_status;
+            const containerList = document.getElementById('container-status-list');
+            if (containers && containerList) {
+                containerList.innerHTML = containers.slice(0, 5).map(container => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fab fa-docker text-gray-500 dark:text-gray-400 mr-3"></i>
+                            <div>
+                                <div class="font-medium text-gray-800 dark:text-white">${container.name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">${container.image}</div>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            container.status === 'running' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                            container.status === 'exited' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }">
+                            ${container.status}
+                        </span>
+                    </div>
+                `).join('');
+            } else {
+                if (containerList) containerList.innerHTML = '<p class="text-gray-500">Não foi possível carregar os containers.</p>';
+            }
+        } catch (e) {
+            console.error("Erro ao atualizar status dos containers:", e);
+        }
+
+        // 4. Atualizar Links Externos
+        try {
+            const tools = data.external_tools;
+            const toolsList = document.getElementById('external-tools-list');
+            if (tools && toolsList) {
+                if (tools.length > 0) {
+                    toolsList.innerHTML = tools.map(tool => `
+                        <a href="${tool.url}" target="_blank" class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg flex items-center space-x-3 transition transform hover:scale-105 hover:shadow-lg">
+                            ${renderIcon(tool.icon)}
+                            <div>
+                                <p class="font-semibold text-gray-800 dark:text-white">${tool.name}</p>
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 rounded-full ${tool.status === 'active' ? 'bg-green-500' : 'bg-red-500'} mr-2"></div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${tool.status === 'active' ? 'Online' : 'Offline'}</p>
+                                </div>
+                            </div>
+                        </a>
+                    `).join('');
+                } else {
+                    toolsList.innerHTML = `
+                        <div class="col-span-full text-center py-4">
+                            <i class="fas fa-link text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-500 dark:text-gray-400">Nenhum link útil cadastrado.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">Adicione links no <a href="/admin/control_panel/usefullink/" class="text-blue-500 hover:underline">Painel de Administração</a>.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                if(toolsList) toolsList.innerHTML = '<p class="text-gray-500">Não foi possível carregar os links.</p>';
+            }
+        } catch (e) {
+            console.error("Erro ao atualizar links externos:", e);
+        }
+
+        if(lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    function fetchDashboardData() {
+        console.log("Buscando dados do dashboard...");
+        if(refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.querySelector('i').classList.add('fa-spin');
+        }
+
+        fetch('{% url "control_panel:api_health" %}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro de rede: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                updateUI(data);
+                updateDashboard(data);
             })
             .catch(error => {
-                console.error('Error fetching dashboard data:', error);
-                showToast('Erro ao atualizar dados.', 'error');
+                console.error('Erro fatal ao carregar dados do dashboard:', error);
+                showToast(error.message, 'error');
             })
             .finally(() => {
-                refreshBtn.disabled = false;
-                refreshBtn.classList.remove('opacity-50');
+                if(refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.querySelector('i').classList.remove('fa-spin');
+                }
             });
     }
 
@@ -365,34 +378,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const button = e.target.closest('.action-btn');
         if (!button) return;
 
+        console.log("Ação rápida acionada:", button.dataset.action);
         const action = button.dataset.action;
         const service = button.dataset.service;
         let url, body;
 
         switch(action) {
-            case 'clear-cache':
-                url = "{% url 'control_panel:api_clear_cache' %}";
-                break;
-            case 'send-test-email':
-                url = "{% url 'control_panel:api_send_test_email' %}";
-                break;
-            case 'health-check':
-                url = "{% url 'control_panel:api_run_health_check' %}";
-                break;
-            case 'backup-db':
-                url = "{% url 'control_panel:api_backup_database' %}";
-                break;
+            case 'clear-cache': url = "{% url 'control_panel:api_clear_cache' %}"; break;
+            case 'send-test-email': url = "{% url 'control_panel:api_send_test_email' %}"; break;
+            case 'health-check': url = "{% url 'control_panel:api_run_health_check' %}"; break;
+            case 'backup-db': url = "{% url 'control_panel:api_backup_database' %}"; break;
             case 'restart-service':
                 url = "{% url 'control_panel:api_restart_service' %}";
                 body = new FormData();
                 body.append('service', service);
                 break;
-            default:
-                return;
+            default: return;
         }
 
         button.disabled = true;
-        button.classList.add('opacity-50');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
 
         fetch(url, {
             method: 'POST',
@@ -403,31 +409,30 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(({ok, data}) => {
             if (ok) {
                 showToast(data.message || 'Ação executada com sucesso!', 'success');
-                if (action === 'restart-service') {
-                    showToast('Atualizando em 5s...', 'info');
-                    setTimeout(fetchData, 5000);
-                }
+                setTimeout(fetchDashboardData, 2000);
             } else {
-                throw new Error(data.message || 'Ocorreu um erro.');
+                throw new Error(data.message || 'Ocorreu um erro desconhecido.');
             }
         })
         .catch(error => {
-            console.error(`Error performing action ${action}:`, error);
+            console.error(`Erro ao executar a ação ${action}:`, error);
             showToast(error.message, 'error');
         })
         .finally(() => {
             button.disabled = false;
-            button.classList.remove('opacity-50');
+            button.innerHTML = originalContent;
         });
     }
 
-    // Initial fetch and set interval
-    fetchData();
-    setInterval(fetchData, 30000);
-
     // Event Listeners
-    refreshBtn.addEventListener('click', fetchData);
-    document.getElementById('quick-actions-grid').addEventListener('click', handleAction);
+    const quickActionsGrid = document.getElementById('quick-actions-grid');
+    if(refreshBtn) refreshBtn.addEventListener('click', fetchDashboardData);
+    if(quickActionsGrid) quickActionsGrid.addEventListener('click', handleAction);
+
+    // Carregar dados iniciais
+    fetchDashboardData();
+    // Recarregar a cada 30 segundos
+    setInterval(fetchDashboardData, 30000);
 });
 </script>
 {% endblock %}

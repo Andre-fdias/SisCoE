@@ -7,22 +7,26 @@ import subprocess
 import json
 import logging
 import os
-import re # Adicionado: Importação do módulo re
+import re 
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from django.db import connection
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.contrib import messages
 
+from .models import UsefulLink
+
 logger = logging.getLogger(__name__)
 
 def is_staff_or_superuser(user):
-    return user.is_staff or user.is_superuser
+    return user.is_superuser
 
 # Funções auxiliares movidas para o topo para melhor organização
 def _calculate_cpu_percent(stats):
@@ -52,21 +56,15 @@ def _check_port_status(host, port):
             sock.settimeout(1)
             result = sock.connect_ex((host, port))
             return 'active' if result == 0 else 'down'
-    except socket.error:
+    except (socket.gaierror, socket.error):
         return 'down'
 
 # Views Principais
 @login_required
 @user_passes_test(is_staff_or_superuser)
 def dashboard(request):
-    context = {
-        'system_metrics': get_system_metrics(),
-        'service_status': get_service_status(),
-        'django_info': get_django_info(request),
-        'container_status': get_container_status(),
-        'external_tools': get_external_tools(),
-    }
-    return render(request, 'control_panel/dashboard.html', context)
+    # O contexto é carregado dinamicamente via API, não é necessário aqui.
+    return render(request, 'control_panel/dashboard.html')
 
 @login_required
 @user_passes_test(is_staff_or_superuser)
@@ -265,8 +263,8 @@ def get_django_info(request):
         'database_engine': settings.DATABASES['default']['ENGINE'],
         'allowed_hosts': settings.ALLOWED_HOSTS,
         'time_zone': settings.TIME_ZONE,
-        'static_root': settings.STATIC_ROOT,
-        'media_root': settings.MEDIA_ROOT,
+        'static_root': str(settings.STATIC_ROOT),
+        'media_root': str(settings.MEDIA_ROOT),
     }
 
 def get_container_status():
@@ -278,7 +276,9 @@ def get_container_status():
             stats = {}
             if container.status == 'running':
                 try:
-                    stats = container.stats(stream=False, one_shot=True)
+                    # Use one_shot=False for a stream, but for a snapshot, one_shot=True is better.
+                    # However, the API docs suggest one_shot=False is deprecated and behavior is now default.
+                    stats = container.stats(stream=False)
                 except Exception:
                     pass # Ignora erro se não conseguir pegar stats
 
@@ -288,14 +288,18 @@ def get_container_status():
                 'image': container.image.tags[0] if container.image.tags else 'N/A',
                 'ports': container.ports,
                 'created': container.attrs['Created'][:19],
-                'cpu_usage': _calculate_cpu_percent(stats),
-                'memory_usage': _calculate_memory_usage(stats),
+                'cpu_usage': _calculate_cpu_percent(stats) if stats else 0,
+                'memory_usage': _calculate_memory_usage(stats) if stats else 0,
             })
         
         return containers
+    except docker.errors.DockerException as e:
+        logger.error(f"Erro de comunicação com o Docker: {e}")
+        return [] # Retorna lista vazia em caso de erro de comunicação
     except Exception as e:
-        logger.error(f"Erro ao obter status dos containers: {e}")
-        return [{'name': 'Docker', 'status': 'error', 'message': str(e)}]
+        logger.error(f"Erro inesperado ao obter status dos containers: {e}")
+        return []
+
 
 def get_detailed_container_info():
     try:
@@ -318,7 +322,7 @@ def get_detailed_container_info():
             
             if container.status == 'running':
                 try:
-                    stats = container.stats(stream=False, one_shot=True)
+                    stats = container.stats(stream=False)
                     container_info['stats'] = {
                         'cpu_percent': _calculate_cpu_percent(stats),
                         'memory_usage': _calculate_memory_usage(stats),
@@ -360,23 +364,23 @@ def get_docker_system_info():
         return {}
 
 def get_external_tools():
-    tools = [
-        {'name': 'Django Admin', 'url': '/admin/', 'port': None, 'icon': '🔧'},
-        {'name': 'Portainer', 'url': 'http://localhost:9000', 'port': 9000, 'icon': '🐳'},
-        {'name': 'RabbitMQ', 'url': 'http://localhost:15672', 'port': 15672, 'icon': '🐇'},
-        {'name': 'Redis Cdr', 'url': 'http://localhost:8081', 'port': 8081, 'icon': '🗄️'},
-        {'name': 'pgAdmin', 'url': 'http://localhost:5050', 'port': 5050, 'icon': '🐘'},
-        {'name': 'Flower', 'url': 'http://localhost:5555', 'port': 5555, 'icon': '🌸'},
-        {'name': 'Grafana', 'url': 'http://localhost:3000', 'port': 3000, 'icon': '📊'},
-        {'name': 'Prometheus', 'url': 'http://localhost:9090', 'port': 9090, 'icon': '⚡'},
-    ]
-    
-    for tool in tools:
-        if tool['port']:
-            tool['status'] = _check_port_status('localhost', tool['port'])
-        else:
-            tool['status'] = 'active'
-    
+    tools = []
+    for link in UsefulLink.objects.filter(is_active=True).order_by('order'):
+        parsed_url = urlparse(link.url)
+        status = 'active' # Default for relative URLs
+        
+        # Check status only for external http/https URLs
+        if parsed_url.scheme in ['http', 'https'] and parsed_url.hostname:
+            port = parsed_url.port or (443 if parsed_url.scheme == 'https' else 80)
+            status = _check_port_status(parsed_url.hostname, port)
+            
+        tools.append({
+            'name': link.name,
+            'url': link.url,
+            'icon': link.icon,
+            'status': status,
+            'description': link.description
+        })
     return tools
 
 def get_recent_logs(level='ERROR', limit=50):
@@ -387,14 +391,10 @@ def get_recent_logs(level='ERROR', limit=50):
             return [{'level': 'ERROR', 'message': f"Arquivo de log não configurado ou não encontrado: {log_file}"}]
         
         logs = []
-        # Regex para capturar o nível do log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        # e o restante da mensagem.
-        # Assume que o nível está no início da linha, seguido por um espaço ou hífen.
         log_pattern = re.compile(r'^(DEBUG|INFO|WARNING|ERROR|CRITICAL)\s*[:-]?\s*(.*)', re.IGNORECASE)
 
         with open(log_file, 'r') as f:
             lines = f.readlines()
-            # Processa as últimas 'limit' linhas para logs mais recentes
             for line in reversed(lines):
                 if len(logs) >= limit:
                     break
@@ -404,17 +404,17 @@ def get_recent_logs(level='ERROR', limit=50):
                     log_level = match.group(1).upper()
                     log_message = match.group(2).strip()
                 else:
-                    # Se não conseguir parsear, assume INFO e a linha inteira como mensagem
                     log_level = 'INFO'
                     log_message = line.strip()
 
-                if log_level == level.upper() or level.upper() == 'ALL': # Adiciona 'ALL' para ver todos os logs
+                if log_level == level.upper() or level.upper() == 'ALL':
                     logs.append({'level': log_level, 'message': log_message})
         
         return logs
     except Exception as e:
         logger.error(f"Erro ao ler logs: {e}")
         return [{'level': 'ERROR', 'message': f"Erro ao carregar logs: {e}"}]
+
 def get_performance_metrics():
     """Métricas de performance da aplicação lidas do cache."""
     total_requests = cache.get('total_requests', 0)
@@ -430,13 +430,13 @@ def get_performance_metrics():
         error_rate = 0
 
     return {
-        'requests_per_second': 0,  # Placeholder - requer uma implementação mais complexa
+        'requests_per_second': 0,
         'average_response_time_ms': round(average_response_time_ms, 2),
         'error_rate': round(error_rate, 2),
         'total_requests': total_requests,
         'error_count_4xx': error_count_4xx,
         'error_count_5xx': error_count_5xx,
-        'active_users': 0, # Placeholder
+        'active_users': 0,
     }
 
 def get_database_metrics():
@@ -489,8 +489,12 @@ def api_health(request):
         'timestamp': datetime.now().isoformat(),
         'system_metrics': get_system_metrics(),
         'service_status': get_service_status(),
+        'django_info': get_django_info(request),
+        'container_status': get_container_status(),
+        'external_tools': get_external_tools(),
     })
-
+    
+    
 @login_required
 @user_passes_test(is_staff_or_superuser)
 def api_metrics(request):
@@ -524,24 +528,31 @@ def api_containers(request):
 @login_required
 @user_passes_test(is_staff_or_superuser)
 @require_http_methods(["POST"])
+@csrf_exempt # Para simplificar, mas em produção use CSRF token
 def api_restart_service(request):
     """Reinicia um serviço via docker-compose"""
     service = request.POST.get('service')
+    if not service:
+        service_data = json.loads(request.body)
+        service = service_data.get('service')
+
     command = ['docker-compose', 'restart', service]
     
     try:
         if service not in ['web', 'celery', 'celery-beat', 'rabbitmq', 'redis', 'db']:
             return JsonResponse({'status': 'error', 'message': 'Serviço inválido'}, status=400)
         
-        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=False)
         if result.returncode == 0:
             return JsonResponse({'status': 'success', 'message': f'Serviço {service} reiniciado com sucesso.'})
         else:
+            logger.error(f"Erro ao reiniciar serviço {service}: {result.stderr}")
             return JsonResponse({'status': 'error', 'message': result.stderr or result.stdout}, status=500)
             
     except subprocess.TimeoutExpired:
         return JsonResponse({'status': 'error', 'message': f'Timeout ao reiniciar o serviço {service}'}, status=500)
     except Exception as e:
+        logger.error(f"Exceção ao reiniciar serviço: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
@@ -568,18 +579,22 @@ def api_restart_container(request):
 @user_passes_test(is_staff_or_superuser)
 @require_http_methods(["POST"])
 def api_clear_cache(request):
-    """Limpa o cache"""
+    """Limpa o cache do Django e do Redis."""
     try:
         cache.clear()
-        messages.success(request, 'Cache do Django limpo.')
+        message = "Cache do Django limpo. "
         
-        # Limpar cache do Redis também
-        r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
-        r.flushdb()
-        messages.success(request, 'Cache do Redis (db 0) limpo.')
-        
-        return JsonResponse({'status': 'success', 'message': 'Cache limpo com sucesso'})
+        try:
+            r = redis.Redis.from_url(settings.CELERY_BROKER_URL, socket_connect_timeout=2)
+            r.flushdb()
+            message += "Cache do Redis (db 0) limpo."
+        except Exception as e:
+            logger.warning(f"Não foi possível limpar o cache do Redis: {e}")
+            message += "Não foi possível limpar o cache do Redis."
+
+        return JsonResponse({'status': 'success', 'message': message})
     except Exception as e:
+        logger.error(f"Erro ao limpar cache: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
@@ -590,7 +605,7 @@ def api_send_test_email(request):
     try:
         send_mail(
             'Teste do Painel de Controle - SisCoE',
-            f'Este é um email de teste enviado para {request.user.email} a partir do painel de controle do SisCoE.',
+            f'Este é um email de teste enviado para {request.user.email} a partir do painel de controle do SisCoE em {datetime.now()}.',
             settings.DEFAULT_FROM_EMAIL,
             [request.user.email],
             fail_silently=False,
@@ -602,6 +617,7 @@ def api_send_test_email(request):
 
 @login_required
 @user_passes_test(is_staff_or_superuser)
+@require_http_methods(["POST"]) # Mudado para POST para ser consistente
 def api_run_health_check(request):
     """Executa verificação completa de saúde"""
     try:
@@ -615,9 +631,9 @@ def api_run_health_check(request):
         all_healthy = all(status == 'healthy' for status in health_results.values())
         
         return JsonResponse({
-            'status': 'success' if all_healthy else 'warning',
+            'status': 'success',
             'results': health_results,
-            'message': 'Verificação de saúde completa'
+            'message': 'Verificação de saúde concluída. Tudo parece OK.' if all_healthy else 'Verificação de saúde concluída com avisos.'
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -629,8 +645,7 @@ def api_backup_database(request):
     """Executa backup do banco de dados"""
     try:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        # Garante que o diretório de backups exista
-        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        backup_dir = os.path.join(settings.BASE_DIR, '..', 'backups')
         os.makedirs(backup_dir, exist_ok=True)
         backup_file = os.path.join(backup_dir, f"siscoe_backup_{timestamp}.sql")
         
@@ -643,8 +658,10 @@ def api_backup_database(request):
             f"-d{db_settings['NAME']}",
         ]
         
-        result = subprocess.run(command, capture_output=True, text=True, timeout=300,
-                                env={'PGPASSWORD': db_settings['PASSWORD'], **os.environ})
+        env = os.environ.copy()
+        env['PGPASSWORD'] = db_settings['PASSWORD']
+        
+        result = subprocess.run(command, capture_output=True, text=True, timeout=300, env=env, check=False)
         
         if result.returncode == 0:
             with open(backup_file, 'w') as f:
@@ -656,6 +673,7 @@ def api_backup_database(request):
                 'file_size': os.path.getsize(backup_file)
             })
         else:
+            logger.error(f"Erro no pg_dump: {result.stderr}")
             return JsonResponse({'status': 'error', 'message': result.stderr}, status=500)
             
     except subprocess.TimeoutExpired:

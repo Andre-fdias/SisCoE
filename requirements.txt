@@ -1,19 +1,28 @@
+# requirements.txt
 # ==============================================
-# DEPENDÊNCIAS PRINCIPAIS DO DJANGO
+# DEPENDÊNCIAS PRINCIPAIS DO DJANGO (CORRIGIDO)
 # ==============================================
-Django==5.2
+Django==4.2.7  # MUDADO: De 5.2 para 4.2.7 para compatibilidade
 djangorestframework==3.15.1
 drf-nested-routers==0.93.4
 django-appconf==1.1.0
 django-compressor==4.5.1
 django-crispy-forms==2.4
-django-extensions==4.1
+django-extensions==4.1.0
 django-fontawesome-5==1.0.18
 django-seed==0.3.1
 django-widget-tweaks==1.5.0
 django-import-export==3.3.8
 django-prometheus==2.4.1
 whitenoise==6.9.0
+
+# ==============================================
+# PAINEL DE CONTROLE (ADICIONADO)
+# ==============================================
+psutil==5.9.8
+docker==7.1.0
+celery==5.3.4
+redis==7.0.1
 
 # ==============================================
 # SERVIDOR DE PRODUÇÃO
@@ -31,7 +40,6 @@ openpyxl==3.1.5
 orjson==3.10.16
 reportlab==4.4.0
 pillow==11.2.1
-redis==7.0.1
 
 # ==============================================
 # AUTENTICAÇÃO E SEGURANÇA

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.utils.html import format_html
-from .models import SystemSettings, AuditLog, BackupConfig
+from .models import SystemSettings, AuditLog, BackupConfig, UsefulLink
 
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(admin.ModelAdmin):
@@ -40,6 +40,12 @@ class BackupConfigAdmin(admin.ModelAdmin):
             # Lógica de backup aqui
             self.message_user(request, f"Backup {backup_config.name} executado com sucesso!")
     run_backup_now.short_description = "Executar backup agora"
+
+@admin.register(UsefulLink)
+class UsefulLinkAdmin(admin.ModelAdmin):
+    list_display = ['name', 'url', 'icon', 'order', 'is_active']
+    list_editable = ['order', 'is_active']
+    search_fields = ['name', 'url']
 
 # Customizar User Admin
 class CustomUserAdmin(UserAdmin):

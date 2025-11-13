@@ -1,6 +1,6 @@
-# control_panel/models.py
+# backend/control_panel/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings  # Importação importante
 from django.utils import timezone
 
 class SystemSettings(models.Model):
@@ -36,7 +36,7 @@ class AuditLog(models.Model):
     ]
     
     timestamp = models.DateTimeField(default=timezone.now)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)  # ← CORRIGIDO
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     resource = models.CharField(max_length=100)
     details = models.TextField(blank=True)
@@ -74,3 +74,21 @@ class BackupConfig(models.Model):
     class Meta:
         verbose_name = "Configuração de Backup"
         verbose_name_plural = "Configurações de Backup"
+
+class UsefulLink(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Nome")
+    url = models.URLField(max_length=2000, verbose_name="URL")
+    icon = models.CharField(max_length=50, blank=True, help_text="Ex: fas fa-link, fab fa-docker, ou um emoji 🐳", verbose_name="Ícone")
+    description = models.CharField(max_length=255, blank=True, verbose_name="Descrição")
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Link Útil"
+        verbose_name_plural = "Links Úteis"
+        ordering = ['order', 'name']
+
+        

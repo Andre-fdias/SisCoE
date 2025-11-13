@@ -1,70 +1,133 @@
 <!-- control_panel/templates/control_panel/base.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Painel de Controle - SisCoE{% endblock %}</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         primary: '#3b82f6',
                         secondary: '#1e40af',
+                        dark: {
+                            800: '#1f2937',
+                        }
                     }
                 }
             }
         }
     </script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
     <style>
-        .status-healthy { background-color: #d1fae5; color: #065f46; }
-        .status-down { background-color: #fee2e2; color: #991b1b; }
-        .status-checking { background-color: #fef3c7; color: #92400e; }
+        .status-healthy { 
+            background-color: #d1fae5; 
+            color: #065f46; 
+        }
+        .dark .status-healthy {
+            background-color: #064e3b;
+            color: #a7f3d0;
+        }
+        .status-down { 
+            background-color: #fee2e2; 
+            color: #991b1b; 
+        }
+        .dark .status-down {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+        .status-checking { 
+            background-color: #fef3c7; 
+            color: #92400e; 
+        }
+        .dark .status-checking {
+            background-color: #78350f;
+            color: #fde68a;
+        }
+        
+        .gradient-div-1 {
+            background: linear-gradient(to right, #d1d5db, #9ca3af);
+        }
+        
+        .dark .gradient-div-1 {
+            background: linear-gradient(to right, #1f2937, #111827);
+        }
+        
+        .gradient-div-2 {
+            background: linear-gradient(to bottom right, #f3f4f6, #dbeafe);
+        }
+        
+        .dark .gradient-div-2 {
+            background: linear-gradient(to bottom right, #111827, #1e3a8a);
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
     <!-- Header -->
-    <header class="bg-white shadow-sm">
+    <header class="bg-white dark:bg-gray-900 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-gray-900">🚀 Painel de Controle</h1>
-                    <span class="ml-2 text-sm text-gray-500">SisCoE</span>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">🚀 Painel de Controle</h1>
+                    <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">SisCoE</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-700">Olá, {{ request.user.username }}</span>
-                    <a href="{% url 'admin:logout' %}" class="text-sm text-red-600 hover:text-red-800">Sair</a>
+                    <button id="darkModeToggle"
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-800">
+                        <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                    </button>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Olá, {{ request.user.username }}</span>
+                    <a href="{% url 'core:index' %}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Voltar</a>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
+    <nav class="bg-white dark:bg-gray-900 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex space-x-8">
                 <a href="{% url 'control_panel:dashboard' %}" 
-                   class="{% if request.resolver_match.url_name == 'dashboard' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                   class="{% if request.resolver_match.url_name == 'dashboard' %}border-primary text-primary dark:border-blue-400 dark:text-blue-400{% else %}border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300{% endif %} py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                     Dashboard
                 </a>
                 <a href="{% url 'control_panel:services' %}" 
-                   class="{% if request.resolver_match.url_name == 'services' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                   class="{% if request.resolver_match.url_name == 'services' %}border-primary text-primary dark:border-blue-400 dark:text-blue-400{% else %}border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300{% endif %} py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                     Serviços
                 </a>
                 <a href="{% url 'control_panel:performance' %}" 
-                   class="{% if request.resolver_match.url_name == 'performance' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                   class="{% if request.resolver_match.url_name == 'performance' %}border-primary text-primary dark:border-blue-400 dark:text-blue-400{% else %}border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300{% endif %} py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                     Performance
                 </a>
                 <a href="{% url 'control_panel:logs' %}" 
-                   class="{% if request.resolver_match.url_name == 'logs' %}border-primary text-primary{% else %}border-transparent text-gray-500{% endif %} py-4 px-1 border-b-2 font-medium text-sm">
+                   class="{% if request.resolver_match.url_name == 'logs' %}border-primary text-primary dark:border-blue-400 dark:text-blue-400{% else %}border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300{% endif %} py-4 px-1 border-b-2 font-medium text-sm transition-colors">
                     Logs
                 </a>
-                <a href="/admin/" 
-                   class="border-transparent text-gray-500 hover:text-gray-700 py-4 px-1 border-b-2 font-medium text-sm">
+                <a href="{% url 'control_panel:containers' %}" 
+                   class="{% if request.resolver_match.url_name == 'containers' %}border-primary text-primary dark:border-blue-400 dark:text-blue-400{% else %}border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300{% endif %} py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    Containers
+                </a>
+                {% comment %} Link do Django Admin condicional - só mostra se as migrações estiverem aplicadas {% endcomment %}
+                {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'admin:index' %}" 
+                   class="border-transparent text-gray-500 hover:text-gray-700 py-4 px-1 border-b-2 font-medium text-sm transition-colors dark:text-gray-400 dark:hover:text-gray-300">
                     Django Admin
                 </a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -76,27 +139,67 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white mt-8 border-t">
+    <footer class="bg-white dark:bg-gray-900 mt-8 border-t border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-sm text-gray-500">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
                 SisCoE Control Panel • {% now "Y" %}
             </p>
         </div>
     </footer>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
     <script>
-        // Auto-refresh a cada 30 segundos
-        setInterval(() => {
-            fetch('/control-panel/api/health/')
-                .then(response => response.json())
-                .then(data => {
-                    // Atualizar componentes específicos
-                    if (typeof updateMetrics === 'function') {
-                        updateMetrics(data);
-                    }
-                });
-        }, 30000);
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+
+            const savedMode = localStorage.getItem('darkMode');
+            
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+
+            // Auto-refresh a cada 30 segundos
+            setInterval(() => {
+                fetch('/control-panel/api/health/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (typeof updateMetrics === 'function') {
+                            updateMetrics(data);
+                        }
+                    });
+            }, 30000);
+        });
 
         // Funções utilitárias
         function formatBytes(bytes, decimals = 2) {
@@ -113,6 +216,23 @@
             const hours = Math.floor((seconds % (3600 * 24)) / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
             return `${days}d ${hours}h ${minutes}m`;
+        }
+
+        function showToast(message, type = 'success') {
+            const isDark = document.documentElement.classList.contains('dark');
+            Toastify({
+                text: message, 
+                duration: 3000, 
+                close: true, 
+                gravity: "top", 
+                position: "right", 
+                stopOnFocus: true,
+                style: {
+                    background: type === 'error' ? '#ef4444' : 
+                              type === 'warning' ? '#f59e0b' : '#22c55e',
+                    color: "#fff"
+                },
+            }).showToast();
         }
     </script>
     

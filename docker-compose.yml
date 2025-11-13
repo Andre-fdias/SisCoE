@@ -1,185 +1,193 @@
-
-#version: "3.8"
+version: '3.8'
 
 services:
   db:
-    container_name: siscoe.db
-    image: postgres:17-alpine
-    restart: always
-    user: postgres
+    image: postgres:13
+    container_name: siscoe-db
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data/
     environment:
-      - LC_ALL=C.UTF-8
-      - POSTGRES_PASSWORD=davi2807
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=siscoe_db
-    ports:
-      - 5431:5432
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     networks:
       - siscoe-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  pgadmin:
-    container_name: siscoe_pgadmin
-    image: dpage/pgadmin4
     restart: unless-stopped
-    volumes:
-       - pgadmin:/var/lib/pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: andrefonsecadias21@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: davi280711
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - 5051:80
+
+  redis:
+    image: redis:6.2
+    container_name: siscoe-redis
     networks:
       - siscoe-network
+    restart: unless-stopped
 
-  mailhog:
-    container_name: siscoe_mailhog
-    image: mailhog/mailhog
-    restart: always
-    logging:
-      driver: 'none'
-    ports:
-      - 1025:1025
-      - 8025:8025
-    networks:
-       - siscoe-network
-
-  app:
-    build:
+  web:
+    build: 
       context: .
       dockerfile: Dockerfile
-    container_name: siscoe_app
-    hostname: app
-    stdin_open: true
-    expose:
-      - '8000'
+    container_name: siscoe-web
+    command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
     volumes:
-      - .env.docker:/app/.env  # Este monta o arquivo .env.docker como .env no container
-      - ./logs:/var/log/django_app
-    command: >
-      bash -c "
-        echo 'Aguardando banco de dados...' &&
-        sleep 10 &&
-        python manage.py migrate &&
-        python manage.py create_superuser &&
-        gunicorn backend.wsgi:application -b 0.0.0.0:8000
-      "
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8000"
+    environment:
+      - PYTHONPATH=/app/backend
+      - DJANGO_SETTINGS_MODULE=backend.settings.dev
+    env_file:
+      - .env
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+      - redis
     networks:
       - siscoe-network
-
-
-  nginx:
-    container_name: siscoe_nginx
-    image: nginx:alpine
-    hostname: nginx
-    ports:
-      - '80:8000'
-    volumes:
-      - ./docker/config/nginx/:/etc/nginx/conf.d/
-      - ./staticfiles:/app/staticfiles:ro  # Adicione esta linha
-    depends_on:
-      - app
-    networks:
-       - siscoe-network
-
-  # --- STACK DE MONITORAMENTO ---
-  prometheus:
-    image: prom/prometheus:v2.47.2
-    container_name: siscoe_prometheus
     restart: unless-stopped
+
+  celery:
+    build: .
+    container_name: siscoe-celery
+    command: celery -A backend worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.dev
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    networks:
+      - siscoe-network
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    container_name: siscoe-celery-beat
+    command: celery -A backend beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.dev
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - siscoe-network
+    restart: unless-stopped
+
+  # --- Monitoring & Management Services ---
+
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    container_name: siscoe-prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
       - "9090:9090"
     networks:
       - siscoe-network
-    depends_on:
-      - app
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:8.5.2
+    container_name: siscoe-grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana_dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/siscoe_dashboard.json
+    ports:
+      - "3000:3000"
+    networks:
+      - siscoe-network
+    restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:v0.26.0
-    container_name: siscoe_alertmanager
-    restart: unless-stopped
+    image: prom/alertmanager:v0.24.0
+    container_name: siscoe-alertmanager
     volumes:
-      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml
+      - ./monitoring/alertmanager:/config
     command:
-      - '--config.file=/etc/alertmanager/config.yml'
+      - '--config.file=/config/alertmanager.yml'
+      - '--storage.path=/alertmanager'
     ports:
       - "9093:9093"
     networks:
       - siscoe-network
-
-  telegram-bridge:
-    image: incaller/prometheus_alertmanager_telegram:latest
-    container_name: siscoe_telegram_bridge
     restart: unless-stopped
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env.docker # Aponta para o arquivo .env.docker
-    environment:
-      # O TELEGRAM_BOT_TOKEN será lido do arquivo .env.docker
-      - TELEGRAM_CHAT_ID=-4958407274
-    networks:
-      - siscoe-network
 
-  # --- STACK ELK (LOGGING E ANÁLISE) ---
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
-    container_name: siscoe_elasticsearch
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
+  flower:
+    image: mher/flower:0.9.7
+    container_name: siscoe-flower
+    command: flower --broker=redis://siscoe-redis:6379/0 --port=5555
     ports:
-      - "9200:9200"
-    networks:
-      - siscoe-network
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.9
-    container_name: siscoe_logstash
-    volumes:
-      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline # Configuração do Logstash
-      - ./logs:/var/log/django_app # Monta o diretório de logs do Django
-    ports:
-      - "5044:5044" # Porta para Beats (opcional)
-    environment:
-      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+      - "5555:5555"
     depends_on:
-      - elasticsearch
+      - redis
     networks:
       - siscoe-network
+    restart: unless-stopped
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.9
-    container_name: siscoe_kibana
+  portainer:
+    image: portainer/portainer-ce:2.11.1
+    container_name: siscoe-portainer
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
     ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
+      - "9443:9443"
+      - "9000:9000"
     networks:
       - siscoe-network
+    restart: unless-stopped
 
-volumes:
-  pgdata:  # mesmo nome do volume externo definido na linha 10
   pgadmin:
-  esdata:
+    image: dpage/pgadmin4:6.10
+    container_name: siscoe-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@siscoe.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - siscoe-network
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: siscoe-redis-commander
+    environment:
+      - REDIS_HOSTS=local:siscoe-redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - siscoe-network
+    restart: unless-stopped
 
 networks:
   siscoe-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+  portainer_data:
+  pgadmin_data:

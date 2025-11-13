@@ -28,4 +28,4 @@ scrape_configs:
     # O Prometheus buscará as métricas no caminho /prometheus/metrics
     metrics_path: /prometheus/metrics
     static_configs:
-      - targets: ['app:8000'] # Aponta para o serviço 'app' do Docker Compose
+      - targets: ['web:8000'] # Aponta para o serviço 'web' do Docker Compose

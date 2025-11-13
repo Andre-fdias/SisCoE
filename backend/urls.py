@@ -3,9 +3,12 @@ from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from backend.chat.views import ChatView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # noqa E501
+    path('control-panel/', include('backend.control_panel.urls', namespace='control_panel')),
+    # path('', RedirectView.as_view(url='/control-panel/', permanent=False)),
     path('chat/', ChatView.as_view(), name='chat-page'), # Página do Chat
     path('api/chat/', include('backend.chat.urls')), # API do Chat
     path('crm/', include('backend.crm.urls', namespace='crm')),  # noqa E501
@@ -24,4 +27,15 @@ urlpatterns = [
     path('prometheus/', include('django_prometheus.urls')),
     path('', include('backend.core.urls', namespace='core')),  # noqa E501
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
+
+# Servir arquivos estáticos e media em desenvolvimento
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Handler para erro 404
+handler404 = 'backend.control_panel.views.handler404'
+
+# Handler para erro 500  
+handler500 = 'backend.control_panel.views.handler500'

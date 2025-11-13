@@ -1,99 +1,93 @@
-
-{% extends "admin/base_site.html" %}
+{% extends "control_panel/base.html" %}
 {% load static %}
 
 {% block title %}Logs | Painel de Controle | SisCoE{% endblock %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --header-bg: #1f2937;
-            --body-bg: #111827;
-            --card-bg: #1f2937;
-            --text-color: #d1d5db;
-            --text-muted: #9ca3af;
-            --border-color: #374151;
-            --healthy-color: #22c55e;
-            --warning-color: #f59e0b;
-            --down-color: #ef4444;
-        }
-        .theme-light {
-            --header-bg: #ffffff;
-            --body-bg: #f9fafb;
-            --card-bg: #ffffff;
-            --text-color: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-        }
-        body {
-            background-color: var(--body-bg);
-            color: var(--text-color);
-        }
-        .log-entry {
-            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            white-space: pre-wrap; /* Preserves whitespace and wraps text */
-            word-break: break-all; /* Breaks words if necessary */
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-        .log-level-DEBUG { color: #60a5fa; } /* blue-400 */
-        .log-level-INFO { color: #34d399; } /* emerald-400 */
-        .log-level-WARNING { color: #fbbf24; } /* amber-400 */
-        .log-level-ERROR { color: #ef4444; } /* red-500 */
-        .log-level-CRITICAL { color: #dc2626; font-weight: bold; } /* red-600 */
-    </style>
-{% endblock %}
-
 {% block content %}
-<div id="content-main" class="p-6 space-y-6">
-    
-    <!-- CABEÇALHO -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold"><i class="fas fa-clipboard-list mr-2"></i>Logs Recentes</h1>
-        <div class="flex items-center space-x-4">
-            <form method="get" action="{% url 'control_panel:logs' %}" class="flex items-center space-x-2">
-                <label for="log-level-select" class="text-gray-400">Nível:</label>
-                <select id="log-level-select" name="level" onchange="this.form.submit()"
-                        class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
-                    {% for level in log_levels %}
-                        <option value="{{ level }}" {% if level == selected_level %}selected{% endif %}>{{ level }}</option>
+<div class="container mx-auto p-5">
+    <div class="gradient-div-1 rounded-2xl shadow-xl overflow-hidden p-8">
+        <!-- CABEÇALHO -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 shadow-md">
+                    <i class="fas fa-clipboard-list text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Logs do Sistema</h1>
+                    <p class="text-gray-600 dark:text-gray-300">Visualização e monitoramento de logs da aplicação</p>
+                </div>
+            </div>
+            <a href="{% url 'control_panel:dashboard' %}" 
+               class="px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700 text-white rounded-lg transition shadow-md flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar ao Dashboard
+            </a>
+        </div>
+
+        <!-- CONTROLES DE LOGS -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <form method="get" action="{% url 'control_panel:logs' %}" class="flex items-center space-x-3">
+                        <label for="log-level-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">Nível de Log:</label>
+                        <select id="log-level-select" name="level" onchange="this.form.submit()"
+                                class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 transition">
+                            {% for level in log_levels %}
+                                <option value="{{ level }}" {% if level == selected_level %}selected{% endif %}>{{ level }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="download-logs-btn" 
+                            class="px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-lg transition shadow-md flex items-center">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </button>
+                    <button id="refresh-logs-btn" 
+                            class="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white rounded-lg transition shadow-md flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>Atualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DE LOGS -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                <i class="fas fa-list-alt mr-2 text-blue-500"></i>
+                Logs (Últimos 50)
+            </h2>
+            <div id="log-entries" class="max-h-96 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                {% if recent_logs %}
+                    {% for log_entry in recent_logs %}
+                        <div class="log-entry font-mono text-sm p-3 mb-2 rounded-lg border-l-4 
+                            {% if log_entry.level == 'DEBUG' %}border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300
+                            {% elif log_entry.level == 'INFO' %}border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300
+                            {% elif log_entry.level == 'WARNING' %}border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300
+                            {% elif log_entry.level == 'ERROR' %}border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300
+                            {% elif log_entry.level == 'CRITICAL' %}border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300
+                            {% else %}border-gray-500 bg-gray-50 dark:bg-gray-900/20 text-gray-800 dark:text-gray-300{% endif %}">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-semibold">{{ log_entry.level }}</span>
+                                <span class="text-xs opacity-75">{{ forloop.counter }}</span>
+                            </div>
+                            <div class="whitespace-pre-wrap break-words">{{ log_entry.message }}</div>
+                        </div>
                     {% endfor %}
-                </select>
-            </form>
-            <button id="download-logs-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                <i class="fas fa-download mr-2"></i>Download
-            </button>
-        </div>
-    </div>
-
-    <!-- SEÇÃO DE LOGS -->
-    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 class="text-xl font-semibold mb-4">Logs (Últimos 50)</h2>
-        <div id="log-entries" class="max-h-96 overflow-y-auto bg-gray-900 p-4 rounded-md">
-            {% if recent_logs %}
-                {% for log_entry in recent_logs %}
-                    <div class="log-entry log-level-{{ log_entry.level }}">
-                        {{ log_entry.message }}
+                {% else %}
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-search text-4xl mb-4"></i>
+                        <p class="text-lg">Nenhum log encontrado para o nível selecionado.</p>
                     </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-gray-400">Nenhum log encontrado para o nível selecionado.</p>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
-
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const downloadLogsBtn = document.getElementById('download-logs-btn');
+    const refreshLogsBtn = document.getElementById('refresh-logs-btn');
 
     downloadLogsBtn.addEventListener('click', function() {
         const logContent = document.getElementById('log-entries').innerText;
@@ -106,7 +100,65 @@ document.addEventListener('DOMContentLoaded', function() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
+        showToast('Download dos logs iniciado!', 'success');
     });
+
+    refreshLogsBtn.addEventListener('click', function() {
+        refreshLogsBtn.disabled = true;
+        const originalText = refreshLogsBtn.innerHTML;
+        refreshLogsBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
+        
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    });
+
+    // Auto-scroll para o final dos logs
+    const logEntries = document.getElementById('log-entries');
+    if (logEntries) {
+        logEntries.scrollTop = logEntries.scrollHeight;
+    }
 });
 </script>
+
+<style>
+.log-entry {
+    transition: all 0.2s ease-in-out;
+}
+
+.log-entry:hover {
+    transform: translateX(4px);
+}
+
+#log-entries::-webkit-scrollbar {
+    width: 8px;
+}
+
+#log-entries::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#log-entries::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#log-entries::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.dark #log-entries::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark #log-entries::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark #log-entries::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+</style>
 {% endblock %}

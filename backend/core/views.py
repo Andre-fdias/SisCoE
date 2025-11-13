@@ -21,6 +21,8 @@ from backend.core.utils import filter_by_user_sgb
 logger = logging.getLogger(__name__)
 
 def capa(request):
+    if request.user.is_authenticated:
+        return redirect('core:index')
     template_name = 'landing.html'
     return render(request, template_name)
 
