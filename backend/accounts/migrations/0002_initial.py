@@ -11,84 +11,119 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
-        ('auth', '0012_alter_user_first_name_max_length'),
-        ('efetivo', '0001_initial'),
+        ("accounts", "0001_initial"),
+        ("auth", "0012_alter_user_first_name_max_length"),
+        ("efetivo", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='cadastro',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_account', to='efetivo.cadastro', verbose_name='Cadastro Militar'),
+            model_name="user",
+            name="cadastro",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_account",
+                to="efetivo.cadastro",
+                verbose_name="Cadastro Militar",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='groups',
-            field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups'),
+            model_name="user",
+            name="groups",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+                related_name="user_set",
+                related_query_name="user",
+                to="auth.group",
+                verbose_name="groups",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='user_permissions',
-            field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions'),
+            model_name="user",
+            name="user_permissions",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Specific permissions for this user.",
+                related_name="user_set",
+                related_query_name="user",
+                to="auth.permission",
+                verbose_name="user permissions",
+            ),
         ),
         migrations.CreateModel(
-            name='SearchableUser',
-            fields=[
-            ],
+            name="SearchableUser",
+            fields=[],
             options={
-                'verbose_name': 'Usuário Pesquisável',
-                'verbose_name_plural': 'Usuários Pesquisáveis',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Usuário Pesquisável",
+                "verbose_name_plural": "Usuários Pesquisáveis",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('accounts.user',),
+            bases=("accounts.user",),
             managers=[
-                ('objects', backend.accounts.managers.UserManager()),
+                ("objects", backend.accounts.managers.UserManager()),
             ],
         ),
         migrations.AddField(
-            model_name='termosaceite',
-            name='usuario',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='termos_aceitos', to=settings.AUTH_USER_MODEL),
+            model_name="termosaceite",
+            name="usuario",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="termos_aceitos",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='useractionlog',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='Usuário'),
+            model_name="useractionlog",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Usuário",
+            ),
         ),
         migrations.CreateModel(
-            name='SearchableUserActionLog',
-            fields=[
-            ],
+            name="SearchableUserActionLog",
+            fields=[],
             options={
-                'verbose_name': 'Log de Ação Pesquisável',
-                'verbose_name_plural': 'Logs de Ações Pesquisáveis',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Log de Ação Pesquisável",
+                "verbose_name_plural": "Logs de Ações Pesquisáveis",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('accounts.useractionlog',),
+            bases=("accounts.useractionlog",),
         ),
         migrations.AddIndex(
-            model_name='user',
-            index=models.Index(fields=['email'], name='accounts_us_email_74c8d6_idx'),
+            model_name="user",
+            index=models.Index(fields=["email"], name="accounts_us_email_74c8d6_idx"),
         ),
         migrations.AddIndex(
-            model_name='user',
-            index=models.Index(fields=['is_active'], name='accounts_us_is_acti_a5841d_idx'),
+            model_name="user",
+            index=models.Index(
+                fields=["is_active"], name="accounts_us_is_acti_a5841d_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='user',
-            index=models.Index(fields=['permissoes'], name='accounts_us_permiss_4834b6_idx'),
+            model_name="user",
+            index=models.Index(
+                fields=["permissoes"], name="accounts_us_permiss_4834b6_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='useractionlog',
-            index=models.Index(fields=['user', 'timestamp'], name='accounts_us_user_id_0cb827_idx'),
+            model_name="useractionlog",
+            index=models.Index(
+                fields=["user", "timestamp"], name="accounts_us_user_id_0cb827_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='useractionlog',
-            index=models.Index(fields=['timestamp'], name='accounts_us_timesta_a5b48d_idx'),
+            model_name="useractionlog",
+            index=models.Index(
+                fields=["timestamp"], name="accounts_us_timesta_a5b48d_idx"
+            ),
         ),
     ]

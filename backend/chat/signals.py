@@ -5,6 +5,7 @@ from .models import Presence
 
 User = get_user_model()
 
+
 @receiver(post_save, sender=User)
 def create_user_presence(sender, instance, created, **kwargs):
     """
@@ -12,6 +13,7 @@ def create_user_presence(sender, instance, created, **kwargs):
     """
     if created:
         Presence.objects.get_or_create(user=instance)
+
 
 @receiver(post_save, sender=User)
 def save_user_presence(sender, instance, **kwargs):

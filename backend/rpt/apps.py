@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class RptConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'backend.rpt'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "backend.rpt"

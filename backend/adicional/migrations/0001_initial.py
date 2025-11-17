@@ -11,78 +11,439 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('efetivo', '0001_initial'),
+        ("efetivo", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Cadastro_adicional',
+            name="Cadastro_adicional",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Atualizado em')),
-                ('data_conclusao', models.DateTimeField(blank=True, null=True, verbose_name='Data de Conclusão')),
-                ('numero_adicional', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], verbose_name='Número do Adicional')),
-                ('data_ultimo_adicional', models.DateField(verbose_name='Data do Último Adicional')),
-                ('numero_prox_adicional', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], default=1, verbose_name='Próximo Número do Adicional')),
-                ('proximo_adicional', models.DateField(blank=True, null=True, verbose_name='Próximo Adicional')),
-                ('mes_proximo_adicional', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Mês do Próximo Adicional')),
-                ('ano_proximo_adicional', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Ano do Próximo Adicional')),
-                ('dias_desconto_adicional', models.PositiveSmallIntegerField(default=0, verbose_name='Dias de Desconto Adicional')),
-                ('situacao_adicional', models.CharField(choices=[('Aguardando', 'Aguardando'), ('Concedido', 'Concedido'), ('Concluído', 'Concluído')], default='Aguardando', max_length=30, verbose_name='Situação do Adicional')),
-                ('sexta_parte', models.BooleanField(default=False, verbose_name='6ª Parte Concluída')),
-                ('confirmacao_6parte', models.BooleanField(default=False, verbose_name='6ª Parte Confirmada')),
-                ('data_concessao_adicional', models.DateField(blank=True, null=True, verbose_name='Data de Concessão do Adicional')),
-                ('bol_g_pm_adicional', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL GPm Adicional')),
-                ('data_publicacao_adicional', models.DateField(blank=True, null=True, verbose_name='Data Publicação Adicional')),
-                ('status_adicional', models.CharField(choices=[('aguardando_requisitos', 'Aguardando Requisitos'), ('faz_jus', 'Faz Jus'), ('lancado_sipa', 'Lançado em SIPA'), ('aguardando_publicacao', 'Aguardando Publicação'), ('publicado', 'Publicado'), ('encerrado', 'Encerrado')], default='aguardando_requisitos', max_length=30, verbose_name='Status do Adicional')),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro', verbose_name='Cadastro')),
-                ('user_created', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='adicionais_criados', to=settings.AUTH_USER_MODEL, verbose_name='Criado por')),
-                ('user_updated', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='adicionais_modificados', to=settings.AUTH_USER_MODEL, verbose_name='Modificado por')),
-                ('usuario_conclusao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='adicionais_concluidos', to=settings.AUTH_USER_MODEL, verbose_name='Concluído por')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Criado em"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Atualizado em"),
+                ),
+                (
+                    "data_conclusao",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Data de Conclusão"
+                    ),
+                ),
+                (
+                    "numero_adicional",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        verbose_name="Número do Adicional",
+                    ),
+                ),
+                (
+                    "data_ultimo_adicional",
+                    models.DateField(verbose_name="Data do Último Adicional"),
+                ),
+                (
+                    "numero_prox_adicional",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        default=1,
+                        verbose_name="Próximo Número do Adicional",
+                    ),
+                ),
+                (
+                    "proximo_adicional",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Próximo Adicional"
+                    ),
+                ),
+                (
+                    "mes_proximo_adicional",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Mês do Próximo Adicional"
+                    ),
+                ),
+                (
+                    "ano_proximo_adicional",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Ano do Próximo Adicional"
+                    ),
+                ),
+                (
+                    "dias_desconto_adicional",
+                    models.PositiveSmallIntegerField(
+                        default=0, verbose_name="Dias de Desconto Adicional"
+                    ),
+                ),
+                (
+                    "situacao_adicional",
+                    models.CharField(
+                        choices=[
+                            ("Aguardando", "Aguardando"),
+                            ("Concedido", "Concedido"),
+                            ("Concluído", "Concluído"),
+                        ],
+                        default="Aguardando",
+                        max_length=30,
+                        verbose_name="Situação do Adicional",
+                    ),
+                ),
+                (
+                    "sexta_parte",
+                    models.BooleanField(
+                        default=False, verbose_name="6ª Parte Concluída"
+                    ),
+                ),
+                (
+                    "confirmacao_6parte",
+                    models.BooleanField(
+                        default=False, verbose_name="6ª Parte Confirmada"
+                    ),
+                ),
+                (
+                    "data_concessao_adicional",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Concessão do Adicional",
+                    ),
+                ),
+                (
+                    "bol_g_pm_adicional",
+                    models.CharField(
+                        blank=True,
+                        max_length=50,
+                        null=True,
+                        verbose_name="BOL GPm Adicional",
+                    ),
+                ),
+                (
+                    "data_publicacao_adicional",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data Publicação Adicional"
+                    ),
+                ),
+                (
+                    "status_adicional",
+                    models.CharField(
+                        choices=[
+                            ("aguardando_requisitos", "Aguardando Requisitos"),
+                            ("faz_jus", "Faz Jus"),
+                            ("lancado_sipa", "Lançado em SIPA"),
+                            ("aguardando_publicacao", "Aguardando Publicação"),
+                            ("publicado", "Publicado"),
+                            ("encerrado", "Encerrado"),
+                        ],
+                        default="aguardando_requisitos",
+                        max_length=30,
+                        verbose_name="Status do Adicional",
+                    ),
+                ),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                        verbose_name="Cadastro",
+                    ),
+                ),
+                (
+                    "user_created",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="adicionais_criados",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Criado por",
+                    ),
+                ),
+                (
+                    "user_updated",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="adicionais_modificados",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Modificado por",
+                    ),
+                ),
+                (
+                    "usuario_conclusao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="adicionais_concluidos",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Concluído por",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Cadastro de Adicional',
-                'verbose_name_plural': 'Cadastros de Adicionais',
-                'db_table': 'adicional_cadastro_adicional',
-                'ordering': ['-created_at'],
-                'permissions': [('can_concluir_adicional', 'Pode concluir adicional')],
+                "verbose_name": "Cadastro de Adicional",
+                "verbose_name_plural": "Cadastros de Adicionais",
+                "db_table": "adicional_cadastro_adicional",
+                "ordering": ["-created_at"],
+                "permissions": [("can_concluir_adicional", "Pode concluir adicional")],
             },
         ),
         migrations.CreateModel(
-            name='HistoricoCadastro',
+            name="HistoricoCadastro",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True, verbose_name='Data da Alteração')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Última Atualização')),
-                ('data_conclusao', models.DateTimeField(blank=True, null=True, verbose_name='Data de Conclusão')),
-                ('numero_adicional', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], default=1, verbose_name='Número do Adicional')),
-                ('data_ultimo_adicional', models.DateField(default=django.utils.timezone.now, verbose_name='Data do Último Adicional')),
-                ('numero_prox_adicional', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], verbose_name='Próximo Número do Adicional')),
-                ('proximo_adicional', models.DateField(blank=True, null=True, verbose_name='Próximo Adicional')),
-                ('mes_proximo_adicional', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Mês do Próximo Adicional')),
-                ('ano_proximo_adicional', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Ano do Próximo Adicional')),
-                ('dias_desconto_adicional', models.PositiveSmallIntegerField(default=0, verbose_name='Dias de Desconto Adicional')),
-                ('situacao_adicional', models.CharField(choices=[('Aguardando', 'Aguardando'), ('Concedido', 'Concedido'), ('Concluído', 'Concluído')], default='Aguardando', max_length=30, verbose_name='Situação do Adicional')),
-                ('sexta_parte', models.BooleanField(default=False, verbose_name='6ª Parte Concluída')),
-                ('confirmacao_6parte', models.BooleanField(default=False, verbose_name='6ª Parte Confirmada')),
-                ('data_concessao_adicional', models.DateField(blank=True, null=True, verbose_name='Data de Concessão do Adicional')),
-                ('bol_g_pm_adicional', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL GPm Adicional')),
-                ('data_publicacao_adicional', models.DateField(blank=True, null=True, verbose_name='Data Publicação Adicional')),
-                ('status_adicional', models.CharField(choices=[('aguardando_requisitos', 'Aguardando Requisitos'), ('faz_jus', 'Faz Jus'), ('lancado_sipa', 'Lançado em SIPA'), ('aguardando_publicacao', 'Aguardando Publicação'), ('publicado', 'Publicado'), ('encerrado', 'Encerrado')], default='aguardando_requisitos', max_length=30, verbose_name='Status do Adicional')),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro', verbose_name='Cadastro')),
-                ('cadastro_adicional', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='historicos', to='adicional.cadastro_adicional', verbose_name='Adicional Relacionado')),
-                ('user_created', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='historicos_criados', to=settings.AUTH_USER_MODEL, verbose_name='Criado por')),
-                ('user_updated', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='historicos_modificados', to=settings.AUTH_USER_MODEL, verbose_name='Modificado por')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='Responsável pela Alteração')),
-                ('usuario_conclusao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='historicos_concluidos', to=settings.AUTH_USER_MODEL, verbose_name='Concluído por')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "data_alteracao",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data da Alteração"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Criado em"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Última Atualização"
+                    ),
+                ),
+                (
+                    "data_conclusao",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Data de Conclusão"
+                    ),
+                ),
+                (
+                    "numero_adicional",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        default=1,
+                        verbose_name="Número do Adicional",
+                    ),
+                ),
+                (
+                    "data_ultimo_adicional",
+                    models.DateField(
+                        default=django.utils.timezone.now,
+                        verbose_name="Data do Último Adicional",
+                    ),
+                ),
+                (
+                    "numero_prox_adicional",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        verbose_name="Próximo Número do Adicional",
+                    ),
+                ),
+                (
+                    "proximo_adicional",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Próximo Adicional"
+                    ),
+                ),
+                (
+                    "mes_proximo_adicional",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Mês do Próximo Adicional"
+                    ),
+                ),
+                (
+                    "ano_proximo_adicional",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Ano do Próximo Adicional"
+                    ),
+                ),
+                (
+                    "dias_desconto_adicional",
+                    models.PositiveSmallIntegerField(
+                        default=0, verbose_name="Dias de Desconto Adicional"
+                    ),
+                ),
+                (
+                    "situacao_adicional",
+                    models.CharField(
+                        choices=[
+                            ("Aguardando", "Aguardando"),
+                            ("Concedido", "Concedido"),
+                            ("Concluído", "Concluído"),
+                        ],
+                        default="Aguardando",
+                        max_length=30,
+                        verbose_name="Situação do Adicional",
+                    ),
+                ),
+                (
+                    "sexta_parte",
+                    models.BooleanField(
+                        default=False, verbose_name="6ª Parte Concluída"
+                    ),
+                ),
+                (
+                    "confirmacao_6parte",
+                    models.BooleanField(
+                        default=False, verbose_name="6ª Parte Confirmada"
+                    ),
+                ),
+                (
+                    "data_concessao_adicional",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Concessão do Adicional",
+                    ),
+                ),
+                (
+                    "bol_g_pm_adicional",
+                    models.CharField(
+                        blank=True,
+                        max_length=50,
+                        null=True,
+                        verbose_name="BOL GPm Adicional",
+                    ),
+                ),
+                (
+                    "data_publicacao_adicional",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data Publicação Adicional"
+                    ),
+                ),
+                (
+                    "status_adicional",
+                    models.CharField(
+                        choices=[
+                            ("aguardando_requisitos", "Aguardando Requisitos"),
+                            ("faz_jus", "Faz Jus"),
+                            ("lancado_sipa", "Lançado em SIPA"),
+                            ("aguardando_publicacao", "Aguardando Publicação"),
+                            ("publicado", "Publicado"),
+                            ("encerrado", "Encerrado"),
+                        ],
+                        default="aguardando_requisitos",
+                        max_length=30,
+                        verbose_name="Status do Adicional",
+                    ),
+                ),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                        verbose_name="Cadastro",
+                    ),
+                ),
+                (
+                    "cadastro_adicional",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="historicos",
+                        to="adicional.cadastro_adicional",
+                        verbose_name="Adicional Relacionado",
+                    ),
+                ),
+                (
+                    "user_created",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="historicos_criados",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Criado por",
+                    ),
+                ),
+                (
+                    "user_updated",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="historicos_modificados",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Modificado por",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Responsável pela Alteração",
+                    ),
+                ),
+                (
+                    "usuario_conclusao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="historicos_concluidos",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Concluído por",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Histórico de Adicional',
-                'verbose_name_plural': 'Históricos de Adicionais',
-                'ordering': ['-data_alteracao'],
+                "verbose_name": "Histórico de Adicional",
+                "verbose_name_plural": "Históricos de Adicionais",
+                "ordering": ["-data_alteracao"],
             },
         ),
     ]

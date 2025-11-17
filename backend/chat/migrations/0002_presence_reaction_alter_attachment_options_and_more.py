@@ -9,129 +9,196 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0006_alter_searchableuser_options_and_more'),
-        ('chat', '0001_initial'),
+        ("accounts", "0006_alter_searchableuser_options_and_more"),
+        ("chat", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Presence',
+            name="Presence",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('status', models.CharField(choices=[('online', 'Online'), ('offline', 'Offline'), ('away', 'Ausente')], default='offline', max_length=10)),
-                ('last_seen', models.DateTimeField(auto_now=True)),
-                ('is_typing', models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("online", "Online"),
+                            ("offline", "Offline"),
+                            ("away", "Ausente"),
+                        ],
+                        default="offline",
+                        max_length=10,
+                    ),
+                ),
+                ("last_seen", models.DateTimeField(auto_now=True)),
+                ("is_typing", models.BooleanField(default=False)),
             ],
             options={
-                'ordering': ('-last_seen',),
+                "ordering": ("-last_seen",),
             },
         ),
         migrations.CreateModel(
-            name='Reaction',
+            name="Reaction",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('emoji', models.CharField(max_length=10)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("emoji", models.CharField(max_length=10)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'ordering': ('created_at',),
+                "ordering": ("created_at",),
             },
         ),
         migrations.AlterModelOptions(
-            name='attachment',
-            options={'ordering': ('uploaded_at',)},
+            name="attachment",
+            options={"ordering": ("uploaded_at",)},
         ),
         migrations.AddField(
-            model_name='attachment',
-            name='duration',
-            field=models.IntegerField(default=0, help_text='Duração em segundos para áudio/vídeo'),
+            model_name="attachment",
+            name="duration",
+            field=models.IntegerField(
+                default=0, help_text="Duração em segundos para áudio/vídeo"
+            ),
         ),
         migrations.AddField(
-            model_name='attachment',
-            name='file_size',
+            model_name="attachment",
+            name="file_size",
             field=models.BigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='attachment',
-            name='thumbnail',
-            field=models.ImageField(blank=True, null=True, upload_to='chat_thumbnails/%Y/%m/%d/'),
+            model_name="attachment",
+            name="thumbnail",
+            field=models.ImageField(
+                blank=True, null=True, upload_to="chat_thumbnails/%Y/%m/%d/"
+            ),
         ),
         migrations.AddField(
-            model_name='conversation',
-            name='photo',
-            field=models.ImageField(blank=True, null=True, upload_to='chat_photos/%Y/%m/%d/'),
+            model_name="conversation",
+            name="photo",
+            field=models.ImageField(
+                blank=True, null=True, upload_to="chat_photos/%Y/%m/%d/"
+            ),
         ),
         migrations.AddField(
-            model_name='message',
-            name='edited',
+            model_name="message",
+            name="edited",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='message',
-            name='edited_at',
+            model_name="message",
+            name="edited_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='message',
-            name='quoted_text',
-            field=models.TextField(blank=True, help_text='Snapshot do texto da mensagem respondida', null=True),
+            model_name="message",
+            name="quoted_text",
+            field=models.TextField(
+                blank=True,
+                help_text="Snapshot do texto da mensagem respondida",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='messagestatus',
-            name='delivered_at',
+            model_name="messagestatus",
+            name="delivered_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='messagestatus',
-            name='read_at',
+            model_name="messagestatus",
+            name="read_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='participant',
-            name='is_admin',
+            model_name="participant",
+            name="is_admin",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='participant',
-            name='last_read_message',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='chat.message'),
+            model_name="participant",
+            name="last_read_message",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="chat.message",
+            ),
         ),
         migrations.AddField(
-            model_name='participant',
-            name='muted_until',
+            model_name="participant",
+            name="muted_until",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='attachment',
-            name='file_type',
-            field=models.CharField(choices=[('image', 'Imagem'), ('video', 'Vídeo'), ('audio', 'Áudio'), ('document', 'Documento'), ('voice_note', 'Mensagem de Voz')], max_length=20),
+            model_name="attachment",
+            name="file_type",
+            field=models.CharField(
+                choices=[
+                    ("image", "Imagem"),
+                    ("video", "Vídeo"),
+                    ("audio", "Áudio"),
+                    ("document", "Documento"),
+                    ("voice_note", "Mensagem de Voz"),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.AddIndex(
-            model_name='conversation',
-            index=models.Index(fields=['updated_at'], name='chat_conver_updated_09e193_idx'),
+            model_name="conversation",
+            index=models.Index(
+                fields=["updated_at"], name="chat_conver_updated_09e193_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='message',
-            index=models.Index(fields=['conversation', 'created_at'], name='chat_messag_convers_3154fc_idx'),
+            model_name="message",
+            index=models.Index(
+                fields=["conversation", "created_at"],
+                name="chat_messag_convers_3154fc_idx",
+            ),
         ),
         migrations.AddField(
-            model_name='presence',
-            name='typing_conversation',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='chat.conversation'),
+            model_name="presence",
+            name="typing_conversation",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="chat.conversation",
+            ),
         ),
         migrations.AddField(
-            model_name='reaction',
-            name='message',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reactions', to='chat.message'),
+            model_name="reaction",
+            name="message",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="reactions",
+                to="chat.message",
+            ),
         ),
         migrations.AddField(
-            model_name='reaction',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="reaction",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='reaction',
-            unique_together={('message', 'user', 'emoji')},
+            name="reaction",
+            unique_together={("message", "user", "emoji")},
         ),
     ]

@@ -1,8 +1,8 @@
 # image_utils.py (ou o nome do seu arquivo utils.py)
 from PIL import Image, ImageDraw, ImageFont
 import os
-from django.conf import settings
 from io import BytesIO
+
 
 def add_cpf_to_image(image_path, cpf, output_path):
     # Abra a imagem
@@ -10,10 +10,12 @@ def add_cpf_to_image(image_path, cpf, output_path):
     draw = ImageDraw.Draw(image)
 
     # Defina a fonte e o tamanho do texto
-    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"  # Caminho para a fonte
+    font_path = (
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"  # Caminho para a fonte
+    )
     # Verifique se a fonte existe, caso contrário use uma fonte padrão
     if not os.path.exists(font_path):
-        font_path = "arial.ttf" # Exemplo de fonte genérica no Windows
+        font_path = "arial.ttf"  # Exemplo de fonte genérica no Windows
         try:
             # Tenta carregar uma fonte padrão do Pillow
             font = ImageFont.truetype(font_path, 36)
@@ -32,18 +34,21 @@ def add_cpf_to_image(image_path, cpf, output_path):
     # Salve a imagem com o CPF
     image.save(output_path)
 
+
 def generate_fake_image(text="Fake Image", width=400, height=300):
     """Gera uma imagem simples com texto para uso em cadastros fake."""
-    img = Image.new('RGB', (width, height), color = (73, 109, 137))
+    img = Image.new("RGB", (width, height), color=(73, 109, 137))
     d = ImageDraw.Draw(img)
 
     # Tenta carregar uma fonte. Use uma fonte padrão se a específica não for encontrada.
     try:
-        font = ImageFont.truetype("arial.ttf", 30) # Substitua por um caminho de fonte real se disponível
+        font = ImageFont.truetype(
+            "arial.ttf", 30
+        )  # Substitua por um caminho de fonte real se disponível
     except IOError:
-        font = ImageFont.load_default() # Fallback para fonte padrão
+        font = ImageFont.load_default()  # Fallback para fonte padrão
 
-    text_color = (255, 255, 255) # Branco
+    text_color = (255, 255, 255)  # Branco
 
     # Centralizar texto
     bbox = d.textbbox((0, 0), text, font=font)
@@ -51,7 +56,7 @@ def generate_fake_image(text="Fake Image", width=400, height=300):
     text_height = bbox[3] - bbox[1]
     x = (width - text_width) / 2
     y = (height - text_height) / 2
-    
+
     d.text((x, y), text, fill=text_color, font=font)
 
     buffer = BytesIO()

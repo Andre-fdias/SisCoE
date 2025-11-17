@@ -3,6 +3,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.filter
 def dict_get(dictionary, key):
     """
@@ -13,8 +14,9 @@ def dict_get(dictionary, key):
         return dictionary.get(key)
     return None
 
+
 @register.filter
-def sum_values(data_list, key_to_sum='militar_count'):
+def sum_values(data_list, key_to_sum="militar_count"):
     """
     Soma os valores de uma chave específica em uma lista de dicionários.
     Uso: {{ my_list_of_dicts|sum_values:'my_key' }}

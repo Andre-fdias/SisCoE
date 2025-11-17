@@ -15,288 +15,1240 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='CPF',
+            name="CPF",
             fields=[
-                ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('cpf', models.CharField(max_length=14)),
-                ('re', models.CharField(max_length=6)),
+                ("id", models.IntegerField(primary_key=True, serialize=False)),
+                ("cpf", models.CharField(max_length=14)),
+                ("re", models.CharField(max_length=6)),
             ],
         ),
         migrations.CreateModel(
-            name='Cadastro',
+            name="Cadastro",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('re', models.CharField(max_length=6, unique=True)),
-                ('dig', models.CharField(max_length=1)),
-                ('nome', models.CharField(max_length=50)),
-                ('nome_de_guerra', models.CharField(max_length=20)),
-                ('genero', models.CharField(choices=[('', ' '), ('Masculino', 'Masculino'), ('Feminino', 'Feminino')], max_length=10)),
-                ('nasc', models.DateField()),
-                ('matricula', models.DateField()),
-                ('admissao', models.DateField()),
-                ('previsao_de_inatividade', models.DateField()),
-                ('cpf', models.CharField(max_length=14, unique=True)),
-                ('rg', models.CharField(max_length=14)),
-                ('tempo_para_averbar_inss', models.IntegerField(default=1)),
-                ('tempo_para_averbar_militar', models.IntegerField(default=1)),
-                ('email', models.EmailField(max_length=100, unique=True)),
-                ('telefone', models.CharField(max_length=14)),
-                ('alteracao', models.CharField(choices=[('', ''), ('Movimentação', 'Movimentação'), ('Promoção', 'Promoção'), ('Foto', 'Foto'), ('Averbação', 'Averbação'), ('Correção', 'Correção'), ('Documento', 'Documento'), ('Contato', 'Contato'), ('Inclusão', 'Inclusão')], max_length=20)),
-                ('create_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='cadastros', to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("re", models.CharField(max_length=6, unique=True)),
+                ("dig", models.CharField(max_length=1)),
+                ("nome", models.CharField(max_length=50)),
+                ("nome_de_guerra", models.CharField(max_length=20)),
+                (
+                    "genero",
+                    models.CharField(
+                        choices=[
+                            ("", " "),
+                            ("Masculino", "Masculino"),
+                            ("Feminino", "Feminino"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                ("nasc", models.DateField()),
+                ("matricula", models.DateField()),
+                ("admissao", models.DateField()),
+                ("previsao_de_inatividade", models.DateField()),
+                ("cpf", models.CharField(max_length=14, unique=True)),
+                ("rg", models.CharField(max_length=14)),
+                ("tempo_para_averbar_inss", models.IntegerField(default=1)),
+                ("tempo_para_averbar_militar", models.IntegerField(default=1)),
+                ("email", models.EmailField(max_length=100, unique=True)),
+                ("telefone", models.CharField(max_length=14)),
+                (
+                    "alteracao",
+                    models.CharField(
+                        choices=[
+                            ("", ""),
+                            ("Movimentação", "Movimentação"),
+                            ("Promoção", "Promoção"),
+                            ("Foto", "Foto"),
+                            ("Averbação", "Averbação"),
+                            ("Correção", "Correção"),
+                            ("Documento", "Documento"),
+                            ("Contato", "Contato"),
+                            ("Inclusão", "Inclusão"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("create_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        default=1,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="cadastros",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('re',),
+                "ordering": ("re",),
             },
         ),
         migrations.CreateModel(
-            name='CatEfetivo',
+            name="CatEfetivo",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tipo', models.CharField(choices=[('ATIVO', 'ATIVO'), ('INATIVO', 'INATIVO'), ('LSV', 'LSV'), ('LTS', 'LTS'), ('LTS FAMILIA', 'LTS FAMILIA'), ('CONVAL', 'CONVAL'), ('ELEIÇÃO', 'ELEIÇÃO'), ('LP', 'LP'), ('FERIAS', 'FÉRIAS'), ('RESTRICAO', 'RESTRIÇÃO'), ('DS', 'DS'), ('DR', 'DR'), ('FOLGA_MENSAL', 'FOLGA MENSAL'), ('FOLGA_SEMANAL', 'FOLGA SEMANAL')], default='ATIVO', max_length=20)),
-                ('data_inicio', models.DateField(blank=True, null=True)),
-                ('data_termino', models.DateField(blank=True, null=True)),
-                ('data_cadastro', models.DateTimeField(auto_now_add=True)),
-                ('ativo', models.BooleanField(default=True)),
-                ('observacao', models.TextField(blank=True, null=True)),
-                ('boletim_concessao_lsv', models.CharField(blank=True, max_length=50, null=True)),
-                ('data_boletim_lsv', models.DateField(blank=True, null=True)),
-                ('restricao_au', models.BooleanField(default=False, verbose_name='Audição seja primordial')),
-                ('restricao_ou', models.BooleanField(default=False, verbose_name='Ordem unida')),
-                ('restricao_bs', models.BooleanField(default=False, verbose_name='Busca e salvamento')),
-                ('restricao_po', models.BooleanField(default=False, verbose_name='Policiamento')),
-                ('restricao_cb', models.BooleanField(default=False, verbose_name='Corte de barba')),
-                ('restricao_pq', models.BooleanField(default=False, verbose_name='Serviços com produtos químicos')),
-                ('restricao_cc', models.BooleanField(default=False, verbose_name='Corte de cabelo')),
-                ('restricao_pt', models.BooleanField(default=False, verbose_name='Prática de tiro')),
-                ('restricao_ci', models.BooleanField(default=False, verbose_name='Correr para incêndio')),
-                ('restricao_sa', models.BooleanField(default=False, verbose_name='Serviços aquáticos')),
-                ('restricao_dg', models.BooleanField(default=False, verbose_name='Datilografia e Digitação')),
-                ('restricao_sb', models.BooleanField(default=False, verbose_name='Serviços burocráticos')),
-                ('restricao_dv', models.BooleanField(default=False, verbose_name='Dirigir veículo')),
-                ('restricao_se', models.BooleanField(default=False, verbose_name='Serviços externos')),
-                ('restricao_ef', models.BooleanField(default=False, verbose_name='Educação Física')),
-                ('restricao_sg', models.BooleanField(default=False, verbose_name='Serviço de guarda')),
-                ('restricao_em', models.BooleanField(default=False, verbose_name='Escrever a mão')),
-                ('restricao_sh', models.BooleanField(default=False, verbose_name='Serviços em altura')),
-                ('restricao_ep', models.BooleanField(default=False, verbose_name='Equilíbrio seja primordial')),
-                ('restricao_si', models.BooleanField(default=False, verbose_name='Serviços internos')),
-                ('restricao_es', models.BooleanField(default=False, verbose_name='Exposição ao sol')),
-                ('restricao_sm', models.BooleanField(default=False, verbose_name='Serviços manuais')),
-                ('restricao_fo', models.BooleanField(default=False, verbose_name='Formatura')),
-                ('restricao_sn', models.BooleanField(default=False, verbose_name='Serviços noturnos')),
-                ('restricao_is', models.BooleanField(default=False, verbose_name='Tocar instrumento de sopro')),
-                ('restricao_sp', models.BooleanField(default=False, verbose_name='Serviços pesados')),
-                ('restricao_lp', models.BooleanField(default=False, verbose_name='Longa permanência em pé')),
-                ('restricao_st', models.BooleanField(default=False, verbose_name='Serviços de telefonia')),
-                ('restricao_lr', models.BooleanField(default=False, verbose_name='Locais ruidosos')),
-                ('restricao_ua', models.BooleanField(default=False, verbose_name='Uso de arma')),
-                ('restricao_ls', models.BooleanField(default=False, verbose_name='Longa permanência sentado')),
-                ('restricao_ub', models.BooleanField(default=False, verbose_name='Uso de botas')),
-                ('restricao_uc', models.BooleanField(default=False, verbose_name='Uso de calçado esportivo')),
-                ('restricao_ma', models.BooleanField(default=False, verbose_name='Manuseio com animais')),
-                ('restricao_mc', models.BooleanField(default=False, verbose_name='Montar a cavalo')),
-                ('restricao_mg', models.BooleanField(default=False, verbose_name='Mergulho')),
-                ('restricao_mp', models.BooleanField(default=False, verbose_name='Manipulação de pó')),
-                ('restricao_vp', models.BooleanField(default=False, verbose_name='Visão seja primordial')),
-                ('restricao_uu', models.BooleanField(default=False, verbose_name='Uso de uniformes')),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='categorias_efetivo', to='efetivo.cadastro')),
-                ('usuario_cadastro', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "tipo",
+                    models.CharField(
+                        choices=[
+                            ("ATIVO", "ATIVO"),
+                            ("INATIVO", "INATIVO"),
+                            ("LSV", "LSV"),
+                            ("LTS", "LTS"),
+                            ("LTS FAMILIA", "LTS FAMILIA"),
+                            ("CONVAL", "CONVAL"),
+                            ("ELEIÇÃO", "ELEIÇÃO"),
+                            ("LP", "LP"),
+                            ("FERIAS", "FÉRIAS"),
+                            ("RESTRICAO", "RESTRIÇÃO"),
+                            ("DS", "DS"),
+                            ("DR", "DR"),
+                            ("FOLGA_MENSAL", "FOLGA MENSAL"),
+                            ("FOLGA_SEMANAL", "FOLGA SEMANAL"),
+                        ],
+                        default="ATIVO",
+                        max_length=20,
+                    ),
+                ),
+                ("data_inicio", models.DateField(blank=True, null=True)),
+                ("data_termino", models.DateField(blank=True, null=True)),
+                ("data_cadastro", models.DateTimeField(auto_now_add=True)),
+                ("ativo", models.BooleanField(default=True)),
+                ("observacao", models.TextField(blank=True, null=True)),
+                (
+                    "boletim_concessao_lsv",
+                    models.CharField(blank=True, max_length=50, null=True),
+                ),
+                ("data_boletim_lsv", models.DateField(blank=True, null=True)),
+                (
+                    "restricao_au",
+                    models.BooleanField(
+                        default=False, verbose_name="Audição seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_ou",
+                    models.BooleanField(default=False, verbose_name="Ordem unida"),
+                ),
+                (
+                    "restricao_bs",
+                    models.BooleanField(
+                        default=False, verbose_name="Busca e salvamento"
+                    ),
+                ),
+                (
+                    "restricao_po",
+                    models.BooleanField(default=False, verbose_name="Policiamento"),
+                ),
+                (
+                    "restricao_cb",
+                    models.BooleanField(default=False, verbose_name="Corte de barba"),
+                ),
+                (
+                    "restricao_pq",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços com produtos químicos"
+                    ),
+                ),
+                (
+                    "restricao_cc",
+                    models.BooleanField(default=False, verbose_name="Corte de cabelo"),
+                ),
+                (
+                    "restricao_pt",
+                    models.BooleanField(default=False, verbose_name="Prática de tiro"),
+                ),
+                (
+                    "restricao_ci",
+                    models.BooleanField(
+                        default=False, verbose_name="Correr para incêndio"
+                    ),
+                ),
+                (
+                    "restricao_sa",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços aquáticos"
+                    ),
+                ),
+                (
+                    "restricao_dg",
+                    models.BooleanField(
+                        default=False, verbose_name="Datilografia e Digitação"
+                    ),
+                ),
+                (
+                    "restricao_sb",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços burocráticos"
+                    ),
+                ),
+                (
+                    "restricao_dv",
+                    models.BooleanField(default=False, verbose_name="Dirigir veículo"),
+                ),
+                (
+                    "restricao_se",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços externos"
+                    ),
+                ),
+                (
+                    "restricao_ef",
+                    models.BooleanField(default=False, verbose_name="Educação Física"),
+                ),
+                (
+                    "restricao_sg",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviço de guarda"
+                    ),
+                ),
+                (
+                    "restricao_em",
+                    models.BooleanField(default=False, verbose_name="Escrever a mão"),
+                ),
+                (
+                    "restricao_sh",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços em altura"
+                    ),
+                ),
+                (
+                    "restricao_ep",
+                    models.BooleanField(
+                        default=False, verbose_name="Equilíbrio seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_si",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços internos"
+                    ),
+                ),
+                (
+                    "restricao_es",
+                    models.BooleanField(default=False, verbose_name="Exposição ao sol"),
+                ),
+                (
+                    "restricao_sm",
+                    models.BooleanField(default=False, verbose_name="Serviços manuais"),
+                ),
+                (
+                    "restricao_fo",
+                    models.BooleanField(default=False, verbose_name="Formatura"),
+                ),
+                (
+                    "restricao_sn",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços noturnos"
+                    ),
+                ),
+                (
+                    "restricao_is",
+                    models.BooleanField(
+                        default=False, verbose_name="Tocar instrumento de sopro"
+                    ),
+                ),
+                (
+                    "restricao_sp",
+                    models.BooleanField(default=False, verbose_name="Serviços pesados"),
+                ),
+                (
+                    "restricao_lp",
+                    models.BooleanField(
+                        default=False, verbose_name="Longa permanência em pé"
+                    ),
+                ),
+                (
+                    "restricao_st",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços de telefonia"
+                    ),
+                ),
+                (
+                    "restricao_lr",
+                    models.BooleanField(default=False, verbose_name="Locais ruidosos"),
+                ),
+                (
+                    "restricao_ua",
+                    models.BooleanField(default=False, verbose_name="Uso de arma"),
+                ),
+                (
+                    "restricao_ls",
+                    models.BooleanField(
+                        default=False, verbose_name="Longa permanência sentado"
+                    ),
+                ),
+                (
+                    "restricao_ub",
+                    models.BooleanField(default=False, verbose_name="Uso de botas"),
+                ),
+                (
+                    "restricao_uc",
+                    models.BooleanField(
+                        default=False, verbose_name="Uso de calçado esportivo"
+                    ),
+                ),
+                (
+                    "restricao_ma",
+                    models.BooleanField(
+                        default=False, verbose_name="Manuseio com animais"
+                    ),
+                ),
+                (
+                    "restricao_mc",
+                    models.BooleanField(default=False, verbose_name="Montar a cavalo"),
+                ),
+                (
+                    "restricao_mg",
+                    models.BooleanField(default=False, verbose_name="Mergulho"),
+                ),
+                (
+                    "restricao_mp",
+                    models.BooleanField(
+                        default=False, verbose_name="Manipulação de pó"
+                    ),
+                ),
+                (
+                    "restricao_vp",
+                    models.BooleanField(
+                        default=False, verbose_name="Visão seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_uu",
+                    models.BooleanField(default=False, verbose_name="Uso de uniformes"),
+                ),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="categorias_efetivo",
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "usuario_cadastro",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Categoria de Efetivo',
-                'verbose_name_plural': 'Categorias de Efetivo',
-                'ordering': ['-data_inicio'],
+                "verbose_name": "Categoria de Efetivo",
+                "verbose_name_plural": "Categorias de Efetivo",
+                "ordering": ["-data_inicio"],
             },
         ),
         migrations.CreateModel(
-            name='DetalhesSituacao',
+            name="DetalhesSituacao",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('situacao', models.CharField(blank=True, choices=[('', ' '), ('Efetivo', 'Efetivo'), ('Exonerado a Pedido', 'Exonerado a Pedido'), ('Exonerado Ex-Ofício', 'Exonerado Ex-Ofício'), ('Reserva a Pedido', 'Reserva a Pedido'), ('Transferido', 'Transferido'), ('Mov. Interna', 'Mov. Interna')], default='Efetivo', max_length=30, null=True)),
-                ('cat_efetivo', models.CharField(blank=True, choices=[('', ' '), ('ATIVO', 'ATIVO'), ('INATIVO', 'INATIVO'), ('LSV', 'LSV'), ('LTS', 'LTS'), ('LTS FAMILIA', 'LTS FAMILIA'), ('CONVAL', 'CONVAL'), ('ELEIÇÃO', 'ELEIÇAO'), ('LP', 'LP'), ('FERIAS', 'FÉRIAS'), ('RESTRICAO', 'RESTRIÇÃO')], default='ATIVO', max_length=20, null=True)),
-                ('sgb', models.CharField(blank=True, choices=[('', ' '), ('EM', ' EM'), ('1ºSGB', '1ºSGB'), ('2ºSGB', '2ºSGB'), ('3ºSGB', '3ºSGB'), ('4ºSGB', '4ºSGB'), ('5ºSGB', '5ºSGB')], max_length=9, null=True)),
-                ('posto_secao', models.CharField(blank=True, choices=[('', ' '), ('703150000 - CMT', 'CMT'), ('703159000 - SUB CMT', 'SUB CMT'), ('703159100 - SEC ADM', 'SEC ADM'), ('703159110 - B/1 E B/5', 'B/1 E B/5'), ('703159110-1 - B/5', 'B/5'), ('703159120 - AA', 'AA'), ('703159130 - B/3 E MOTOMEC', 'B/3 E MOTOMEC'), ('703159130-1 - MOTOMEC', 'MOTOMEC'), ('703159131 - COBOM', 'COBOM'), ('703159140 - B/4', 'B/4'), ('703159150 - ST UGE', 'ST UGE'), ('703159160 - ST PJMD', 'ST PJMD'), ('703159200 - SEC ATIV TEC', 'SEC ATIV TEC'), ('703151000 - CMT 1º SGB', 'CMT 1º SGB'), ('703151100 - ADM PB CERRADO', 'ADM PB CERRADO'), ('703151101 - EB CERRADO', 'EB CERRADO'), ('703151102 - EB ZONA NORTE', 'EB ZONA NORTE'), ('703151200 - ADM PB SANTA ROSÁLIA', 'ADM PB SANTA ROSÁLIA'), ('703151201 - EB SANTA ROSÁLIA', 'EB SANTA ROSÁLIA'), ('703151202 - EB ÉDEM', 'EB ÉDEM'), ('703151300 - ADM PB VOTORANTIM', 'ADM PB VOTORANTIM'), ('703151301 - EB VOTORANTIM', 'EB VOTORANTIM'), ('703151302 - EB PIEDADE', 'EB PIEDADE'), ('703151800 - ADM 1º SGB', 'ADM 1º SGB'), ('703152000 - CMT 2º SGB', 'CMT 2º SGB'), ('703152100 - ADM PB ITU', 'ADM PB ITU'), ('703152101 - EB ITU', 'EB ITU'), ('703152102 - EB PORTO FELIZ', 'EB PORTO FELIZ'), ('703152200 - ADM PB SALTO', 'ADM PB SALTO'), ('703152201 - EB SALTO', 'EB SALTO'), ('703152300 - ADM PB SÃO ROQUE', 'ADM PB SÃO ROQUE'), ('703152301 - EB SÃO ROQUE', 'EB SÃO ROQUE'), ('703152302 - EB IBIÚNA', 'EB IBIÚNA'), ('703152800 - ADM 2º SGB', 'ADM 2º SGB'), ('703152900 - NUCL ATIV TEC 2º SGB', 'NUCL ATIV TEC 2º SGB'), ('703153000 - CMT 3º SGB', 'CMT 3º SGB'), ('703153100 - ADM PB ITAPEVA', 'ADM PB ITAPEVA'), ('703153101 - EB ITAPEVA', 'EB ITAPEVA'), ('703153102 - EB APIAÍ', 'EB APIAÍ'), ('703153103 - EB ITARARÉ', 'EB ITARARÉ'), ('703153104 - EB CAPÃO BONITO', 'EB CAPÃO BONITO'), ('703153800 - ADM 3º SGB', 'ADM 3º SGB'), ('703153900 - NUCL ATIV TEC 3º SGB', 'NUCL ATIV TEC 3º SGB'), ('703154000 - CMT 4º SGB', 'CMT 4º SGB'), ('703154100 - ADM PB ITAPETININGA', 'ADM PB ITAPETININGA'), ('703154101 - EB ITAPETININGA', 'EB ITAPETININGA'), ('703154102 - EB BOITUVA', 'EB BOITUVA'), ('703154103 - EB ANGATUBA', 'EB ANGATUBA'), ('703154200 - ADM PB TATUÍ', 'ADM PB TATUÍ'), ('703154201 - EB TATUÍ', 'EB TATUÍ'), ('703154202 - EB TIETÊ', 'EB TIETÊ'), ('703154203 - EB LARANJAL PAULISTA', 'EB LARANJAL PAULISTA'), ('703154800 - ADM 4º SGB', 'ADM 4º SGB'), ('703154900 - NUCL ATIV TEC 4º SGB', 'NUCL ATIV TEC 4º SGB'), ('703155000 - CMT 5º SGB', 'CMT 5º SGB'), ('703155100 - ADM PB BOTUCATU', 'ADM PB BOTUCATU'), ('703155101 - EB BOTUCATU', 'EB BOTUCATU'), ('703155102 - EB ITATINGA', 'EB ITATINGA'), ('703155200 - ADM PB AVARÉ', 'ADM PB AVARÉ'), ('703155201 - EB AVARÉ', 'EB AVARÉ'), ('703155202 - EB PIRAJU', 'EB PIRAJU'), ('703155203 - EB ITAÍ', 'EB ITAÍ'), ('703155800 - ADM 5º SGB', 'ADM 5º SGB'), ('703155900 - NUCL ATIV TEC 5º SGB', 'NUCL ATIV TEC 5º SGB')], max_length=100, null=True)),
-                ('esta_adido', models.CharField(blank=True, choices=[('', ' '), ('703150000 - CMT', 'CMT'), ('703159000 - SUB CMT', 'SUB CMT'), ('703159100 - SEC ADM', 'SEC ADM'), ('703159110 - B/1 E B/5', 'B/1 E B/5'), ('703159110-1 - B/5', 'B/5'), ('703159120 - AA', 'AA'), ('703159130 - B/3 E MOTOMEC', 'B/3 E MOTOMEC'), ('703159130-1 - MOTOMEC', 'MOTOMEC'), ('703159131 - COBOM', 'COBOM'), ('703159140 - B/4', 'B/4'), ('703159150 - ST UGE', 'ST UGE'), ('703159160 - ST PJMD', 'ST PJMD'), ('703159200 - SEC ATIV TEC', 'SEC ATIV TEC'), ('703151000 - CMT 1º SGB', 'CMT 1º SGB'), ('703151100 - ADM PB CERRADO', 'ADM PB CERRADO'), ('703151101 - EB CERRADO', 'EB CERRADO'), ('703151102 - EB ZONA NORTE', 'EB ZONA NORTE'), ('703151200 - ADM PB SANTA ROSÁLIA', 'ADM PB SANTA ROSÁLIA'), ('703151201 - EB SANTA ROSÁLIA', 'EB SANTA ROSÁLIA'), ('703151202 - EB ÉDEM', 'EB ÉDEM'), ('703151300 - ADM PB VOTORANTIM', 'ADM PB VOTORANTIM'), ('703151301 - EB VOTORANTIM', 'EB VOTORANTIM'), ('703151302 - EB PIEDADE', 'EB PIEDADE'), ('703151800 - ADM 1º SGB', 'ADM 1º SGB'), ('703152000 - CMT 2º SGB', 'CMT 2º SGB'), ('703152100 - ADM PB ITU', 'ADM PB ITU'), ('703152101 - EB ITU', 'EB ITU'), ('703152102 - EB PORTO FELIZ', 'EB PORTO FELIZ'), ('703152200 - ADM PB SALTO', 'ADM PB SALTO'), ('703152201 - EB SALTO', 'EB SALTO'), ('703152300 - ADM PB SÃO ROQUE', 'ADM PB SÃO ROQUE'), ('703152301 - EB SÃO ROQUE', 'EB SÃO ROQUE'), ('703152302 - EB IBIÚNA', 'EB IBIÚNA'), ('703152800 - ADM 2º SGB', 'ADM 2º SGB'), ('703152900 - NUCL ATIV TEC 2º SGB', 'NUCL ATIV TEC 2º SGB'), ('703153000 - CMT 3º SGB', 'CMT 3º SGB'), ('703153100 - ADM PB ITAPEVA', 'ADM PB ITAPEVA'), ('703153101 - EB ITAPEVA', 'EB ITAPEVA'), ('703153102 - EB APIAÍ', 'EB APIAÍ'), ('703153103 - EB ITARARÉ', 'EB ITARARÉ'), ('703153104 - EB CAPÃO BONITO', 'EB CAPÃO BONITO'), ('703153800 - ADM 3º SGB', 'ADM 3º SGB'), ('703153900 - NUCL ATIV TEC 3º SGB', 'NUCL ATIV TEC 3º SGB'), ('703154000 - CMT 4º SGB', 'CMT 4º SGB'), ('703154100 - ADM PB ITAPETININGA', 'ADM PB ITAPETININGA'), ('703154101 - EB ITAPETININGA', 'EB ITAPETININGA'), ('703154102 - EB BOITUVA', 'EB BOITUVA'), ('703154103 - EB ANGATUBA', 'EB ANGATUBA'), ('703154200 - ADM PB TATUÍ', 'ADM PB TATUÍ'), ('703154201 - EB TATUÍ', 'EB TATUÍ'), ('703154202 - EB TIETÊ', 'EB TIETÊ'), ('703154203 - EB LARANJAL PAULISTA', 'EB LARANJAL PAULISTA'), ('703154800 - ADM 4º SGB', 'ADM 4º SGB'), ('703154900 - NUCL ATIV TEC 4º SGB', 'NUCL ATIV TEC 4º SGB'), ('703155000 - CMT 5º SGB', 'CMT 5º SGB'), ('703155100 - ADM PB BOTUCATU', 'ADM PB BOTUCATU'), ('703155101 - EB BOTUCATU', 'EB BOTUCATU'), ('703155102 - EB ITATINGA', 'EB ITATINGA'), ('703155200 - ADM PB AVARÉ', 'ADM PB AVARÉ'), ('703155201 - EB AVARÉ', 'EB AVARÉ'), ('703155202 - EB PIRAJU', 'EB PIRAJU'), ('703155203 - EB ITAÍ', 'EB ITAÍ'), ('703155800 - ADM 5º SGB', 'ADM 5º SGB'), ('703155900 - NUCL ATIV TEC 5º SGB', 'NUCL ATIV TEC 5º SGB')], max_length=100, null=True)),
-                ('funcao', models.CharField(blank=True, choices=[('', ' '), ('AUX (ADM)', 'AUX (ADM)'), ('AUX B1', 'AUX B1'), ('AUX B2', 'AUX B2'), ('AUX B3', 'AUX B3'), ('AUX B4', 'AUX B4'), ('AUX B5', 'AUX B5'), ('AUXILIARES', 'AUXILIARES'), ('B.EDUCADOR', 'B.EDUCADOR'), ('CH DE SETOR', 'CH DE SETOR'), ('CH SAT', 'CH SAT'), ('CH SEC ADM', 'CH SEC ADM'), ('CH_SEÇÃO', 'CH_SEÇÃO'), ('CMT', 'CMT'), ('CMT 1ºSGB', 'CMT 1ºSGB'), ('AUX (MOTOMEC)', 'AUX (MOTOMEC)'), ('CMT 2ºSGB', 'CMT 2ºSGB'), ('CMT 3ºSGB', 'CMT 3ºSGB'), ('CMT 4ºSGB', 'CMT 4ºSGB'), ('CMT 5ºSGB', ' CMT 5ºSGB'), ('CMT PRONTIDÃO', 'CMT PRONTIDÃO'), ('CMT_BASE', 'CMT_BASE'), ('CMT_GB', 'CMT_GB'), ('CMT_PB', 'CMT_PB'), ('COBOM (ATENDENTE)', 'COBOM (ATENDENTE)'), ('COBOM (DESPACHADOR)', 'COBOM (DESPACHADOR)'), ('AUX (NAT)', '3 - AUX (NAT)'), ('COBOM (SUPERVISOR)', 'COBOM (SUPERVISOR)'), ('ESB', 'ESB'), ('ESSGT', 'ESSGT'), ('LSV', 'LSV'), ('LTS', 'LTS'), ('MECÂNICO', 'MECÂNICO'), ('MOTORISTA', 'MOTORISTA'), ('OBRAS', 'OBRAS'), ('AUX (SAT)', 'AUX (SAT)'), ('S/FUNÇ_CAD', 'S/FUNÇ_CAD'), ('TELEFONISTA', 'TELEFONISTA'), ('TELEMÁTICA', 'TELEMÁTICA'), ('AUX (SJD)', 'AUX (SJD)'), ('SUBCMT', 'SUBCMT'), ('AUX (UGE)', 'AUX (UGE)')], max_length=50, null=True)),
-                ('op_adm', models.CharField(blank=True, choices=[('', ' '), ('Administrativo', ' Administrativo'), ('Operacional', 'Operacional')], max_length=18, null=True)),
-                ('prontidao', models.CharField(blank=True, choices=[('', ' '), ('VERDE', 'VERDE'), ('AMARELA', 'AMARELA'), ('AZUL', 'AZUL'), ('ADM', 'ADM')], default='VERDE', max_length=18, null=True)),
-                ('apresentacao_na_unidade', models.DateField(blank=True, null=True)),
-                ('saida_da_unidade', models.DateField(blank=True, null=True)),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True)),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='detalhes_situacao', to='efetivo.cadastro')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='detalhes_usuario', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "situacao",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("Efetivo", "Efetivo"),
+                            ("Exonerado a Pedido", "Exonerado a Pedido"),
+                            ("Exonerado Ex-Ofício", "Exonerado Ex-Ofício"),
+                            ("Reserva a Pedido", "Reserva a Pedido"),
+                            ("Transferido", "Transferido"),
+                            ("Mov. Interna", "Mov. Interna"),
+                        ],
+                        default="Efetivo",
+                        max_length=30,
+                        null=True,
+                    ),
+                ),
+                (
+                    "cat_efetivo",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("ATIVO", "ATIVO"),
+                            ("INATIVO", "INATIVO"),
+                            ("LSV", "LSV"),
+                            ("LTS", "LTS"),
+                            ("LTS FAMILIA", "LTS FAMILIA"),
+                            ("CONVAL", "CONVAL"),
+                            ("ELEIÇÃO", "ELEIÇAO"),
+                            ("LP", "LP"),
+                            ("FERIAS", "FÉRIAS"),
+                            ("RESTRICAO", "RESTRIÇÃO"),
+                        ],
+                        default="ATIVO",
+                        max_length=20,
+                        null=True,
+                    ),
+                ),
+                (
+                    "sgb",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("EM", " EM"),
+                            ("1ºSGB", "1ºSGB"),
+                            ("2ºSGB", "2ºSGB"),
+                            ("3ºSGB", "3ºSGB"),
+                            ("4ºSGB", "4ºSGB"),
+                            ("5ºSGB", "5ºSGB"),
+                        ],
+                        max_length=9,
+                        null=True,
+                    ),
+                ),
+                (
+                    "posto_secao",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("703150000 - CMT", "CMT"),
+                            ("703159000 - SUB CMT", "SUB CMT"),
+                            ("703159100 - SEC ADM", "SEC ADM"),
+                            ("703159110 - B/1 E B/5", "B/1 E B/5"),
+                            ("703159110-1 - B/5", "B/5"),
+                            ("703159120 - AA", "AA"),
+                            ("703159130 - B/3 E MOTOMEC", "B/3 E MOTOMEC"),
+                            ("703159130-1 - MOTOMEC", "MOTOMEC"),
+                            ("703159131 - COBOM", "COBOM"),
+                            ("703159140 - B/4", "B/4"),
+                            ("703159150 - ST UGE", "ST UGE"),
+                            ("703159160 - ST PJMD", "ST PJMD"),
+                            ("703159200 - SEC ATIV TEC", "SEC ATIV TEC"),
+                            ("703151000 - CMT 1º SGB", "CMT 1º SGB"),
+                            ("703151100 - ADM PB CERRADO", "ADM PB CERRADO"),
+                            ("703151101 - EB CERRADO", "EB CERRADO"),
+                            ("703151102 - EB ZONA NORTE", "EB ZONA NORTE"),
+                            (
+                                "703151200 - ADM PB SANTA ROSÁLIA",
+                                "ADM PB SANTA ROSÁLIA",
+                            ),
+                            ("703151201 - EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"),
+                            ("703151202 - EB ÉDEM", "EB ÉDEM"),
+                            ("703151300 - ADM PB VOTORANTIM", "ADM PB VOTORANTIM"),
+                            ("703151301 - EB VOTORANTIM", "EB VOTORANTIM"),
+                            ("703151302 - EB PIEDADE", "EB PIEDADE"),
+                            ("703151800 - ADM 1º SGB", "ADM 1º SGB"),
+                            ("703152000 - CMT 2º SGB", "CMT 2º SGB"),
+                            ("703152100 - ADM PB ITU", "ADM PB ITU"),
+                            ("703152101 - EB ITU", "EB ITU"),
+                            ("703152102 - EB PORTO FELIZ", "EB PORTO FELIZ"),
+                            ("703152200 - ADM PB SALTO", "ADM PB SALTO"),
+                            ("703152201 - EB SALTO", "EB SALTO"),
+                            ("703152300 - ADM PB SÃO ROQUE", "ADM PB SÃO ROQUE"),
+                            ("703152301 - EB SÃO ROQUE", "EB SÃO ROQUE"),
+                            ("703152302 - EB IBIÚNA", "EB IBIÚNA"),
+                            ("703152800 - ADM 2º SGB", "ADM 2º SGB"),
+                            (
+                                "703152900 - NUCL ATIV TEC 2º SGB",
+                                "NUCL ATIV TEC 2º SGB",
+                            ),
+                            ("703153000 - CMT 3º SGB", "CMT 3º SGB"),
+                            ("703153100 - ADM PB ITAPEVA", "ADM PB ITAPEVA"),
+                            ("703153101 - EB ITAPEVA", "EB ITAPEVA"),
+                            ("703153102 - EB APIAÍ", "EB APIAÍ"),
+                            ("703153103 - EB ITARARÉ", "EB ITARARÉ"),
+                            ("703153104 - EB CAPÃO BONITO", "EB CAPÃO BONITO"),
+                            ("703153800 - ADM 3º SGB", "ADM 3º SGB"),
+                            (
+                                "703153900 - NUCL ATIV TEC 3º SGB",
+                                "NUCL ATIV TEC 3º SGB",
+                            ),
+                            ("703154000 - CMT 4º SGB", "CMT 4º SGB"),
+                            ("703154100 - ADM PB ITAPETININGA", "ADM PB ITAPETININGA"),
+                            ("703154101 - EB ITAPETININGA", "EB ITAPETININGA"),
+                            ("703154102 - EB BOITUVA", "EB BOITUVA"),
+                            ("703154103 - EB ANGATUBA", "EB ANGATUBA"),
+                            ("703154200 - ADM PB TATUÍ", "ADM PB TATUÍ"),
+                            ("703154201 - EB TATUÍ", "EB TATUÍ"),
+                            ("703154202 - EB TIETÊ", "EB TIETÊ"),
+                            (
+                                "703154203 - EB LARANJAL PAULISTA",
+                                "EB LARANJAL PAULISTA",
+                            ),
+                            ("703154800 - ADM 4º SGB", "ADM 4º SGB"),
+                            (
+                                "703154900 - NUCL ATIV TEC 4º SGB",
+                                "NUCL ATIV TEC 4º SGB",
+                            ),
+                            ("703155000 - CMT 5º SGB", "CMT 5º SGB"),
+                            ("703155100 - ADM PB BOTUCATU", "ADM PB BOTUCATU"),
+                            ("703155101 - EB BOTUCATU", "EB BOTUCATU"),
+                            ("703155102 - EB ITATINGA", "EB ITATINGA"),
+                            ("703155200 - ADM PB AVARÉ", "ADM PB AVARÉ"),
+                            ("703155201 - EB AVARÉ", "EB AVARÉ"),
+                            ("703155202 - EB PIRAJU", "EB PIRAJU"),
+                            ("703155203 - EB ITAÍ", "EB ITAÍ"),
+                            ("703155800 - ADM 5º SGB", "ADM 5º SGB"),
+                            (
+                                "703155900 - NUCL ATIV TEC 5º SGB",
+                                "NUCL ATIV TEC 5º SGB",
+                            ),
+                        ],
+                        max_length=100,
+                        null=True,
+                    ),
+                ),
+                (
+                    "esta_adido",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("703150000 - CMT", "CMT"),
+                            ("703159000 - SUB CMT", "SUB CMT"),
+                            ("703159100 - SEC ADM", "SEC ADM"),
+                            ("703159110 - B/1 E B/5", "B/1 E B/5"),
+                            ("703159110-1 - B/5", "B/5"),
+                            ("703159120 - AA", "AA"),
+                            ("703159130 - B/3 E MOTOMEC", "B/3 E MOTOMEC"),
+                            ("703159130-1 - MOTOMEC", "MOTOMEC"),
+                            ("703159131 - COBOM", "COBOM"),
+                            ("703159140 - B/4", "B/4"),
+                            ("703159150 - ST UGE", "ST UGE"),
+                            ("703159160 - ST PJMD", "ST PJMD"),
+                            ("703159200 - SEC ATIV TEC", "SEC ATIV TEC"),
+                            ("703151000 - CMT 1º SGB", "CMT 1º SGB"),
+                            ("703151100 - ADM PB CERRADO", "ADM PB CERRADO"),
+                            ("703151101 - EB CERRADO", "EB CERRADO"),
+                            ("703151102 - EB ZONA NORTE", "EB ZONA NORTE"),
+                            (
+                                "703151200 - ADM PB SANTA ROSÁLIA",
+                                "ADM PB SANTA ROSÁLIA",
+                            ),
+                            ("703151201 - EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"),
+                            ("703151202 - EB ÉDEM", "EB ÉDEM"),
+                            ("703151300 - ADM PB VOTORANTIM", "ADM PB VOTORANTIM"),
+                            ("703151301 - EB VOTORANTIM", "EB VOTORANTIM"),
+                            ("703151302 - EB PIEDADE", "EB PIEDADE"),
+                            ("703151800 - ADM 1º SGB", "ADM 1º SGB"),
+                            ("703152000 - CMT 2º SGB", "CMT 2º SGB"),
+                            ("703152100 - ADM PB ITU", "ADM PB ITU"),
+                            ("703152101 - EB ITU", "EB ITU"),
+                            ("703152102 - EB PORTO FELIZ", "EB PORTO FELIZ"),
+                            ("703152200 - ADM PB SALTO", "ADM PB SALTO"),
+                            ("703152201 - EB SALTO", "EB SALTO"),
+                            ("703152300 - ADM PB SÃO ROQUE", "ADM PB SÃO ROQUE"),
+                            ("703152301 - EB SÃO ROQUE", "EB SÃO ROQUE"),
+                            ("703152302 - EB IBIÚNA", "EB IBIÚNA"),
+                            ("703152800 - ADM 2º SGB", "ADM 2º SGB"),
+                            (
+                                "703152900 - NUCL ATIV TEC 2º SGB",
+                                "NUCL ATIV TEC 2º SGB",
+                            ),
+                            ("703153000 - CMT 3º SGB", "CMT 3º SGB"),
+                            ("703153100 - ADM PB ITAPEVA", "ADM PB ITAPEVA"),
+                            ("703153101 - EB ITAPEVA", "EB ITAPEVA"),
+                            ("703153102 - EB APIAÍ", "EB APIAÍ"),
+                            ("703153103 - EB ITARARÉ", "EB ITARARÉ"),
+                            ("703153104 - EB CAPÃO BONITO", "EB CAPÃO BONITO"),
+                            ("703153800 - ADM 3º SGB", "ADM 3º SGB"),
+                            (
+                                "703153900 - NUCL ATIV TEC 3º SGB",
+                                "NUCL ATIV TEC 3º SGB",
+                            ),
+                            ("703154000 - CMT 4º SGB", "CMT 4º SGB"),
+                            ("703154100 - ADM PB ITAPETININGA", "ADM PB ITAPETININGA"),
+                            ("703154101 - EB ITAPETININGA", "EB ITAPETININGA"),
+                            ("703154102 - EB BOITUVA", "EB BOITUVA"),
+                            ("703154103 - EB ANGATUBA", "EB ANGATUBA"),
+                            ("703154200 - ADM PB TATUÍ", "ADM PB TATUÍ"),
+                            ("703154201 - EB TATUÍ", "EB TATUÍ"),
+                            ("703154202 - EB TIETÊ", "EB TIETÊ"),
+                            (
+                                "703154203 - EB LARANJAL PAULISTA",
+                                "EB LARANJAL PAULISTA",
+                            ),
+                            ("703154800 - ADM 4º SGB", "ADM 4º SGB"),
+                            (
+                                "703154900 - NUCL ATIV TEC 4º SGB",
+                                "NUCL ATIV TEC 4º SGB",
+                            ),
+                            ("703155000 - CMT 5º SGB", "CMT 5º SGB"),
+                            ("703155100 - ADM PB BOTUCATU", "ADM PB BOTUCATU"),
+                            ("703155101 - EB BOTUCATU", "EB BOTUCATU"),
+                            ("703155102 - EB ITATINGA", "EB ITATINGA"),
+                            ("703155200 - ADM PB AVARÉ", "ADM PB AVARÉ"),
+                            ("703155201 - EB AVARÉ", "EB AVARÉ"),
+                            ("703155202 - EB PIRAJU", "EB PIRAJU"),
+                            ("703155203 - EB ITAÍ", "EB ITAÍ"),
+                            ("703155800 - ADM 5º SGB", "ADM 5º SGB"),
+                            (
+                                "703155900 - NUCL ATIV TEC 5º SGB",
+                                "NUCL ATIV TEC 5º SGB",
+                            ),
+                        ],
+                        max_length=100,
+                        null=True,
+                    ),
+                ),
+                (
+                    "funcao",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("AUX (ADM)", "AUX (ADM)"),
+                            ("AUX B1", "AUX B1"),
+                            ("AUX B2", "AUX B2"),
+                            ("AUX B3", "AUX B3"),
+                            ("AUX B4", "AUX B4"),
+                            ("AUX B5", "AUX B5"),
+                            ("AUXILIARES", "AUXILIARES"),
+                            ("B.EDUCADOR", "B.EDUCADOR"),
+                            ("CH DE SETOR", "CH DE SETOR"),
+                            ("CH SAT", "CH SAT"),
+                            ("CH SEC ADM", "CH SEC ADM"),
+                            ("CH_SEÇÃO", "CH_SEÇÃO"),
+                            ("CMT", "CMT"),
+                            ("CMT 1ºSGB", "CMT 1ºSGB"),
+                            ("AUX (MOTOMEC)", "AUX (MOTOMEC)"),
+                            ("CMT 2ºSGB", "CMT 2ºSGB"),
+                            ("CMT 3ºSGB", "CMT 3ºSGB"),
+                            ("CMT 4ºSGB", "CMT 4ºSGB"),
+                            ("CMT 5ºSGB", " CMT 5ºSGB"),
+                            ("CMT PRONTIDÃO", "CMT PRONTIDÃO"),
+                            ("CMT_BASE", "CMT_BASE"),
+                            ("CMT_GB", "CMT_GB"),
+                            ("CMT_PB", "CMT_PB"),
+                            ("COBOM (ATENDENTE)", "COBOM (ATENDENTE)"),
+                            ("COBOM (DESPACHADOR)", "COBOM (DESPACHADOR)"),
+                            ("AUX (NAT)", "3 - AUX (NAT)"),
+                            ("COBOM (SUPERVISOR)", "COBOM (SUPERVISOR)"),
+                            ("ESB", "ESB"),
+                            ("ESSGT", "ESSGT"),
+                            ("LSV", "LSV"),
+                            ("LTS", "LTS"),
+                            ("MECÂNICO", "MECÂNICO"),
+                            ("MOTORISTA", "MOTORISTA"),
+                            ("OBRAS", "OBRAS"),
+                            ("AUX (SAT)", "AUX (SAT)"),
+                            ("S/FUNÇ_CAD", "S/FUNÇ_CAD"),
+                            ("TELEFONISTA", "TELEFONISTA"),
+                            ("TELEMÁTICA", "TELEMÁTICA"),
+                            ("AUX (SJD)", "AUX (SJD)"),
+                            ("SUBCMT", "SUBCMT"),
+                            ("AUX (UGE)", "AUX (UGE)"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "op_adm",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("Administrativo", " Administrativo"),
+                            ("Operacional", "Operacional"),
+                        ],
+                        max_length=18,
+                        null=True,
+                    ),
+                ),
+                (
+                    "prontidao",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("", " "),
+                            ("VERDE", "VERDE"),
+                            ("AMARELA", "AMARELA"),
+                            ("AZUL", "AZUL"),
+                            ("ADM", "ADM"),
+                        ],
+                        default="VERDE",
+                        max_length=18,
+                        null=True,
+                    ),
+                ),
+                ("apresentacao_na_unidade", models.DateField(blank=True, null=True)),
+                ("saida_da_unidade", models.DateField(blank=True, null=True)),
+                ("data_alteracao", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="detalhes_situacao",
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="detalhes_usuario",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-data_alteracao'],
+                "ordering": ["-data_alteracao"],
             },
         ),
         migrations.CreateModel(
-            name='HistoricoCatEfetivo',
+            name="HistoricoCatEfetivo",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_registro', models.DateTimeField(auto_now_add=True)),
-                ('tipo', models.CharField(choices=[('ATIVO', 'Ativo'), ('INATIVO', 'Inativo'), ('LSV', 'LSV - Licença para Serviço Voluntário'), ('LTS', 'LTS - Licença para Tratamento de Saúde'), ('LTS FAMILIA', 'LTS Família - Licença para Tratamento de Saúde de Familiar'), ('CONVAL', 'Convalescença'), ('ELEIÇÃO', 'Eleição'), ('LP', 'Licença Prêmio'), ('FERIAS', 'Férias'), ('RESTRICAO', 'Restrição'), ('DS', 'Dispensado de Serviço'), ('DR', 'Dispensa Recompensa')], max_length=20)),
-                ('data_inicio', models.DateField()),
-                ('data_termino', models.DateField(blank=True, null=True)),
-                ('ativo', models.BooleanField(default=True)),
-                ('observacao', models.TextField(blank=True, null=True)),
-                ('deletado', models.BooleanField(default=False)),
-                ('boletim_concessao_lsv', models.CharField(blank=True, max_length=50, null=True)),
-                ('data_boletim_lsv', models.DateField(blank=True, null=True)),
-                ('restricao_au', models.BooleanField(default=False, verbose_name='Audição seja primordial')),
-                ('restricao_ou', models.BooleanField(default=False, verbose_name='Ordem unida')),
-                ('restricao_bs', models.BooleanField(default=False, verbose_name='Busca e salvamento')),
-                ('restricao_po', models.BooleanField(default=False, verbose_name='Policiamento')),
-                ('restricao_cb', models.BooleanField(default=False, verbose_name='Corte de barba')),
-                ('restricao_pq', models.BooleanField(default=False, verbose_name='Serviços com produtos químicos')),
-                ('restricao_cc', models.BooleanField(default=False, verbose_name='Corte de cabelo')),
-                ('restricao_pt', models.BooleanField(default=False, verbose_name='Prática de tiro')),
-                ('restricao_ci', models.BooleanField(default=False, verbose_name='Correr para incêndio')),
-                ('restricao_sa', models.BooleanField(default=False, verbose_name='Serviços aquáticos')),
-                ('restricao_dg', models.BooleanField(default=False, verbose_name='Datilografia e Digitação')),
-                ('restricao_sb', models.BooleanField(default=False, verbose_name='Serviços burocráticos')),
-                ('restricao_dv', models.BooleanField(default=False, verbose_name='Dirigir veículo')),
-                ('restricao_se', models.BooleanField(default=False, verbose_name='Serviços externos')),
-                ('restricao_ef', models.BooleanField(default=False, verbose_name='Educação Física')),
-                ('restricao_sg', models.BooleanField(default=False, verbose_name='Serviço de guarda')),
-                ('restricao_em', models.BooleanField(default=False, verbose_name='Escrever a mão')),
-                ('restricao_sh', models.BooleanField(default=False, verbose_name='Serviços em altura')),
-                ('restricao_ep', models.BooleanField(default=False, verbose_name='Equilíbrio seja primordial')),
-                ('restricao_si', models.BooleanField(default=False, verbose_name='Serviços internos')),
-                ('restricao_es', models.BooleanField(default=False, verbose_name='Exposição ao sol')),
-                ('restricao_sm', models.BooleanField(default=False, verbose_name='Serviços manuais')),
-                ('restricao_fo', models.BooleanField(default=False, verbose_name='Formatura')),
-                ('restricao_sn', models.BooleanField(default=False, verbose_name='Serviços noturnos')),
-                ('restricao_is', models.BooleanField(default=False, verbose_name='Tocar instrumento de sopro')),
-                ('restricao_sp', models.BooleanField(default=False, verbose_name='Serviços pesados')),
-                ('restricao_lp', models.BooleanField(default=False, verbose_name='Longa permanência em pé')),
-                ('restricao_st', models.BooleanField(default=False, verbose_name='Serviços de telefonia')),
-                ('restricao_lr', models.BooleanField(default=False, verbose_name='Locais ruidosos')),
-                ('restricao_ua', models.BooleanField(default=False, verbose_name='Uso de arma')),
-                ('restricao_ls', models.BooleanField(default=False, verbose_name='Longa permanência sentado')),
-                ('restricao_ub', models.BooleanField(default=False, verbose_name='Uso de botas')),
-                ('restricao_uc', models.BooleanField(default=False, verbose_name='Uso de calçado esportivo')),
-                ('restricao_ma', models.BooleanField(default=False, verbose_name='Manuseio com animais')),
-                ('restricao_mc', models.BooleanField(default=False, verbose_name='Montar a cavalo')),
-                ('restricao_mg', models.BooleanField(default=False, verbose_name='Mergulho')),
-                ('restricao_mp', models.BooleanField(default=False, verbose_name='Manipulação de pó')),
-                ('restricao_vp', models.BooleanField(default=False, verbose_name='Visão seja primordial')),
-                ('restricao_uu', models.BooleanField(default=False, verbose_name='Uso de uniformes')),
-                ('cat_efetivo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='historico', to='efetivo.catefetivo')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("data_registro", models.DateTimeField(auto_now_add=True)),
+                (
+                    "tipo",
+                    models.CharField(
+                        choices=[
+                            ("ATIVO", "Ativo"),
+                            ("INATIVO", "Inativo"),
+                            ("LSV", "LSV - Licença para Serviço Voluntário"),
+                            ("LTS", "LTS - Licença para Tratamento de Saúde"),
+                            (
+                                "LTS FAMILIA",
+                                "LTS Família - Licença para Tratamento de Saúde de Familiar",
+                            ),
+                            ("CONVAL", "Convalescença"),
+                            ("ELEIÇÃO", "Eleição"),
+                            ("LP", "Licença Prêmio"),
+                            ("FERIAS", "Férias"),
+                            ("RESTRICAO", "Restrição"),
+                            ("DS", "Dispensado de Serviço"),
+                            ("DR", "Dispensa Recompensa"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("data_inicio", models.DateField()),
+                ("data_termino", models.DateField(blank=True, null=True)),
+                ("ativo", models.BooleanField(default=True)),
+                ("observacao", models.TextField(blank=True, null=True)),
+                ("deletado", models.BooleanField(default=False)),
+                (
+                    "boletim_concessao_lsv",
+                    models.CharField(blank=True, max_length=50, null=True),
+                ),
+                ("data_boletim_lsv", models.DateField(blank=True, null=True)),
+                (
+                    "restricao_au",
+                    models.BooleanField(
+                        default=False, verbose_name="Audição seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_ou",
+                    models.BooleanField(default=False, verbose_name="Ordem unida"),
+                ),
+                (
+                    "restricao_bs",
+                    models.BooleanField(
+                        default=False, verbose_name="Busca e salvamento"
+                    ),
+                ),
+                (
+                    "restricao_po",
+                    models.BooleanField(default=False, verbose_name="Policiamento"),
+                ),
+                (
+                    "restricao_cb",
+                    models.BooleanField(default=False, verbose_name="Corte de barba"),
+                ),
+                (
+                    "restricao_pq",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços com produtos químicos"
+                    ),
+                ),
+                (
+                    "restricao_cc",
+                    models.BooleanField(default=False, verbose_name="Corte de cabelo"),
+                ),
+                (
+                    "restricao_pt",
+                    models.BooleanField(default=False, verbose_name="Prática de tiro"),
+                ),
+                (
+                    "restricao_ci",
+                    models.BooleanField(
+                        default=False, verbose_name="Correr para incêndio"
+                    ),
+                ),
+                (
+                    "restricao_sa",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços aquáticos"
+                    ),
+                ),
+                (
+                    "restricao_dg",
+                    models.BooleanField(
+                        default=False, verbose_name="Datilografia e Digitação"
+                    ),
+                ),
+                (
+                    "restricao_sb",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços burocráticos"
+                    ),
+                ),
+                (
+                    "restricao_dv",
+                    models.BooleanField(default=False, verbose_name="Dirigir veículo"),
+                ),
+                (
+                    "restricao_se",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços externos"
+                    ),
+                ),
+                (
+                    "restricao_ef",
+                    models.BooleanField(default=False, verbose_name="Educação Física"),
+                ),
+                (
+                    "restricao_sg",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviço de guarda"
+                    ),
+                ),
+                (
+                    "restricao_em",
+                    models.BooleanField(default=False, verbose_name="Escrever a mão"),
+                ),
+                (
+                    "restricao_sh",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços em altura"
+                    ),
+                ),
+                (
+                    "restricao_ep",
+                    models.BooleanField(
+                        default=False, verbose_name="Equilíbrio seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_si",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços internos"
+                    ),
+                ),
+                (
+                    "restricao_es",
+                    models.BooleanField(default=False, verbose_name="Exposição ao sol"),
+                ),
+                (
+                    "restricao_sm",
+                    models.BooleanField(default=False, verbose_name="Serviços manuais"),
+                ),
+                (
+                    "restricao_fo",
+                    models.BooleanField(default=False, verbose_name="Formatura"),
+                ),
+                (
+                    "restricao_sn",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços noturnos"
+                    ),
+                ),
+                (
+                    "restricao_is",
+                    models.BooleanField(
+                        default=False, verbose_name="Tocar instrumento de sopro"
+                    ),
+                ),
+                (
+                    "restricao_sp",
+                    models.BooleanField(default=False, verbose_name="Serviços pesados"),
+                ),
+                (
+                    "restricao_lp",
+                    models.BooleanField(
+                        default=False, verbose_name="Longa permanência em pé"
+                    ),
+                ),
+                (
+                    "restricao_st",
+                    models.BooleanField(
+                        default=False, verbose_name="Serviços de telefonia"
+                    ),
+                ),
+                (
+                    "restricao_lr",
+                    models.BooleanField(default=False, verbose_name="Locais ruidosos"),
+                ),
+                (
+                    "restricao_ua",
+                    models.BooleanField(default=False, verbose_name="Uso de arma"),
+                ),
+                (
+                    "restricao_ls",
+                    models.BooleanField(
+                        default=False, verbose_name="Longa permanência sentado"
+                    ),
+                ),
+                (
+                    "restricao_ub",
+                    models.BooleanField(default=False, verbose_name="Uso de botas"),
+                ),
+                (
+                    "restricao_uc",
+                    models.BooleanField(
+                        default=False, verbose_name="Uso de calçado esportivo"
+                    ),
+                ),
+                (
+                    "restricao_ma",
+                    models.BooleanField(
+                        default=False, verbose_name="Manuseio com animais"
+                    ),
+                ),
+                (
+                    "restricao_mc",
+                    models.BooleanField(default=False, verbose_name="Montar a cavalo"),
+                ),
+                (
+                    "restricao_mg",
+                    models.BooleanField(default=False, verbose_name="Mergulho"),
+                ),
+                (
+                    "restricao_mp",
+                    models.BooleanField(
+                        default=False, verbose_name="Manipulação de pó"
+                    ),
+                ),
+                (
+                    "restricao_vp",
+                    models.BooleanField(
+                        default=False, verbose_name="Visão seja primordial"
+                    ),
+                ),
+                (
+                    "restricao_uu",
+                    models.BooleanField(default=False, verbose_name="Uso de uniformes"),
+                ),
+                (
+                    "cat_efetivo",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="historico",
+                        to="efetivo.catefetivo",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Histórico de Categoria de Efetivo',
-                'verbose_name_plural': 'Históricos de Categorias de Efetivo',
-                'ordering': ['-data_registro'],
+                "verbose_name": "Histórico de Categoria de Efetivo",
+                "verbose_name_plural": "Históricos de Categorias de Efetivo",
+                "ordering": ["-data_registro"],
             },
         ),
         migrations.CreateModel(
-            name='HistoricoDetalhesSituacao',
+            name="HistoricoDetalhesSituacao",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('situacao', models.CharField(blank=True, max_length=50, null=True)),
-                ('sgb', models.CharField(blank=True, max_length=50, null=True)),
-                ('posto_secao', models.CharField(blank=True, max_length=50, null=True)),
-                ('esta_adido', models.CharField(blank=True, max_length=50, null=True)),
-                ('funcao', models.CharField(blank=True, max_length=50, null=True)),
-                ('op_adm', models.CharField(blank=True, max_length=50, null=True)),
-                ('prontidao', models.CharField(blank=True, default='', max_length=18, null=True)),
-                ('cat_efetivo', models.CharField(blank=True, default='ATIVO', max_length=30, null=True)),
-                ('apresentacao_na_unidade', models.DateField(blank=True, null=True)),
-                ('saida_da_unidade', models.DateField(blank=True, null=True)),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True)),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("situacao", models.CharField(blank=True, max_length=50, null=True)),
+                ("sgb", models.CharField(blank=True, max_length=50, null=True)),
+                ("posto_secao", models.CharField(blank=True, max_length=50, null=True)),
+                ("esta_adido", models.CharField(blank=True, max_length=50, null=True)),
+                ("funcao", models.CharField(blank=True, max_length=50, null=True)),
+                ("op_adm", models.CharField(blank=True, max_length=50, null=True)),
+                (
+                    "prontidao",
+                    models.CharField(blank=True, default="", max_length=18, null=True),
+                ),
+                (
+                    "cat_efetivo",
+                    models.CharField(
+                        blank=True, default="ATIVO", max_length=30, null=True
+                    ),
+                ),
+                ("apresentacao_na_unidade", models.DateField(blank=True, null=True)),
+                ("saida_da_unidade", models.DateField(blank=True, null=True)),
+                ("data_alteracao", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Histórico de Detalhes de Situação',
-                'verbose_name_plural': 'Históricos de Detalhes de Situação',
-                'ordering': ['-data_alteracao'],
+                "verbose_name": "Histórico de Detalhes de Situação",
+                "verbose_name_plural": "Históricos de Detalhes de Situação",
+                "ordering": ["-data_alteracao"],
             },
         ),
         migrations.CreateModel(
-            name='HistoricoPromocao',
+            name="HistoricoPromocao",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('posto_grad', models.CharField(max_length=100)),
-                ('quadro', models.CharField(max_length=100)),
-                ('grupo', models.CharField(max_length=100)),
-                ('ultima_promocao', models.DateField()),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True)),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("posto_grad", models.CharField(max_length=100)),
+                ("quadro", models.CharField(max_length=100)),
+                ("grupo", models.CharField(max_length=100)),
+                ("ultima_promocao", models.DateField()),
+                ("data_alteracao", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Imagem',
+            name="Imagem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(upload_to='img/fotos_perfil')),
-                ('create_at', models.DateTimeField(auto_now_add=True)),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='imagens', to='efetivo.cadastro')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("image", models.ImageField(upload_to="img/fotos_perfil")),
+                ("create_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="imagens",
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-create_at'],
+                "ordering": ["-create_at"],
             },
         ),
         migrations.CreateModel(
-            name='Promocao',
+            name="Promocao",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('posto_grad', models.CharField(choices=[('', ' '), ('Cel PM', 'Cel PM'), ('Ten Cel PM', 'Ten Cel PM'), ('Maj PM', 'Maj PM'), ('CAP PM', 'Cap PM'), ('1º Ten PM', '1º Ten PM'), ('1º Ten QAPM', '1º Ten QAOPM'), ('2º Ten PM', '2º Ten PM'), ('2º Ten QAPM', '2º Ten QAOPM'), ('Asp OF PM', 'Asp OF PM'), ('Subten PM', 'Subten PM'), ('1º Sgt PM', '1º Sgt PM'), ('2º Sgt PM', '2º Sgt PM'), ('3º Sgt PM', '3º Sgt PM'), ('Cb PM', 'Cb PM'), ('Sd PM', 'Sd PM'), ('Sd PM 2ºCL', 'Sd PM 2ºCL')], max_length=100)),
-                ('quadro', models.CharField(choices=[('', ' '), ('Oficiais', 'Oficiais'), ('Praças Especiais', 'Praças Especiais'), ('Praças', 'Praças')], max_length=100)),
-                ('grupo', models.CharField(choices=[('', ' '), ('Cel', ' Cel'), ('Tc', 'Tc'), ('Maj', 'Maj'), ('Cap', 'Cap'), ('Ten', 'Ten'), ('Ten QAOPM', 'Ten QAOPM'), ('Praça Especiais', 'Praça Especiais'), ('St/Sgt', 'St/Sgt'), ('Cb/Sd', 'Cb/Sd')], max_length=100)),
-                ('ultima_promocao', models.DateField()),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True)),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='promocoes', to='efetivo.cadastro')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "posto_grad",
+                    models.CharField(
+                        choices=[
+                            ("", " "),
+                            ("Cel PM", "Cel PM"),
+                            ("Ten Cel PM", "Ten Cel PM"),
+                            ("Maj PM", "Maj PM"),
+                            ("CAP PM", "Cap PM"),
+                            ("1º Ten PM", "1º Ten PM"),
+                            ("1º Ten QAPM", "1º Ten QAOPM"),
+                            ("2º Ten PM", "2º Ten PM"),
+                            ("2º Ten QAPM", "2º Ten QAOPM"),
+                            ("Asp OF PM", "Asp OF PM"),
+                            ("Subten PM", "Subten PM"),
+                            ("1º Sgt PM", "1º Sgt PM"),
+                            ("2º Sgt PM", "2º Sgt PM"),
+                            ("3º Sgt PM", "3º Sgt PM"),
+                            ("Cb PM", "Cb PM"),
+                            ("Sd PM", "Sd PM"),
+                            ("Sd PM 2ºCL", "Sd PM 2ºCL"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "quadro",
+                    models.CharField(
+                        choices=[
+                            ("", " "),
+                            ("Oficiais", "Oficiais"),
+                            ("Praças Especiais", "Praças Especiais"),
+                            ("Praças", "Praças"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "grupo",
+                    models.CharField(
+                        choices=[
+                            ("", " "),
+                            ("Cel", " Cel"),
+                            ("Tc", "Tc"),
+                            ("Maj", "Maj"),
+                            ("Cap", "Cap"),
+                            ("Ten", "Ten"),
+                            ("Ten QAOPM", "Ten QAOPM"),
+                            ("Praça Especiais", "Praça Especiais"),
+                            ("St/Sgt", "St/Sgt"),
+                            ("Cb/Sd", "Cb/Sd"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                ("ultima_promocao", models.DateField()),
+                ("data_alteracao", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="promocoes",
+                        to="efetivo.cadastro",
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddIndex(
-            model_name='catefetivo',
-            index=models.Index(fields=['tipo'], name='efetivo_cat_tipo_f85d38_idx'),
+            model_name="catefetivo",
+            index=models.Index(fields=["tipo"], name="efetivo_cat_tipo_f85d38_idx"),
         ),
         migrations.AddIndex(
-            model_name='catefetivo',
-            index=models.Index(fields=['cadastro'], name='efetivo_cat_cadastr_9d53c8_idx'),
+            model_name="catefetivo",
+            index=models.Index(
+                fields=["cadastro"], name="efetivo_cat_cadastr_9d53c8_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='catefetivo',
-            index=models.Index(fields=['ativo'], name='efetivo_cat_ativo_bec96b_idx'),
+            model_name="catefetivo",
+            index=models.Index(fields=["ativo"], name="efetivo_cat_ativo_bec96b_idx"),
         ),
         migrations.AddIndex(
-            model_name='catefetivo',
-            index=models.Index(fields=['data_inicio', 'data_termino'], name='efetivo_cat_data_in_5823a8_idx'),
+            model_name="catefetivo",
+            index=models.Index(
+                fields=["data_inicio", "data_termino"],
+                name="efetivo_cat_data_in_5823a8_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='detalhessituacao',
-            index=models.Index(fields=['situacao', 'posto_secao'], name='efetivo_det_situaca_63d18d_idx'),
+            model_name="detalhessituacao",
+            index=models.Index(
+                fields=["situacao", "posto_secao"],
+                name="efetivo_det_situaca_63d18d_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='detalhessituacao',
-            index=models.Index(fields=['cadastro'], name='efetivo_det_cadastr_9af3c3_idx'),
+            model_name="detalhessituacao",
+            index=models.Index(
+                fields=["cadastro"], name="efetivo_det_cadastr_9af3c3_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='historicocatefetivo',
-            index=models.Index(fields=['cat_efetivo'], name='efetivo_his_cat_efe_e92877_idx'),
+            model_name="historicocatefetivo",
+            index=models.Index(
+                fields=["cat_efetivo"], name="efetivo_his_cat_efe_e92877_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='historicocatefetivo',
-            index=models.Index(fields=['data_registro'], name='efetivo_his_data_re_205c96_idx'),
+            model_name="historicocatefetivo",
+            index=models.Index(
+                fields=["data_registro"], name="efetivo_his_data_re_205c96_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='historicocatefetivo',
-            index=models.Index(fields=['tipo'], name='efetivo_his_tipo_1fb486_idx'),
+            model_name="historicocatefetivo",
+            index=models.Index(fields=["tipo"], name="efetivo_his_tipo_1fb486_idx"),
         ),
         migrations.AddIndex(
-            model_name='promocao',
-            index=models.Index(fields=['grupo'], name='efetivo_pro_grupo_b03f27_idx'),
+            model_name="promocao",
+            index=models.Index(fields=["grupo"], name="efetivo_pro_grupo_b03f27_idx"),
         ),
         migrations.AddIndex(
-            model_name='promocao',
-            index=models.Index(fields=['cadastro'], name='efetivo_pro_cadastr_bc40b7_idx'),
+            model_name="promocao",
+            index=models.Index(
+                fields=["cadastro"], name="efetivo_pro_cadastr_bc40b7_idx"
+            ),
         ),
     ]

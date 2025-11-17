@@ -16,67 +16,194 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Conversation',
+            name="Conversation",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, help_text='Nome do grupo, se aplicável', max_length=128, null=True)),
-                ('is_group', models.BooleanField(default=False, help_text='Define se a conversa é em grupo')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        blank=True,
+                        help_text="Nome do grupo, se aplicável",
+                        max_length=128,
+                        null=True,
+                    ),
+                ),
+                (
+                    "is_group",
+                    models.BooleanField(
+                        default=False, help_text="Define se a conversa é em grupo"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ('-updated_at',),
+                "ordering": ("-updated_at",),
             },
         ),
         migrations.CreateModel(
-            name='Message',
+            name="Message",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('text', models.TextField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='chat.conversation')),
-                ('parent_message', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='replies', to='chat.message')),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_messages', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("text", models.TextField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "conversation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="messages",
+                        to="chat.conversation",
+                    ),
+                ),
+                (
+                    "parent_message",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="replies",
+                        to="chat.message",
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sent_messages",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('created_at',),
+                "ordering": ("created_at",),
             },
         ),
         migrations.CreateModel(
-            name='Attachment',
+            name="Attachment",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('file', models.FileField(upload_to='chat_attachments/%Y/%m/%d/')),
-                ('file_type', models.CharField(help_text='Ex: image/jpeg, application/pdf', max_length=50)),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='chat.message')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("file", models.FileField(upload_to="chat_attachments/%Y/%m/%d/")),
+                (
+                    "file_type",
+                    models.CharField(
+                        help_text="Ex: image/jpeg, application/pdf", max_length=50
+                    ),
+                ),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "message",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attachments",
+                        to="chat.message",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Participant',
+            name="Participant",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('joined_at', models.DateTimeField(auto_now_add=True)),
-                ('conversation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='participants', to='chat.conversation')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='conversations', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("joined_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "conversation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="participants",
+                        to="chat.conversation",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="conversations",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-joined_at',),
-                'unique_together': {('user', 'conversation')},
+                "ordering": ("-joined_at",),
+                "unique_together": {("user", "conversation")},
             },
         ),
         migrations.CreateModel(
-            name='MessageStatus',
+            name="MessageStatus",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('sent', 'Enviado'), ('delivered', 'Entregue'), ('read', 'Lido')], default='sent', max_length=10)),
-                ('timestamp', models.DateTimeField(auto_now=True)),
-                ('message', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='statuses', to='chat.message')),
-                ('participant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='message_statuses', to='chat.participant')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("sent", "Enviado"),
+                            ("delivered", "Entregue"),
+                            ("read", "Lido"),
+                        ],
+                        default="sent",
+                        max_length=10,
+                    ),
+                ),
+                ("timestamp", models.DateTimeField(auto_now=True)),
+                (
+                    "message",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="statuses",
+                        to="chat.message",
+                    ),
+                ),
+                (
+                    "participant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="message_statuses",
+                        to="chat.participant",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-timestamp',),
-                'unique_together': {('message', 'participant')},
+                "ordering": ("-timestamp",),
+                "unique_together": {("message", "participant")},
             },
         ),
     ]

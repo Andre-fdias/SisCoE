@@ -1,26 +1,26 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from django.core.validators import URLValidator
-
-
+from django.utils.text import Truncator
+from django.db.models import Sum
+from datetime import date
 
 
 class Posto(models.Model):
 
-    sgb_choices=( 
-        ("", " "),                                                
-        ("EM"," EM"),
+    sgb_choices = (
+        ("", " "),
+        ("EM", " EM"),
         ("1ºSGB", "1ºSGB"),
         ("2ºSGB", "2ºSGB"),
         ("3ºSGB", "3ºSGB"),
         ("4ºSGB", "4ºSGB"),
-        ("5ºSGB", "5ºSGB")
+        ("5ºSGB", "5ºSGB"),
     )
 
-    op_adm_choices=( 
-        ("", " "),                                                
-        ("Administrativo"," Administrativo"),
+    op_adm_choices = (
+        ("", " "),
+        ("Administrativo", " Administrativo"),
         ("Operacional", "Operacional"),
     )
 
@@ -93,116 +93,115 @@ class Posto(models.Model):
     )
 
     cidade_posto_choices = [
-    ("", " "),
-    ("Sorocaba", "Sorocaba"),
-    ("Votorantim", "Votorantim"),
-    ("Piedade", "Piedade"),
-
-    ("Itu", "Itu"),
-    ("Porto Feliz", "Porto Feliz"),
-    ("Salto", "Salto"),
-    ("São Roque", "São Roque"),
-    ("Ibiúna", "Ibiúna"),
-
-    ("Itapeva", "Itapeva"),
-    ("Itararé", "Itararé"),
-    ("Apiaí", "Apiaí"),  
-    ("Capão Bonito", "Capão Bonito"),
- 
-    ("Itapetininga", "Itapetininga"),
-    ("Angatuba", "Angatuba"),
-    ("Boituva", "Boituva"),
-    ("Tatuí", "Tatuí"),
-    ("Tietê", "Tietê"),
-    ("Laranjal Paulista", "Laranjal Paulista"),
-
-    ("Botucatu", "Botucatu"),
-    ("Itaí", "Itaí"),
-    ("Avaré", "Avaré"),
-    ("Itatinga", "Itatinga"),
-    ("Piraju", "Piraju"),
-
-]
+        ("", " "),
+        ("Sorocaba", "Sorocaba"),
+        ("Votorantim", "Votorantim"),
+        ("Piedade", "Piedade"),
+        ("Itu", "Itu"),
+        ("Porto Feliz", "Porto Feliz"),
+        ("Salto", "Salto"),
+        ("São Roque", "São Roque"),
+        ("Ibiúna", "Ibiúna"),
+        ("Itapeva", "Itapeva"),
+        ("Itararé", "Itararé"),
+        ("Apiaí", "Apiaí"),
+        ("Capão Bonito", "Capão Bonito"),
+        ("Itapetininga", "Itapetininga"),
+        ("Angatuba", "Angatuba"),
+        ("Boituva", "Boituva"),
+        ("Tatuí", "Tatuí"),
+        ("Tietê", "Tietê"),
+        ("Laranjal Paulista", "Laranjal Paulista"),
+        ("Botucatu", "Botucatu"),
+        ("Itaí", "Itaí"),
+        ("Avaré", "Avaré"),
+        ("Itatinga", "Itatinga"),
+        ("Piraju", "Piraju"),
+    ]
     posto_atendimento_choices = [
-     ("", " "),    
-   ("EB AVARÉ", "EB AVARÉ"),
-    ("EB APIAÍ", "EB APIAÍ"),
-    ("EB ITAPETININGA", "EB ITAPETININGA"),
-    ("EB ITARARÉ", "EB ITARARÉ"),
-    ("EB SÃO ROQUE", "EB SÃO ROQUE"),
-    ("EB CAPÃO BONITO", "EB CAPÃO BONITO"),
-    ("EB CERRADO", "EB CERRADO"),
-    ("EB ANGATUBA", "EB ANGATUBA"),
-    ("EB BOTUCATU", "EB BOTUCATU"),
-    ("EB SALTO", "EB SALTO"),
-    ("EB ITAÍ", "EB ITAÍ"),
-    ("EB BOITUVA", "EB BOITUVA"),
-    ("EB TATUÍ", "EB TATUÍ"),
-    ("EB TIETÊ", "EB TIETÊ"),
-    ("EB LARANJAL PAULISTA", "EB LARANJAL PAULISTA"),
-    ("EB PIRAJU", "EB PIRAJU"),
-    ("EB IBIÚNA", "EB IBIÚNA"),
-    ("EB ITAPEVA", "EB ITAPEVA"),
-    ("EB ITATINGA", "EB ITATINGA"),
-    ("EB ITU", "EB ITU"),
-    ("EB PIEDADE", "EB PIEDADE"),
-    ("EB PORTO FELIZ", "EB PORTO FELIZ"),
-    ("EB VOTORANTIM", "EB VOTORANTIM"),
-    ("EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"),
-    ("EB ZONA NORTE", "EB ZONA NORTE"),
-    ("EB ÉDEM", "EB ÉDEM"),
- 
-]
-    
-    tipo_choices=( 
-        ("", " "),                                                
-        ("Sede","Sede"),
+        ("", " "),
+        ("EB AVARÉ", "EB AVARÉ"),
+        ("EB APIAÍ", "EB APIAÍ"),
+        ("EB ITAPETININGA", "EB ITAPETININGA"),
+        ("EB ITARARÉ", "EB ITARARÉ"),
+        ("EB SÃO ROQUE", "EB SÃO ROQUE"),
+        ("EB CAPÃO BONITO", "EB CAPÃO BONITO"),
+        ("EB CERRADO", "EB CERRADO"),
+        ("EB ANGATUBA", "EB ANGATUBA"),
+        ("EB BOTUCATU", "EB BOTUCATU"),
+        ("EB SALTO", "EB SALTO"),
+        ("EB ITAÍ", "EB ITAÍ"),
+        ("EB BOITUVA", "EB BOITUVA"),
+        ("EB TATUÍ", "EB TATUÍ"),
+        ("EB TIETÊ", "EB TIETÊ"),
+        ("EB LARANJAL PAULISTA", "EB LARANJAL PAULISTA"),
+        ("EB PIRAJU", "EB PIRAJU"),
+        ("EB IBIÚNA", "EB IBIÚNA"),
+        ("EB ITAPEVA", "EB ITAPEVA"),
+        ("EB ITATINGA", "EB ITATINGA"),
+        ("EB ITU", "EB ITU"),
+        ("EB PIEDADE", "EB PIEDADE"),
+        ("EB PORTO FELIZ", "EB PORTO FELIZ"),
+        ("EB VOTORANTIM", "EB VOTORANTIM"),
+        ("EB SANTA ROSÁLIA", "EB SANTA ROSÁLIA"),
+        ("EB ZONA NORTE", "EB ZONA NORTE"),
+        ("EB ÉDEM", "EB ÉDEM"),
+    ]
+
+    tipo_choices = (
+        ("", " "),
+        ("Sede", "Sede"),
         ("Apoio", "Apoio"),
     )
 
- 
-
-
     id = models.AutoField(primary_key=True)
     sgb = models.CharField(max_length=30, blank=False, null=False, choices=sgb_choices)
-    posto_secao = models.CharField(max_length=120, blank=False, null=False, choices=posto_secao_choices)
-    posto_atendimento = models.CharField(max_length=50, blank=False, null=False, choices=posto_atendimento_choices)
-    cidade_posto = models.CharField(max_length=50, blank=False, null=False, choices=cidade_posto_choices)
-    tipo_cidade = models.CharField(max_length=50, blank=False, null=False, choices=op_adm_choices)
-    op_adm = models.CharField(max_length=50, blank=False, null=False, choices=tipo_choices)
+    posto_secao = models.CharField(
+        max_length=120, blank=False, null=False, choices=posto_secao_choices
+    )
+    posto_atendimento = models.CharField(
+        max_length=50, blank=False, null=False, choices=posto_atendimento_choices
+    )
+    cidade_posto = models.CharField(
+        max_length=50, blank=False, null=False, choices=cidade_posto_choices
+    )
+    tipo_cidade = models.CharField(
+        max_length=50, blank=False, null=False, choices=op_adm_choices
+    )
+    op_adm = models.CharField(
+        max_length=50, blank=False, null=False, choices=tipo_choices
+    )
     quartel = models.ImageField(
-        upload_to='img/quartel/', 
+        upload_to="img/quartel/",
         blank=True,
         null=True,
         verbose_name="Quartel",
-        help_text="Formato: PNG/JPG. Tamanho máximo: 2MB"
+        help_text="Formato: PNG/JPG. Tamanho máximo: 2MB",
     )
     data_criacao = models.DateTimeField(default=timezone.now)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.posto_atendimento} - {self.cidade_posto}' 
-
+        return f"{self.posto_atendimento} - {self.cidade_posto}"
 
     def get_search_result(self):
         return {
-            'title': f"{self.posto_atendimento} - {self.cidade_posto}",
-            'fields': {
-                'Posto/Seção': self.posto_secao,
-                'Cidade': self.cidade_posto,
-                'Tipo': self.op_adm
-            }
+            "title": f"{self.posto_atendimento} - {self.cidade_posto}",
+            "fields": {
+                "Posto/Seção": self.posto_secao,
+                "Cidade": self.cidade_posto,
+                "Tipo": self.op_adm,
+            },
         }
-
 
 
 class Contato(models.Model):
     posto = models.OneToOneField(
-        Posto, 
-        on_delete=models.CASCADE, 
-        related_name='contato',
-        verbose_name="Contato do Posto"
-    )  
+        Posto,
+        on_delete=models.CASCADE,
+        related_name="contato",
+        verbose_name="Contato do Posto",
+    )
     telefone = models.CharField(max_length=20)
     rua = models.CharField(max_length=100)
     numero = models.CharField(max_length=10)
@@ -214,23 +213,22 @@ class Contato(models.Model):
     longitude = models.FloatField()
     latitude = models.FloatField()
 
-
     def __str__(self):
-        return f'Contato {self.posto.posto_atendimento}'
+        return f"Contato {self.posto.posto_atendimento}"
 
     def get_search_result(self):
         return {
-            'title': f"Contato {self.posto.posto_atendimento}",
-            'fields': {
-                'Telefone': self.telefone,
-                'Endereço': f"{self.rua}, {self.numero} - {self.bairro}",
-                'Cidade': self.cidade
-            }
+            "title": f"Contato {self.posto.posto_atendimento}",
+            "fields": {
+                "Telefone": self.telefone,
+                "Endereço": f"{self.rua}, {self.numero} - {self.bairro}",
+                "Cidade": self.cidade,
+            },
         }
 
 
 class Pessoal(models.Model):
-    posto = models.ForeignKey(Posto, on_delete=models.CASCADE, related_name='pessoal')
+    posto = models.ForeignKey(Posto, on_delete=models.CASCADE, related_name="pessoal")
     cel = models.IntegerField()
     ten_cel = models.IntegerField()
     maj = models.IntegerField()
@@ -242,145 +240,148 @@ class Pessoal(models.Model):
     cb_sd = models.IntegerField()
 
     def __str__(self):
-        return f'{self.posto}'
-    
+        return f"{self.posto}"
+
     @property
     def total(self):
         return (
-            self.ten_cel + self.maj + self.cap +
-            self.tenqo + self.tenqa + 
-            self.st_sgt + self.cb_sd
+            self.ten_cel
+            + self.maj
+            + self.cap
+            + self.tenqo
+            + self.tenqa
+            + self.st_sgt
+            + self.cb_sd
         )
-    
+
     def get_search_result(self):
         return {
-            'title': f"{self.municipio}",
-            'fields': {
-                'Município': self.get_nome_municipio(),
-                'Descrição': Truncator(self.descricao).chars(100) if self.descricao else '-'
-            }
+            "title": f"{self.municipio}",
+            "fields": {
+                "Município": self.get_nome_municipio(),
+                "Descrição": (
+                    Truncator(self.descricao).chars(100) if self.descricao else "-"
+                ),
+            },
         }
 
 
 class Cidade(models.Model):
 
     municipio_choices = (
-    ("", " "),
-    ("Águas de Santa Bárbara", "Águas de Santa Bárbara"),
-    ("Apiaí", "Apiaí"),
-    ("Barra do Chapéu", "Barra do Chapéu"),
-    ("Alambari", "Alambari"),
-    ("Bom Sucesso de Itararé", "Bom Sucesso de Itararé"),
-    ("Alumínio", "Alumínio"),
-    ("Buri", "Buri"),
-    ("Capão Bonito", "Capão Bonito"),
-    ("Araçoiaba da Serra", "Araçoiaba da Serra"),
-    ("Angatuba", "Angatuba"),
-    ("Anhembi", "Anhembi"),
-    ("Araçariguama", "Araçariguama"),
-    ("Arandu", "Arandu"),
-    ("Areiópolis", "Areiópolis"),
-    ("Avaré", "Avaré"),
-    ("Campina do Monte Alegre", "Campina do Monte Alegre"),
-    ("Barão de Antonina", "Barão de Antonina"),
-    ("Boituva", "Boituva"),
-    ("Capela do Alto", "Capela do Alto"),
-    ("Botucatu", "Botucatu"),
-    ("Bofete", "Bofete"),
-    ("Cerqueira César", "Cerqueira César"),
-    ("Cerquilho", "Cerquilho"),
-    ("Cesário Lange", "Cesário Lange"),
-    ("Conchas", "Conchas"),
-    ("Coronel Macedo", "Coronel Macedo"),
-    ("Fartura", "Fartura"),
-    ("Guapiara", "Guapiara"),
-    ("Guareí", "Guareí"),
-    ("Iaras", "Iaras"),
-    ("Ibiúna", "Ibiúna"),
-    ("Iperó", "Iperó"),
-    ("Itaberá", "Itaberá"),
-    ("Itaí", "Itaí"),
-    ("Itaoca", "Itaoca"),
-    ("Itapetininga", "Itapetininga"),
-    ("Itapeva", "Itapeva"),
-    ("Itapirapuã Paulista", "Itapirapuã Paulista"),
-    ("Itaporanga", "Itaporanga"),
-    ("Itararé", "Itararé"),
-    ("Itatinga", "Itatinga"),
-    ("Itu", "Itu"),
-    ("Jumirim", "Jumirim"),
-    ("Laranjal Paulista", "Laranjal Paulista"),
-    ("Mairinque", "Mairinque"),
-    ("Manduri", "Manduri"),
-    ("Nova Campina", "Nova Campina"),
-    ("Paranapanema", "Paranapanema"),
-    ("Pardinho", "Pardinho"),
-    ("Pereiras", "Pereiras"),
-    ("Piedade", "Piedade"),
-    ("Pilar do Sul", "Pilar do Sul"),
-    ("Piraju", "Piraju"),
-    ("Porangaba", "Porangaba"),
-    ("Porto Feliz", "Porto Feliz"),
-    ("Pratânia", "Pratânia"),
-    ("Quadra", "Quadra"),
-    ("Ribeira", "Ribeira"),
-    ("Ribeirão Branco", "Ribeirão Branco"),
-    ("Ribeirão Grande", "Ribeirão Grande"),
-    ("Riversul", "Riversul"),
-    ("Salto", "Salto"),
-    ("Salto de Pirapora", "Salto de Pirapora"),
-    ("São Manuel", "São Manuel"),
-    ("São Miguel Arcanjo", "São Miguel Arcanjo"),
-    ("São Paulo", "São Paulo"),
-    ("São Roque", "São Roque"),
-    ("Sarapuí", "Sarapuí"),
-    ("Sarutaiá", "Sarutaiá"),
-    ("Sorocaba", "Sorocaba"),
-    ("Taguaí", "Taguaí"),
-    ("Tapiraí", "Tapiraí"),
-    ("Taquarituba", "Taquarituba"),
-    ("Taquarivaí", "Taquarivaí"),
-    ("Tatuí", "Tatuí"),
-    ("Tejupá", "Tejupá"),
-    ("Tietê", "Tietê"),
-    ("Torre de Pedra", "Torre de Pedra"),
-    ("Votorantim", "Votorantim"),
+        ("", " "),
+        ("Águas de Santa Bárbara", "Águas de Santa Bárbara"),
+        ("Apiaí", "Apiaí"),
+        ("Barra do Chapéu", "Barra do Chapéu"),
+        ("Alambari", "Alambari"),
+        ("Bom Sucesso de Itararé", "Bom Sucesso de Itararé"),
+        ("Alumínio", "Alumínio"),
+        ("Buri", "Buri"),
+        ("Capão Bonito", "Capão Bonito"),
+        ("Araçoiaba da Serra", "Araçoiaba da Serra"),
+        ("Angatuba", "Angatuba"),
+        ("Anhembi", "Anhembi"),
+        ("Araçariguama", "Araçariguama"),
+        ("Arandu", "Arandu"),
+        ("Areiópolis", "Areiópolis"),
+        ("Avaré", "Avaré"),
+        ("Campina do Monte Alegre", "Campina do Monte Alegre"),
+        ("Barão de Antonina", "Barão de Antonina"),
+        ("Boituva", "Boituva"),
+        ("Capela do Alto", "Capela do Alto"),
+        ("Botucatu", "Botucatu"),
+        ("Bofete", "Bofete"),
+        ("Cerqueira César", "Cerqueira César"),
+        ("Cerquilho", "Cerquilho"),
+        ("Cesário Lange", "Cesário Lange"),
+        ("Conchas", "Conchas"),
+        ("Coronel Macedo", "Coronel Macedo"),
+        ("Fartura", "Fartura"),
+        ("Guapiara", "Guapiara"),
+        ("Guareí", "Guareí"),
+        ("Iaras", "Iaras"),
+        ("Ibiúna", "Ibiúna"),
+        ("Iperó", "Iperó"),
+        ("Itaberá", "Itaberá"),
+        ("Itaí", "Itaí"),
+        ("Itaoca", "Itaoca"),
+        ("Itapetininga", "Itapetininga"),
+        ("Itapeva", "Itapeva"),
+        ("Itapirapuã Paulista", "Itapirapuã Paulista"),
+        ("Itaporanga", "Itaporanga"),
+        ("Itararé", "Itararé"),
+        ("Itatinga", "Itatinga"),
+        ("Itu", "Itu"),
+        ("Jumirim", "Jumirim"),
+        ("Laranjal Paulista", "Laranjal Paulista"),
+        ("Mairinque", "Mairinque"),
+        ("Manduri", "Manduri"),
+        ("Nova Campina", "Nova Campina"),
+        ("Paranapanema", "Paranapanema"),
+        ("Pardinho", "Pardinho"),
+        ("Pereiras", "Pereiras"),
+        ("Piedade", "Piedade"),
+        ("Pilar do Sul", "Pilar do Sul"),
+        ("Piraju", "Piraju"),
+        ("Porangaba", "Porangaba"),
+        ("Porto Feliz", "Porto Feliz"),
+        ("Pratânia", "Pratânia"),
+        ("Quadra", "Quadra"),
+        ("Ribeira", "Ribeira"),
+        ("Ribeirão Branco", "Ribeirão Branco"),
+        ("Ribeirão Grande", "Ribeirão Grande"),
+        ("Riversul", "Riversul"),
+        ("Salto", "Salto"),
+        ("Salto de Pirapora", "Salto de Pirapora"),
+        ("São Manuel", "São Manuel"),
+        ("São Miguel Arcanjo", "São Miguel Arcanjo"),
+        ("São Paulo", "São Paulo"),
+        ("São Roque", "São Roque"),
+        ("Sarapuí", "Sarapuí"),
+        ("Sarutaiá", "Sarutaiá"),
+        ("Sorocaba", "Sorocaba"),
+        ("Taguaí", "Taguaí"),
+        ("Tapiraí", "Tapiraí"),
+        ("Taquarituba", "Taquarituba"),
+        ("Taquarivaí", "Taquarivaí"),
+        ("Tatuí", "Tatuí"),
+        ("Tejupá", "Tejupá"),
+        ("Tietê", "Tietê"),
+        ("Torre de Pedra", "Torre de Pedra"),
+        ("Votorantim", "Votorantim"),
     )
-       
+
     posto = models.ForeignKey(
-        Posto, 
-        on_delete=models.CASCADE, 
-        related_name='cidades',
-        verbose_name="Posto vinculado"
+        Posto,
+        on_delete=models.CASCADE,
+        related_name="cidades",
+        verbose_name="Posto vinculado",
     )
     descricao = models.TextField(
         verbose_name="Descrição",
         blank=True,
-        help_text="Informações relevantes sobre o município"
+        help_text="Informações relevantes sobre o município",
     )
     municipio = models.CharField(
-        max_length=100,
-        verbose_name="Município",choices=municipio_choices)
-    
+        max_length=100, verbose_name="Município", choices=municipio_choices
+    )
+
     longitude = models.FloatField()
     latitude = models.FloatField()
     bandeira = models.ImageField(
-        upload_to='img/bandeiras/%Y/%m/%d/', 
+        upload_to="img/bandeiras/%Y/%m/%d/",
         blank=True,
         null=True,
         verbose_name="Bandeira municipal",
-        help_text="Formato: PNG/JPG. Tamanho máximo: 2MB"
+        help_text="Formato: PNG/JPG. Tamanho máximo: 2MB",
     )
 
     def __str__(self):
-        return f'{self.municipio} - {self.posto.posto_atendimento}'
-    
-
+        return f"{self.municipio} - {self.posto.posto_atendimento}"
 
     class Meta:
         verbose_name = "Cidade"
         verbose_name_plural = "Cidades"
-
 
     def get_nome_municipio(self):
         """Retorna o nome de exibição do município"""
@@ -389,57 +390,56 @@ class Cidade(models.Model):
     # Adicione ao final da classe Pessoal
     def get_search_result(self):
         return {
-            'title': f"Pessoal {self.posto.posto_atendimento}",
-            'fields': {
-                'Cel': self.cel,
-                'Ten Cel': self.ten_cel,
-                'Maj': self.maj,
-                'Cap': self.cap,
-                'Total': self.total
-            }
+            "title": f"Pessoal {self.posto.posto_atendimento}",
+            "fields": {
+                "Cel": self.cel,
+                "Ten Cel": self.ten_cel,
+                "Maj": self.maj,
+                "Cap": self.cap,
+                "Total": self.total,
+            },
         }
-    
-    
+
     class HistoricoPessoal(models.Model):
-            data_referencia = models.DateField()
-            total_cel = models.IntegerField()
-            total_ten_cel = models.IntegerField()
-            total_maj = models.IntegerField()
-            total_cap = models.IntegerField()
-            total_tenqo = models.IntegerField()
-            total_tenqa = models.IntegerField()
-            total_asp = models.IntegerField()
-            total_st_sgt = models.IntegerField()
-            total_cb_sd = models.IntegerField()
-            total_geral = models.IntegerField()
-            criado_em = models.DateTimeField(auto_now_add=True)
+        data_referencia = models.DateField()
+        total_cel = models.IntegerField()
+        total_ten_cel = models.IntegerField()
+        total_maj = models.IntegerField()
+        total_cap = models.IntegerField()
+        total_tenqo = models.IntegerField()
+        total_tenqa = models.IntegerField()
+        total_asp = models.IntegerField()
+        total_st_sgt = models.IntegerField()
+        total_cb_sd = models.IntegerField()
+        total_geral = models.IntegerField()
+        criado_em = models.DateTimeField(auto_now_add=True)
 
     @classmethod
     def criar_registro_mensal(cls):
         totais = Pessoal.objects.aggregate(
-            cel=Sum('cel'),
-            ten_cel=Sum('ten_cel'),
-            maj=Sum('maj'),
-            cap=Sum('cap'),
-            tenqo=Sum('tenqo'),
-            tenqa=Sum('tenqa'),
-            asp=Sum('asp'),
-            st_sgt=Sum('st_sgt'),
-            cb_sd=Sum('cb_sd')
+            cel=Sum("cel"),
+            ten_cel=Sum("ten_cel"),
+            maj=Sum("maj"),
+            cap=Sum("cap"),
+            tenqo=Sum("tenqo"),
+            tenqa=Sum("tenqa"),
+            asp=Sum("asp"),
+            st_sgt=Sum("st_sgt"),
+            cb_sd=Sum("cb_sd"),
         )
-        
+
         total_geral = sum(v for v in totais.values() if v is not None)
-        
+
         return cls.objects.create(
             data_referencia=date.today(),
-            total_cel=totais['cel'] or 0,
-            total_ten_cel=totais['ten_cel'] or 0,
-            total_maj=totais['maj'] or 0,
-            total_cap=totais['cap'] or 0,
-            total_tenqo=totais['tenqo'] or 0,
-            total_tenqa=totais['tenqa'] or 0,
-            total_asp=totais['asp'] or 0,
-            total_st_sgt=totais['st_sgt'] or 0,
-            total_cb_sd=totais['cb_sd'] or 0,
-            total_geral=total_geral
+            total_cel=totais["cel"] or 0,
+            total_ten_cel=totais["ten_cel"] or 0,
+            total_maj=totais["maj"] or 0,
+            total_cap=totais["cap"] or 0,
+            total_tenqo=totais["tenqo"] or 0,
+            total_tenqa=totais["tenqa"] or 0,
+            total_asp=totais["asp"] or 0,
+            total_st_sgt=totais["st_sgt"] or 0,
+            total_cb_sd=totais["cb_sd"] or 0,
+            total_geral=total_geral,
         )

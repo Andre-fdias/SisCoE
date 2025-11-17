@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class DocumentosConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'backend.documentos'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "backend.documentos"

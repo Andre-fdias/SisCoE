@@ -1,15 +1,7 @@
 # backend/core/models.py
 # Remova: from backend.accounts.models import User # Não é mais necessário importar User diretamente
-from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils.safestring import mark_safe
 # Remova: from backend.efetivo.models import Cadastro # REMOVA ESTA LINHA PARA EVITAR IMPORTAÇÃO CIRCULAR
-from django.db import connection
-from django.conf import settings # Mantenha esta importação para settings.AUTH_USER_MODEL
-from django.core.exceptions import ValidationError
 import logging
-from django.db.models import Q # Para usar Q objects na busca por email/nome
 
 logger = logging.getLogger(__name__)
 

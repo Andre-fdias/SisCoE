@@ -8,6 +8,5 @@ from prometheus_client import Counter
 # Usamos um Counter porque este valor apenas incrementa.
 # É uma métrica de segurança crucial para detectar ataques de força bruta.
 accounts_login_failures_total = Counter(
-    'accounts_login_failures_total',
-    'Total de tentativas de login que falharam.'
+    "accounts_login_failures_total", "Total de tentativas de login que falharam."
 )

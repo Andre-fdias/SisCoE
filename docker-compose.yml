@@ -35,6 +35,8 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
+      args:
+        - DOCKER_GID=989
     container_name: siscoe-web
     command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
     volumes:

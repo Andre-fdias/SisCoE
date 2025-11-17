@@ -9,66 +9,170 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('email', models.EmailField(max_length=100, unique=True, verbose_name='email address')),
-                ('first_name', models.CharField(max_length=150, verbose_name='first name')),
-                ('last_name', models.CharField(max_length=150, verbose_name='last name')),
-                ('date_joined', models.DateTimeField(auto_now_add=True, verbose_name='date joined')),
-                ('is_active', models.BooleanField(default=True, verbose_name='active')),
-                ('is_admin', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='admin status')),
-                ('last_login_ip', models.GenericIPAddressField(blank=True, null=True)),
-                ('last_login_computer_name', models.CharField(blank=True, max_length=255, null=True)),
-                ('login_history', models.JSONField(blank=True, default=list)),
-                ('is_online', models.BooleanField(default=False)),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('must_change_password', models.BooleanField(default=False, help_text='Designates whether the user must change their password on next login.', verbose_name='must change password')),
-                ('last_password_change', models.DateTimeField(blank=True, default=django.utils.timezone.now, null=True, verbose_name='Última Alteração de Senha')),
-                ('permissoes', models.CharField(choices=[('basico', 'Básico'), ('sgb', 'SGB'), ('gestor', 'Gestor'), ('admin', 'Admin'), ('visitantes', 'Visitante')], default='basico', max_length=20, verbose_name='Nível de Permissão')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        max_length=100, unique=True, verbose_name="email address"
+                    ),
+                ),
+                (
+                    "first_name",
+                    models.CharField(max_length=150, verbose_name="first name"),
+                ),
+                (
+                    "last_name",
+                    models.CharField(max_length=150, verbose_name="last name"),
+                ),
+                (
+                    "date_joined",
+                    models.DateTimeField(auto_now_add=True, verbose_name="date joined"),
+                ),
+                ("is_active", models.BooleanField(default=True, verbose_name="active")),
+                (
+                    "is_admin",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates whether the user can log into this admin site.",
+                        verbose_name="admin status",
+                    ),
+                ),
+                ("last_login_ip", models.GenericIPAddressField(blank=True, null=True)),
+                (
+                    "last_login_computer_name",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("login_history", models.JSONField(blank=True, default=list)),
+                ("is_online", models.BooleanField(default=False)),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                (
+                    "must_change_password",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates whether the user must change their password on next login.",
+                        verbose_name="must change password",
+                    ),
+                ),
+                (
+                    "last_password_change",
+                    models.DateTimeField(
+                        blank=True,
+                        default=django.utils.timezone.now,
+                        null=True,
+                        verbose_name="Última Alteração de Senha",
+                    ),
+                ),
+                (
+                    "permissoes",
+                    models.CharField(
+                        choices=[
+                            ("basico", "Básico"),
+                            ("sgb", "SGB"),
+                            ("gestor", "Gestor"),
+                            ("admin", "Admin"),
+                            ("visitantes", "Visitante"),
+                        ],
+                        default="basico",
+                        max_length=20,
+                        verbose_name="Nível de Permissão",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'user',
-                'verbose_name_plural': 'users',
+                "verbose_name": "user",
+                "verbose_name_plural": "users",
             },
             managers=[
-                ('objects', backend.accounts.managers.UserManager()),
+                ("objects", backend.accounts.managers.UserManager()),
             ],
         ),
         migrations.CreateModel(
-            name='TermosAceite',
+            name="TermosAceite",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_aceite', models.DateTimeField(auto_now_add=True)),
-                ('ip_address', models.GenericIPAddressField()),
-                ('signature_data', models.TextField()),
-                ('versao_termos', models.CharField(max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("data_aceite", models.DateTimeField(auto_now_add=True)),
+                ("ip_address", models.GenericIPAddressField()),
+                ("signature_data", models.TextField()),
+                ("versao_termos", models.CharField(max_length=50)),
             ],
             options={
-                'verbose_name': 'Termo de Aceite',
-                'verbose_name_plural': 'Termos de Aceite',
+                "verbose_name": "Termo de Aceite",
+                "verbose_name_plural": "Termos de Aceite",
             },
         ),
         migrations.CreateModel(
-            name='UserActionLog',
+            name="UserActionLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(max_length=255, verbose_name='Ação')),
-                ('timestamp', models.DateTimeField(auto_now_add=True, verbose_name='Data/Hora')),
-                ('ip_address', models.GenericIPAddressField(blank=True, null=True, verbose_name='Endereço IP')),
-                ('computer_name', models.CharField(blank=True, max_length=255, null=True, verbose_name='Nome do Computador')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("action", models.CharField(max_length=255, verbose_name="Ação")),
+                (
+                    "timestamp",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora"),
+                ),
+                (
+                    "ip_address",
+                    models.GenericIPAddressField(
+                        blank=True, null=True, verbose_name="Endereço IP"
+                    ),
+                ),
+                (
+                    "computer_name",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Nome do Computador",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Log de Ação do Usuário',
-                'verbose_name_plural': 'Logs de Ações dos Usuários',
-                'ordering': ['-timestamp'],
+                "verbose_name": "Log de Ação do Usuário",
+                "verbose_name_plural": "Logs de Ações dos Usuários",
+                "ordering": ["-timestamp"],
             },
         ),
     ]

@@ -15,28 +15,56 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Lembrete',
+            name="Lembrete",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('titulo', models.CharField(max_length=200)),
-                ('descricao', models.TextField()),
-                ('data', models.DateTimeField()),
-                ('tipo', models.CharField(default='Lembrete', max_length=50)),
-                ('cor', models.CharField(default='#3788d8', max_length=7)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("titulo", models.CharField(max_length=200)),
+                ("descricao", models.TextField()),
+                ("data", models.DateTimeField()),
+                ("tipo", models.CharField(default="Lembrete", max_length=50)),
+                ("cor", models.CharField(default="#3788d8", max_length=7)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Tarefa',
+            name="Tarefa",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('titulo', models.CharField(max_length=200)),
-                ('descricao', models.TextField()),
-                ('data_inicio', models.DateTimeField()),
-                ('data_fim', models.DateTimeField()),
-                ('tipo', models.CharField(default='Tarefa', max_length=50)),
-                ('cor', models.CharField(default='#3788d8', max_length=7)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("titulo", models.CharField(max_length=200)),
+                ("descricao", models.TextField()),
+                ("data_inicio", models.DateTimeField()),
+                ("data_fim", models.DateTimeField()),
+                ("tipo", models.CharField(default="Tarefa", max_length=50)),
+                ("cor", models.CharField(default="#3788d8", max_length=7)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

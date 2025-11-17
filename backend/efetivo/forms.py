@@ -2,8 +2,9 @@ from django import forms
 
 # tem a função de filtro na pagina listar_militar, utilizado para filtrar a tabela
 
+
 class FuncionarioFilterForm(forms.Form):
-    search = forms.CharField(required=False, label='Pesquisar')
+    search = forms.CharField(required=False, label="Pesquisar")
     sgb = forms.ChoiceField(
         choices=[
             ("", ""),
@@ -15,7 +16,7 @@ class FuncionarioFilterForm(forms.Form):
             ("5ºSGB", "5ºSGB"),
         ],
         required=False,
-        label='SGB'
+        label="SGB",
     )
     grupo = forms.ChoiceField(
         choices=[
@@ -31,7 +32,7 @@ class FuncionarioFilterForm(forms.Form):
             ("Cb/Sd", "Cb/Sd"),
         ],
         required=False,
-        label='Grupo'
+        label="Grupo",
     )
     posto_secao = forms.ChoiceField(
         choices=[
@@ -102,6 +103,5 @@ class FuncionarioFilterForm(forms.Form):
             ("703155900 - NUCL ATIV TEC 5º SGB", "NUCL ATIV TEC 5º SGB"),
         ],
         required=False,
-        label='posto_secao'
+        label="posto_secao",
     )
-

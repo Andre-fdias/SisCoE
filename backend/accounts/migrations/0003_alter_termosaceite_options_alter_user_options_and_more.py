@@ -6,26 +6,47 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0002_initial'),
+        ("accounts", "0002_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='termosaceite',
-            options={'ordering': ['-data_aceite'], 'verbose_name': 'Termo de Aceite', 'verbose_name_plural': 'Termos de Aceite'},
+            name="termosaceite",
+            options={
+                "ordering": ["-data_aceite"],
+                "verbose_name": "Termo de Aceite",
+                "verbose_name_plural": "Termos de Aceite",
+            },
         ),
         migrations.AlterModelOptions(
-            name='user',
-            options={'permissions': [('can_view_all_access_history', "Can view all users' access history"), ('can_view_all_action_history', "Can view all users' action history"), ('can_manage_user_permissions', 'Can manage user permissions'), ('can_view_user_list', 'Can view user list')], 'verbose_name': 'user', 'verbose_name_plural': 'users'},
+            name="user",
+            options={
+                "permissions": [
+                    (
+                        "can_view_all_access_history",
+                        "Can view all users' access history",
+                    ),
+                    (
+                        "can_view_all_action_history",
+                        "Can view all users' action history",
+                    ),
+                    ("can_manage_user_permissions", "Can manage user permissions"),
+                    ("can_view_user_list", "Can view user list"),
+                ],
+                "verbose_name": "user",
+                "verbose_name_plural": "users",
+            },
         ),
         migrations.AddField(
-            model_name='termosaceite',
-            name='pdf_terms',
-            field=models.FileField(blank=True, null=True, upload_to='termos_aceite/'),
+            model_name="termosaceite",
+            name="pdf_terms",
+            field=models.FileField(blank=True, null=True, upload_to="termos_aceite/"),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='login_history',
-            field=models.JSONField(blank=True, default=list, null=True, verbose_name='Histórico de Login'),
+            model_name="user",
+            name="login_history",
+            field=models.JSONField(
+                blank=True, default=list, null=True, verbose_name="Histórico de Login"
+            ),
         ),
     ]

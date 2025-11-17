@@ -4,6 +4,7 @@ from backend.efetivo.models import Cadastro
 
 register = template.Library()
 
+
 # Alterado para register.filter (em vez de simple_tag)
 @register.filter
 def get_cadastros_by_cpf(cpf):

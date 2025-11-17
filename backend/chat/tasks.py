@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Message
 
+
 @shared_task
 def delete_old_messages():
     """
@@ -15,42 +16,42 @@ def delete_old_messages():
     cutoff_date = timezone.now() - timedelta(days=2)
     old_messages = Message.objects.filter(created_at__lt=cutoff_date)
     count = old_messages.count()
-    
+
     execution_time = timezone.now()
     report_lines = [
-        f"=== RELATÓRIO DE LIMPEZA AUTOMÁTICA ===",
+        "=== RELATÓRIO DE LIMPEZA AUTOMÁTICA ===",
         f"Data/Hora: {execution_time}",
         f"Data de corte: {cutoff_date}",
         f"Total de mensagens antigas: {count}",
     ]
-    
+
     if count > 0:
         # Agrupa por conversa para o relatório
         from django.db.models import Count
+
         by_conversation = old_messages.values(
-            'conversation__id', 
-            'conversation__name'
-        ).annotate(
-            message_count=Count('id')
-        )
-        
+            "conversation__id", "conversation__name"
+        ).annotate(message_count=Count("id"))
+
         report_lines.append("\nDistribuição por conversa:")
         for conv in by_conversation:
-            conv_name = conv['conversation__name'] or f"Conversa {conv['conversation__id']}"
+            conv_name = (
+                conv["conversation__name"] or f"Conversa {conv['conversation__id']}"
+            )
             report_lines.append(f"  - {conv_name}: {conv['message_count']} mensagens")
-        
+
         # Executa a exclusão
         old_messages.delete()
         report_lines.append(f"\n✅ {count} mensagens excluídas com sucesso!")
-        
+
         # Log detalhado
         print("\n".join(report_lines))
-        
+
         # Opcional: Envia email de relatório para admins
-        if hasattr(settings, 'ADMINS') and settings.ADMINS:
+        if hasattr(settings, "ADMINS") and settings.ADMINS:
             try:
                 send_mail(
-                    subject=f'[SisCoE] Relatório de Limpeza de Mensagens - {execution_time.date()}',
+                    subject=f"[SisCoE] Relatório de Limpeza de Mensagens - {execution_time.date()}",
                     message="\n".join(report_lines),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[admin[1] for admin in settings.ADMINS],
@@ -58,12 +59,13 @@ def delete_old_messages():
                 )
             except Exception as e:
                 print(f"Erro ao enviar email de relatório: {e}")
-        
+
         return f"Excluídas {count} mensagens antigas"
     else:
         report_lines.append("\n✅ Nenhuma mensagem antiga para excluir")
         print("\n".join(report_lines))
         return "Nenhuma mensagem antiga para excluir"
+
 
 @shared_task
 def cleanup_old_attachments():
@@ -74,18 +76,16 @@ def cleanup_old_attachments():
     from .models import Attachment
     from django.utils import timezone
     from datetime import timedelta
-    
+
     # Encontra anexos sem mensagem associada ou muito antigos
     orphan_attachments = Attachment.objects.filter(
         message__isnull=True
-    ) | Attachment.objects.filter(
-        uploaded_at__lt=timezone.now() - timedelta(days=7)
-    )
-    
+    ) | Attachment.objects.filter(uploaded_at__lt=timezone.now() - timedelta(days=7))
+
     count = orphan_attachments.count()
-    
+
     if count > 0:
         orphan_attachments.delete()
         return f"Excluídos {count} anexos órfãos/antigos"
-    
+
     return "Nenhum anexo órfão/antigo para excluir"

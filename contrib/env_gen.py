@@ -1,6 +1,7 @@
 """
 Python SECRET_KEY generator.
 """
+
 import random
 
 chars = "abcdefghijklmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!?@#$%^&*()"
@@ -29,11 +30,14 @@ ALLOWED_HOSTS=127.0.0.1,.localhost,0.0.0.0
 #EMAIL_HOST_USER=
 #EMAIL_HOST_PASSWORD=
 #EMAIL_USE_TLS=True
-""".strip() % (secret_key, password)
+""".strip() % (
+    secret_key,
+    password,
+)
 
 # Writing our configuration file to '.env'
-with open('.env', 'w') as configfile:
+with open(".env", "w") as configfile:
     configfile.write(CONFIG_STRING)
 
-print('Success!')
-print('Type: cat .env')
+print("Success!")
+print("Type: cat .env")

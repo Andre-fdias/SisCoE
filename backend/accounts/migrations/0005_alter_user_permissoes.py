@@ -6,13 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0004_remove_termosaceite_pdf_terms'),
+        ("accounts", "0004_remove_termosaceite_pdf_terms"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='permissoes',
-            field=models.CharField(choices=[('basico', 'Básico'), ('visitantes', 'Visitante'), ('sgb', 'SGB'), ('gestor', 'Gestor'), ('admin', 'Admin')], default='basico', max_length=20, verbose_name='Nível de Permissão'),
+            model_name="user",
+            name="permissoes",
+            field=models.CharField(
+                choices=[
+                    ("basico", "Básico"),
+                    ("visitantes", "Visitante"),
+                    ("sgb", "SGB"),
+                    ("gestor", "Gestor"),
+                    ("admin", "Admin"),
+                ],
+                default="basico",
+                max_length=20,
+                verbose_name="Nível de Permissão",
+            ),
         ),
     ]

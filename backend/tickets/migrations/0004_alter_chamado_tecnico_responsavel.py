@@ -8,14 +8,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tickets', '0003_populate_categorias'),
+        ("tickets", "0003_populate_categorias"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='chamado',
-            name='tecnico_responsavel',
-            field=models.ForeignKey(blank=True, limit_choices_to={'is_admin': True}, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='chamados_atribuidos', to=settings.AUTH_USER_MODEL, verbose_name='Técnico Responsável'),
+            model_name="chamado",
+            name="tecnico_responsavel",
+            field=models.ForeignKey(
+                blank=True,
+                limit_choices_to={"is_admin": True},
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="chamados_atribuidos",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Técnico Responsável",
+            ),
         ),
     ]

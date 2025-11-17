@@ -11,17 +11,19 @@ from prometheus_client import Histogram
 # Isso nos permite calcular não apenas a média, mas também percentis (p95, p99),
 # que são essenciais para entender a performance real da aplicação.
 FUNCTION_LATENCY_SECONDS = Histogram(
-    'function_latency_seconds',
-    'Latência de execução para funções monitoradas',
-    ['function_name'] # Label para identificar a função que foi medida
+    "function_latency_seconds",
+    "Latência de execução para funções monitoradas",
+    ["function_name"],  # Label para identificar a função que foi medida
 )
+
 
 # --- 2. Decorator: @track_function_latency ---
 def track_function_latency(func):
     """
-    Um decorator que mede o tempo de execução da função decorada e 
+    Um decorator que mede o tempo de execução da função decorada e
     registra a duração no histograma FUNCTION_LATENCY_SECONDS.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -31,5 +33,8 @@ def track_function_latency(func):
             end_time = time.time()
             duration = end_time - start_time
             # Registra a duração na métrica, usando o nome da função como label.
-            FUNCTION_LATENCY_SECONDS.labels(function_name=func.__name__).observe(duration)
+            FUNCTION_LATENCY_SECONDS.labels(function_name=func.__name__).observe(
+                duration
+            )
+
     return wrapper

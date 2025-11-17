@@ -9,97 +9,147 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0005_alter_user_permissoes'),
-        ('efetivo', '0001_initial'),
+        ("accounts", "0005_alter_user_permissoes"),
+        ("efetivo", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='searchableuser',
-            options={'verbose_name': 'Searchable User'},
+            name="searchableuser",
+            options={"verbose_name": "Searchable User"},
         ),
         migrations.AlterModelOptions(
-            name='searchableuseractionlog',
-            options={'verbose_name': 'Searchable Action Log'},
+            name="searchableuseractionlog",
+            options={"verbose_name": "Searchable Action Log"},
         ),
         migrations.AlterModelOptions(
-            name='termosaceite',
-            options={'ordering': ['-data_aceite']},
+            name="termosaceite",
+            options={"ordering": ["-data_aceite"]},
         ),
         migrations.AlterModelOptions(
-            name='user',
-            options={'verbose_name': 'user', 'verbose_name_plural': 'users'},
+            name="user",
+            options={"verbose_name": "user", "verbose_name_plural": "users"},
         ),
         migrations.AlterModelOptions(
-            name='useractionlog',
-            options={'ordering': ['-timestamp']},
+            name="useractionlog",
+            options={"ordering": ["-timestamp"]},
         ),
         migrations.AlterField(
-            model_name='user',
-            name='cadastro',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_account', to='efetivo.cadastro', verbose_name='Military Record'),
+            model_name="user",
+            name="cadastro",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="user_account",
+                to="efetivo.cadastro",
+                verbose_name="Military Record",
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='is_admin',
-            field=models.BooleanField(default=False, verbose_name='admin status'),
+            model_name="user",
+            name="is_admin",
+            field=models.BooleanField(default=False, verbose_name="admin status"),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='last_password_change',
-            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, null=True),
+            model_name="user",
+            name="last_password_change",
+            field=models.DateTimeField(
+                blank=True, default=django.utils.timezone.now, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='login_history',
-            field=models.JSONField(blank=True, default=list, null=True, verbose_name='Login History'),
+            model_name="user",
+            name="login_history",
+            field=models.JSONField(
+                blank=True, default=list, null=True, verbose_name="Login History"
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='must_change_password',
+            model_name="user",
+            name="must_change_password",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='permissoes',
-            field=models.CharField(choices=[('basico', 'Básico'), ('visitantes', 'Visitante'), ('sgb', 'SGB'), ('gestor', 'Gestor'), ('admin', 'Admin')], default='basico', max_length=20, verbose_name='Permission Level'),
+            model_name="user",
+            name="permissoes",
+            field=models.CharField(
+                choices=[
+                    ("basico", "Básico"),
+                    ("visitantes", "Visitante"),
+                    ("sgb", "SGB"),
+                    ("gestor", "Gestor"),
+                    ("admin", "Admin"),
+                ],
+                default="basico",
+                max_length=20,
+                verbose_name="Permission Level",
+            ),
         ),
         migrations.AlterField(
-            model_name='useractionlog',
-            name='action',
+            model_name="useractionlog",
+            name="action",
             field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
-            model_name='useractionlog',
-            name='computer_name',
+            model_name="useractionlog",
+            name="computer_name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='useractionlog',
-            name='ip_address',
+            model_name="useractionlog",
+            name="ip_address",
             field=models.GenericIPAddressField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='useractionlog',
-            name='timestamp',
+            model_name="useractionlog",
+            name="timestamp",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='useractionlog',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="useractionlog",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bio', models.TextField(blank=True, null=True, verbose_name='Biografia')),
-                ('avatar', models.ImageField(blank=True, null=True, upload_to='avatars/', verbose_name='Avatar')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "bio",
+                    models.TextField(blank=True, null=True, verbose_name="Biografia"),
+                ),
+                (
+                    "avatar",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to="avatars/",
+                        verbose_name="Avatar",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Perfil',
-                'verbose_name_plural': 'Perfis',
+                "verbose_name": "Perfil",
+                "verbose_name_plural": "Perfis",
             },
         ),
     ]

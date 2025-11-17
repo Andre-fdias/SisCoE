@@ -13,12 +13,7 @@ application = ProtocolTypeRouter(
     {
         # HTTP (síncrono) - Django views normais
         "http": get_asgi_application(),
-        
         # WebSocket (assíncrono) - Chat em tempo real
-        "websocket": AuthMiddlewareStack(
-            URLRouter(
-                chat_routing.websocket_urlpatterns
-            )
-        ),
+        "websocket": AuthMiddlewareStack(URLRouter(chat_routing.websocket_urlpatterns)),
     }
 )

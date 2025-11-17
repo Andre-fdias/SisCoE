@@ -2,28 +2,48 @@
 
 from django.db import migrations
 
+
 def populate_categorias(apps, schema_editor):
     """
     Popula a tabela Categoria com as opções definidas nos CHOICES do modelo.
     """
-    Categoria = apps.get_model('tickets', 'Categoria')
-    
+    Categoria = apps.get_model("tickets", "Categoria")
+
     # Importa as CHOICES diretamente do arquivo do modelo para garantir consistência.
     # Esta é uma abordagem que funciona bem para migrações de dados.
     from backend.tickets.models import Categoria as CategoriaModel
-    
+
     TIPO_PROBLEMA_CHOICES = CategoriaModel.TIPO_PROBLEMA_CHOICES
     SUBCATEGORIA_CHOICES = CategoriaModel.SUBCATEGORIA_CHOICES
 
     # Mapeamento para garantir que subcategorias sejam associadas às categorias corretas
     # (Evita criar combinações inválidas como "Gestão de Usuários - Erro na Calculadora")
     mapa_validacao = {
-        'gestao_usuarios': ['erro_login', 'alteracao_senha', 'problema_permissao', 'cadastro_usuario'],
-        'cadastro_efetivo': ['erro_buscar_militar', 'dados_desatualizados', 'problema_promocao', 'erro_situacao'],
-        'relatorios_documentos': ['geracao_relatorio', 'exportacao_dados', 'upload_documento', 'visualizacao_documento'],
-        'ferramentas_sistema': ['erro_calculadora', 'problema_agenda', 'erro_busca_global'],
-        'cursos_qualificacoes': ['inscricao_curso', 'visualizacao_historico'],
-        'outros': ['duvida_geral', 'sugestao_melhoria', 'outro_problema'],
+        "gestao_usuarios": [
+            "erro_login",
+            "alteracao_senha",
+            "problema_permissao",
+            "cadastro_usuario",
+        ],
+        "cadastro_efetivo": [
+            "erro_buscar_militar",
+            "dados_desatualizados",
+            "problema_promocao",
+            "erro_situacao",
+        ],
+        "relatorios_documentos": [
+            "geracao_relatorio",
+            "exportacao_dados",
+            "upload_documento",
+            "visualizacao_documento",
+        ],
+        "ferramentas_sistema": [
+            "erro_calculadora",
+            "problema_agenda",
+            "erro_busca_global",
+        ],
+        "cursos_qualificacoes": ["inscricao_curso", "visualizacao_historico"],
+        "outros": ["duvida_geral", "sugestao_melhoria", "outro_problema"],
     }
 
     for cat_key, sub_list in mapa_validacao.items():
@@ -36,24 +56,25 @@ def populate_categorias(apps, schema_editor):
                 Categoria.objects.get_or_create(
                     categoria=cat_key,
                     subcategoria=sub_key,
-                    defaults={'descricao': f'{cat_display} - {sub_display}'}
+                    defaults={"descricao": f"{cat_display} - {sub_display}"},
                 )
+
 
 def revert_populate(apps, schema_editor):
     """
-    Remove as categorias que foram populadas. 
+    Remove as categorias que foram populadas.
     Opcional: pode ser um `pass` se a remoção não for desejada.
     """
     # Esta implementação é simples e apaga tudo.
     # Em um cenário real, poderia ser mais seletiva.
-    Categoria = apps.get_model('tickets', 'Categoria')
+    Categoria = apps.get_model("tickets", "Categoria")
     Categoria.objects.all().delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tickets', '0002_alter_categoria_categoria_and_more'),
+        ("tickets", "0002_alter_categoria_categoria_and_more"),
     ]
 
     operations = [

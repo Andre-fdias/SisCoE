@@ -1,7 +1,5 @@
 # core/admin.py
-from django.contrib import admin
 # Remova: from .models import Profile  # Certifique-se de importar o modelo Profile
-from django.utils.translation import gettext_lazy as _ # Importar para nomes de filtros
 
 # ======================\
 # FILTROS PERSONALIZADOS\

@@ -16,81 +16,338 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Categoria',
+            name="Categoria",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('categoria', models.CharField(choices=[('acesso', 'Problemas de Acesso'), ('sistema', 'Falhas de Sistema'), ('hardware', 'Problemas de Hardware'), ('rede', 'Problemas de Rede'), ('software', 'Problemas de Software'), ('outros', 'Outros Problemas')], max_length=50, verbose_name='Categoria do Problema')),
-                ('subcategoria', models.CharField(choices=[('senha_incorreta', 'Senha incorreta'), ('usuario_bloqueado', 'Usuário bloqueado'), ('sem_permissao', 'Sem permissão de acesso'), ('acesso_outros', 'Outros problemas de acesso'), ('erro_login', 'Erro ao fazer login'), ('lentidao', 'Sistema lento'), ('tela_branca', 'Tela travada / branca'), ('sistema_outros', 'Outras falhas de sistema'), ('impressora', 'Impressora com falha'), ('teclado', 'Teclado com problema'), ('monitor', 'Monitor não liga'), ('hardware_outros', 'Outros problemas de hardware'), ('sem_internet', 'Sem conexão com a internet'), ('vpn', 'Falha de VPN'), ('dns', 'Erro de DNS'), ('rede_outros', 'Outros problemas de rede'), ('instalacao', 'Erro na instalação'), ('licenca', 'Licença expirada'), ('atualizacao', 'Falha na atualização'), ('software_outros', 'Outros problemas de software'), ('suporte_geral', 'Solicitação de suporte geral'), ('duvida', 'Dúvida sobre o sistema'), ('outro', 'Outro tipo de problema')], max_length=50, verbose_name='Subcategoria')),
-                ('descricao', models.TextField(blank=True, null=True, verbose_name='Descrição')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "categoria",
+                    models.CharField(
+                        choices=[
+                            ("acesso", "Problemas de Acesso"),
+                            ("sistema", "Falhas de Sistema"),
+                            ("hardware", "Problemas de Hardware"),
+                            ("rede", "Problemas de Rede"),
+                            ("software", "Problemas de Software"),
+                            ("outros", "Outros Problemas"),
+                        ],
+                        max_length=50,
+                        verbose_name="Categoria do Problema",
+                    ),
+                ),
+                (
+                    "subcategoria",
+                    models.CharField(
+                        choices=[
+                            ("senha_incorreta", "Senha incorreta"),
+                            ("usuario_bloqueado", "Usuário bloqueado"),
+                            ("sem_permissao", "Sem permissão de acesso"),
+                            ("acesso_outros", "Outros problemas de acesso"),
+                            ("erro_login", "Erro ao fazer login"),
+                            ("lentidao", "Sistema lento"),
+                            ("tela_branca", "Tela travada / branca"),
+                            ("sistema_outros", "Outras falhas de sistema"),
+                            ("impressora", "Impressora com falha"),
+                            ("teclado", "Teclado com problema"),
+                            ("monitor", "Monitor não liga"),
+                            ("hardware_outros", "Outros problemas de hardware"),
+                            ("sem_internet", "Sem conexão com a internet"),
+                            ("vpn", "Falha de VPN"),
+                            ("dns", "Erro de DNS"),
+                            ("rede_outros", "Outros problemas de rede"),
+                            ("instalacao", "Erro na instalação"),
+                            ("licenca", "Licença expirada"),
+                            ("atualizacao", "Falha na atualização"),
+                            ("software_outros", "Outros problemas de software"),
+                            ("suporte_geral", "Solicitação de suporte geral"),
+                            ("duvida", "Dúvida sobre o sistema"),
+                            ("outro", "Outro tipo de problema"),
+                        ],
+                        max_length=50,
+                        verbose_name="Subcategoria",
+                    ),
+                ),
+                (
+                    "descricao",
+                    models.TextField(blank=True, null=True, verbose_name="Descrição"),
+                ),
             ],
             options={
-                'verbose_name': 'Categoria',
-                'verbose_name_plural': 'Categorias',
-                'ordering': ['categoria', 'subcategoria'],
-                'unique_together': {('categoria', 'subcategoria')},
+                "verbose_name": "Categoria",
+                "verbose_name_plural": "Categorias",
+                "ordering": ["categoria", "subcategoria"],
+                "unique_together": {("categoria", "subcategoria")},
             },
         ),
         migrations.CreateModel(
-            name='Chamado',
+            name="Chamado",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('protocolo', models.CharField(default=backend.tickets.models.gerar_protocolo, editable=False, max_length=20, unique=True)),
-                ('solicitante_nome', models.CharField(blank=True, max_length=150, null=True, verbose_name='Nome do Solicitante')),
-                ('solicitante_email', models.EmailField(blank=True, max_length=254, null=True, verbose_name='Email do Solicitante')),
-                ('solicitante_cpf', models.CharField(blank=True, max_length=14, null=True, verbose_name='CPF do Solicitante')),
-                ('solicitante_telefone', models.CharField(blank=True, max_length=20, null=True, verbose_name='Telefone do Solicitante')),
-                ('re', models.CharField(blank=True, max_length=7, null=True, verbose_name='RE')),
-                ('posto_grad', models.CharField(blank=True, max_length=100, null=True, verbose_name='Posto/Graduação')),
-                ('sgb', models.CharField(blank=True, max_length=9, null=True, verbose_name='SGB')),
-                ('posto_secao', models.CharField(blank=True, max_length=100, null=True, verbose_name='Posto/Seção')),
-                ('foto_militar', models.ImageField(blank=True, null=True, upload_to='chamados_fotos/', verbose_name='Foto do Militar')),
-                ('assunto', models.CharField(max_length=255, verbose_name='Assunto')),
-                ('descricao', models.TextField(verbose_name='Descrição do Problema')),
-                ('status', models.CharField(choices=[('aberto', 'Aberto'), ('em_atendimento', 'Em Atendimento'), ('aguardando_usuario', 'Aguardando Resposta do Usuário'), ('resolvido', 'Resolvido'), ('fechado', 'Fechado')], default='aberto', max_length=20, verbose_name='Status')),
-                ('criado_em', models.DateTimeField(auto_now_add=True)),
-                ('atualizado_em', models.DateTimeField(auto_now=True)),
-                ('data_resolucao', models.DateTimeField(blank=True, null=True, verbose_name='Data de Resolução')),
-                ('data_fechamento', models.DateTimeField(blank=True, null=True, verbose_name='Data de Fechamento')),
-                ('categoria', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='tickets.categoria', verbose_name='Categoria')),
-                ('tecnico_responsavel', models.ForeignKey(blank=True, limit_choices_to={'is_staff': True}, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='chamados_atribuidos', to=settings.AUTH_USER_MODEL, verbose_name='Técnico Responsável')),
-                ('usuario', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='chamados_criados', to=settings.AUTH_USER_MODEL, verbose_name='Usuário Registrado')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "protocolo",
+                    models.CharField(
+                        default=backend.tickets.models.gerar_protocolo,
+                        editable=False,
+                        max_length=20,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "solicitante_nome",
+                    models.CharField(
+                        blank=True,
+                        max_length=150,
+                        null=True,
+                        verbose_name="Nome do Solicitante",
+                    ),
+                ),
+                (
+                    "solicitante_email",
+                    models.EmailField(
+                        blank=True,
+                        max_length=254,
+                        null=True,
+                        verbose_name="Email do Solicitante",
+                    ),
+                ),
+                (
+                    "solicitante_cpf",
+                    models.CharField(
+                        blank=True,
+                        max_length=14,
+                        null=True,
+                        verbose_name="CPF do Solicitante",
+                    ),
+                ),
+                (
+                    "solicitante_telefone",
+                    models.CharField(
+                        blank=True,
+                        max_length=20,
+                        null=True,
+                        verbose_name="Telefone do Solicitante",
+                    ),
+                ),
+                (
+                    "re",
+                    models.CharField(
+                        blank=True, max_length=7, null=True, verbose_name="RE"
+                    ),
+                ),
+                (
+                    "posto_grad",
+                    models.CharField(
+                        blank=True,
+                        max_length=100,
+                        null=True,
+                        verbose_name="Posto/Graduação",
+                    ),
+                ),
+                (
+                    "sgb",
+                    models.CharField(
+                        blank=True, max_length=9, null=True, verbose_name="SGB"
+                    ),
+                ),
+                (
+                    "posto_secao",
+                    models.CharField(
+                        blank=True,
+                        max_length=100,
+                        null=True,
+                        verbose_name="Posto/Seção",
+                    ),
+                ),
+                (
+                    "foto_militar",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to="chamados_fotos/",
+                        verbose_name="Foto do Militar",
+                    ),
+                ),
+                ("assunto", models.CharField(max_length=255, verbose_name="Assunto")),
+                ("descricao", models.TextField(verbose_name="Descrição do Problema")),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("aberto", "Aberto"),
+                            ("em_atendimento", "Em Atendimento"),
+                            ("aguardando_usuario", "Aguardando Resposta do Usuário"),
+                            ("resolvido", "Resolvido"),
+                            ("fechado", "Fechado"),
+                        ],
+                        default="aberto",
+                        max_length=20,
+                        verbose_name="Status",
+                    ),
+                ),
+                ("criado_em", models.DateTimeField(auto_now_add=True)),
+                ("atualizado_em", models.DateTimeField(auto_now=True)),
+                (
+                    "data_resolucao",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Data de Resolução"
+                    ),
+                ),
+                (
+                    "data_fechamento",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Data de Fechamento"
+                    ),
+                ),
+                (
+                    "categoria",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="tickets.categoria",
+                        verbose_name="Categoria",
+                    ),
+                ),
+                (
+                    "tecnico_responsavel",
+                    models.ForeignKey(
+                        blank=True,
+                        limit_choices_to={"is_staff": True},
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="chamados_atribuidos",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Técnico Responsável",
+                    ),
+                ),
+                (
+                    "usuario",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="chamados_criados",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuário Registrado",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Chamado',
-                'verbose_name_plural': 'Chamados',
-                'ordering': ['-criado_em'],
+                "verbose_name": "Chamado",
+                "verbose_name_plural": "Chamados",
+                "ordering": ["-criado_em"],
             },
         ),
         migrations.CreateModel(
-            name='Anexo',
+            name="Anexo",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('arquivo', models.FileField(upload_to='chamados_anexos/%Y/%m/%d/', validators=[backend.tickets.models.validate_file_size], verbose_name='Arquivo')),
-                ('descricao', models.CharField(blank=True, max_length=255, null=True, verbose_name='Descrição do Anexo')),
-                ('enviado_em', models.DateTimeField(auto_now_add=True)),
-                ('autor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('chamado', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='anexos', to='tickets.chamado')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "arquivo",
+                    models.FileField(
+                        upload_to="chamados_anexos/%Y/%m/%d/",
+                        validators=[backend.tickets.models.validate_file_size],
+                        verbose_name="Arquivo",
+                    ),
+                ),
+                (
+                    "descricao",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Descrição do Anexo",
+                    ),
+                ),
+                ("enviado_em", models.DateTimeField(auto_now_add=True)),
+                (
+                    "autor",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "chamado",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="anexos",
+                        to="tickets.chamado",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Anexo',
-                'verbose_name_plural': 'Anexos',
-                'ordering': ['-enviado_em'],
+                "verbose_name": "Anexo",
+                "verbose_name_plural": "Anexos",
+                "ordering": ["-enviado_em"],
             },
         ),
         migrations.CreateModel(
-            name='Comentario',
+            name="Comentario",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('texto', models.TextField(verbose_name='Comentário')),
-                ('criado_em', models.DateTimeField(auto_now_add=True)),
-                ('privado', models.BooleanField(default=False, help_text='Comentários privados são visíveis apenas para a equipe técnica.', verbose_name='Comentário Privado')),
-                ('autor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='Autor')),
-                ('chamado', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comentarios', to='tickets.chamado')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("texto", models.TextField(verbose_name="Comentário")),
+                ("criado_em", models.DateTimeField(auto_now_add=True)),
+                (
+                    "privado",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Comentários privados são visíveis apenas para a equipe técnica.",
+                        verbose_name="Comentário Privado",
+                    ),
+                ),
+                (
+                    "autor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Autor",
+                    ),
+                ),
+                (
+                    "chamado",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comentarios",
+                        to="tickets.chamado",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Comentário',
-                'verbose_name_plural': 'Comentários',
-                'ordering': ['criado_em'],
+                "verbose_name": "Comentário",
+                "verbose_name_plural": "Comentários",
+                "ordering": ["criado_em"],
             },
         ),
     ]

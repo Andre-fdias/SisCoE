@@ -1,9 +1,9 @@
-
 import base64
 from django.conf import settings
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 
 def get_key():
     """
@@ -14,7 +14,7 @@ def get_key():
     # O salt pode ser fixo se você quiser que a mesma chave seja gerada sempre.
     # Idealmente, para maior segurança, o salt deveria ser armazenado e único,
     # mas para este caso de uso (descriptografar dados existentes), ele precisa ser constante.
-    salt = b'siscoe-chat-salt' 
+    salt = b"siscoe-chat-salt"
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -24,11 +24,12 @@ def get_key():
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
 
+
 def encrypt_message(text):
     """Criptografa uma mensagem."""
     if not settings.CHAT_ENCRYPTION_KEY or not text:
         return text
-    
+
     try:
         f = Fernet(get_key())
         encrypted_text = f.encrypt(text.encode())
@@ -36,6 +37,7 @@ def encrypt_message(text):
     except Exception:
         # Se a criptografia falhar, retorne o texto original
         return text
+
 
 def decrypt_message(encrypted_text):
     """Descriptografa uma mensagem."""
@@ -50,4 +52,3 @@ def decrypt_message(encrypted_text):
     except Exception:
         # Se a descriptografia falhar (pode ser texto plano), retorne o texto como está
         return encrypted_text
-

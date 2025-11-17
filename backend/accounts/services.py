@@ -6,19 +6,17 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.conf import settings
 from .tokens import account_activation_token
-from .models import UserActionLog, TermosAceite
+from .models import UserActionLog
 from .utils import get_client_ip, get_computer_name
 from django.contrib.auth import get_user_model
 import logging
-import requests
-import json
 from django.utils import timezone
 
 # Importar o serviço Brevo corrigido
 from .brevo_service import send_brevo_email
 
 # Importar o modelo Cadastro
-from backend.efetivo.models import Cadastro 
+from backend.efetivo.models import Cadastro
 
 # Importar o signal user_logged_in e o decorador receiver
 from django.contrib.auth.signals import user_logged_in
@@ -29,82 +27,91 @@ import socket
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
+
 def send_email(subject, html_content, recipient_email):
     """
     Função auxiliar para enviar e-mails usando a API do Brevo.
     """
     logger.info(f"🔄 Iniciando envio de email para: {recipient_email}")
-    
+
     try:
         result = send_brevo_email(
             subject=subject,
             html_content=html_content,
             to_email=recipient_email,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            from_name=settings.DEFAULT_FROM_NAME
+            from_name=settings.DEFAULT_FROM_NAME,
         )
-        
+
         if result:
             logger.info(f"✅ Email enviado com sucesso para {recipient_email}")
         else:
             logger.error(f"❌ Falha no envio do email para {recipient_email}")
-            
+
         return result
-        
+
     except Exception as e:
         logger.error(f"❌ Erro inesperado em send_email: {str(e)}", exc_info=True)
         return False
+
 
 def send_mail_to_user(request, user):
     """
     Envia e-mail de redefinição de senha.
     """
     current_site = get_current_site(request)
-    subject = 'Redefinição de senha - SisCoE'
-    html_content = render_to_string('email/password_reset_email.html', {
-        'user': user,
-        'protocol': 'https' if request.is_secure() else 'http',
-        'domain': current_site.domain,
-        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-        'token': account_activation_token.make_token(user),
-    })
-    
+    subject = "Redefinição de senha - SisCoE"
+    html_content = render_to_string(
+        "email/password_reset_email.html",
+        {
+            "user": user,
+            "protocol": "https" if request.is_secure() else "http",
+            "domain": current_site.domain,
+            "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+            "token": account_activation_token.make_token(user),
+        },
+    )
+
     return send_email(subject, html_content, user.email)
+
 
 def send_generated_password_email(request, user, password):
     """
     Envia e-mail com senha gerada para novo usuário
     """
     logger.info(f"🔄 Preparando email de senha para: {user.email}")
-    
+
     current_site = get_current_site(request)
-    subject = 'Sua Nova Senha de Acesso ao SisCoE'
+    subject = "Sua Nova Senha de Acesso ao SisCoE"
 
     # Tentar obter o objeto Cadastro associado ao usuário
     cadastro_data = None
     try:
-        if hasattr(user, 'profile') and user.profile.cadastro:
+        if hasattr(user, "profile") and user.profile.cadastro:
             cadastro_data = user.profile.cadastro
         else:
             cadastro_data = Cadastro.objects.filter(email=user.email).first()
     except Exception as e:
         logger.warning(f"⚠️ Não foi possível obter dados do cadastro: {e}")
 
-    html_content = render_to_string('email/account_activated_with_password.html', {
-        'user': user,
-        'password': password,
-        'protocol': 'https' if request.is_secure() else 'http',
-        'domain': current_site.domain,
-        'cadastro_data': cadastro_data,
-    })
-    
+    html_content = render_to_string(
+        "email/account_activated_with_password.html",
+        {
+            "user": user,
+            "password": password,
+            "protocol": "https" if request.is_secure() else "http",
+            "domain": current_site.domain,
+            "cadastro_data": cadastro_data,
+        },
+    )
+
     # Log da ação
     log_user_action(
         user=user,
         action=f"Envio de e-mail com senha temporária para {user.email}",
-        request=request
+        request=request,
     )
-    
+
     # Enviar email
     try:
         result = send_email(subject, html_content, user.email)
@@ -116,21 +123,22 @@ def send_generated_password_email(request, user, password):
     except Exception as e:
         logger.error(f"❌ Erro ao enviar e-mail de senha: {str(e)}", exc_info=True)
         return False
-    
+
+
 def log_user_action(user, action, request=None):
     """
     Registra ações do usuário no sistema
     """
     ip_address = get_client_ip(request) if request else None
     computer_name = get_computer_name(ip_address) if ip_address else None
-    
+
     try:
         UserActionLog.objects.create(
             user=user,
             action=action,
             timestamp=timezone.now(),
             ip_address=ip_address,
-            computer_name=computer_name
+            computer_name=computer_name,
         )
         return True
     except Exception as e:
@@ -138,16 +146,17 @@ def log_user_action(user, action, request=None):
         return False
 
 
-
 # ... (funções send_email, send_mail_to_user, send_generated_password_email)
 
+
 def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+        ip = x_forwarded_for.split(",")[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        ip = request.META.get("REMOTE_ADDR")
     return ip
+
 
 def get_computer_name(ip_address):
     if not ip_address:
@@ -163,57 +172,64 @@ def get_computer_name(ip_address):
         logger.warning(f"Erro ao obter nome do computador para IP {ip_address}: {e}")
         return None
 
+
 def log_user_action(user, action, request=None):
     """
     Registra ações do usuário no sistema
     """
     ip_address = get_client_ip(request) if request else None
     computer_name = get_computer_name(ip_address) if ip_address else None
-    
+
     try:
         UserActionLog.objects.create(
             user=user,
             action=action,
             timestamp=timezone.now(),
             ip_address=ip_address,
-            computer_name=computer_name
+            computer_name=computer_name,
         )
         # Atualiza last_login_ip e last_login_computer_name no modelo User
         user.last_login_ip = ip_address
         user.last_login_computer_name = computer_name
-        user.save(update_fields=['last_login_ip', 'last_login_computer_name']) # Salva apenas os campos alterados
+        user.save(
+            update_fields=["last_login_ip", "last_login_computer_name"]
+        )  # Salva apenas os campos alterados
         return True
     except Exception as e:
         logger.error(f"Erro ao registrar ação do usuário: {str(e)}", exc_info=True)
         return False
+
 
 # Conecta ao signal user_logged_in do Django para garantir que o last_login seja atualizado
 @receiver(user_logged_in)
 def update_user_last_login_data(sender, request, user, **kwargs):
     ip_address = get_client_ip(request)
     computer_name = get_computer_name(ip_address)
-    
+
     user.last_login_ip = ip_address
     user.last_login_computer_name = computer_name
-    
+
     # Marca explicitamente como online e evita que o pre_save override
     user.is_online = True
     # user._force_online = True  # Esta flag não é mais necessária se o save for feito aqui
 
     # AQUI ESTÁ A LINHA CRÍTICA QUE ESTAVA FALTANDO OU FOI REMOVIDA
     user.update_login_history(
-        ip=ip_address,
-        computer_name=computer_name,
-        login_time=timezone.now()
+        ip=ip_address, computer_name=computer_name, login_time=timezone.now()
     )
-    
+
     # Garante que last_login também é salvo, pois o pre_save em signals.py depende dele
     # E que login_history é salvo
-    user.save(update_fields=['last_login_ip', 'last_login_computer_name', 'is_online', 'last_login', 'login_history'])
-    
+    user.save(
+        update_fields=[
+            "last_login_ip",
+            "last_login_computer_name",
+            "is_online",
+            "last_login",
+            "login_history",
+        ]
+    )
+
     # Se a flag for usada em outro lugar, pode ser mantida, mas não é estritamente necessária aqui
     # if hasattr(user, '_force_online'):
     #     del user._force_online
-
-
-

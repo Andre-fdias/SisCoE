@@ -1,32 +1,28 @@
 from datetime import date, datetime
+
 # Remova: from django.contrib.auth import get_user_model
-from django.conf import settings # Adicione esta importação para acessar AUTH_USER_MODEL
+from django.conf import (
+    settings,
+)  # Adicione esta importação para acessar AUTH_USER_MODEL
 from dateutil.relativedelta import relativedelta
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import re
-from django.core.exceptions import ValidationError
-from PIL import Image, ImageDraw, ImageFont
-import os
 import locale
 from django.utils import timezone
 
 try:
-    locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 except locale.Error:
-    locale.setlocale(locale.LC_TIME, 'C.UTF-8')  # Fallback para locale neutra
+    locale.setlocale(locale.LC_TIME, "C.UTF-8")  # Fallback para locale neutra
     # Ou alternativamente: pass (não altera a locale)
 
 # responsavel pelo cadastro básico de dados de militares
 
+
 class Cadastro(models.Model):
-    genero_choices = (
-        ("", " "),
-        ("Masculino", "Masculino"),
-        ("Feminino", "Feminino")
-    )
+    genero_choices = (("", " "), ("Masculino", "Masculino"), ("Feminino", "Feminino"))
 
     alteracao_choices = (
         ("", ""),
@@ -39,14 +35,16 @@ class Cadastro(models.Model):
         ("Contato", "Contato"),
         ("Inclusão", "Inclusão"),
     )
-    n_choices = [(i, f'{i:02d}') for i in range(1, 9)]
-    
+    n_choices = [(i, f"{i:02d}") for i in range(1, 9)]
+
     id = models.AutoField(primary_key=True)
-    re = models.CharField(max_length=6,  blank=False, null=False, unique=True)
+    re = models.CharField(max_length=6, blank=False, null=False, unique=True)
     dig = models.CharField(max_length=1, blank=False, null=False)
     nome = models.CharField(max_length=50, blank=False, null=False)
     nome_de_guerra = models.CharField(max_length=20, blank=False, null=False)
-    genero = models.CharField(max_length=10, blank=False, null=False, choices=genero_choices)
+    genero = models.CharField(
+        max_length=10, blank=False, null=False, choices=genero_choices
+    )
     nasc = models.DateField(blank=False, null=False)
     matricula = models.DateField(blank=False, null=False)
     admissao = models.DateField(blank=False, null=False)
@@ -57,14 +55,19 @@ class Cadastro(models.Model):
     tempo_para_averbar_militar = models.IntegerField(blank=False, null=False, default=1)
     email = models.EmailField(max_length=100, unique=True, blank=False, null=False)
     telefone = models.CharField(max_length=14, blank=False, null=False)
-    alteracao = models.CharField(max_length=20, blank=False, null=False, choices=alteracao_choices)
+    alteracao = models.CharField(
+        max_length=20, blank=False, null=False, choices=alteracao_choices
+    )
     create_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cadastros', default=1)  
-   
-   
-  
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cadastros",
+        default=1,
+    )
+
     def __str__(self):
-        return f'{self.re} {self.dig} {self.nome_de_guerra}'
+        return f"{self.re} {self.dig} {self.nome_de_guerra}"
 
     @property
     def idade_detalhada(self):
@@ -97,18 +100,25 @@ class Cadastro(models.Model):
         diferenca = hoje - self.previsao_de_inatividade
         return diferenca.days
 
-    
     @property
     def inativa_status(self):
         dias = self.previsao_de_inatividade_dias()
         if dias < 1:
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">Sim</span>')
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">Sim</span>'
+            )
         if dias < 180:
-            return mark_safe('<span class="bg-yellow-500 text-white px-2 py-1 rounded">Falta menos de 06 meses</span>')
+            return mark_safe(
+                '<span class="bg-yellow-500 text-white px-2 py-1 rounded">Falta menos de 06 meses</span>'
+            )
         if dias < 367:
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">Falta menos de 1 ano</span>')
-        return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">Não</span>')
-    
+            return mark_safe(
+                '<span class="bg-gray-500 text-white px-2 py-1 rounded">Falta menos de 1 ano</span>'
+            )
+        return mark_safe(
+            '<span class="bg-red-500 text-white px-2 py-1 rounded">Não</span>'
+        )
+
     @property
     def tempo_para_averbar_inss_inteiro(self):
         return self.tempo_para_averbar_inss
@@ -116,32 +126,31 @@ class Cadastro(models.Model):
     @property
     def tempo_para_averbar_militar_inteiro(self):
         return self.tempo_para_averbar_militar
-    
+
     @property
     def ultima_promocao(self):
         try:
-            return self.promocoes.latest('data_alteracao')
+            return self.promocoes.latest("data_alteracao")
         except Promocao.DoesNotExist:
             return None
+
     def categoria_ativa(self):
         return self.categorias_efetivo.filter(ativo=True).first()
 
-
     class Meta:
-        ordering = ('re',)
+        ordering = ("re",)
 
     def get_search_result(self):
         return {
-            'title': f"{self.nome_de_guerra} ({self.re}-{self.dig})",
-            'fields': {
-                'RE': f"{self.re}-{self.dig}",
-                'Nome': self.nome,
-                'CPF': self.cpf,
-                'Email': self.email,
-                'Telefone': self.telefone
-            }
+            "title": f"{self.nome_de_guerra} ({self.re}-{self.dig})",
+            "fields": {
+                "RE": f"{self.re}-{self.dig}",
+                "Nome": self.nome,
+                "CPF": self.cpf,
+                "Email": self.email,
+                "Telefone": self.telefone,
+            },
         }
-
 
 
 class CPF(models.Model):
@@ -149,91 +158,84 @@ class CPF(models.Model):
     cpf = models.CharField(max_length=14)
     re = models.CharField(max_length=6)
 
+
 @receiver(post_save, sender=Cadastro)
 def create_cpf_record(sender, instance, created, **kwargs):
     if created:
-        CPF.objects.create(
-            id=instance.id,
-            cpf=instance.cpf,
-            re=instance.re
-        )
-
-
+        CPF.objects.create(id=instance.id, cpf=instance.cpf, re=instance.re)
 
 
 # responsavel pelo cadastro sa situação funcional de militares
 class DetalhesSituacao(models.Model):
 
-    situacao_choices=(
+    situacao_choices = (
         ("", " "),
-        ("Efetivo","Efetivo"),
+        ("Efetivo", "Efetivo"),
         ("Exonerado a Pedido", "Exonerado a Pedido"),
-        ("Exonerado Ex-Ofício","Exonerado Ex-Ofício"),
+        ("Exonerado Ex-Ofício", "Exonerado Ex-Ofício"),
         ("Reserva a Pedido", "Reserva a Pedido"),
         ("Transferido", "Transferido"),
         ("Mov. Interna", "Mov. Interna"),
-       )
-    sgb_choices=( 
-        ("", " "),                                                
-        ("EM"," EM"),
+    )
+    sgb_choices = (
+        ("", " "),
+        ("EM", " EM"),
         ("1ºSGB", "1ºSGB"),
         ("2ºSGB", "2ºSGB"),
         ("3ºSGB", "3ºSGB"),
         ("4ºSGB", "4ºSGB"),
-        ("5ºSGB", "5ºSGB")
+        ("5ºSGB", "5ºSGB"),
     )
 
-    op_adm_choices=( 
-        ("", " "),                                                
-        ("Administrativo"," Administrativo"),
+    op_adm_choices = (
+        ("", " "),
+        ("Administrativo", " Administrativo"),
         ("Operacional", "Operacional"),
     )
 
-
-    funcao_choices=(
+    funcao_choices = (
         ("", " "),
-        ("AUX (ADM)" ,"AUX (ADM)" ),
-        ("AUX B1" ,"AUX B1" ),
-        ("AUX B2" ,"AUX B2" ),
-        ("AUX B3" ,"AUX B3" ),
-        ("AUX B4" ,"AUX B4" ),
-        ("AUX B5" ,"AUX B5" ),
-        ("AUXILIARES" ,"AUXILIARES" ),
-        ("B.EDUCADOR" ,"B.EDUCADOR" ),
-        ("CH DE SETOR" ,"CH DE SETOR" ),
-        ("CH SAT" ,"CH SAT" ),
-        ("CH SEC ADM" ,"CH SEC ADM" ),
-        ("CH_SEÇÃO" ,"CH_SEÇÃO" ),
-        ("CMT" ,"CMT" ),
-        ("CMT 1ºSGB" ,"CMT 1ºSGB" ),
-        ("AUX (MOTOMEC)" ,"AUX (MOTOMEC)" ),
-        ("CMT 2ºSGB" ,"CMT 2ºSGB" ),
-        ("CMT 3ºSGB" ,"CMT 3ºSGB" ),
-        ("CMT 4ºSGB" ,"CMT 4ºSGB" ),
-        ("CMT 5ºSGB" ," CMT 5ºSGB" ),
-        ("CMT PRONTIDÃO" ,"CMT PRONTIDÃO" ),
-        ("CMT_BASE" ,"CMT_BASE" ),
-        ("CMT_GB" ,"CMT_GB" ),
-        ("CMT_PB" ,"CMT_PB" ),
-        ("COBOM (ATENDENTE)" ,"COBOM (ATENDENTE)" ),
-        ("COBOM (DESPACHADOR)" ,"COBOM (DESPACHADOR)" ),
-        ("AUX (NAT)" ,"3 - AUX (NAT)" ),
-        ("COBOM (SUPERVISOR)" ,"COBOM (SUPERVISOR)" ),
-        ("ESB" ,"ESB" ),
-        ("ESSGT" ,"ESSGT" ),
-        ("LSV" ,"LSV" ),
-        ("LTS" ,"LTS" ),
-        ("MECÂNICO" ,"MECÂNICO" ),
-        ("MOTORISTA" ,"MOTORISTA" ),
-        ("OBRAS" ,"OBRAS" ),
-        ("AUX (SAT)" ,"AUX (SAT)" ),
-        ("S/FUNÇ_CAD" ,"S/FUNÇ_CAD" ),
-        ("TELEFONISTA" ,"TELEFONISTA" ),
-        ("TELEMÁTICA" ,"TELEMÁTICA" ),
-        ("AUX (SJD)" ,"AUX (SJD)" ),
-        ("SUBCMT" ,"SUBCMT" ),
-        ("AUX (UGE)" ,"AUX (UGE)" ),
-      
+        ("AUX (ADM)", "AUX (ADM)"),
+        ("AUX B1", "AUX B1"),
+        ("AUX B2", "AUX B2"),
+        ("AUX B3", "AUX B3"),
+        ("AUX B4", "AUX B4"),
+        ("AUX B5", "AUX B5"),
+        ("AUXILIARES", "AUXILIARES"),
+        ("B.EDUCADOR", "B.EDUCADOR"),
+        ("CH DE SETOR", "CH DE SETOR"),
+        ("CH SAT", "CH SAT"),
+        ("CH SEC ADM", "CH SEC ADM"),
+        ("CH_SEÇÃO", "CH_SEÇÃO"),
+        ("CMT", "CMT"),
+        ("CMT 1ºSGB", "CMT 1ºSGB"),
+        ("AUX (MOTOMEC)", "AUX (MOTOMEC)"),
+        ("CMT 2ºSGB", "CMT 2ºSGB"),
+        ("CMT 3ºSGB", "CMT 3ºSGB"),
+        ("CMT 4ºSGB", "CMT 4ºSGB"),
+        ("CMT 5ºSGB", " CMT 5ºSGB"),
+        ("CMT PRONTIDÃO", "CMT PRONTIDÃO"),
+        ("CMT_BASE", "CMT_BASE"),
+        ("CMT_GB", "CMT_GB"),
+        ("CMT_PB", "CMT_PB"),
+        ("COBOM (ATENDENTE)", "COBOM (ATENDENTE)"),
+        ("COBOM (DESPACHADOR)", "COBOM (DESPACHADOR)"),
+        ("AUX (NAT)", "3 - AUX (NAT)"),
+        ("COBOM (SUPERVISOR)", "COBOM (SUPERVISOR)"),
+        ("ESB", "ESB"),
+        ("ESSGT", "ESSGT"),
+        ("LSV", "LSV"),
+        ("LTS", "LTS"),
+        ("MECÂNICO", "MECÂNICO"),
+        ("MOTORISTA", "MOTORISTA"),
+        ("OBRAS", "OBRAS"),
+        ("AUX (SAT)", "AUX (SAT)"),
+        ("S/FUNÇ_CAD", "S/FUNÇ_CAD"),
+        ("TELEFONISTA", "TELEFONISTA"),
+        ("TELEMÁTICA", "TELEMÁTICA"),
+        ("AUX (SJD)", "AUX (SJD)"),
+        ("SUBCMT", "SUBCMT"),
+        ("AUX (UGE)", "AUX (UGE)"),
     )
     posto_secao_choices = (
         ("", " "),
@@ -371,10 +373,10 @@ class DetalhesSituacao(models.Model):
         ("703155900 - NUCL ATIV TEC 5º SGB", "NUCL ATIV TEC 5º SGB"),
     )
 
-    cat_efetivo_choices=( 
-        ("", " "),                                                
-        ("ATIVO","ATIVO"),
-        ("INATIVO","INATIVO"),
+    cat_efetivo_choices = (
+        ("", " "),
+        ("ATIVO", "ATIVO"),
+        ("INATIVO", "INATIVO"),
         ("LSV", "LSV"),
         ("LTS", "LTS"),
         ("LTS FAMILIA", "LTS FAMILIA"),
@@ -384,38 +386,69 @@ class DetalhesSituacao(models.Model):
         ("FERIAS", "FÉRIAS"),
         ("RESTRICAO", "RESTRIÇÃO"),
     )
-    prontidao_choices=( 
-        ("", " "),                                                
-        ("VERDE","VERDE"),
-        ("AMARELA","AMARELA"),
+    prontidao_choices = (
+        ("", " "),
+        ("VERDE", "VERDE"),
+        ("AMARELA", "AMARELA"),
         ("AZUL", "AZUL"),
-        ("ADM", "ADM"),  
+        ("ADM", "ADM"),
     )
 
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE,
-                                 related_name='detalhes_situacao')
+    cadastro = models.ForeignKey(
+        Cadastro, on_delete=models.CASCADE, related_name="detalhes_situacao"
+    )
     # Modificado para permitir em branco/nulo
-    situacao = models.CharField(max_length=30, blank=True, null=True, choices=situacao_choices, default="Efetivo")
+    situacao = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        choices=situacao_choices,
+        default="Efetivo",
+    )
     # Modificado para permitir em branco/nulo
-    cat_efetivo = models.CharField(max_length=20, blank=True, null=True, choices=cat_efetivo_choices, default="ATIVO")
+    cat_efetivo = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=cat_efetivo_choices,
+        default="ATIVO",
+    )
     # Modificado para permitir em branco/nulo
     sgb = models.CharField(max_length=9, blank=True, null=True, choices=sgb_choices)
     # Modificado para permitir em branco/nulo
-    posto_secao = models.CharField(max_length=100, blank=True, null=True, choices=posto_secao_choices)
-    esta_adido = models.CharField(max_length=100, blank=True, null=True, choices=esta_adido_choices)
+    posto_secao = models.CharField(
+        max_length=100, blank=True, null=True, choices=posto_secao_choices
+    )
+    esta_adido = models.CharField(
+        max_length=100, blank=True, null=True, choices=esta_adido_choices
+    )
     # Modificado para permitir em branco/nulo
-    funcao = models.CharField(max_length=50, blank=True, null=True, choices=funcao_choices)
-    op_adm = models.CharField(max_length=18, blank=True, null=True, choices=op_adm_choices)
+    funcao = models.CharField(
+        max_length=50, blank=True, null=True, choices=funcao_choices
+    )
+    op_adm = models.CharField(
+        max_length=18, blank=True, null=True, choices=op_adm_choices
+    )
     # Modificado para permitir em branco/nulo (o default="" já ajuda no blank=True, mas null=True é para o BD)
-    prontidao = models.CharField(max_length=18, blank=True, null=True, choices=prontidao_choices, default="VERDE") # Sugestão: um default mais significativo, como "VERDE"
+    prontidao = models.CharField(
+        max_length=18, blank=True, null=True, choices=prontidao_choices, default="VERDE"
+    )  # Sugestão: um default mais significativo, como "VERDE"
     apresentacao_na_unidade = models.DateField(blank=True, null=True)
     saida_da_unidade = models.DateField(blank=True, null=True)
-    data_alteracao = models.DateTimeField(auto_now_add=True) # Geralmente não é alterado pelo usuário
-    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='detalhes_usuario')
+    data_alteracao = models.DateTimeField(
+        auto_now_add=True
+    )  # Geralmente não é alterado pelo usuário
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="detalhes_usuario",
+    )
 
     def __str__(self):
-      return f'{self.cadastro.re} - {self.situacao}'
-    
+        return f"{self.cadastro.re} - {self.situacao}"
+
     @property
     def tempo_na_unidade(self):
         hoje = datetime.today()
@@ -424,204 +457,281 @@ class DetalhesSituacao(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['situacao', 'posto_secao']),
-            models.Index(fields=['cadastro']),
-            ]
-        ordering = ['-data_alteracao']  # Ordena do mais recente para o mais antigo
-    
+            models.Index(fields=["situacao", "posto_secao"]),
+            models.Index(fields=["cadastro"]),
+        ]
+        ordering = ["-data_alteracao"]  # Ordena do mais recente para o mais antigo
+
     @property
     def status(self):
-        if self.situacao == 'Efetivo':
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">Efetivo</span>')
-        if self.situacao == 'Exonerado a Pedido':
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">Exonerado a Pedido</span>')
-        if self.situacao == 'Exonerado Ex-Ofício':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Exonerado Ex-Ofício</span>')
-        if self.situacao == 'Reserva a Pedido':
-            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">Reserva a Pedido</span>')
-        if self.situacao == 'Transferido':
-            return mark_safe('<span class="bg-yellow-500 text-white px-2 py-1 rounded">Transferido</span>')
-        if self.situacao == 'Mov. Interna':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Mov. Interna</span>')
-     
+        if self.situacao == "Efetivo":
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">Efetivo</span>'
+            )
+        if self.situacao == "Exonerado a Pedido":
+            return mark_safe(
+                '<span class="bg-gray-500 text-white px-2 py-1 rounded">Exonerado a Pedido</span>'
+            )
+        if self.situacao == "Exonerado Ex-Ofício":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Exonerado Ex-Ofício</span>'
+            )
+        if self.situacao == "Reserva a Pedido":
+            return mark_safe(
+                '<span class="bg-indigo-500 text-white px-2 py-1 rounded">Reserva a Pedido</span>'
+            )
+        if self.situacao == "Transferido":
+            return mark_safe(
+                '<span class="bg-yellow-500 text-white px-2 py-1 rounded">Transferido</span>'
+            )
+        if self.situacao == "Mov. Interna":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Mov. Interna</span>'
+            )
+
     @property
     def prontidao_badge(self):
-        if self.prontidao == 'VERDE':
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">VERDE</span>')
-        if self.prontidao == 'AMARELA':
-            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AMARELA</span>') # changed text to black for better visibility
-        if self.prontidao == 'AZUL':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">AZUL</span>')
-        if self.prontidao == 'ADM':
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ADM</span>')
-        return mark_safe('<span class="bg-gray-200 text-gray-500 px-2 py-1 rounded">N/A</span>') # added a default badge for empty values.
- 
+        if self.prontidao == "VERDE":
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">VERDE</span>'
+            )
+        if self.prontidao == "AMARELA":
+            return mark_safe(
+                '<span class="bg-yellow-500 text-black px-2 py-1 rounded">AMARELA</span>'
+            )  # changed text to black for better visibility
+        if self.prontidao == "AZUL":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">AZUL</span>'
+            )
+        if self.prontidao == "ADM":
+            return mark_safe(
+                '<span class="bg-gray-500 text-white px-2 py-1 rounded">ADM</span>'
+            )
+        return mark_safe(
+            '<span class="bg-gray-200 text-gray-500 px-2 py-1 rounded">N/A</span>'
+        )  # added a default badge for empty values.
+
     @property
     def status_cat(self):
-        if self.cat_efetivo == 'ATIVO':
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">Ativo</span>')
-        if self.cat_efetivo == 'INATIVO':
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">Inativo</span>')
-        if self.cat_efetivo == 'LSV':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Lsv</span>')
-        if self.cat_efetivo == 'LTS':
-            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">Lts</span>')
-        if self.cat_efetivo == 'LTS FAMILIA':
-            return mark_safe('<span class="bg-yellow-500 text-white px-2 py-1 rounded">Lts Familia</span>')
-        if self.cat_efetivo == 'CONVAL':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Conval</span>')
-        if self.cat_efetivo == 'ELEIÇÃO':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Eleição</span>')
-        if self.cat_efetivo == 'LP':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">LP</span>')
-        if self.cat_efetivo == 'FERIAS':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Férias</span>')
-
+        if self.cat_efetivo == "ATIVO":
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">Ativo</span>'
+            )
+        if self.cat_efetivo == "INATIVO":
+            return mark_safe(
+                '<span class="bg-gray-500 text-white px-2 py-1 rounded">Inativo</span>'
+            )
+        if self.cat_efetivo == "LSV":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Lsv</span>'
+            )
+        if self.cat_efetivo == "LTS":
+            return mark_safe(
+                '<span class="bg-indigo-500 text-white px-2 py-1 rounded">Lts</span>'
+            )
+        if self.cat_efetivo == "LTS FAMILIA":
+            return mark_safe(
+                '<span class="bg-yellow-500 text-white px-2 py-1 rounded">Lts Familia</span>'
+            )
+        if self.cat_efetivo == "CONVAL":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Conval</span>'
+            )
+        if self.cat_efetivo == "ELEIÇÃO":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Eleição</span>'
+            )
+        if self.cat_efetivo == "LP":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">LP</span>'
+            )
+        if self.cat_efetivo == "FERIAS":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Férias</span>'
+            )
 
     # Adicione ao final da classe DetalhesSituacao
     def get_search_result(self):
         return {
-            'title': f"Situação de {self.cadastro.nome_de_guerra}",
-            'fields': {
-                'Situação': self.situacao,
-                'SGB': self.sgb,
-                'Posto/Seção': self.posto_secao,
-                'Função': self.funcao
-            }
+            "title": f"Situação de {self.cadastro.nome_de_guerra}",
+            "fields": {
+                "Situação": self.situacao,
+                "SGB": self.sgb,
+                "Posto/Seção": self.posto_secao,
+                "Função": self.funcao,
+            },
         }
+
 
 # responsavel pelas promoções de militares
 
+
 class Promocao(models.Model):
-    posto_grad_choices =(
-      ("", " "),
-      ("Cel PM", "Cel PM"),
-      ("Ten Cel PM", "Ten Cel PM"),
-      ("Maj PM", "Maj PM"),
-      ("CAP PM", "Cap PM"),
-      ("1º Ten PM", "1º Ten PM"),
-      ("1º Ten QAPM", "1º Ten QAOPM"),
-      ("2º Ten PM", "2º Ten PM"),
-      ("2º Ten QAPM", "2º Ten QAOPM"),
-      ("Asp OF PM", "Asp OF PM"),
-      ("Subten PM", "Subten PM"),
-      ("1º Sgt PM", "1º Sgt PM"),
-      ("2º Sgt PM", "2º Sgt PM"),
-      ("3º Sgt PM", "3º Sgt PM"),
-      ("Cb PM", "Cb PM"),
-      ("Sd PM", "Sd PM"),
-      ("Sd PM 2ºCL", "Sd PM 2ºCL"),
-   )
+    posto_grad_choices = (
+        ("", " "),
+        ("Cel PM", "Cel PM"),
+        ("Ten Cel PM", "Ten Cel PM"),
+        ("Maj PM", "Maj PM"),
+        ("CAP PM", "Cap PM"),
+        ("1º Ten PM", "1º Ten PM"),
+        ("1º Ten QAPM", "1º Ten QAOPM"),
+        ("2º Ten PM", "2º Ten PM"),
+        ("2º Ten QAPM", "2º Ten QAOPM"),
+        ("Asp OF PM", "Asp OF PM"),
+        ("Subten PM", "Subten PM"),
+        ("1º Sgt PM", "1º Sgt PM"),
+        ("2º Sgt PM", "2º Sgt PM"),
+        ("3º Sgt PM", "3º Sgt PM"),
+        ("Cb PM", "Cb PM"),
+        ("Sd PM", "Sd PM"),
+        ("Sd PM 2ºCL", "Sd PM 2ºCL"),
+    )
 
+    quadro_choices = (
+        ("", " "),
+        ("Oficiais", "Oficiais"),
+        ("Praças Especiais", "Praças Especiais"),
+        ("Praças", "Praças"),
+    )
 
-    quadro_choices=(
-      ("", " "),
-      ("Oficiais", "Oficiais"),
-      ("Praças Especiais" ,"Praças Especiais"),
-      ( "Praças", "Praças")
-   )
-
-    grupo_choices=( 
-      ("", " "),                                                
-      ("Cel"," Cel"),
-      ("Tc", "Tc"),
-      ("Maj", "Maj"),
-      ("Cap", "Cap"),
-      ("Ten", "Ten"),
-      ("Ten QAOPM", "Ten QAOPM"),
-      ("Praça Especiais","Praça Especiais"),
-      ("St/Sgt", "St/Sgt"),
-      ("Cb/Sd", "Cb/Sd")
-    )  
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='promocoes')
+    grupo_choices = (
+        ("", " "),
+        ("Cel", " Cel"),
+        ("Tc", "Tc"),
+        ("Maj", "Maj"),
+        ("Cap", "Cap"),
+        ("Ten", "Ten"),
+        ("Ten QAOPM", "Ten QAOPM"),
+        ("Praça Especiais", "Praça Especiais"),
+        ("St/Sgt", "St/Sgt"),
+        ("Cb/Sd", "Cb/Sd"),
+    )
+    cadastro = models.ForeignKey(
+        Cadastro, on_delete=models.CASCADE, related_name="promocoes"
+    )
     posto_grad = models.CharField(max_length=100, choices=posto_grad_choices)
     quadro = models.CharField(max_length=100, choices=quadro_choices)
     grupo = models.CharField(max_length=100, choices=grupo_choices)
     ultima_promocao = models.DateField(blank=False, null=False)
     data_alteracao = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     def __str__(self):
-        return f'{self.cadastro} - {self.posto_grad}'
+        return f"{self.cadastro} - {self.posto_grad}"
 
     @property
     def grad(self):
-        if self.posto_grad == 'Cel PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Cel PM</span>')
-        if self.posto_grad == 'Ten Cel PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Ten Cel PM</span>')
-        if self.posto_grad == 'Maj PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Maj PM</span>')
-        if self.posto_grad == 'CAP PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">CAP PM</span>')
-        if self.posto_grad == '1º Ten PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">1º Ten PM</span>')
-        if self.posto_grad == '1º Ten QAPM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">1º Ten QAPM</span>')
-        if self.posto_grad == '2º Ten PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">2º Ten PM</span>')
-        if self.posto_grad == '2º Ten QAPM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">2º Ten QAPM</span>')
-        if self.posto_grad == 'Asp OF PM':
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">Asp OF PM</span>')
-        if self.posto_grad == 'Subten PM':
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">Subten PM</span>')
-        if self.posto_grad == '1º Sgt PM':
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">1º Sgt PM</span>')
-        if self.posto_grad == '2º Sgt PM':
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">2º Sgt PM</span>')
-        if self.posto_grad == '3º Sgt PM':
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">3º Sgt PM</span>')
-        if self.posto_grad == 'Cb PM':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Cb PM</span>')
-        if self.posto_grad == 'Sd PM':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Sd PM</span>')
-        if self.posto_grad == 'Sd PM 2ºCL':
-            return mark_safe('<span class="bg-black text-white px-2 py-1 rounded">Sd PM 2ºCL</span>')
-   
+        if self.posto_grad == "Cel PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Cel PM</span>'
+            )
+        if self.posto_grad == "Ten Cel PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Ten Cel PM</span>'
+            )
+        if self.posto_grad == "Maj PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Maj PM</span>'
+            )
+        if self.posto_grad == "CAP PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">CAP PM</span>'
+            )
+        if self.posto_grad == "1º Ten PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">1º Ten PM</span>'
+            )
+        if self.posto_grad == "1º Ten QAPM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">1º Ten QAPM</span>'
+            )
+        if self.posto_grad == "2º Ten PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">2º Ten PM</span>'
+            )
+        if self.posto_grad == "2º Ten QAPM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">2º Ten QAPM</span>'
+            )
+        if self.posto_grad == "Asp OF PM":
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">Asp OF PM</span>'
+            )
+        if self.posto_grad == "Subten PM":
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">Subten PM</span>'
+            )
+        if self.posto_grad == "1º Sgt PM":
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">1º Sgt PM</span>'
+            )
+        if self.posto_grad == "2º Sgt PM":
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">2º Sgt PM</span>'
+            )
+        if self.posto_grad == "3º Sgt PM":
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">3º Sgt PM</span>'
+            )
+        if self.posto_grad == "Cb PM":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Cb PM</span>'
+            )
+        if self.posto_grad == "Sd PM":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Sd PM</span>'
+            )
+        if self.posto_grad == "Sd PM 2ºCL":
+            return mark_safe(
+                '<span class="bg-black text-white px-2 py-1 rounded">Sd PM 2ºCL</span>'
+            )
 
-   
     @property
     def ultima_promocao_detalhada(self):
         hoje = datetime.today()
         delta = relativedelta(hoje, self.ultima_promocao)
         return f"{delta.years} anos, {delta.months} meses e {delta.days} dias"
 
-   
     class Meta:
         indexes = [
-            models.Index(fields=['grupo']),
-            models.Index(fields=['cadastro']),
+            models.Index(fields=["grupo"]),
+            models.Index(fields=["cadastro"]),
         ]
-   
-    def get_search_result(self):
-      return {
-        'title': f"Promoção de {self.cadastro.nome_de_guerra}",
-        'fields': {
-            'Posto/Grad': self.posto_grad,
-            'Última Promoção': self.ultima_promocao.strftime('%d/%m/%Y')
-        }
-    }
 
+    def get_search_result(self):
+        return {
+            "title": f"Promoção de {self.cadastro.nome_de_guerra}",
+            "fields": {
+                "Posto/Grad": self.posto_grad,
+                "Última Promoção": self.ultima_promocao.strftime("%d/%m/%Y"),
+            },
+        }
 
 
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 # from backend.efetivo.utils import add_cpf_to_image # Certifique-se de que isso está importado se for usado
 
+
 class Imagem(models.Model):
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='imagens')
-    image = models.ImageField(upload_to='img/fotos_perfil')
+    cadastro = models.ForeignKey(
+        Cadastro, on_delete=models.CASCADE, related_name="imagens"
+    )
+    image = models.ImageField(upload_to="img/fotos_perfil")
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
         # Adicione esta linha para ordenar as imagens pela data de criação (mais recente primeiro)
-        ordering = ['-create_at'] 
+        ordering = ["-create_at"]
 
     def __str__(self):
-        return f'Imagem de {self.cadastro.nome_de_guerra}'
+        return f"Imagem de {self.cadastro.nome_de_guerra}"
+
 
 class HistoricoPromocao(models.Model):
     cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE)
@@ -629,43 +739,67 @@ class HistoricoPromocao(models.Model):
     quadro = models.CharField(max_length=100)
     grupo = models.CharField(max_length=100)
     ultima_promocao = models.DateField()
-    data_alteracao = models.DateTimeField(auto_now_add=True) 
-    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    data_alteracao = models.DateTimeField(auto_now_add=True)
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self):
-        return f'{self.cadastro.re} - {self.posto_grad}'
+        return f"{self.cadastro.re} - {self.posto_grad}"
 
 
 # modelo de dados para  gerar o historico de movimentações  do militar
 
 
 class HistoricoDetalhesSituacao(models.Model):
-    cadastro = models.ForeignKey('Cadastro', on_delete=models.CASCADE) # Use 'Cadastro' como string se Cadastro for definido abaixo
-    situacao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
-    sgb = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
-    posto_secao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
-    esta_adido = models.CharField(max_length=50, blank=True, null=True) # Já era nullable
-    funcao = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
-    op_adm = models.CharField(max_length=50, blank=True, null=True) # Adicionado blank=True, null=True
-    prontidao = models.CharField(max_length=18, blank=True, null=True, default="") # blank=True, null=True
-    cat_efetivo = models.CharField(max_length=30, blank=True, null=True, default="ATIVO") # blank=True, null=True
-    apresentacao_na_unidade = models.DateField(blank=True, null=True) # Adicionado blank=True, null=True
-    saida_da_unidade = models.DateField(null=True, blank=True) # Já era nullable
+    cadastro = models.ForeignKey(
+        "Cadastro", on_delete=models.CASCADE
+    )  # Use 'Cadastro' como string se Cadastro for definido abaixo
+    situacao = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    sgb = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    posto_secao = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    esta_adido = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Já era nullable
+    funcao = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    op_adm = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    prontidao = models.CharField(
+        max_length=18, blank=True, null=True, default=""
+    )  # blank=True, null=True
+    cat_efetivo = models.CharField(
+        max_length=30, blank=True, null=True, default="ATIVO"
+    )  # blank=True, null=True
+    apresentacao_na_unidade = models.DateField(
+        blank=True, null=True
+    )  # Adicionado blank=True, null=True
+    saida_da_unidade = models.DateField(null=True, blank=True)  # Já era nullable
     data_alteracao = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Usar get_user_model() é mais robusto
-    
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )  # Usar get_user_model() é mais robusto
+
     def __str__(self):
         return f'Histórico para {self.cadastro.nome_de_guerra if self.cadastro else "Militar Desconhecido"} - {self.situacao}'
 
     class Meta:
         verbose_name = "Histórico de Detalhes de Situação"
         verbose_name_plural = "Históricos de Detalhes de Situação"
-        ordering = ['-data_alteracao'] # Boa prática para históricos
+        ordering = ["-data_alteracao"]  # Boa prática para históricos
+
 
 from django.db import models
-from django.utils.safestring import mark_safe
-from datetime import date
 from backend.efetivo.models import Cadastro
+
 
 class CatEfetivo(models.Model):
     # Choices para o tipo de situação
@@ -682,17 +816,21 @@ class CatEfetivo(models.Model):
         ("RESTRICAO", "RESTRIÇÃO"),
         ("DS", "DS"),
         ("DR", "DR"),
-        ("FOLGA_MENSAL", "FOLGA MENSAL"),   # NOVO TIPO
-        ("FOLGA_SEMANAL", "FOLGA SEMANAL"), # NOVO TIPO
+        ("FOLGA_MENSAL", "FOLGA MENSAL"),  # NOVO TIPO
+        ("FOLGA_SEMANAL", "FOLGA SEMANAL"),  # NOVO TIPO
     )
 
     # Campos comuns a todos os tipos
-    cadastro = models.ForeignKey(Cadastro, on_delete=models.CASCADE, related_name='categorias_efetivo')
+    cadastro = models.ForeignKey(
+        Cadastro, on_delete=models.CASCADE, related_name="categorias_efetivo"
+    )
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default="ATIVO")
     data_inicio = models.DateField(null=True, blank=True)
     data_termino = models.DateField(null=True, blank=True)
     data_cadastro = models.DateTimeField(auto_now_add=True)
-    usuario_cadastro = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_cadastro = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
     ativo = models.BooleanField(default=True)
     observacao = models.TextField(blank=True, null=True)
 
@@ -746,19 +884,19 @@ class CatEfetivo(models.Model):
     @property
     def status(self):
         hoje = date.today()
-        
+
         # Se não há data de início, retorna status desconhecido
         if not self.data_inicio:
             return "N/A"
-        
+
         # Se tem data de término e já passou
         if self.data_termino and self.data_termino < hoje:
             return "ENCERRADO"
-        
+
         # Se a data de início é no futuro
         if self.data_inicio > hoje:
             return "AGUARDANDO INÍCIO"
-        
+
         # Se está entre as datas ou sem data de término
         return "EM VIGOR"
 
@@ -766,32 +904,42 @@ class CatEfetivo(models.Model):
     def status_badge(self):
         status = self.status
         if status == "ENCERRADO":
-            return mark_safe('<span class="bg-gray-500 text-white px-2 py-1 rounded">ENCERRADO</span>')
+            return mark_safe(
+                '<span class="bg-gray-500 text-white px-2 py-1 rounded">ENCERRADO</span>'
+            )
         elif status == "AGUARDANDO INÍCIO":
-            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">AGUARDANDO INÍCIO</span>')
+            return mark_safe(
+                '<span class="bg-yellow-500 text-black px-2 py-1 rounded">AGUARDANDO INÍCIO</span>'
+            )
         elif status == "EM VIGOR":
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">EM VIGOR</span>')
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">EM VIGOR</span>'
+            )
         else:  # N/A
-            return mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">N/A</span>')
+            return mark_safe(
+                '<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">N/A</span>'
+            )
 
     def get_total_dias(self):
         if self.data_inicio and self.data_termino:
             # Calcula a diferença em dias. Adicionamos +1 para incluir o dia de início e o dia de término.
             return (self.data_termino - self.data_inicio).days + 1
-        return 0     
-        
+        return 0
+
     @property
     def restricoes_selecionadas(self):
         """
         Retorna os campos de restrição como uma lista de dicionários,
         incluindo o nome do campo, verbose_name e o valor (True/False).
         """
-        restricao_campos = [f for f in self._meta.get_fields() if f.name.startswith('restricao_')]
+        restricao_campos = [
+            f for f in self._meta.get_fields() if f.name.startswith("restricao_")
+        ]
         return [
             {
-                'name': campo.name,
-                'verbose_name': campo.verbose_name,
-                'value': getattr(self, campo.name)
+                "name": campo.name,
+                "verbose_name": campo.verbose_name,
+                "value": getattr(self, campo.name),
             }
             for campo in restricao_campos
         ]
@@ -800,33 +948,57 @@ class CatEfetivo(models.Model):
     def tipo_badge(self):
         tipo = self.tipo
         if tipo == "ATIVO":
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>')
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>'
+            )
         elif tipo == "INATIVO":
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>')
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>'
+            )
         elif tipo == "LSV":
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>')
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>'
+            )
         elif tipo == "LTS":
-            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>')
+            return mark_safe(
+                '<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>'
+            )
         elif tipo == "LTS FAMILIA":
-            return mark_safe('<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>')
+            return mark_safe(
+                '<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>'
+            )
         elif tipo == "CONVAL":
-            return mark_safe('<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>')
+            return mark_safe(
+                '<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>'
+            )
         elif tipo == "ELEIÇÃO":
-            return mark_safe('<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>')
+            return mark_safe(
+                '<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>'
+            )
         elif tipo == "LP":
-            return mark_safe('<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>')
+            return mark_safe(
+                '<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>'
+            )
         elif tipo == "FERIAS":
-            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>')
+            return mark_safe(
+                '<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>'
+            )
         elif tipo == "RESTRICAO":
-            return mark_safe('<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>')
+            return mark_safe(
+                '<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>'
+            )
         elif tipo == "DS":
-            return mark_safe('<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>')
+            return mark_safe(
+                '<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>'
+            )
         elif tipo == "DR":
-            return mark_safe('<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>')
+            return mark_safe(
+                '<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>'
+            )
         else:
-            return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
-
-
+            return mark_safe(
+                f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>'
+            )
 
     def save(self, *args, **kwargs):
         is_new = self._state.adding  # Verifica se é um novo registro
@@ -840,7 +1012,9 @@ class CatEfetivo(models.Model):
 
         # Limpa restrições se não for RESTRICAO
         if self.tipo != "RESTRICAO":
-            campos_restricao = [f.name for f in self._meta.fields if f.name.startswith('restricao_')]
+            campos_restricao = [
+                f.name for f in self._meta.fields if f.name.startswith("restricao_")
+            ]
             for campo in campos_restricao:
                 setattr(self, campo, False)
 
@@ -850,24 +1024,28 @@ class CatEfetivo(models.Model):
         if is_new:
             self.criar_registro_historico()
 
-
     def get_search_result(self):
         return {
-            'title': f"{self.get_tipo_display()} - {self.cadastro.nome_de_guerra}",
-            'fields': {
-                'Tipo': self.get_tipo_display(),
-                'Início': self.data_inicio.strftime('%d/%m/%Y'),
-                'Término': self.data_termino.strftime('%d/%m/%Y') if self.data_termino else '-',
-                'Status': self.status
-            }
+            "title": f"{self.get_tipo_display()} - {self.cadastro.nome_de_guerra}",
+            "fields": {
+                "Tipo": self.get_tipo_display(),
+                "Início": self.data_inicio.strftime("%d/%m/%Y"),
+                "Término": (
+                    self.data_termino.strftime("%d/%m/%Y") if self.data_termino else "-"
+                ),
+                "Status": self.status,
+            },
         }
 
     @property
     def restricoes_selecionadas(self):
         """Retorna uma lista com as restrições selecionadas"""
         restricoes = []
-        campos_restricao = [field.name for field in self._meta.get_fields()
-                                    if field.name.startswith('restricao_')]
+        campos_restricao = [
+            field.name
+            for field in self._meta.get_fields()
+            if field.name.startswith("restricao_")
+        ]
 
         for campo in campos_restricao:
             if getattr(self, campo):
@@ -879,17 +1057,20 @@ class CatEfetivo(models.Model):
 
     @property
     def restricoes_selecionadas_siglas(self):
-        if self.tipo != 'RESTRICAO':
+        if self.tipo != "RESTRICAO":
             return ""
 
         siglas = []
-        campos_restricao = [field.name for field in self._meta.get_fields()
-                                    if field.name.startswith('restricao_')]
+        campos_restricao = [
+            field.name
+            for field in self._meta.get_fields()
+            if field.name.startswith("restricao_")
+        ]
 
         for campo in campos_restricao:
             if getattr(self, campo):
                 # Pega as duas últimas letras do nome do campo
-                sigla = campo.split('_')[-1].upper()
+                sigla = campo.split("_")[-1].upper()
                 siglas.append(sigla)
 
         return ", ".join(siglas)
@@ -902,7 +1083,7 @@ class CatEfetivo(models.Model):
             badges.append(
                 f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs mr-1">{restricao}</span>'
             )
-        return mark_safe(' '.join(badges))
+        return mark_safe(" ".join(badges))
 
     def save(self, *args, **kwargs):
         # Verifica se a data de término foi atingida e marca como inativo
@@ -911,8 +1092,11 @@ class CatEfetivo(models.Model):
 
         # Se não for do tipo RESTRICAO, limpa todas as restrições
         if self.tipo != "RESTRICAO":
-            campos_restricao = [field.name for field in self._meta.get_fields()
-                                        if field.name.startswith('restricao_')]
+            campos_restricao = [
+                field.name
+                for field in self._meta.get_fields()
+                if field.name.startswith("restricao_")
+            ]
             for campo in campos_restricao:
                 setattr(self, campo, False)
 
@@ -974,20 +1158,19 @@ class CatEfetivo(models.Model):
             restricao_mp=self.restricao_mp,
             restricao_vp=self.restricao_vp,
             restricao_uu=self.restricao_uu,
-            usuario_alteracao=self.usuario_cadastro
+            usuario_alteracao=self.usuario_cadastro,
         )
 
     class Meta:
         verbose_name = "Categoria de Efetivo"
         verbose_name_plural = "Categorias de Efetivo"
-        ordering = ['-data_inicio']
+        ordering = ["-data_inicio"]
         indexes = [
-            models.Index(fields=['tipo']),
-            models.Index(fields=['cadastro']),
-            models.Index(fields=['ativo']),
-            models.Index(fields=['data_inicio', 'data_termino']),
+            models.Index(fields=["tipo"]),
+            models.Index(fields=["cadastro"]),
+            models.Index(fields=["ativo"]),
+            models.Index(fields=["data_inicio", "data_termino"]),
         ]
-
 
     @property
     def tipo_icon(self):
@@ -1003,7 +1186,7 @@ class CatEfetivo(models.Model):
             "DR": "fa-calendar-week",
         }
         return icons.get(self.tipo, "fa-user")
-    
+
     @property
     def tipo_color(self):
         colors = {
@@ -1019,171 +1202,253 @@ class CatEfetivo(models.Model):
         }
         return colors.get(self.tipo, "gray")
 
-
     @property
     def regras_restricoes_badges(self):
-        if self.tipo != 'RESTRICAO':
-            return mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">N/A</span>')
-        
+        if self.tipo != "RESTRICAO":
+            return mark_safe(
+                '<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">N/A</span>'
+            )
+
         badges = []
-        
+
         # Grupo 5.2.1
-        grupo_521 = {'BS', 'CI', 'DV', 'EF', 'FO', 'IS', 'LP', 'MA', 'MC', 'MG', 'OU', 'PO', 'PQ', 'SA', 'SE', 'SH', 'SM', 'SP'}
-        if any(sigla in grupo_521 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        grupo_521 = {
+            "BS",
+            "CI",
+            "DV",
+            "EF",
+            "FO",
+            "IS",
+            "LP",
+            "MA",
+            "MC",
+            "MG",
+            "OU",
+            "PO",
+            "PQ",
+            "SA",
+            "SE",
+            "SH",
+            "SM",
+            "SP",
+        }
+        if any(
+            sigla in grupo_521
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1" title="Atividades operacionais com condições ou administrativas/apoio">5.2.1</span>'
             )
-        
+
         # Grupo 5.2.1.1 (subgrupo de EF)
-        if 'EF' in self.restricoes_selecionadas_siglas:
+        if "EF" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs mr-1" title="Plano de exercícios físicos específicos">5.2.1.1</span>'
             )
-        
+
         # Grupo 5.2.2
-        grupo_522 = {'AU', 'EP', 'ES', 'LR', 'PT', 'VP'}
-        if any(sigla in grupo_522 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        grupo_522 = {"AU", "EP", "ES", "LR", "PT", "VP"}
+        if any(
+            sigla in grupo_522
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-1" title="Somente atividades administrativas">5.2.2</span>'
             )
-        
+
         # Grupo 5.2.3
-        if 'SN' in self.restricoes_selecionadas_siglas:
+        if "SN" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mr-1" title="Trabalhar durante o dia em qualquer atividade">5.2.3</span>'
             )
-        
+
         # Grupo 5.2.4
-        if 'SG' in self.restricoes_selecionadas_siglas:
+        if "SG" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mr-1" title="Policiamento ostensivo ou administrativas/apoio">5.2.4</span>'
             )
-        
+
         # Grupo 5.2.5
-        if 'UA' in self.restricoes_selecionadas_siglas:
+        if "UA" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs mr-1" title="Desarmado e atividades administrativas">5.2.5</span>'
             )
-        
+
         # Grupo 5.2.5.1 (subgrupo de UA)
-        if 'UA' in self.restricoes_selecionadas_siglas:
+        if "UA" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-red-200 text-red-800 px-2 py-1 rounded text-xs mr-1" title="Pode requerer processo administrativo">5.2.5.1</span>'
             )
-        
+
         # Grupo 5.2.6
-        grupo_526 = {'UU', 'CC', 'CB'}
-        if any(sigla in grupo_526 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        grupo_526 = {"UU", "CC", "CB"}
+        if any(
+            sigla in grupo_526
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Atividades administrativas ou de apoio">5.2.6</span>'
             )
-        
+
         # Grupo 5.2.6.1 (subgrupo de UU, CC, CB)
-        if any(sigla in grupo_526 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        if any(
+            sigla in grupo_526
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-indigo-200 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Uniforme B-5.1, sem atendimento ao público">5.2.6.1</span>'
             )
-        
+
         # Grupo 5.2.6.2 (subgrupo de CC)
-        if 'CC' in self.restricoes_selecionadas_siglas:
+        if "CC" in self.restricoes_selecionadas_siglas:
             badges.append(
                 '<span class="bg-indigo-300 text-indigo-800 px-2 py-1 rounded text-xs mr-1" title="Cabelos penteados com gel/rede">5.2.6.2</span>'
             )
-        
+
         # Grupo 5.2.7
-        grupo_527 = {'UB', 'UC', 'US'}
-        if any(sigla in grupo_527 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        grupo_527 = {"UB", "UC", "US"}
+        if any(
+            sigla in grupo_527
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs mr-1" title="Sandálias pretas, sem atendimento ao público">5.2.7</span>'
             )
-        
+
         # Grupo 5.2.8
-        grupo_528 = {'DG', 'EM', 'LS', 'MP', 'SB', 'SI', 'ST'}
-        if any(sigla in grupo_528 for sigla in self.restricoes_selecionadas_siglas.split(', ')):
+        grupo_528 = {"DG", "EM", "LS", "MP", "SB", "SI", "ST"}
+        if any(
+            sigla in grupo_528
+            for sigla in self.restricoes_selecionadas_siglas.split(", ")
+        ):
             badges.append(
                 '<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs mr-1" title="Policiamento ostensivo">5.2.8</span>'
             )
-        
+
         # Grupo 5.2.9 (para gestantes)
         # Nota: Você precisaria ter um campo para identificar gestantes
         # if self.gestante:
         #     badges.append(
         #         '<span class="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs mr-1" title="Atividades administrativas com uniforme de gestante">5.2.9</span>'
         #     )
-        
+
         # Grupo 5.2.9.1 (subgrupo de gestantes com US)
         # if self.gestante and 'US' in self.restricoes_selecionadas_siglas:
         #     badges.append(
         #         '<span class="bg-pink-200 text-pink-800 px-2 py-1 rounded text-xs mr-1" title="Sem atendimento ao público">5.2.9.1</span>'
         #     )
-        
-        return mark_safe(' '.join(badges)) if badges else mark_safe('<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">Sem regras específicas</span>')
+
+        return (
+            mark_safe(" ".join(badges))
+            if badges
+            else mark_safe(
+                '<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs">Sem regras específicas</span>'
+            )
+        )
+
 
 @property
 def regras_restricoes_badges(self):
-    if self.tipo != 'RESTRICAO':
+    if self.tipo != "RESTRICAO":
         return []
-    
+
     regras = []
-    siglas = self.restricoes_selecionadas_siglas.split(', ') if self.restricoes_selecionadas_siglas else []
-    
+    siglas = (
+        self.restricoes_selecionadas_siglas.split(", ")
+        if self.restricoes_selecionadas_siglas
+        else []
+    )
+
     # Mapeamento de regras para siglas
     regras_map = {
-        '5.2.1': ['BS', 'CI', 'DV', 'EF', 'FO', 'IS', 'LP', 'MA', 'MC', 'MG', 'OU', 'PO', 'PQ', 'SA', 'SE', 'SH', 'SM', 'SP'],
-        '5.2.2': ['AU', 'EP', 'ES', 'LR', 'PT', 'VP'],
-        '5.2.3': ['SN'],
-        '5.2.4': ['SG'],
-        '5.2.5': ['UA'],
-        '5.2.6': ['UU', 'CC', 'CB'],
-        '5.2.7': ['UB', 'UC', 'US'],
-        '5.2.8': ['DG', 'EM', 'LS', 'MP', 'SB', 'SI', 'ST']
+        "5.2.1": [
+            "BS",
+            "CI",
+            "DV",
+            "EF",
+            "FO",
+            "IS",
+            "LP",
+            "MA",
+            "MC",
+            "MG",
+            "OU",
+            "PO",
+            "PQ",
+            "SA",
+            "SE",
+            "SH",
+            "SM",
+            "SP",
+        ],
+        "5.2.2": ["AU", "EP", "ES", "LR", "PT", "VP"],
+        "5.2.3": ["SN"],
+        "5.2.4": ["SG"],
+        "5.2.5": ["UA"],
+        "5.2.6": ["UU", "CC", "CB"],
+        "5.2.7": ["UB", "UC", "US"],
+        "5.2.8": ["DG", "EM", "LS", "MP", "SB", "SI", "ST"],
     }
-    
+
     # Verifica quais regras se aplicam
     for regra, siglas_regra in regras_map.items():
         if any(sigla in siglas for sigla in siglas_regra):
             regras.append(regra)
-    
+
     return regras
 
     @property
     def get_restricao_fields(self):
         fields_data = []
         for field in self._meta.get_fields():
-            if field.name.startswith('restricao_') and isinstance(field, models.BooleanField):
-                fields_data.append({
-                    'name': field.name,
-                    'verbose_name': field.verbose_name,
-                    'value': getattr(self, field.name)
-                })
+            if field.name.startswith("restricao_") and isinstance(
+                field, models.BooleanField
+            ):
+                fields_data.append(
+                    {
+                        "name": field.name,
+                        "verbose_name": field.verbose_name,
+                        "value": getattr(self, field.name),
+                    }
+                )
         return fields_data
 
     @property
     def tipo_choices(self):
-        return CatEfetivo._meta.get_field('tipo').choices
+        return CatEfetivo._meta.get_field("tipo").choices
 
 
 class HistoricoCatEfetivo(models.Model):
-    cat_efetivo = models.ForeignKey('CatEfetivo', on_delete=models.CASCADE, related_name='historico') # Usar string para evitar importação circular se CatEfetivo estiver abaixo
+    cat_efetivo = models.ForeignKey(
+        "CatEfetivo", on_delete=models.CASCADE, related_name="historico"
+    )  # Usar string para evitar importação circular se CatEfetivo estiver abaixo
     data_registro = models.DateTimeField(auto_now_add=True)
-    usuario_alteracao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_alteracao = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     # Campos espelho do CatEfetivo
-    tipo = models.CharField(max_length=20, choices=[ # Definir as escolhas aqui ou referenciar CatEfetivo.TIPO_CHOICES
-        ('ATIVO', 'Ativo'),
-        ('INATIVO', 'Inativo'),
-        ('LSV', 'LSV - Licença para Serviço Voluntário'),
-        ('LTS', 'LTS - Licença para Tratamento de Saúde'),
-        ('LTS FAMILIA', 'LTS Família - Licença para Tratamento de Saúde de Familiar'),
-        ('CONVAL', 'Convalescença'),
-        ('ELEIÇÃO', 'Eleição'),
-        ('LP', 'Licença Prêmio'),
-        ('FERIAS', 'Férias'),
-        ('RESTRICAO', 'Restrição'),
-        ('DS', 'Dispensado de Serviço'),
-        ('DR', 'Dispensa Recompensa'),
-        # ... Adicione outras escolhas se existirem em CatEfetivo.TIPO_CHOICES
-    ])
+    tipo = models.CharField(
+        max_length=20,
+        choices=[  # Definir as escolhas aqui ou referenciar CatEfetivo.TIPO_CHOICES
+            ("ATIVO", "Ativo"),
+            ("INATIVO", "Inativo"),
+            ("LSV", "LSV - Licença para Serviço Voluntário"),
+            ("LTS", "LTS - Licença para Tratamento de Saúde"),
+            (
+                "LTS FAMILIA",
+                "LTS Família - Licença para Tratamento de Saúde de Familiar",
+            ),
+            ("CONVAL", "Convalescença"),
+            ("ELEIÇÃO", "Eleição"),
+            ("LP", "Licença Prêmio"),
+            ("FERIAS", "Férias"),
+            ("RESTRICAO", "Restrição"),
+            ("DS", "Dispensado de Serviço"),
+            ("DR", "Dispensa Recompensa"),
+            # ... Adicione outras escolhas se existirem em CatEfetivo.TIPO_CHOICES
+        ],
+    )
     data_inicio = models.DateField()
     data_termino = models.DateField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
@@ -1243,68 +1508,97 @@ class HistoricoCatEfetivo(models.Model):
         # Apenas garantir que mark_safe seja importado.
         tipo = self.tipo
         if tipo == "ATIVO":
-            return mark_safe('<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>')
+            return mark_safe(
+                '<span class="bg-green-500 text-white px-2 py-1 rounded">ATIVO</span>'
+            )
         elif tipo == "INATIVO":
-            return mark_safe('<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>')
+            return mark_safe(
+                '<span class="bg-red-500 text-white px-2 py-1 rounded">INATIVO</span>'
+            )
         elif tipo == "LSV":
-            return mark_safe('<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>')
+            return mark_safe(
+                '<span class="bg-blue-500 text-white px-2 py-1 rounded">LSV</span>'
+            )
         elif tipo == "LTS":
-            return mark_safe('<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>')
+            return mark_safe(
+                '<span class="bg-indigo-500 text-white px-2 py-1 rounded">LTS</span>'
+            )
         elif tipo == "LTS FAMILIA":
-            return mark_safe('<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>')
+            return mark_safe(
+                '<span class="bg-purple-500 text-white px-2 py-1 rounded">LTS FAMILIA</span>'
+            )
         elif tipo == "CONVAL":
-            return mark_safe('<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>')
+            return mark_safe(
+                '<span class="bg-pink-500 text-white px-2 py-1 rounded">CONVALESCENÇA</span>'
+            )
         elif tipo == "ELEIÇÃO":
-            return mark_safe('<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>')
+            return mark_safe(
+                '<span class="bg-teal-500 text-white px-2 py-1 rounded">ELEIÇÃO</span>'
+            )
         elif tipo == "LP":
-            return mark_safe('<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>')
+            return mark_safe(
+                '<span class="bg-orange-500 text-white px-2 py-1 rounded">LP</span>'
+            )
         elif tipo == "FERIAS":
-            return mark_safe('<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>')
+            return mark_safe(
+                '<span class="bg-yellow-500 text-black px-2 py-1 rounded">FÉRIAS</span>'
+            )
         elif tipo == "RESTRICAO":
-            return mark_safe('<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>')
+            return mark_safe(
+                '<span class="bg-red-700 text-white px-2 py-1 rounded">RESTRIÇÃO</span>'
+            )
         elif tipo == "DS":
-            return mark_safe('<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>')
+            return mark_safe(
+                '<span class="bg-lime-500 text-black px-2 py-1 rounded">DS</span>'
+            )
         elif tipo == "DR":
-            return mark_safe('<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>')
+            return mark_safe(
+                '<span class="bg-cyan-500 text-white px-2 py-1 rounded">DR</span>'
+            )
         else:
-            return mark_safe(f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>')
+            return mark_safe(
+                f'<span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">{tipo}</span>'
+            )
 
     @property
     def status_info(self):
         hoje = date.today()
         if not self.data_inicio:
             return "N/A"
-            
+
         if self.data_termino and self.data_termino < hoje:
             return "ENCERRADO"
         elif self.data_inicio > hoje:
             return "AGUARDANDO INÍCIO"
-        elif self.data_inicio <= hoje and (self.data_termino is None or self.data_termino >= hoje):
+        elif self.data_inicio <= hoje and (
+            self.data_termino is None or self.data_termino >= hoje
+        ):
             return "EM VIGOR"
         else:
             return "N/A"
-        
-        
+
     def get_total_dias(self):
         if self.data_inicio and self.data_termino:
             # Calcula a diferença em dias. Adicionamos +1 para incluir o dia de início e o dia de término.
             return (self.data_termino - self.data_inicio).days + 1
-        return 0 # Retorna 0 se as datas não estiverem completas para o cálculo
+        return 0  # Retorna 0 se as datas não estiverem completas para o cálculo
 
     @property
     def restricoes_selecionadas_siglas(self):
-        if self.tipo != 'RESTRICAO':
+        if self.tipo != "RESTRICAO":
             return ""
 
         siglas = []
         # Percorre todos os campos do modelo
         for field in self._meta.get_fields():
             # Verifica se o campo é um booleano e começa com 'restricao_'
-            if isinstance(field, models.BooleanField) and field.name.startswith('restricao_'):
+            if isinstance(field, models.BooleanField) and field.name.startswith(
+                "restricao_"
+            ):
                 # Se o valor do campo booleano for True
                 if getattr(self, field.name):
                     # Pega as duas últimas letras do nome do campo (a sigla)
-                    sigla = field.name.split('_')[-1].upper()
+                    sigla = field.name.split("_")[-1].upper()
                     siglas.append(sigla)
 
         return ", ".join(siglas)
@@ -1312,20 +1606,21 @@ class HistoricoCatEfetivo(models.Model):
     class Meta:
         verbose_name = "Histórico de Categoria de Efetivo"
         verbose_name_plural = "Históricos de Categorias de Efetivo"
-        ordering = ['-data_registro']
+        ordering = ["-data_registro"]
         indexes = [
-            models.Index(fields=['cat_efetivo']),
-            models.Index(fields=['data_registro']),
-            models.Index(fields=['tipo']),
+            models.Index(fields=["cat_efetivo"]),
+            models.Index(fields=["data_registro"]),
+            models.Index(fields=["tipo"]),
         ]
 
         # Adicione ao final da classe HistoricoCatEfetivo
+
     def get_search_result(self):
         return {
-            'title': f"Histórico Categoria - {self.cat_efetivo.cadastro.nome_de_guerra}",
-            'fields': {
-                'Tipo': self.get_tipo_display(),
-                'Data Registro': self.data_registro.strftime('%d/%m/%Y %H:%M'),
-                'Status': self.status_info
-            }
+            "title": f"Histórico Categoria - {self.cat_efetivo.cadastro.nome_de_guerra}",
+            "fields": {
+                "Tipo": self.get_tipo_display(),
+                "Data Registro": self.data_registro.strftime("%d/%m/%Y %H:%M"),
+                "Status": self.status_info,
+            },
         }

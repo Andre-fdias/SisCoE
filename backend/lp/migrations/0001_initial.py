@@ -10,121 +10,644 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('efetivo', '0001_initial'),
+        ("efetivo", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LP',
+            name="LP",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_cadastro', models.DateTimeField(auto_now_add=True, verbose_name='Data de Cadastro')),
-                ('data_atualizacao', models.DateTimeField(auto_now=True, verbose_name='Última Atualização')),
-                ('data_conclusao', models.DateTimeField(blank=True, null=True, verbose_name='Data de Conclusão')),
-                ('numero_lp', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], verbose_name='Número da LP')),
-                ('data_ultimo_lp', models.DateField(blank=True, null=True, verbose_name='Data do Último LP')),
-                ('numero_prox_lp', models.PositiveSmallIntegerField(blank=True, choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], null=True, verbose_name='Próximo Número da LP')),
-                ('proximo_lp', models.DateField(blank=True, null=True, verbose_name='Próximo LP')),
-                ('mes_proximo_lp', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Mês do Próximo LP')),
-                ('ano_proximo_lp', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Ano do Próximo LP')),
-                ('dias_desconto_lp', models.PositiveSmallIntegerField(default=0, verbose_name='Dias de Desconto LP')),
-                ('bol_g_pm_lp', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL GPm LP')),
-                ('data_publicacao_lp', models.DateField(blank=True, null=True, verbose_name='Data Publicação LP')),
-                ('data_concessao_lp', models.DateField(blank=True, null=True, verbose_name='Data de Concessão da LP')),
-                ('lancamento_sipa', models.BooleanField(default=False, verbose_name='Lançamento no SIPA')),
-                ('observacoes', models.TextField(blank=True, verbose_name='Observações')),
-                ('situacao_lp', models.CharField(choices=[('Aguardando', 'Aguardando'), ('Concedido', 'Concedido'), ('Concluído', 'Concluído')], default='Aguardando', max_length=30, verbose_name='Situação da LP')),
-                ('status_lp', models.CharField(choices=[('aguardando_requisitos', 'Aguardando Requisitos'), ('apta_concessao', 'Apta para Concessão'), ('lancado_sipa', 'Lançado no SIPA'), ('concedido', 'Concedido'), ('publicado', 'Publicado'), ('concluido', 'Concluído')], default='aguardando_requisitos', max_length=30, verbose_name='Status da LP')),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro', verbose_name='Cadastro')),
-                ('user_created', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lps_criadas', to=settings.AUTH_USER_MODEL, verbose_name='Criado por')),
-                ('user_updated', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lps_modificadas', to=settings.AUTH_USER_MODEL, verbose_name='Modificado por')),
-                ('usuario_conclusao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='lps_concluidas', to=settings.AUTH_USER_MODEL, verbose_name='Concluído por')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "data_cadastro",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data de Cadastro"
+                    ),
+                ),
+                (
+                    "data_atualizacao",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Última Atualização"
+                    ),
+                ),
+                (
+                    "data_conclusao",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="Data de Conclusão"
+                    ),
+                ),
+                (
+                    "numero_lp",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        verbose_name="Número da LP",
+                    ),
+                ),
+                (
+                    "data_ultimo_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data do Último LP"
+                    ),
+                ),
+                (
+                    "numero_prox_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True,
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        null=True,
+                        verbose_name="Próximo Número da LP",
+                    ),
+                ),
+                (
+                    "proximo_lp",
+                    models.DateField(blank=True, null=True, verbose_name="Próximo LP"),
+                ),
+                (
+                    "mes_proximo_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Mês do Próximo LP"
+                    ),
+                ),
+                (
+                    "ano_proximo_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Ano do Próximo LP"
+                    ),
+                ),
+                (
+                    "dias_desconto_lp",
+                    models.PositiveSmallIntegerField(
+                        default=0, verbose_name="Dias de Desconto LP"
+                    ),
+                ),
+                (
+                    "bol_g_pm_lp",
+                    models.CharField(
+                        blank=True, max_length=50, null=True, verbose_name="BOL GPm LP"
+                    ),
+                ),
+                (
+                    "data_publicacao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data Publicação LP"
+                    ),
+                ),
+                (
+                    "data_concessao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data de Concessão da LP"
+                    ),
+                ),
+                (
+                    "lancamento_sipa",
+                    models.BooleanField(
+                        default=False, verbose_name="Lançamento no SIPA"
+                    ),
+                ),
+                (
+                    "observacoes",
+                    models.TextField(blank=True, verbose_name="Observações"),
+                ),
+                (
+                    "situacao_lp",
+                    models.CharField(
+                        choices=[
+                            ("Aguardando", "Aguardando"),
+                            ("Concedido", "Concedido"),
+                            ("Concluído", "Concluído"),
+                        ],
+                        default="Aguardando",
+                        max_length=30,
+                        verbose_name="Situação da LP",
+                    ),
+                ),
+                (
+                    "status_lp",
+                    models.CharField(
+                        choices=[
+                            ("aguardando_requisitos", "Aguardando Requisitos"),
+                            ("apta_concessao", "Apta para Concessão"),
+                            ("lancado_sipa", "Lançado no SIPA"),
+                            ("concedido", "Concedido"),
+                            ("publicado", "Publicado"),
+                            ("concluido", "Concluído"),
+                        ],
+                        default="aguardando_requisitos",
+                        max_length=30,
+                        verbose_name="Status da LP",
+                    ),
+                ),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                        verbose_name="Cadastro",
+                    ),
+                ),
+                (
+                    "user_created",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lps_criadas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Criado por",
+                    ),
+                ),
+                (
+                    "user_updated",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lps_modificadas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Modificado por",
+                    ),
+                ),
+                (
+                    "usuario_conclusao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lps_concluidas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Concluído por",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Licença Prêmio',
-                'verbose_name_plural': 'Licenças Prêmio',
-                'unique_together': {('cadastro', 'numero_lp')},
+                "verbose_name": "Licença Prêmio",
+                "verbose_name_plural": "Licenças Prêmio",
+                "unique_together": {("cadastro", "numero_lp")},
             },
         ),
         migrations.CreateModel(
-            name='HistoricoLP',
+            name="HistoricoLP",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True, verbose_name='Data da Alteração')),
-                ('situacao_lp', models.CharField(choices=[('Aguardando', 'Aguardando'), ('Concedido', 'Concedido'), ('Concluído', 'Concluído')], max_length=30, verbose_name='Situação da LP')),
-                ('status_lp', models.CharField(choices=[('aguardando_requisitos', 'Aguardando Requisitos'), ('apta_concessao', 'Apta para Concessão'), ('lancado_sipa', 'Lançado no SIPA'), ('concedido', 'Concedido'), ('publicado', 'Publicado'), ('concluido', 'Concluído')], max_length=30, verbose_name='Status da LP')),
-                ('numero_lp', models.PositiveSmallIntegerField(choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], verbose_name='Número da LP')),
-                ('data_ultimo_lp', models.DateField(blank=True, null=True, verbose_name='Data do Último LP')),
-                ('numero_prox_lp', models.PositiveSmallIntegerField(blank=True, choices=[(1, '01'), (2, '02'), (3, '03'), (4, '04'), (5, '05'), (6, '06'), (7, '07'), (8, '08')], null=True, verbose_name='Próximo Número da LP')),
-                ('proximo_lp', models.DateField(blank=True, null=True, verbose_name='Próximo LP')),
-                ('mes_proximo_lp', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Mês do Próximo LP')),
-                ('ano_proximo_lp', models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Ano do Próximo LP')),
-                ('dias_desconto_lp', models.PositiveSmallIntegerField(default=0, verbose_name='Dias de Desconto LP')),
-                ('bol_g_pm_lp', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL GPm LP')),
-                ('data_publicacao_lp', models.DateField(blank=True, null=True, verbose_name='Data Publicação LP')),
-                ('data_concessao_lp', models.DateField(blank=True, null=True, verbose_name='Data de Concessão da LP')),
-                ('lancamento_sipa', models.BooleanField(default=False, verbose_name='Lançamento no SIPA')),
-                ('data_conclusao', models.DateTimeField(blank=True, null=True, verbose_name='Data de Conclusão (Histórico)')),
-                ('observacoes_historico', models.TextField(blank=True, verbose_name='Observações do Histórico')),
-                ('usuario_alteracao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='Usuário da Alteração')),
-                ('usuario_conclusao', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='historico_lps_concluidas', to=settings.AUTH_USER_MODEL, verbose_name='Concluído por (Histórico)')),
-                ('lp', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lp.lp', verbose_name='LP')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "data_alteracao",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data da Alteração"
+                    ),
+                ),
+                (
+                    "situacao_lp",
+                    models.CharField(
+                        choices=[
+                            ("Aguardando", "Aguardando"),
+                            ("Concedido", "Concedido"),
+                            ("Concluído", "Concluído"),
+                        ],
+                        max_length=30,
+                        verbose_name="Situação da LP",
+                    ),
+                ),
+                (
+                    "status_lp",
+                    models.CharField(
+                        choices=[
+                            ("aguardando_requisitos", "Aguardando Requisitos"),
+                            ("apta_concessao", "Apta para Concessão"),
+                            ("lancado_sipa", "Lançado no SIPA"),
+                            ("concedido", "Concedido"),
+                            ("publicado", "Publicado"),
+                            ("concluido", "Concluído"),
+                        ],
+                        max_length=30,
+                        verbose_name="Status da LP",
+                    ),
+                ),
+                (
+                    "numero_lp",
+                    models.PositiveSmallIntegerField(
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        verbose_name="Número da LP",
+                    ),
+                ),
+                (
+                    "data_ultimo_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data do Último LP"
+                    ),
+                ),
+                (
+                    "numero_prox_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True,
+                        choices=[
+                            (1, "01"),
+                            (2, "02"),
+                            (3, "03"),
+                            (4, "04"),
+                            (5, "05"),
+                            (6, "06"),
+                            (7, "07"),
+                            (8, "08"),
+                        ],
+                        null=True,
+                        verbose_name="Próximo Número da LP",
+                    ),
+                ),
+                (
+                    "proximo_lp",
+                    models.DateField(blank=True, null=True, verbose_name="Próximo LP"),
+                ),
+                (
+                    "mes_proximo_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Mês do Próximo LP"
+                    ),
+                ),
+                (
+                    "ano_proximo_lp",
+                    models.PositiveSmallIntegerField(
+                        blank=True, null=True, verbose_name="Ano do Próximo LP"
+                    ),
+                ),
+                (
+                    "dias_desconto_lp",
+                    models.PositiveSmallIntegerField(
+                        default=0, verbose_name="Dias de Desconto LP"
+                    ),
+                ),
+                (
+                    "bol_g_pm_lp",
+                    models.CharField(
+                        blank=True, max_length=50, null=True, verbose_name="BOL GPm LP"
+                    ),
+                ),
+                (
+                    "data_publicacao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data Publicação LP"
+                    ),
+                ),
+                (
+                    "data_concessao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data de Concessão da LP"
+                    ),
+                ),
+                (
+                    "lancamento_sipa",
+                    models.BooleanField(
+                        default=False, verbose_name="Lançamento no SIPA"
+                    ),
+                ),
+                (
+                    "data_conclusao",
+                    models.DateTimeField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Conclusão (Histórico)",
+                    ),
+                ),
+                (
+                    "observacoes_historico",
+                    models.TextField(
+                        blank=True, verbose_name="Observações do Histórico"
+                    ),
+                ),
+                (
+                    "usuario_alteracao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuário da Alteração",
+                    ),
+                ),
+                (
+                    "usuario_conclusao",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="historico_lps_concluidas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Concluído por (Histórico)",
+                    ),
+                ),
+                (
+                    "lp",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="lp.lp",
+                        verbose_name="LP",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Histórico da LP',
-                'verbose_name_plural': 'Histórico das LPs',
+                "verbose_name": "Histórico da LP",
+                "verbose_name_plural": "Histórico das LPs",
             },
         ),
         migrations.CreateModel(
-            name='LP_fruicao',
+            name="LP_fruicao",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('numero_lp', models.PositiveSmallIntegerField(verbose_name='Número da LP Concluída')),
-                ('data_concessao_lp', models.DateField(blank=True, null=True, verbose_name='Data de Concessão da LP')),
-                ('bol_g_pm_lp', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL G PM')),
-                ('data_publicacao_lp', models.DateField(blank=True, null=True, verbose_name='Data Publicação LP')),
-                ('tipo_periodo_afastamento', models.PositiveSmallIntegerField(blank=True, choices=[(15, '15 Dias'), (30, '30 Dias'), (45, '45 Dias'), (60, '60 Dias'), (75, '75 Dias'), (90, '90 Dias')], null=True, verbose_name='Tipo de Período de Afastamento')),
-                ('tipo_choice', models.CharField(blank=True, choices=[('fruicao', 'Fruição'), ('pecunia', 'Pecúnia')], max_length=10, null=True, verbose_name='Tipo de Escolha')),
-                ('data_cadastro', models.DateTimeField(auto_now_add=True, verbose_name='Data de Cadastro')),
-                ('data_atualizacao', models.DateTimeField(auto_now=True, verbose_name='Última Atualização')),
-                ('dias_disponiveis', models.PositiveSmallIntegerField(default=90, verbose_name='Dias Disponíveis')),
-                ('dias_utilizados', models.PositiveSmallIntegerField(default=0, verbose_name='Dias Utilizados')),
-                ('data_inicio_afastamento', models.DateField(blank=True, null=True, verbose_name='Data de Início do Afastamento')),
-                ('data_termino_afastamento', models.DateField(blank=True, null=True, verbose_name='Data de Término do Afastamento')),
-                ('bol_int', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL Int')),
-                ('data_bol_int', models.DateField(blank=True, null=True, verbose_name='Data do BOL Int')),
-                ('cadastro', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='efetivo.cadastro', verbose_name='Cadastro')),
-                ('lp_concluida', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='previsao_associada', to='lp.lp', verbose_name='LP Concluída Associada')),
-                ('user_created', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='previsoes_criadas', to=settings.AUTH_USER_MODEL, verbose_name='Criado por')),
-                ('user_updated', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='previsoes_modificadas', to=settings.AUTH_USER_MODEL, verbose_name='Modificado por')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "numero_lp",
+                    models.PositiveSmallIntegerField(
+                        verbose_name="Número da LP Concluída"
+                    ),
+                ),
+                (
+                    "data_concessao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data de Concessão da LP"
+                    ),
+                ),
+                (
+                    "bol_g_pm_lp",
+                    models.CharField(
+                        blank=True, max_length=50, null=True, verbose_name="BOL G PM"
+                    ),
+                ),
+                (
+                    "data_publicacao_lp",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data Publicação LP"
+                    ),
+                ),
+                (
+                    "tipo_periodo_afastamento",
+                    models.PositiveSmallIntegerField(
+                        blank=True,
+                        choices=[
+                            (15, "15 Dias"),
+                            (30, "30 Dias"),
+                            (45, "45 Dias"),
+                            (60, "60 Dias"),
+                            (75, "75 Dias"),
+                            (90, "90 Dias"),
+                        ],
+                        null=True,
+                        verbose_name="Tipo de Período de Afastamento",
+                    ),
+                ),
+                (
+                    "tipo_choice",
+                    models.CharField(
+                        blank=True,
+                        choices=[("fruicao", "Fruição"), ("pecunia", "Pecúnia")],
+                        max_length=10,
+                        null=True,
+                        verbose_name="Tipo de Escolha",
+                    ),
+                ),
+                (
+                    "data_cadastro",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data de Cadastro"
+                    ),
+                ),
+                (
+                    "data_atualizacao",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Última Atualização"
+                    ),
+                ),
+                (
+                    "dias_disponiveis",
+                    models.PositiveSmallIntegerField(
+                        default=90, verbose_name="Dias Disponíveis"
+                    ),
+                ),
+                (
+                    "dias_utilizados",
+                    models.PositiveSmallIntegerField(
+                        default=0, verbose_name="Dias Utilizados"
+                    ),
+                ),
+                (
+                    "data_inicio_afastamento",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Início do Afastamento",
+                    ),
+                ),
+                (
+                    "data_termino_afastamento",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Término do Afastamento",
+                    ),
+                ),
+                (
+                    "bol_int",
+                    models.CharField(
+                        blank=True, max_length=50, null=True, verbose_name="BOL Int"
+                    ),
+                ),
+                (
+                    "data_bol_int",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data do BOL Int"
+                    ),
+                ),
+                (
+                    "cadastro",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="efetivo.cadastro",
+                        verbose_name="Cadastro",
+                    ),
+                ),
+                (
+                    "lp_concluida",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="previsao_associada",
+                        to="lp.lp",
+                        verbose_name="LP Concluída Associada",
+                    ),
+                ),
+                (
+                    "user_created",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="previsoes_criadas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Criado por",
+                    ),
+                ),
+                (
+                    "user_updated",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="previsoes_modificadas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Modificado por",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Fruição de LP',
-                'verbose_name_plural': 'Fruições de LPs',
-                'ordering': ['cadastro', 'numero_lp'],
+                "verbose_name": "Fruição de LP",
+                "verbose_name_plural": "Fruições de LPs",
+                "ordering": ["cadastro", "numero_lp"],
             },
         ),
         migrations.CreateModel(
-            name='HistoricoFruicaoLP',
+            name="HistoricoFruicaoLP",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_alteracao', models.DateTimeField(auto_now_add=True)),
-                ('tipo_periodo_afastamento', models.PositiveSmallIntegerField(blank=True, choices=[(15, '15 Dias'), (30, '30 Dias'), (45, '45 Dias'), (60, '60 Dias'), (75, '75 Dias'), (90, '90 Dias')], null=True, verbose_name='Dias de Afastamento')),
-                ('dias_disponiveis', models.PositiveSmallIntegerField(verbose_name='Dias Disponíveis')),
-                ('dias_utilizados', models.PositiveSmallIntegerField(verbose_name='Dias Utilizados')),
-                ('tipo_choice', models.CharField(blank=True, choices=[('fruicao', 'Fruição'), ('pecunia', 'Pecúnia')], max_length=10, null=True, verbose_name='Tipo de Escolha')),
-                ('data_inicio_afastamento', models.DateField(blank=True, null=True, verbose_name='Data de Início do Afastamento')),
-                ('data_termino_afastamento', models.DateField(blank=True, null=True, verbose_name='Data de Término do Afastamento')),
-                ('bol_int', models.CharField(blank=True, max_length=50, null=True, verbose_name='BOL Int')),
-                ('data_bol_int', models.DateField(blank=True, null=True, verbose_name='Data do BOL Int')),
-                ('usuario', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('fruicao', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='historico', to='lp.lp_fruicao')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("data_alteracao", models.DateTimeField(auto_now_add=True)),
+                (
+                    "tipo_periodo_afastamento",
+                    models.PositiveSmallIntegerField(
+                        blank=True,
+                        choices=[
+                            (15, "15 Dias"),
+                            (30, "30 Dias"),
+                            (45, "45 Dias"),
+                            (60, "60 Dias"),
+                            (75, "75 Dias"),
+                            (90, "90 Dias"),
+                        ],
+                        null=True,
+                        verbose_name="Dias de Afastamento",
+                    ),
+                ),
+                (
+                    "dias_disponiveis",
+                    models.PositiveSmallIntegerField(verbose_name="Dias Disponíveis"),
+                ),
+                (
+                    "dias_utilizados",
+                    models.PositiveSmallIntegerField(verbose_name="Dias Utilizados"),
+                ),
+                (
+                    "tipo_choice",
+                    models.CharField(
+                        blank=True,
+                        choices=[("fruicao", "Fruição"), ("pecunia", "Pecúnia")],
+                        max_length=10,
+                        null=True,
+                        verbose_name="Tipo de Escolha",
+                    ),
+                ),
+                (
+                    "data_inicio_afastamento",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Início do Afastamento",
+                    ),
+                ),
+                (
+                    "data_termino_afastamento",
+                    models.DateField(
+                        blank=True,
+                        null=True,
+                        verbose_name="Data de Término do Afastamento",
+                    ),
+                ),
+                (
+                    "bol_int",
+                    models.CharField(
+                        blank=True, max_length=50, null=True, verbose_name="BOL Int"
+                    ),
+                ),
+                (
+                    "data_bol_int",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data do BOL Int"
+                    ),
+                ),
+                (
+                    "usuario",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "fruicao",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="historico",
+                        to="lp.lp_fruicao",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Histórico de Fruição',
-                'verbose_name_plural': 'Históricos de Fruições',
-                'ordering': ['-data_alteracao'],
+                "verbose_name": "Histórico de Fruição",
+                "verbose_name_plural": "Históricos de Fruições",
+                "ordering": ["-data_alteracao"],
             },
         ),
     ]
