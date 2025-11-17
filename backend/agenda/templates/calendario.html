@@ -35,6 +35,23 @@
     .fc-today {
         @apply bg-blue-50/50;
     }
+
+    /* Toast Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+#customToast {
+    animation: slideIn 0.3s ease-out;
+    min-width: 300px;
+}
 </style>
 
 <div class="md:items-center md:justify-between rounded-lg mt-2 w-full">
@@ -46,14 +63,38 @@
                         <h1 class="text-3xl font-bold text-white tracking-tight drop-shadow-md">Agenda Pessoal</h1>
                         <p class="text-blue-200 mt-1 tracking-wide">Consulte abaixo seus compromissos</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <button onclick="openModal('escolhaModal')" 
-                                class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br 
-                                       focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 
-                                       font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
-                            + Adicionar Evento
-                        </button>
-                    </div>
+<!-- NO SEU HTML - Adicione junto com os outros botões -->
+<div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+    <button onclick="openModal('escolhaModal')" 
+            class="text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-gradient-to-br 
+                   focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-lg shadow-blue-500/50 
+                   font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+        + Adicionar Evento
+    </button>
+    
+    <!-- BOTÃO DE ATUALIZAR - ADICIONE ESTE -->
+    <button onclick="recarregarPagina()" 
+            class="text-white bg-gradient-to-r from-green-500 to-green-600 hover:bg-gradient-to-br 
+                   focus:ring-4 focus:outline-none focus:ring-green-300 shadow-lg shadow-green-500/50 
+                   font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
+        <i class="fas fa-sync-alt mr-2"></i>
+        Atualizar
+    </button>
+</div>
+<script>
+    function recarregarPagina() {
+    // Mostra um feedback visual
+    const botao = event.target;
+    const textoOriginal = botao.innerHTML;
+    botao.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Atualizando...';
+    botao.disabled = true;
+    
+    // Recarrega a página após um pequeno delay para o usuário ver o feedback
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+</script>
                 </div>
             </div>
         </fieldset>
@@ -642,30 +683,72 @@
     </script>
 
     <script>
-        function submitForm(event, formId, modalId) {
-            event.preventDefault();
-            var form = document.getElementById(formId);
-            var formData = new FormData(form);
-        
-            fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                }
-            })
-            .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeModal(modalId);
-                window.location.reload(); // Recarrega a página inteira
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
+function submitForm(event, formId, modalId) {
+    event.preventDefault();
+    var form = document.getElementById(formId);
+    var formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal(modalId);
+            form.reset(); // Limpa o formulário
+            
+            // Recarrega os eventos do calendário
+            $('#calendar').fullCalendar('refetchEvents');
+            
+            // Mostra mensagem de sucesso (opcional)
+            showToast(data.message || 'Evento salvo com sucesso!', 'success');
+        } else {
+            // Mostra mensagem de erro
+            showToast(data.message || 'Erro ao salvar evento', 'error');
+            console.error('Erros:', data.errors);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Erro na comunicação com o servidor', 'error');
+    });
+}
+
+function showToast(message, type = 'info') {
+    // Remove toast anterior se existir
+    const existingToast = document.getElementById('customToast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.id = 'customToast';
+    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    }`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Remove automaticamente após 3 segundos
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+
+function recarregarCalendario() {
+    $('#calendar').fullCalendar('refetchEvents');
+}
+
 
 
         let eventoAtual = null; // Variável para armazenar o evento atual

@@ -38,7 +38,11 @@ def lembrete_novo(request):
             lembrete.user = request.user
             lembrete.save()
             return JsonResponse(
-                {"success": True, "message": "Lembrete criado com sucesso!"}
+                {
+                    "success": True, 
+                    "message": "Lembrete criado com sucesso!",
+                    "id": lembrete.id  # Adicione o ID se necessário
+                }
             )
         else:
             errors = {field: error[0] for field, error in form.errors.items()}
@@ -46,11 +50,14 @@ def lembrete_novo(request):
                 {
                     "success": False,
                     "message": "Erro ao criar lembrete.",
-                    "errors": errors,
-                }
+                    "errors": errors
+                },
+                status=400  # Adicione status code para erro
             )
-    return JsonResponse({"success": False, "message": "Método inválido."})
-
+    return JsonResponse(
+        {"success": False, "message": "Método inválido."}, 
+        status=405
+    )
 
 @login_required
 def tarefa_nova(request):
@@ -61,15 +68,26 @@ def tarefa_nova(request):
             tarefa.user = request.user
             tarefa.save()
             return JsonResponse(
-                {"success": True, "message": "Tarefa criada com sucesso!"}
+                {
+                    "success": True, 
+                    "message": "Tarefa criada com sucesso!",
+                    "id": tarefa.id  # Adicione o ID se necessário
+                }
             )
         else:
             errors = {field: error[0] for field, error in form.errors.items()}
             return JsonResponse(
-                {"success": False, "message": "Erro ao criar tarefa.", "errors": errors}
+                {
+                    "success": False,
+                    "message": "Erro ao criar tarefa.",
+                    "errors": errors
+                },
+                status=400
             )
-    return JsonResponse({"success": False, "message": "Método inválido."})
-
+    return JsonResponse(
+        {"success": False, "message": "Método inválido."}, 
+        status=405
+    )
 
 @login_required
 def lembrete_editar(request, pk):
