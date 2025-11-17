@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocorreu um Erro</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111827; /* gray-900 */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="text-center text-white">
+        <h1 class="text-6xl font-bold text-red-500">{{ error_code|default:"Erro" }}</h1>
+        <h2 class="mt-4 text-3xl font-semibold">{{ error_title|default:"Algo deu errado" }}</h2>
+        <p class="mt-2 text-lg text-gray-400">{{ error_message|default:"Não foi possível processar sua solicitação no momento." }}</p>
+        <div class="mt-8">
+            <a href="{% url 'core:capa' %}" class="px-6 py-3 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                Voltar para a Página Inicial
+            </a>
+        </div>
+    </div>
+</body>
+</html>

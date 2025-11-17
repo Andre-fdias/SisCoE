@@ -43,8 +43,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Handler para erro 404
+# Handlers para páginas de erro personalizadas
+handler400 = "backend.control_panel.views.handler400"
+handler403 = "backend.control_panel.views.handler403"
 handler404 = "backend.control_panel.views.handler404"
-
-# Handler para erro 500
 handler500 = "backend.control_panel.views.handler500"

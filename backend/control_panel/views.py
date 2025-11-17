@@ -817,9 +817,35 @@ def api_backup_database(request):
 
 
 # Handlers de erro
-def handler404(request, exception):
-    return render(request, "control_panel/404.html", status=404)
+def handler400(request, exception=None):
+    context = {
+        "error_code": "400",
+        "error_title": "Requisição Inválida",
+        "error_message": "O servidor não pôde processar a requisição devido a uma sintaxe inválida. Por favor, verifique e tente novamente.",
+    }
+    return render(request, "control_panel/error_page.html", context, status=400)
+
+def handler403(request, exception=None):
+    context = {
+        "error_code": "403",
+        "error_title": "Acesso Proibido",
+        "error_message": "Você não tem permissão para acessar esta página ou recurso.",
+    }
+    return render(request, "control_panel/error_page.html", context, status=403)
+
+def handler404(request, exception=None):
+    context = {
+        "error_code": "404",
+        "error_title": "Página Não Encontrada",
+        "error_message": "A página que você está procurando não existe, foi removida ou está temporariamente indisponível.",
+    }
+    return render(request, "control_panel/error_page.html", context, status=404)
 
 
 def handler500(request):
-    return render(request, "control_panel/500.html", status=500)
+    context = {
+        "error_code": "500",
+        "error_title": "Erro Interno do Servidor",
+        "error_message": "Ocorreu um erro inesperado em nosso servidor. Nossa equipe já foi notificada. Por favor, tente novamente mais tarde.",
+    }
+    return render(request, "control_panel/error_page.html", context, status=500)
