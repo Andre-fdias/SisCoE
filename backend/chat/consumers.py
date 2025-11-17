@@ -418,15 +418,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def delete_message(self, message_id):
-        """Exclui uma mensagem (soft delete)."""
+        """Exclui uma mensagem (soft delete) definindo o campo deleted_at."""
         try:
-            message = Message.objects.get(
-                id=message_id, sender=self.user  # Só o remetente pode excluir
-            )
-            message.text = "Esta mensagem foi excluída"
-            message.attachments.all().delete()
-            message.save()
-            return True
+            # Apenas o remetente ou um admin (lógica de permissão a ser adicionada se necessário) pode excluir
+            message = Message.objects.get(id=message_id, sender=self.user)
+            if not message.deleted_at:
+                message.deleted_at = timezone.now()
+                message.save()
+                return True
+            return False  # Mensagem já estava excluída
         except Message.DoesNotExist:
             return False
 

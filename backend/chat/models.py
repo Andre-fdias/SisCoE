@@ -82,6 +82,9 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     edited_at = models.DateTimeField(null=True, blank=True)
     edited = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(
+        null=True, blank=True, db_index=True, help_text="Marca a mensagem como excluída"
+    )
     parent_message = models.ForeignKey(
         "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies"
     )
@@ -91,21 +94,32 @@ class Message(models.Model):
 
     def save(self, *args, **kwargs):
         """Sobrescreve o método save para criptografar a mensagem."""
-        if self.text:
-            self.text = encrypt_message(self.text)
+        # Criptografa apenas se o campo 'text' estiver sendo modificado e não estiver vazio
+        if self.pk is None or self._state.adding:
+            if self.text:
+                self.text = encrypt_message(self.text)
+        else:
+            # Evita re-criptografar em cada save
+            old_instance = Message.objects.get(pk=self.pk)
+            if old_instance.text != self.text and self.text:
+                self.text = encrypt_message(self.text)
+
         super().save(*args, **kwargs)
 
     @property
     def decrypted_text(self):
         """Retorna o texto da mensagem descriptografado de forma segura."""
+        if self.deleted_at:
+            return "Esta mensagem foi excluída."
         if not self.text:
-            return self.text
+            return ""
         return decrypt_message(self.text)
 
     class Meta:
         ordering = ("created_at",)
         indexes = [
             models.Index(fields=["conversation", "created_at"]),
+            models.Index(fields=["deleted_at"]),
         ]
 
     def __str__(self):

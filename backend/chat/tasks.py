@@ -3,26 +3,30 @@ from django.utils import timezone
 from datetime import timedelta
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Message
+from .models import Message, Attachment
+from django.db.models import Q
 
 
 @shared_task
 def delete_old_messages():
     """
-    Exclui mensagens de chat com mais de 2 dias de idade.
+    Marca mensagens de chat com mais de 2 dias como excluídas (soft delete).
     Esta tarefa é projetada para ser executada diariamente.
     Retorna relatório detalhado da execução.
     """
     cutoff_date = timezone.now() - timedelta(days=2)
-    old_messages = Message.objects.filter(created_at__lt=cutoff_date)
+    # Seleciona apenas mensagens não excluídas que são mais antigas que a data de corte
+    old_messages = Message.objects.filter(
+        created_at__lt=cutoff_date, deleted_at__isnull=True
+    )
     count = old_messages.count()
 
     execution_time = timezone.now()
     report_lines = [
-        "=== RELATÓRIO DE LIMPEZA AUTOMÁTICA ===",
+        "=== RELATÓRIO DE LIMPEZA AUTOMÁTICA (SOFT DELETE) ===",
         f"Data/Hora: {execution_time}",
         f"Data de corte: {cutoff_date}",
-        f"Total de mensagens antigas: {count}",
+        f"Total de mensagens antigas para marcar como excluídas: {count}",
     ]
 
     if count > 0:
@@ -40,9 +44,11 @@ def delete_old_messages():
             )
             report_lines.append(f"  - {conv_name}: {conv['message_count']} mensagens")
 
-        # Executa a exclusão
-        old_messages.delete()
-        report_lines.append(f"\n✅ {count} mensagens excluídas com sucesso!")
+        # Executa o soft delete em massa
+        old_messages.update(deleted_at=timezone.now())
+        report_lines.append(
+            f"\n✅ {count} mensagens marcadas como excluídas com sucesso!"
+        )
 
         # Log detalhado
         print("\n".join(report_lines))
@@ -60,9 +66,9 @@ def delete_old_messages():
             except Exception as e:
                 print(f"Erro ao enviar email de relatório: {e}")
 
-        return f"Excluídas {count} mensagens antigas"
+        return f"Marcadas {count} mensagens antigas como excluídas."
     else:
-        report_lines.append("\n✅ Nenhuma mensagem antiga para excluir")
+        report_lines.append("\n✅ Nenhuma mensagem antiga para marcar como excluída.")
         print("\n".join(report_lines))
         return "Nenhuma mensagem antiga para excluir"
 
@@ -70,22 +76,26 @@ def delete_old_messages():
 @shared_task
 def cleanup_old_attachments():
     """
-    Limpa anexos órfãos (sem mensagem associada).
+    Limpa anexos órfãos ou de mensagens excluídas há mais de 30 dias.
     Execução semanal recomendada.
     """
-    from .models import Attachment
-    from django.utils import timezone
-    from datetime import timedelta
+    thirty_days_ago = timezone.now() - timedelta(days=30)
 
-    # Encontra anexos sem mensagem associada ou muito antigos
-    orphan_attachments = Attachment.objects.filter(
-        message__isnull=True
-    ) | Attachment.objects.filter(uploaded_at__lt=timezone.now() - timedelta(days=7))
+    # Condição 1: Anexos de mensagens que foram soft-deleted há mais de 30 dias.
+    # Condição 2: Anexos que não têm nenhuma mensagem associada (órfãos).
+    attachments_to_delete = Attachment.objects.filter(
+        Q(message__deleted_at__lt=thirty_days_ago) | Q(message__isnull=True)
+    )
 
-    count = orphan_attachments.count()
+    count = attachments_to_delete.count()
 
     if count > 0:
-        orphan_attachments.delete()
-        return f"Excluídos {count} anexos órfãos/antigos"
+        # Para evitar problemas de performance em deleções massivas e callbacks,
+        # é mais seguro iterar em blocos.
+        for attachment in attachments_to_delete.iterator():
+            attachment.file.delete(save=False)  # Apaga o arquivo do storage
+            attachment.delete()  # Apaga o registro do banco
 
-    return "Nenhum anexo órfão/antigo para excluir"
+        return f"Excluídos {count} anexos órfãos ou de mensagens antigas."
+
+    return "Nenhum anexo para limpar."

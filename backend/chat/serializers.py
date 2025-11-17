@@ -10,6 +10,7 @@ from .models import (
     Reaction,
     Presence,
 )
+from .encryption import decrypt_message
 from backend.efetivo.models import Cadastro, Promocao, DetalhesSituacao, Imagem
 from backend.accounts.utils import get_user_display_name
 
@@ -255,40 +256,61 @@ class ConversationSerializer(serializers.ModelSerializer):
         return data
 
     def get_last_message(self, obj):
-        """Busca a última mensagem de forma segura."""
-        try:
-            last_message = (
-                obj.messages.select_related("sender").order_by("-created_at").first()
-            )
-            if last_message:
-                return {
-                    "id": last_message.id,
-                    "text": last_message.decrypted_text,
-                    "created_at": last_message.created_at,
-                    "sender": {
-                        "id": last_message.sender.id,
-                        "name": get_user_display_name(last_message.sender),
-                    },
-                }
-        except Exception:
-            pass
+        """
+        Usa os campos anotados pela queryset para construir o objeto da última mensagem
+        sem fazer novas consultas ao banco de dados.
+        """
+        # Verifica se os campos anotados existem no objeto
+        if hasattr(obj, "annotated_last_message_id") and obj.annotated_last_message_id:
+            # Otimização: Busca o nome do sender no `prefetch_related` se possível
+            sender_name = "Desconhecido"
+            if hasattr(obj, "participants"):
+                for p in obj.participants.all():  # CORREÇÃO: Usar .all() para iterar
+                    if p.user.id == obj.annotated_last_message_sender_id:
+                        sender_name = get_user_display_name(p.user)
+                        break
+
+            return {
+                "id": obj.annotated_last_message_id,
+                "text": decrypt_message(obj.annotated_last_message_text),
+                "created_at": obj.annotated_last_message_created_at,
+                "sender": {
+                    "id": obj.annotated_last_message_sender_id,
+                    "name": sender_name,
+                },
+            }
+
+        # Fallback: se não houver anotação, faz a consulta (para single-instance)
+        last_message = obj.messages.order_by("-created_at").first()
+        if last_message:
+            return {
+                "id": last_message.id,
+                "text": last_message.decrypted_text,
+                "created_at": last_message.created_at,
+                "sender": {
+                    "id": last_message.sender.id,
+                    "name": get_user_display_name(last_message.sender),
+                },
+            }
         return None
 
     def get_unread_count(self, obj):
+        """
+        Retorna a contagem de mensagens não lidas a partir do campo anotado.
+        """
+        # Usa o valor anotado se estiver disponível
+        if hasattr(obj, "annotated_unread_count"):
+            return obj.annotated_unread_count
+
+        # Fallback para quando o serializer é usado sem a anotação
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             try:
-                participant = Participant.objects.get(
-                    conversation=obj, user=request.user
-                )
+                participant = obj.participants.get(user=request.user)
                 if participant.last_read_message:
-                    return (
-                        obj.messages.filter(
-                            created_at__gt=participant.last_read_message.created_at
-                        )
-                        .exclude(sender=request.user)
-                        .count()
-                    )
+                    return obj.messages.filter(
+                        created_at__gt=participant.last_read_message.created_at
+                    ).exclude(sender=request.user).count()
                 return obj.messages.exclude(sender=request.user).count()
             except Participant.DoesNotExist:
                 return 0

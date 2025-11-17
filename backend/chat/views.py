@@ -4,7 +4,17 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from django.db.models import Count, Prefetch, Q, Max
+from django.db.models import (
+    Count,
+    Prefetch,
+    Q,
+    Max,
+    Subquery,
+    OuterRef,
+    Value,
+    DateTimeField,
+)
+from django.db.models.functions import Coalesce
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
@@ -170,16 +180,56 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna apenas as conversas do usuário logado, com prefetch otimizado."""
+        """
+        Retorna apenas as conversas do usuário logado, com prefetch e anotações
+        otimizadas para evitar problemas N+1.
+        """
         user = self.request.user
+
+        # Subquery para obter o timestamp da última mensagem lida pelo participante
+        participant_last_read_ts = Participant.objects.filter(
+            conversation=OuterRef("pk"), user=user
+        ).values("last_read_message__created_at")[:1]
+
+        # Subquery para buscar a última mensagem de uma conversa
+        last_message_qs = Message.objects.filter(
+            conversation=OuterRef("pk")
+        ).order_by("-created_at")
 
         queryset = (
             Conversation.objects.filter(participants__user=user)
+            .annotate(
+                # Anota a contagem de mensagens não lidas
+                annotated_unread_count=Coalesce(
+                    Count(
+                        "messages",
+                        filter=Q(
+                            messages__created_at__gt=Coalesce(
+                                Subquery(participant_last_read_ts),
+                                timezone.datetime.min.replace(tzinfo=timezone.utc),
+                            )
+                        )
+                        & ~Q(messages__sender=user),
+                    ),
+                    0,
+                ),
+                # Anota os detalhes da última mensagem para evitar joins caros
+                annotated_last_message_id=Subquery(last_message_qs.values("id")[:1]),
+                annotated_last_message_text=Subquery(
+                    last_message_qs.values("text")[:1]
+                ),
+                annotated_last_message_created_at=Subquery(
+                    last_message_qs.values("created_at")[:1]
+                ),
+                annotated_last_message_sender_id=Subquery(
+                    last_message_qs.values("sender_id")[:1]
+                ),
+            )
             .prefetch_related(
+                # Prefetch necessário para os participantes e seus dados de usuário
                 Prefetch(
                     "participants",
                     queryset=Participant.objects.select_related("user"),
-                    to_attr="prefetched_participants",
                 )
             )
             .distinct()
@@ -304,7 +354,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Retorna mensagens de uma conversa específica com prefetch otimizado."""
+        """
+        Retorna mensagens de uma conversa específica, excluindo as que foram
+        marcadas como excluídas (soft delete).
+        """
         conversation_id = self.kwargs.get("conversation_pk")
 
         if not conversation_id:
@@ -317,7 +370,9 @@ class MessageViewSet(viewsets.ModelViewSet):
             return Message.objects.none()
 
         return (
-            Message.objects.filter(conversation_id=conversation_id)
+            Message.objects.filter(
+                conversation_id=conversation_id, deleted_at__isnull=True
+            )
             .select_related("sender", "conversation", "parent_message")
             .prefetch_related(
                 "attachments",
@@ -408,7 +463,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
         try:
             participant = Participant.objects.get(
-                conversation_id=conversation_pk, user=request.user
+                conversation_id=conversation_pk, user=self.request.user
             )
 
             status_obj, created = MessageStatus.objects.get_or_create(
@@ -436,7 +491,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["delete"], url_path="delete-message")
     def delete_message(self, request, conversation_pk=None, pk=None):
-        """Exclui mensagem individual"""
+        """Exclui uma mensagem (soft delete)."""
         message = self.get_object()
 
         # Verifica permissão: apenas remetente ou admin
@@ -446,8 +501,9 @@ class MessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        message_id = str(message.id)
-        message.delete()
+        # Realiza o soft delete
+        message.deleted_at = timezone.now()
+        message.save()
 
         # Notifica via WebSocket sobre a exclusão
         try:
@@ -457,10 +513,11 @@ class MessageViewSet(viewsets.ModelViewSet):
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f"chat_{conversation_pk}",
-                {"type": "message.delete", "message_id": message_id},
+                {"type": "message.delete", "message_id": str(message.id)},
             )
         except Exception as e:
-            print(f"Erro ao notificar WebSocket: {e}")
+            # Idealmente, logar este erro
+            print(f"Erro ao notificar WebSocket sobre exclusão: {e}")
 
         return Response({"status": "mensagem excluída"})
 

@@ -1,14 +1,21 @@
 import base64
-from django.conf import settings
+import logging
+from functools import lru_cache
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=None)
 def get_key():
     """
-    Deriva uma chave de criptografia da CHAT_ENCRYPTION_KEY.
-    Isso garante que a chave tenha o comprimento correto para o Fernet.
+    Deriva uma chave de criptografia da CHAT_ENCRYPTION_KEY e a armazena em cache.
+    Isso garante que a chave tenha o comprimento correto para o Fernet e que o
+    caro processo de derivação de chave seja executado apenas uma vez.
     """
     password = settings.CHAT_ENCRYPTION_KEY.encode()
     # O salt pode ser fixo se você quiser que a mesma chave seja gerada sempre.
@@ -19,7 +26,7 @@ def get_key():
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
-        iterations=100000,
+        iterations=100000,  # ATENÇÃO: Este valor deve ser aumentado no futuro.
     )
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
@@ -34,9 +41,11 @@ def encrypt_message(text):
         f = Fernet(get_key())
         encrypted_text = f.encrypt(text.encode())
         return encrypted_text.decode()
-    except Exception:
-        # Se a criptografia falhar, retorne o texto original
-        return text
+    except Exception as e:
+        # Se a criptografia falhar, registre o erro e levante uma exceção.
+        # Não retorne o texto original, pois isso é uma falha de segurança.
+        logger.error(f"Falha ao criptografar mensagem: {e}")
+        raise
 
 
 def decrypt_message(encrypted_text):
