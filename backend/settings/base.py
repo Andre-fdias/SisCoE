@@ -346,7 +346,8 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024  # 2MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Configurações de sessão
-SESSION_COOKIE_AGE = 1209600  # 2 semanas em segundos
+SESSION_COOKIE_AGE = 600  # 10 minutos em segundos
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
 # Configurações de timezone para Brasil
