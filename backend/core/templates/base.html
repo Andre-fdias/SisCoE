@@ -1,16 +1,17 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="pt-br">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Get started with a free and open source Tailwind CSS admin dashboard featuring a sidebar layout, advanced charts, and hundreds of components based on Flowbite">
-    <meta name="author" content="Themesberg">
-    <meta name="generator" content="Hugo 0.107.0">
+    <meta name="description" content="Sistema de Controle de Efetivo - SisCoE">
+    <meta name="author" content="SisCoE">
+    <meta name="generator" content="SisCoE">
 
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}SisCoE{% endblock %}</title>
    
-    <link rel="canonical" href="https://themesberg.com/product/tailwind-css/dashboard-windster">
+    <link rel="canonical" href="https://seusite.com">
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
@@ -19,8 +20,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="icon" href="{% static 'img\favicon.ico' %}">
-    <link rel="mask-icon" href="https://demo.themesberg.com/windster/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="stylesheet" href="{% static 'css/spinner.css' %}"> <!-- Opcional -->
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
     <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
@@ -33,17 +34,14 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@">
     <meta name="twitter:creator" content="@">
-    <meta name="twitter:title" content="Tailwind CSS Dashboard - Windster">
-    <meta name="twitter:description" content="Get started with a free and open source Tailwind CSS admin dashboard featuring a sidebar layout, advanced charts, and hundreds of components based on Flowbite">
-    <meta name="twitter:image" content="https://demo.themesberg.com/windster/">
+    <meta name="twitter:title" content="SisCoE - Sistema de Controle de Efetivo">
+    <meta name="twitter:description" content="Sistema integrado de gerenciamento de efetivo militar">
 
     <!-- Facebook -->
-    <meta property="og:url" content="https://demo.themesberg.com/windster/">
-    <meta property="og:title" content="Tailwind CSS Dashboard - Windster">
-    <meta property="og:description" content="Get started with a free and open source Tailwind CSS admin dashboard featuring a sidebar layout, advanced charts, and hundreds of components based on Flowbite">
+    <meta property="og:url" content="https://seusite.com">
+    <meta property="og:title" content="SisCoE">
+    <meta property="og:description" content="Sistema integrado de gerenciamento de efetivo militar">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://demo.themesberg.com/docs/images/og-image.jpg">
-    <meta property="og:image:type" content="image/png">
 
     <!-- Alpine.js -->
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -60,14 +58,8 @@
       <div id="main-content" class="h-full w-full bg-gray-500 relative overflow-y-auto lg:ml-64">
         {% block 'body' %}{% endblock  %}
         
-        <div id="spinner-container" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-75 hidden">
-          <div class="flex space-x-2">
-            <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce delay-100"></div>
-            <div class="w-4 h-4 bg-green-500 rounded-full animate-bounce delay-300"></div>
-            <div class="w-4 h-4 bg-yellow-500 rounded-full animate-bounce delay-500"></div>
-          </div>
-        </div>
-
+        <!-- SPINNER REMOVIDO DAQUI - AGORA É INJETADO AUTOMATICAMENTE -->
+        
       </div>
     </div>
 
@@ -76,27 +68,27 @@
     <script src="../path/to/fullcalendar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
-    <script>
-        // Controle do spinner
-        function showSpinner() {
-          document.getElementById('spinner-container').classList.remove('hidden');
-        }
-      
-        function hideSpinner() {
-          document.getElementById('spinner-container').classList.add('hidden');
-        }
-      
-        // Exemplo de uso durante o carregamento
-        document.addEventListener('DOMContentLoaded', function() {
-          hideSpinner(); // Esconde quando tudo carregar
-        });
-        
-        // Mostrar spinner antes do carregamento da página
-        window.addEventListener('beforeunload', function() {
-          showSpinner();
-        });
-    </script>
 
     {% block js %}{% endblock js %}
+    
+
+<!-- TESTE SPINNER -->
+<script>
+console.log('=== SPINNER DEBUG ===');
+console.log('GlobalSpinner definido:', typeof GlobalSpinner !== 'undefined');
+console.log('Spinner element:', document.getElementById('global-spinner-container'));
+console.log('=====================');
+
+// Teste manual
+if (typeof GlobalSpinner !== 'undefined') {
+    setTimeout(() => {
+        GlobalSpinner.show();
+        setTimeout(() => GlobalSpinner.hide(), 2000);
+    }, 1000);
+}
+</script>
+
+
+    <!-- O spinner será injetado automaticamente aqui pelo middleware -->
   </body>
 </html>

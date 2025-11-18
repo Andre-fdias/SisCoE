@@ -78,3 +78,151 @@ class JSONMessagesMiddleware:
                 # return JsonResponse({"messages": django_messages})
 
         return response
+
+
+from django.utils.deprecation import MiddlewareMixin
+import re
+
+class SpinnerMiddleware(MiddlewareMixin):
+    """
+    Middleware inteligente que so injeta spinner em paginas HTML completas
+    """
+    
+    def process_response(self, request, response):
+        # Verifica se e uma resposta HTML completa (nao partials/JSON)
+        content_type = response.get('Content-Type', '')
+        is_html = 'text/html' in content_type 
+        is_success = response.status_code == 200
+        
+        # NAO injeta em:
+        # - Requisicoes HTMX
+        # - Respostas JSON
+        # - Partial responses
+        # - API calls
+        # - Requests com headers especificos
+        is_htmx = request.headers.get('HX-Request') == 'true'
+        is_api = any([
+            '/api/' in request.path,
+            request.path.startswith('/ajax/'),
+            'application/json' in content_type,
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        ])
+        
+        should_inject = (is_html and is_success and 
+                        not is_htmx and not is_api and
+                        hasattr(response, 'content') and response.content)
+        
+        if should_inject:
+            try:
+                content = response.content.decode('utf-8')
+                
+                # Verifica se e uma pagina completa com estrutura HTML
+                is_full_page = all([
+                    '<!DOCTYPE html>' in content or '<html' in content,
+                    '<head>' in content,
+                    '<body>' in content
+                ])
+                
+                # So injeta em paginas completas que nao tenham spinner
+                has_spinner = 'global-spinner-container' in content
+                
+                if is_full_page and not has_spinner:
+                    
+                    spinner_html = """
+<!-- SPINNER INJETADO POR MIDDLEWARE -->
+<div id="global-spinner-container" class="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900 bg-opacity-80 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+        <div class="flex space-x-2 mb-4">
+            <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce"></div>
+            <div class="w-4 h-4 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            <div class="w-4 h-4 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+        </div>
+        <p class="text-gray-700 font-medium">SisCoE - Carregando...</p>
+    </div>
+</div>
+
+<script>
+// SPINNER AUTOMATICO - MIDDLEWARE
+(function() {
+    'use strict';
+    
+    // So executa se nao houver conflito
+    if (typeof window.GlobalSpinner !== 'undefined') return;
+    
+    const spinner = document.getElementById('global-spinner-container');
+    
+    window.GlobalSpinner = {
+        show: function() { 
+            if(spinner) {
+                spinner.classList.remove('hidden');
+                // Forcar reflow para animacao
+                setTimeout(() => spinner.style.opacity = '1', 10);
+            }
+        },
+        hide: function() { 
+            if(spinner) {
+                spinner.style.opacity = '0';
+                setTimeout(() => spinner.classList.add('hidden'), 300);
+            }
+        }
+    };
+    
+    // Eventos basicos - prevenindo duplicacao
+    let eventsRegistered = false;
+    
+    function setupEvents() {
+        if (eventsRegistered) return;
+        
+        // Esconder quando DOM estiver pronta
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => GlobalSpinner.hide(), 100);
+            });
+        } else {
+            setTimeout(() => GlobalSpinner.hide(), 100);
+        }
+        
+        // Navegacao por links
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a');
+            if (target && 
+                target.href && 
+                !target.href.startsWith('javascript:') && 
+                !target.hasAttribute('data-no-spinner') &&
+                target.target !== '_blank' &&
+                target.hostname === window.location.hostname) {
+                setTimeout(() => GlobalSpinner.show(), 150);
+            }
+        });
+        
+        // Formularios
+        document.addEventListener('submit', function(e) {
+            if (!e.target.hasAttribute('data-no-spinner')) {
+                GlobalSpinner.show();
+            }
+        });
+        
+        // Before unload
+        window.addEventListener('beforeunload', function() {
+            GlobalSpinner.show();
+        });
+        
+        eventsRegistered = true;
+    }
+    
+    // Iniciar eventos
+    setupEvents();
+    
+})();
+</script>
+"""
+                    
+                    if '</body>' in content:
+                        content = content.replace('</body>', spinner_html + '</body>')
+                        response.content = content.encode('utf-8')
+                        
+            except (UnicodeDecodeError, AttributeError):
+                # Ignora silenciosamente
+                pass
+                
+        return response

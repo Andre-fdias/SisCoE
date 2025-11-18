@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Links de Acesso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6">Links de Acesso às Ferramentas de Monitoramento</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <a href="http://localhost:3000" target="_blank" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h2 class="text-xl font-semibold text-blue-600 mb-2">Grafana</h2>
+            <p class="text-gray-700">Visualize suas métricas e dashboards.</p>
+        </a>
+        <a href="http://localhost:9090" target="_blank" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h2 class="text-xl font-semibold text-blue-600 mb-2">Prometheus</h2>
+            <p class="text-gray-700">Sistema de monitoramento e alerta.</p>
+        </a>
+        <a href="http://localhost:9000" target="_blank" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h2 class="text-xl font-semibold text-blue-600 mb-2">Portainer</h2>
+            <p class="text-gray-700">Gerenciamento de contêineres Docker.</p>
+        </a>
+        <a href="http://localhost:5555" target="_blank" class="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h2 class="text-xl font-semibold text-blue-600 mb-2">Flower</h2>
+            <p class="text-gray-700">Monitoramento de tarefas Celery.</p>
+        </a>
+        <!-- Adicione mais links conforme necessário -->
+    </div>
+</div>
+{% endblock %}

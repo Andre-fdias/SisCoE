@@ -1,4 +1,4 @@
-# Dockerfile - VERSÃO CORRIGIDA
+# Dockerfile - VERSÃO DAPHNE
 FROM python:3.11-slim
 
 # Evita que o Python escreve arquivos .pyc
@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     locales \
+    g++ \
+    default-libmysqlclient-dev \
+    pkg-config \
     && echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen \
     && locale-gen pt_BR.UTF-8 \
     && /usr/sbin/update-locale LANG=pt_BR.UTF-8 \
@@ -35,7 +38,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o projeto
 COPY . .
 
-# Cria grupo docker com o GID passado e usuário não-root para segurança - CORRIGIDO
+# Cria grupo docker com o GID passado e usuário não-root para segurança
 RUN if [ -n "$DOCKER_GID" ]; then \
         groupadd -g $DOCKER_GID docker && \
         useradd -m -u 1000 -g docker appuser && \
@@ -47,9 +50,9 @@ RUN if [ -n "$DOCKER_GID" ]; then \
 
 USER appuser
 
-# Health check
+# Health check para Daphne
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health/ || exit 1
 
-# Comando para rodar a aplicação
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Comando para rodar com Daphne (WebSocket + HTTP)
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "backend.asgi:application"]

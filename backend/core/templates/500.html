@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}500 Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 text-center">
+    <h1 class="text-6xl font-bold text-red-600 mb-4">500</h1>
+    <h2 class="text-3xl font-semibold text-gray-800 mb-4">Erro Interno do Servidor</h2>
+    <p class="text-lg text-gray-600 mb-8">Ocorreu um erro inesperado no servidor. Por favor, tente novamente mais tarde.</p>
+    <a href="{% url 'core:index' %}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300">Voltar para a Página Inicial</a>
+</div>
+{% endblock %}

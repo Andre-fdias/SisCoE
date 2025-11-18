@@ -1501,3 +1501,24 @@ def global_search_view(request):
         "results": results,
     }
     return render(request, "global_search/results.html", context)
+
+
+@login_required
+def dashboard_links_view(request):
+    """
+    View para exibir os links de acesso às ferramentas de monitoramento.
+    """
+    return render(request, "core/dashboard_links.html")
+
+
+def handler400(request, exception):
+    return render(request, "400.html", status=400)
+
+def handler403(request, exception):
+    return render(request, "403.html", status=403)
+
+def handler404(request, exception):
+    return render(request, "404.html", status=404)
+
+def handler500(request):
+    return render(request, "500.html", status=500)

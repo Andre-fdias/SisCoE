@@ -44,7 +44,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Handlers para páginas de erro personalizadas
-handler400 = "backend.control_panel.views.handler400"
-handler403 = "backend.control_panel.views.handler403"
-handler404 = "backend.control_panel.views.handler404"
-handler500 = "backend.control_panel.views.handler500"
+handler400 = "backend.core.views.handler400"
+handler403 = "backend.core.views.handler403"
+handler404 = "backend.core.views.handler404"
+handler500 = "backend.core.views.handler500"

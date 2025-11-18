@@ -1042,11 +1042,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- WEBSOCKET ---
-// CORREÇÃO: Função connectWebSocket melhorada
+
 function connectWebSocket(conversationId) {
-    // Fecha conexão anterior se existir
+    console.log('🔄 Iniciando conexão WebSocket...');
+    
+    // Validação básica
+    if (!conversationId) {
+        console.error('❌ conversationId é obrigatório');
+        return;
+    }
+
+    // Fecha conexão anterior de forma segura
     if (state.socket) {
-        state.socket.close();
+        try {
+            state.socket.onopen = null;
+            state.socket.onclose = null;
+            state.socket.onerror = null;
+            state.socket.onmessage = null;
+            
+            if (state.socket.readyState === WebSocket.OPEN) {
+                state.socket.close(1000, 'Nova conexão sendo estabelecida');
+            }
+        } catch (error) {
+            console.warn('⚠️ Erro ao fechar conexão anterior:', error);
+        }
         state.socket = null;
     }
 
@@ -1057,71 +1076,199 @@ function connectWebSocket(conversationId) {
     }
 
     try {
-        // Determina o protocolo WebSocket baseado no protocolo HTTP
+        // DEBUG: Log de informações de conexão
+        console.log('🔧 DEBUG WebSocket:');
+        console.log('- conversationId:', conversationId);
+        console.log('- hostname:', window.location.hostname);
+        console.log('- port:', window.location.port);
+        console.log('- protocol:', window.location.protocol);
+        
+        // Determina o protocolo WebSocket
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         
-        // Constrói a URL do WebSocket
+        // CORREÇÃO: Usa sempre a porta 8000 para desenvolvimento
+        // Se estiver em produção, ajuste conforme necessário
         let wsUrl;
-        if (window.location.port) {
-            wsUrl = `${protocol}//${window.location.hostname}:${window.location.port}/ws/chat/${conversationId}/`;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Para desenvolvimento local, força porta 8000
+            wsUrl = `${protocol}//${window.location.hostname}:8000/ws/chat/${conversationId}/`;
         } else {
-            wsUrl = `${protocol}//${window.location.hostname}/ws/chat/${conversationId}/`;
+            // Para produção, usa o host atual
+            wsUrl = `${protocol}//${window.location.host}/ws/chat/${conversationId}/`;
         }
 
         console.log(`🔗 Conectando WebSocket: ${wsUrl}`);
         
+        // Cria a conexão WebSocket
         state.socket = new WebSocket(wsUrl);
+
+        // --- EVENT HANDLERS ---
 
         state.socket.onopen = () => {
             console.log('✅ WebSocket conectado com sucesso');
+            console.log('- ReadyState:', state.socket.readyState);
+            console.log('- URL:', state.socket.url);
+            
             state.reconnect.attempts = 0;
             
-            // Notifica que está online
+            // Notifica presença online
             if (state.socket.readyState === WebSocket.OPEN) {
-                state.socket.send(JSON.stringify({ 
-                    type: 'presence.update', 
-                    status: 'online' 
-                }));
+                try {
+                    state.socket.send(JSON.stringify({ 
+                        type: 'presence.update', 
+                        status: 'online',
+                        user_id: state.currentUser.id
+                    }));
+                    console.log('📤 Notificação de presência enviada');
+                } catch (sendError) {
+                    console.error('❌ Erro ao enviar presença:', sendError);
+                }
             }
+            
+            showToast('✅ Conectado ao chat', 'success');
         };
 
         state.socket.onclose = (event) => {
             console.log('🔌 WebSocket desconectado:', {
                 code: event.code,
                 reason: event.reason,
-                wasClean: event.wasClean
+                wasClean: event.wasClean,
+                conversationId: conversationId,
+                activeConversationId: state.activeConversationId
             });
-            
-            // Não tenta reconectar se foi um fechamento limpo
-            if (event.code === 1000) {
+
+            // Limpa handlers para evitar memory leaks
+            state.socket.onopen = null;
+            state.socket.onclose = null;
+            state.socket.onerror = null;
+            state.socket.onmessage = null;
+
+            // Não tenta reconectar para códigos de fechamento normais
+            const normalCloseCodes = [1000, 1001];
+            if (normalCloseCodes.includes(event.code)) {
                 console.log('ℹ️ Conexão fechada normalmente');
                 return;
             }
-            
+
             // Tentar reconectar apenas se ainda estiver na mesma conversa
             if (state.activeConversationId === conversationId) {
+                console.log('🔄 Agendando reconexão...');
                 attemptReconnect(conversationId);
+            } else {
+                console.log('ℹ️ Não reconectando - conversa mudou');
             }
         };
 
         state.socket.onerror = (error) => {
-            console.error('❌ Erro no WebSocket:', error);
+            console.error('❌ Erro no WebSocket:', {
+                error: error,
+                readyState: state.socket?.readyState,
+                url: state.socket?.url
+            });
+            
+            // Mostra erro específico baseado no readyState
+            const readyState = state.socket?.readyState;
+            let errorMessage = 'Erro de conexão com o chat';
+            
+            switch (readyState) {
+                case WebSocket.CONNECTING:
+                    errorMessage = 'Conectando ao chat...';
+                    break;
+                case WebSocket.CLOSING:
+                    errorMessage = 'Conexão sendo encerrada';
+                    break;
+                case WebSocket.CLOSED:
+                    errorMessage = 'Conexão fechada';
+                    break;
+                default:
+                    errorMessage = 'Erro na conexão do chat';
+            }
+            
+            showToast(`❌ ${errorMessage}`, 'error');
         };
 
         state.socket.onmessage = (e) => {
             try {
+                console.log('📨 Mensagem WebSocket recebida:', e.data.substring(0, 100) + '...');
+                
                 const data = JSON.parse(e.data);
+                console.log('📦 Dados parseados:', data.type);
+                
                 handleWebSocketMessage(data);
             } catch (error) {
-                console.error('❌ Erro ao processar mensagem WebSocket:', error, e.data);
+                console.error('❌ Erro ao processar mensagem WebSocket:', {
+                    error: error.message,
+                    data: e.data,
+                    conversationId: conversationId
+                });
             }
         };
 
+        // Timeout de conexão
+        const connectionTimeout = setTimeout(() => {
+            if (state.socket && state.socket.readyState === WebSocket.CONNECTING) {
+                console.warn('⏰ Timeout de conexão WebSocket');
+                state.socket.close();
+                attemptReconnect(conversationId);
+            }
+        }, 10000); // 10 segundos
+
+        // Limpa timeout quando conectar
+        state.socket.onopen = () => {
+            clearTimeout(connectionTimeout);
+            // Chama o handler original
+            const originalOnOpen = state.socket.onopen;
+            if (originalOnOpen) originalOnOpen();
+        };
+
     } catch (error) {
-        console.error('❌ Erro fatal ao conectar WebSocket:', error);
-        showToast('❌ Erro de conexão com o chat', 'error');
+        console.error('❌ Erro fatal ao conectar WebSocket:', {
+            error: error.message,
+            stack: error.stack,
+            conversationId: conversationId
+        });
+        
+        showToast('❌ Erro crítico na conexão do chat', 'error');
+        
+        // Tenta reconexão mesmo em caso de erro fatal
+        if (state.activeConversationId === conversationId) {
+            attemptReconnect(conversationId);
+        }
     }
 }
+
+// Função attemptReconnect atualizada para maior robustez
+function attemptReconnect(conversationId) {
+    if (state.reconnect.attempts >= state.reconnect.maxAttempts) {
+        console.error('❌ Máximo de tentativas de reconexão atingido:', state.reconnect.attempts);
+        showToast('❌ Conexão perdida. Recarregue a página para reconectar.', 'error');
+        return;
+    }
+
+    state.reconnect.attempts++;
+    const delay = Math.min(state.reconnect.delay * Math.pow(1.5, state.reconnect.attempts - 1), 30000);
+    
+    console.log(`🔄 Tentativa ${state.reconnect.attempts} de ${state.reconnect.maxAttempts} em ${delay}ms`);
+    
+    state.reconnect.timer = setTimeout(() => {
+        // Verifica múltiplas condições antes de reconectar
+        if (state.activeConversationId === conversationId && 
+            conversationId && 
+            window.WebSocket) {
+            
+            console.log(`🔄 Executando reconexão para conversa: ${conversationId}`);
+            connectWebSocket(conversationId);
+        } else {
+            console.log('ℹ️ Condições não atendidas para reconexão:', {
+                activeMatch: state.activeConversationId === conversationId,
+                hasConversationId: !!conversationId,
+                hasWebSocket: !!window.WebSocket
+            });
+        }
+    }, delay);
+}
+
+
 
 // Função melhorada de reconexão
 function attemptReconnect(conversationId) {

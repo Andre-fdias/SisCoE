@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import index, capa, CalendarioView, dashboard_view, global_search_view
+from .views import index, capa, CalendarioView, dashboard_view, global_search_view, dashboard_links_view
 
 app_name = "core"
 
@@ -14,4 +14,5 @@ urlpatterns = [
     # path('profiles/<int:pk>/update/', profile_update, name='profile_update'),
     path("calendario/", CalendarioView.as_view(), name="calendario"),
     path("search/", global_search_view, name="global_search"),
+    path("links/", dashboard_links_view, name="dashboard_links"),
 ]

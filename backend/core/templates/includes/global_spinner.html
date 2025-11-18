@@ -1,0 +1,124 @@
+<!-- SPINNER GLOBAL UNIVERSAL SISCOE -->
+<div id="global-spinner-container" 
+     class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-gray-900/95 via-blue-900/90 to-purple-900/95 backdrop-blur-sm transition-all duration-500 ease-out hidden opacity-0">
+  
+  <div class="relative">
+    <!-- Efeito de Fundo -->
+    <div class="absolute inset-0 bg-white/5 rounded-3xl blur-xl transform scale-110"></div>
+    
+    <!-- Card Principal -->
+    <div class="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl">
+      
+      <!-- Spinner Animado -->
+      <div class="flex justify-center mb-6">
+        <div class="relative">
+          <div class="w-16 h-16 border-4 border-blue-200/30 border-t-blue-500 rounded-full animate-spin"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 5.5V7H9V5.5L3 7V9L9 10.5V12L3 13.5V15.5L9 14V16L3 17.5V19.5L9 18V22H15V18L21 19.5V17.5L15 16V14L21 15.5V13.5L15 12V10.5L21 9Z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pontos Animados -->
+      <div class="flex justify-center space-x-3 mb-6">
+        <div class="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+        <div class="w-3 h-3 bg-green-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+        <div class="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+      </div>
+
+      <!-- Texto -->
+      <div class="text-center">
+        <p class="text-white font-semibold text-lg mb-2">SisCoE</p>
+        <p class="text-blue-100 text-sm">Carregando sistema...</p>
+      </div>
+
+      <!-- Barra de Progresso -->
+      <div class="mt-6 w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full animate-pulse"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// SISTEMA GLOBAL DE SPINNER - UNIVERSAL
+(function() {
+    'use strict';
+    
+    const spinner = document.getElementById('global-spinner-container');
+    
+    // Criar sistema global se não existir
+    if (typeof window.GlobalSpinner === 'undefined') {
+        window.GlobalSpinner = {
+            show: function() {
+                if (spinner) {
+                    spinner.classList.remove('hidden');
+                    setTimeout(() => spinner.classList.remove('opacity-0'), 10);
+                }
+            },
+            hide: function() {
+                if (spinner) {
+                    spinner.classList.add('opacity-0');
+                    setTimeout(() => spinner.classList.add('hidden'), 500);
+                }
+            }
+        };
+    }
+    
+    // Eventos automáticos - APENAS se não foram registrados antes
+    if (!document.globalSpinnerEventsRegistered) {
+        
+        // Esconder ao carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => GlobalSpinner.hide(), 100);
+            });
+        } else {
+            setTimeout(() => GlobalSpinner.hide(), 100);
+        }
+        
+        // Interceptar clicks em links
+        document.addEventListener('click', function(e) {
+            let target = e.target;
+            while (target && target.nodeName !== 'A') {
+                target = target.parentElement;
+            }
+            
+            if (target && 
+                target.href && 
+                !target.href.startsWith('javascript:') && 
+                !target.hasAttribute('data-no-spinner') &&
+                target.target !== '_blank' &&
+                !target.hasAttribute('download') &&
+                target.hostname === window.location.hostname) {
+                
+                GlobalSpinner.show();
+            }
+        });
+        
+        // Interceptar formulários
+        document.addEventListener('submit', function(e) {
+            if (!e.target.hasAttribute('data-no-spinner')) {
+                GlobalSpinner.show();
+            }
+        });
+        
+        // Mostrar antes de sair da página
+        window.addEventListener('beforeunload', function() {
+            GlobalSpinner.show();
+        });
+        
+        // Esconder quando a página carregar completamente
+        window.addEventListener('load', function() {
+            setTimeout(() => GlobalSpinner.hide(), 300);
+        });
+        
+        // Marcar como registrado
+        document.globalSpinnerEventsRegistered = true;
+    }
+    
+})();
+</script>
