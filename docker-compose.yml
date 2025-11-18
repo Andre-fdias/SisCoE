@@ -32,6 +32,7 @@ services:
       retries: 3
 
   web:
+    image: siscoe:latest
     build: 
       context: .
       dockerfile: Dockerfile
@@ -66,6 +67,7 @@ services:
       retries: 3
 
   celery:
+    image: siscoe:latest
     build: .
     container_name: siscoe-celery
     command: celery -A backend worker -l info
@@ -90,6 +92,7 @@ services:
       retries: 3
 
   celery-beat:
+    image: siscoe:latest
     build: .
     container_name: siscoe-celery-beat
     command: celery -A backend beat -l info
@@ -218,6 +221,9 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:

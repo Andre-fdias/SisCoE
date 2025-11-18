@@ -602,7 +602,6 @@ def api_containers(request):
 @login_required
 @user_passes_test(is_staff_or_superuser)
 @require_http_methods(["POST"])
-@csrf_exempt  # Para simplificar, mas em produção use CSRF token
 def api_restart_service(request):
     """Reinicia um serviço via docker-compose"""
     service = request.POST.get("service")
@@ -610,36 +609,33 @@ def api_restart_service(request):
         service_data = json.loads(request.body)
         service = service_data.get("service")
 
-    command = ["docker-compose", "restart", service]
-
     try:
         if service not in ["web", "celery", "celery-beat", "rabbitmq", "redis", "db"]:
             return JsonResponse(
                 {"status": "error", "message": "Serviço inválido"}, status=400
             )
 
-        result = subprocess.run(
-            command, capture_output=True, text=True, timeout=60, check=False
-        )
-        if result.returncode == 0:
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "message": f"Serviço {service} reiniciado com sucesso.",
-                }
-            )
-        else:
-            logger.error(f"Erro ao reiniciar serviço {service}: {result.stderr}")
-            return JsonResponse(
-                {"status": "error", "message": result.stderr or result.stdout},
-                status=500,
-            )
+        client = docker.from_env(timeout=10)
+        # O nome do container é geralmente no formato 'projectname_servicename_1'
+        # Este é um palpite e pode precisar de ajuste dependendo da sua configuração de docker-compose
+        container_name_prefix = f"siscoe_{service}"
+        containers = client.containers.list(all=True, filters={"name": container_name_prefix})
+        
+        if not containers:
+            return JsonResponse({"status": "error", "message": f"Container para o serviço {service} não encontrado."}, status=404)
 
-    except subprocess.TimeoutExpired:
+        for container in containers:
+            container.restart()
+
         return JsonResponse(
-            {"status": "error", "message": f"Timeout ao reiniciar o serviço {service}"},
-            status=500,
+            {
+                "status": "success",
+                "message": f"Serviço {service} reiniciado com sucesso.",
+            }
         )
+    except docker.errors.DockerException as e:
+        logger.error(f"Erro do Docker ao reiniciar o serviço {service}: {e}")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
     except Exception as e:
         logger.error(f"Exceção ao reiniciar serviço: {e}")
         return JsonResponse({"status": "error", "message": str(e)}, status=500)

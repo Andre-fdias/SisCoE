@@ -39,6 +39,9 @@ jobs:
           script: |
             cd /var/www/siscoe
             
+            # AVISO DE SEGURANÇA: Gerenciar o arquivo .env diretamente no servidor
+            # é mais seguro do que criá-lo via script de deploy.
+            # Considere usar um sistema de gerenciamento de segredos como HashiCorp Vault ou AWS Secrets Manager.
             echo "Criando arquivo .env..."
             cat << EOF > .env
 # Arquivo gerado pelo GitHub Actions - $(date)
@@ -55,6 +58,9 @@ DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 DB_HOST=${{ secrets.DB_HOST }}
 DB_PORT=${{ secrets.DB_PORT }}
 
+# Redis
+REDIS_URL=redis://redis:6379/0
+
 # Email (Brevo)
 BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
 DEFAULT_FROM_EMAIL=${{ secrets.DEFAULT_FROM_EMAIL }}
@@ -70,19 +76,26 @@ TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
 
 EOF
 
-            echo "Fazendo pull das imagens Docker..."
-            docker-compose pull app
+            echo "Fazendo pull da imagem mais recente..."
+            docker-compose pull web
             
-            echo "Recriando os containers..."
-            docker-compose down
-            docker-compose up -d
+            echo "Recriando os containers da aplicação..."
+            # Usa o compose de produção para ligar o Nginx e usar as settings corretas
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate web nginx celery celery-beat
             
+            echo "Aguardando o container 'web' ficar saudável..."
+            # Este loop espera até 60s para o serviço web estar pronto antes de continuar
+            timeout 60s bash -c 'while [[ "$(docker-compose ps -q web)" == "" || "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q web))" != "healthy" ]]; do echo "...aguardando serviço web..."; sleep 3; done'
+
             echo "Executando migrações..."
-            docker-compose exec -T app python manage.py migrate --noinput
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec -T web python manage.py migrate --noinput
             
             echo "Coletando arquivos estáticos..."
-            docker-compose exec -T app python manage.py collectstatic --noinput --clear
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec -T web python manage.py collectstatic --noinput --clear
             
+            echo "Limpando imagens Docker não utilizadas..."
+            docker image prune -f
+
             echo "Deploy da versão ${GITHUB_REF#refs/tags/} concluído!"
 
       - name: Notify via Telegram

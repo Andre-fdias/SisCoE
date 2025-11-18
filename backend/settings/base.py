@@ -18,6 +18,13 @@ ALLOWED_HOSTS = config(
     cast=Csv()
 )
 
+# Read version from VERSION file
+try:
+    with open(BASE_DIR / 'VERSION') as f:
+        VERSION = f.read().strip()
+except FileNotFoundError:
+    VERSION = '0.0.0'
+
 # ============ APLICAÇÕES INSTALADAS ============
 # ⚠️ DAPHNE DEVE SER O PRIMEIRO PARA SUPORTE WEBSOCKET
 INSTALLED_APPS = [
