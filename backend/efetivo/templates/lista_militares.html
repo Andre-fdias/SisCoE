@@ -243,13 +243,7 @@
                     </thead>
                     <tbody id="militares-table-body" class="bg-gray-800 divide-y divide-gray-700">
                         {% for militar in militares %}
-                            {# Busca a última situação do militar #}
-                            {% with ultima_situacao=militar.detalhes_situacao.first %}
-                                {# Adiciona a regra: somente renderiza se a situação for "Efetivo" #}
-                                {% if ultima_situacao and ultima_situacao.situacao == "Efetivo" %}
-                                    {% include "efetivo/militar_table_row.html" with militar=militar %}
-                                {% endif %}
-                            {% endwith %}
+                            {% include "efetivo/militar_table_row.html" with militar=militar %}
                         {% empty %}
                             <tr>
                                 <td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">

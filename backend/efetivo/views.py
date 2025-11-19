@@ -1676,28 +1676,29 @@ class ListaMilitaresView(ListView):
         ],
     }
 
+    def get_base_queryset(self):
+        """
+        Retorna o queryset base com apenas militares de situação 'Efetivo'.
+        """
+        latest_detalhe_situacao = DetalhesSituacao.objects.filter(
+            cadastro=OuterRef("pk")
+        ).order_by("-data_alteracao", "-id")
+
+        return Cadastro.objects.annotate(
+            latest_status=Subquery(latest_detalhe_situacao.values("situacao")[:1])
+        ).filter(latest_status="Efetivo")
+
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = self.get_base_queryset()
         grupo_ativo = self.request.GET.get("grupo")
         subgrupo_ativo = self.request.GET.get("subgrupo")
-
-        print("\n--- DEBUG get_queryset ---")
-        print(f"Initial queryset count (before any filters): {queryset.count()}")
-        print(f"Request: grupo_ativo={grupo_ativo}, subgrupo_ativo={subgrupo_ativo}")
 
         if subgrupo_ativo:
             queryset = queryset.filter(
                 detalhes_situacao__posto_secao__startswith=subgrupo_ativo
             )
-            print(
-                f"Filtered by posto_secao (using __startswith with code): '{subgrupo_ativo}'"
-            )
-
         elif grupo_ativo:
             queryset = queryset.filter(detalhes_situacao__sgb=grupo_ativo)
-            print(f"Filtered by grupo (SGB): '{grupo_ativo}'")
-        else:
-            print("No group or subgroup filter applied. Showing all.")
 
         queryset = (
             queryset.distinct()
@@ -1706,10 +1707,6 @@ class ListaMilitaresView(ListView):
             )
             .order_by("re")
         )
-
-        print(f"Final queryset count (after filters and distinct): {queryset.count()}")
-        print("--- END DEBUG get_queryset ---\n")
-
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -1722,30 +1719,29 @@ class ListaMilitaresView(ListView):
             ("4ºSGB", "4º Subgrupamento"),
             ("5ºSGB", "5º Subgrupamento"),
         ]
-        afastamento_types = [choice[0] for choice in CatEfetivo.TIPO_CHOICES]
         grupo_ativo = self.request.GET.get("grupo")
         subgrupo_ativo = self.request.GET.get("subgrupo")
 
-        # Calculate counts for all groups and subgroups
-        contagens_por_grupo = {}
-        for grupo_key, _ in grupos:
-            contagens_por_grupo[grupo_key] = self.calcular_contagens(
-                self.subgrupos_estrutura.get(grupo_key, [])
-            )
+        base_queryset = self.get_base_queryset()
 
-        # Calculate total counts per group
+        # Calcula a contagem para cada subgrupo e filho
+        subgrupo_counts = {}
+        for grupo_key, _ in grupos:
+            estrutura = self.subgrupos_estrutura.get(grupo_key, [])
+            subgrupo_counts.update(self.calcular_contagens(estrutura, base_queryset))
+
+        # Calcula a contagem total para cada grupo principal
         agrupamento_counts = {}
         for grupo_key, _ in grupos:
             agrupamento_counts[grupo_key] = (
-                Cadastro.objects.filter(detalhes_situacao__sgb=grupo_key)
+                base_queryset.filter(detalhes_situacao__sgb=grupo_key)
                 .distinct()
                 .count()
             )
 
         context.update(
             {
-                "contagens_por_grupo": contagens_por_grupo,
-                "afastamento_types": afastamento_types,
+                "subgrupo_counts": subgrupo_counts,
                 "agrupamento_counts": agrupamento_counts,
                 "grupos": grupos,
                 "grupo_ativo": grupo_ativo,
@@ -1760,32 +1756,34 @@ class ListaMilitaresView(ListView):
         )
         return context
 
-    def calcular_contagens(self, estrutura):
+    def calcular_contagens(self, estrutura, base_queryset):
         contagens = {}
         for item in estrutura:
+            # Conta usando o queryset base já filtrado por 'Efetivo'
             count = (
-                Cadastro.objects.filter(detalhes_situacao__posto_secao=item["codigo"])
+                base_queryset.filter(detalhes_situacao__posto_secao__startswith=item["codigo"])
                 .distinct()
                 .count()
             )
-
             contagens[item["codigo"]] = count
 
-            if item["filhos"]:
-                contagens.update(self.calcular_contagens(item["filhos"]))
+            if item.get("filhos"):
+                contagens.update(self.calcular_contagens(item["filhos"], base_queryset))
         return contagens
 
     def get_subgrupo_nome(self, grupo_key, subgrupo_codigo):
-        if not subgrupo_codigo:
+        if not grupo_key or not subgrupo_codigo:
             return ""
-
-        for subgrupo in self.subgrupos_estrutura.get(grupo_key, []):
-            if subgrupo["codigo"] == subgrupo_codigo:
-                return subgrupo["nome"]
-            if subgrupo.get("filhos"):
-                for filho in subgrupo["filhos"]:
-                    if filho["codigo"] == subgrupo_codigo:
-                        return filho["nome"]
+        
+        estrutura = self.subgrupos_estrutura.get(grupo_key, [])
+        
+        for item in estrutura:
+            if item['codigo'] == subgrupo_codigo:
+                return item['nome']
+            if item.get('filhos'):
+                for filho in item['filhos']:
+                    if filho['codigo'] == subgrupo_codigo:
+                        return filho['nome']
         return ""
 
 
