@@ -21,7 +21,7 @@
 
         <form id="situacaoFuncionalForm" method="POST" action="{% url 'efetivo:editar_situacao_funcional' cadastro.id %}" class="p-6 space-y-6">
             {% csrf_token %}
-            <input type="hidden" name="detalhe_situacao_id" value="{{ detalhe_situacao.id }}">
+            <input type="hidden" name="detalhe_situacao_id" value="{{ detalhes.id }}">
             
             <!-- Seção de Dados Atuais -->
             <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
@@ -29,27 +29,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">Situação</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.status|default:"-" }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">SGB</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.sgb|default:"-" }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">Posto/Seção</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.posto_secao|default:"-" }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">Adido ao</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.esta_adido|default:"-" }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">Função</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.funcao|default:"-" }}</p>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-500 dark:text-gray-400">Prontidão</label>
-                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ cadastro.detalhes_situacao.last.prontidao_badge|default:"-" }}</p>
+                        <p class="text-gray-800 dark:text-gray-200 font-medium">{{ detalhes.prontidao_badge|default:"-" }}</p>
                     </div>
                 </div>
             </div>
@@ -81,12 +81,12 @@
 
                 {# Os demais campos de edição são removidos ou mantidos como hidden inputs para a "Fase 1" #}
                 {# Exemplo de como manter outros campos como hidden, se necessário para a lógica do backend: #}
-                <input type="hidden" name="sgb" value="{{ detalhe_situacao.sgb|default:'' }}">
-                <input type="hidden" name="posto_secao" value="{{ detalhe_situacao.posto_secao|default:'' }}">
-                <input type="hidden" name="esta_adido" value="{{ detalhe_situacao.esta_adido|yesno:"True,False"|default:"False" }}">
-                <input type="hidden" name="funcao" value="{{ detalhe_situacao.funcao|default:'' }}">
-                <input type="hidden" name="prontidao" value="{{ detalhe_situacao.prontidao|default:'' }}">
-                <input type="hidden" name="apresentacao_na_unidade" value="{{ detalhe_situacao.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}">
+                <input type="hidden" name="sgb" value="{{ detalhes.sgb|default:'' }}">
+                <input type="hidden" name="posto_secao" value="{{ detalhes.posto_secao|default:'' }}">
+                <input type="hidden" name="esta_adido" value="{{ detalhes.esta_adido|yesno:"True,False"|default:"False" }}">
+                <input type="hidden" name="funcao" value="{{ detalhes.funcao|default:'' }}">
+                <input type="hidden" name="prontidao" value="{{ detalhes.prontidao|default:'' }}">
+                <input type="hidden" name="apresentacao_na_unidade" value="{{ detalhes.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}">
             </div>
             
             <div class="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -282,7 +282,7 @@
                             }, 300);
                         } else {
                             showNotification(data.message || 'Alterações salvas com sucesso!', 'success');
-                            location.reload(); 
+                            window.location.reload(true); 
                         }
                     } else {
                         throw new Error(data.message || 'Erro desconhecido ao salvar');
@@ -316,7 +316,7 @@
             btnEditarExistente.addEventListener('click', function() {
                 hideModal(choiceModal); // Esconde o modal de escolha
                 showNotification('Situação funcional atualizada com sucesso!', 'success'); // Exibe a mensagem de sucesso final
-                location.reload(); // Recarrega a página para refletir as alterações
+                window.location.reload(true); // Recarrega a página para refletir as alterações
             });
         }
 
@@ -360,7 +360,7 @@
                     if (data.success) {
                         showNotification(data.message || 'Nova situação cadastrada com sucesso!', 'success');
                         hideModal(novaSituacaoFuncionalModal); // Fecha o modal de nova situação
-                        location.reload(); // Recarrega a página para exibir a nova situação
+                        window.location.reload(true); // Recarrega a página para exibir a nova situação
                     } else {
                         throw new Error(data.message || 'Erro desconhecido ao cadastrar nova situação.');
                     }

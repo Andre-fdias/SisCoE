@@ -395,7 +395,7 @@ def ver_militar(request, id):
         )
 
         today = timezone.now().date()
-        detalhes = cadastro.detalhes_situacao.last()
+        detalhes = cadastro.detalhes_situacao.order_by("-data_alteracao", "-id").first()
         promocao = cadastro.promocoes.last()
         categoria_atual = cadastro.categorias_efetivo.filter(ativo=True).first()
 
@@ -410,6 +410,9 @@ def ver_militar(request, id):
                 lp.previsao_associada = LP_fruicao.objects.get(lp_concluida=lp)
             except LP_fruicao.DoesNotExist:
                 lp.previsao_associada = None
+
+        # Verificar se existe alguma restrição ativa para o militar
+        tem_restricao_ativa = cadastro.categorias_efetivo.filter(tipo='RESTRICAO', ativo=True).exists()
 
         # Processar Restrições
         MENSAGENS_RESTRICOES = {
@@ -456,10 +459,11 @@ def ver_militar(request, id):
         }
 
         restricoes_aplicaveis = []
-        if categoria_atual and categoria_atual.tipo == "RESTRICAO":
+        restricoes_siglas = set() # Para armazenar siglas únicas e verificar 'UA'
+        for categoria_restricao in cadastro.categorias_efetivo.filter(tipo='RESTRICAO', ativo=True):
             for field in CatEfetivo._meta.get_fields():
                 if field.name.startswith("restricao_") and getattr(
-                    categoria_atual, field.name
+                    categoria_restricao, field.name
                 ):
                     sigla = field.name.split("_")[-1].upper()
                     if sigla in MENSAGENS_RESTRICOES:
@@ -471,6 +475,8 @@ def ver_militar(request, id):
                                 "regra": RestricaoHelper.get_regra_principal(sigla),
                             }
                         )
+                        restricoes_siglas.add(sigla) # Adicionar a sigla ao conjunto
+
 
         # Status da Categoria
         categoria_status = {}
@@ -543,6 +549,8 @@ def ver_militar(request, id):
             "today": today,
             "categoria_atual": categoria_atual,
             "restricoes_aplicaveis": restricoes_aplicaveis,
+            "restricoes_siglas": list(restricoes_siglas),
+            "tem_restricao_ativa": tem_restricao_ativa,
             "medalhas_do_militar": medalhas_do_militar,
             "cursos_do_militar": cursos_do_militar,
             "cadastro_rpt": cadastro_rpt,

@@ -302,7 +302,7 @@
             
             
             <!-- Seção de Restrições -->
-            {% if categoria_atual and categoria_atual.tipo == 'RESTRICAO' %}
+            {% if tem_restricao_ativa %}
                 <fieldset class="w-full mb-8 rounded-2xl bg-red-300 p-1 border border-red-200">
                     <section class="bg-white p-4 rounded-lg shadow-md border border-red-600">
                         <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
@@ -369,33 +369,33 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Situação</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.status|default:"-" }}</p>
+                                    <p class="text-gray-800 font-medium truncate">{{ detalhes.status|default:"-" }}</p>
                                 </div>
                                 
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">SGB</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.sgb|default:"-" }}</p>
+                                    <p class="text-gray-800 font-medium truncate">{{ detalhes.sgb|default:"-" }}</p>
                                 </div>
                                 
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Posto/Seção</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.posto_secao|default:"-" }}</p>
+                                    <p class="text-gray-800 font-medium truncate">{{ detalhes.posto_secao|default:"-" }}</p>
                                 </div>
                                 
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Adido ao</span>
                             
-                                    <p class="text-gray-800 font-medium truncate">  {{ cadastro.detalhes_situacao.last.esta_adido|default:"-" }} </p>
+                                    <p class="text-gray-800 font-medium truncate">  {{ detalhes.esta_adido|default:"-" }} </p>
                                 </div>
                                 
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Função</span>
-                                    <p class="text-gray-800 font-medium truncate">{{ cadastro.detalhes_situacao.last.funcao|default:"-" }}</p>
+                                    <p class="text-gray-800 font-medium truncate">{{ detalhes.funcao|default:"-" }}</p>
                                 </div>
                                 
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-xs">
                                     <span class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Prontidão</span>
-                                    <div class="text-gray-800 font-medium">{{ cadastro.detalhes_situacao.last.prontidao_badge|default:"-" }}</div>
+                                    <div class="text-gray-800 font-medium">{{ detalhes.prontidao_badge|default:"-" }}</div>
                                 </div>
                             </div>
                             
@@ -430,16 +430,16 @@
                             {# Adicione um script para armazenar os dados atuais para o JS #}
                             <script id="currentSituacaoData" type="application/json">
                                 {
-                                    "id": "{{ detalhe_situacao.id|default:'' }}",
-                                    "situacao": "{{ detalhe_situacao.situacao|default:'' }}",
-                                    "sgb": "{{ detalhe_situacao.sgb|default:'' }}",
-                                    "posto_secao": "{{ detalhe_situacao.posto_secao|default:'' }}",
-                                    "esta_adido": "{{ detalhe_situacao.esta_adido|default:'' }}",
-                                    "funcao": "{{ detalhe_situacao.funcao|default:'' }}",
-                                    "op_adm": "{{ detalhe_situacao.op_adm|default:'' }}",
-                                    "prontidao": "{{ detalhe_situacao.prontidao|default:'' }}",
-                                    "apresentacao_na_unidade": "{{ detalhe_situacao.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}",
-                                    "saida_da_unidade": "{{ detalhe_situacao.saida_da_unidade|date:'Y-m-d'|default:'' }}"
+                                    "id": "{{ detalhes.id|default:'' }}",
+                                    "situacao": "{{ detalhes.situacao|default:'' }}",
+                                    "sgb": "{{ detalhes.sgb|default:'' }}",
+                                    "posto_secao": "{{ detalhes.posto_secao|default:'' }}",
+                                    "esta_adido": "{{ detalhes.esta_adido|default:'' }}",
+                                    "funcao": "{{ detalhes.funcao|default:'' }}",
+                                    "op_adm": "{{ detalhes.op_adm|default:'' }}",
+                                    "prontidao": "{{ detalhes.prontidao|default:'' }}",
+                                    "apresentacao_na_unidade": "{{ detalhes.apresentacao_na_unidade|date:'Y-m-d'|default:'' }}",
+                                    "saida_da_unidade": "{{ detalhes.saida_da_unidade|date:'Y-m-d'|default:'' }}"
                                 }
                             </script>
                         </div>
