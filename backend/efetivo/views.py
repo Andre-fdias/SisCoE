@@ -1738,6 +1738,32 @@ class ListaMilitaresView(ListView):
                 .distinct()
                 .count()
             )
+        
+        # Agrupamento para a visualização em grade
+        prontidao_verde = []
+        prontidao_amarela = []
+        prontidao_azul = []
+        administrativo = []
+        afastados = []
+
+        # O queryset do contexto já está filtrado, vamos usá-lo
+        militares_filtrados = context['militares']
+
+        for militar in militares_filtrados:
+            categoria_atual = militar.categorias_efetivo.filter(ativo=True).first()
+            detalhe_atual = militar.detalhes_situacao.order_by("-data_alteracao", "-id").first()
+
+            if categoria_atual and categoria_atual.tipo != 'ATIVO':
+                afastados.append(militar)
+            elif detalhe_atual and detalhe_atual.op_adm == 'Administrativo':
+                administrativo.append(militar)
+            elif detalhe_atual:
+                if detalhe_atual.prontidao == 'VERDE':
+                    prontidao_verde.append(militar)
+                elif detalhe_atual.prontidao == 'AMARELA':
+                    prontidao_amarela.append(militar)
+                elif detalhe_atual.prontidao == 'AZUL':
+                    prontidao_azul.append(militar)
 
         context.update(
             {
@@ -1752,6 +1778,13 @@ class ListaMilitaresView(ListView):
                 ),
                 "subgrupos_estrutura": self.subgrupos_estrutura,
                 "current_date": timezone.now().date(),
+                # Listas para a grade
+                "prontidao_verde": prontidao_verde,
+                "prontidao_amarela": prontidao_amarela,
+                "prontidao_azul": prontidao_azul,
+                "administrativo": administrativo,
+                "afastados": afastados,
+                "afastamento_types": [choice[0] for choice in CatEfetivo.TIPO_CHOICES],
             }
         )
         return context
