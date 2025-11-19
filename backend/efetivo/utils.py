@@ -2,6 +2,18 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 from io import BytesIO
+import json
+import logging
+import random
+from faker import Faker
+from django.core.files.base import ContentFile
+from django.db import IntegrityError, transaction, models
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+from .models import Cadastro, Promocao, DetalhesSituacao, CatEfetivo, Imagem
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 def add_cpf_to_image(image_path, cpf, output_path):

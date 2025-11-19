@@ -37,14 +37,19 @@
                             class="flex items-center justify-center px-6 py-3 border border-red-600 text-base font-medium rounded-md text-white bg-red-700 hover:bg-red-600 shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5">
                             <i class="fas fa-user-times mr-2"></i> Relação de Inativos
                         </a>
-                             <!-- Botão para Gerar Cadastros Fakes -->
-                    <button id="gerarCadastrosFakeBtn"
-                            class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5 mr-2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Gerar 200 Cadastros Fakes
-                    </button>
+                                     <!-- Contêiner para Geração de Cadastros Fakes -->
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="quantidadeCadastrosFake" name="quantidade" value="50" min="1" max="500" 
+                                class="px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-base focus:ring-emerald-500 focus:border-emerald-500"
+                                style="width: 100px;">
+                            <button id="gerarCadastrosFakeBtn"
+                                    class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 shadow-md transition-all duration-300 transform hover:-translate-y-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5 mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Gerar Fakes
+                            </button>
+                        </div>
                         
                         </div>
                     </div>
@@ -282,65 +287,21 @@
 
             if (exportButton && exportMenu) {
                 exportButton.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Impede que o clique se propague para o documento
+                    e.stopPropagation();
                     exportMenu.classList.toggle('hidden');
                 });
 
                 document.addEventListener('click', function() {
-                    exportMenu.classList.add('hidden'); // Esconde o menu se clicar fora
+                    exportMenu.classList.add('hidden');
                 });
 
                 exportMenu.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Impede que o clique dentro do menu o feche
+                    e.stopPropagation();
                 });
             }
 
             function exportTable(type) {
-                // Implemente sua lógica de exportação aqui
                 console.log('Exportando como:', type);
-                // Você pode adicionar chamadas AJAX para views Django que geram os arquivos
-            }
-
-            // Script para o botão de gerar cadastros fake
-            const gerarCadastrosFakeBtn = document.getElementById('gerarCadastrosFakeBtn');
-            const messagesDiv = document.getElementById('messages'); // Referencia a div de mensagens existente
-
-            if (gerarCadastrosFakeBtn && messagesDiv) { // Garante que ambos os elementos existam
-                gerarCadastrosFakeBtn.addEventListener('click', async function() {
-                    if (confirm('Tem certeza que deseja gerar 200 cadastros fakes? Isso pode levar um tempo e adicionar muitos dados.')) {
-                        messagesDiv.innerHTML = '<div class="p-4 mb-3 rounded-md bg-blue-100 text-blue-800 font-medium animate-pulse">Gerando cadastros... Por favor, aguarde. Não feche a página.</div>';
-                        gerarCadastrosFakeBtn.disabled = true; // Desabilita o botão
-                        gerarCadastrosFakeBtn.classList.add('opacity-50', 'cursor-not-allowed'); // Efeitos visuais de desabilitação
-
-                        try {
-                            const response = await fetch('{% url "efetivo:gerar_cadastros_fake" %}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': getCookie('csrftoken') // Função para obter o CSRF token
-                                },
-                            });
-
-                            const data = await response.json();
-
-                            if (response.ok) {
-                                messagesDiv.innerHTML = `<div class="p-4 mb-3 rounded-md bg-green-100 text-green-800 font-medium">${data.message}</div>`;
-                                // Recarrega a página após um curto atraso para mostrar os novos dados
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 2000); 
-                            } else {
-                                messagesDiv.innerHTML = `<div class="p-4 mb-3 rounded-md bg-red-100 text-red-800 font-medium">Erro: ${data.message || 'Ocorreu um erro desconhecido ao gerar os cadastros.'}</div>`;
-                            }
-                        } catch (error) {
-                            console.error('Erro na requisição AJAX:', error);
-                            messagesDiv.innerHTML = '<div class="p-4 mb-3 rounded-md bg-red-100 text-red-800 font-medium">Erro de conexão ou servidor. Verifique o console para detalhes.</div>';
-                        } finally {
-                            gerarCadastrosFakeBtn.disabled = false; // Reabilita o botão
-                            gerarCadastrosFakeBtn.classList.remove('opacity-50', 'cursor-not-allowed'); // Remove efeitos visuais
-                        }
-                    }
-                });
             }
 
             // Função para obter o CSRF token do cookie
@@ -358,81 +319,76 @@
                 }
                 return cookieValue;
             }
-        });
-    </script>
-    <!-- Adicione este código JavaScript no final do seu template, antes do fechamento do body -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const gerarCadastrosBtn = document.getElementById('gerarCadastrosFakeBtn');
-    
-    if (gerarCadastrosBtn) {
-        gerarCadastrosBtn.addEventListener('click', async function() {
-            if (confirm('Tem certeza que deseja gerar 200 cadastros fakes? Isso pode levar um tempo e adicionar muitos dados.')) {
-                // Mostrar spinner e desabilitar o botão
-                gerarCadastrosBtn.disabled = true;
-                gerarCadastrosBtn.innerHTML = `
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Gerando cadastros...`;
+
+            // Função para mostrar notificação toast
+            function showToast(type, message) {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white shadow-lg z-50 transition-all duration-300 transform ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
                 
-                try {
-                    // Fazer a requisição AJAX
-                    const response = await fetch('{% url "efetivo:gerar_cadastros_fake" %}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}',
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'same-origin'
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        // Mostrar mensagem de sucesso
-                        showToast('success', data.message);
-                        // Recarregar a página após 2 segundos
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    } else {
-                        showToast('error', data.message || 'Erro ao gerar cadastros');
+                setTimeout(() => {
+                    toast.remove();
+                }, 5000);
+            }
+
+            // Script consolidado para o botão de gerar cadastros fake
+            const gerarCadastrosFakeBtn = document.getElementById('gerarCadastrosFakeBtn');
+            const quantidadeInput = document.getElementById('quantidadeCadastrosFake');
+
+            if (gerarCadastrosFakeBtn && quantidadeInput) {
+                gerarCadastrosFakeBtn.addEventListener('click', async function() {
+                    const quantidade = parseInt(quantidadeInput.value, 10);
+                    if (isNaN(quantidade) || quantidade <= 0) {
+                        showToast('error', 'Por favor, insira uma quantidade válida.');
+                        return;
                     }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    showToast('error', 'Erro ao conectar com o servidor');
-                } finally {
-                    // Restaurar o botão após 3 segundos
-                    setTimeout(() => {
-                        gerarCadastrosBtn.disabled = false;
-                        gerarCadastrosBtn.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5 mr-2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+
+                    if (confirm(`Tem certeza que deseja gerar ${quantidade} cadastros fakes?`)) {
+                        const originalButtonHTML = gerarCadastrosFakeBtn.innerHTML;
+                        gerarCadastrosFakeBtn.disabled = true;
+                        gerarCadastrosFakeBtn.innerHTML = `
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Gerar 200 Cadastros Fakes`;
-                    }, 3000);
-                }
+                            Gerando...`;
+
+                        try {
+                            const response = await fetch('{% url "efetivo:gerar_cadastros_fake" %}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken')
+                                },
+                                body: JSON.stringify({ quantidade: quantidade })
+                            });
+
+                            const data = await response.json();
+
+                            if (response.ok) {
+                                showToast('success', data.message);
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
+                            } else {
+                                showToast('error', data.message || 'Ocorreu um erro desconhecido.');
+                            }
+                        } catch (error) {
+                            console.error('Erro na requisição AJAX:', error);
+                            showToast('error', 'Erro de conexão ou servidor.');
+                        } finally {
+                            setTimeout(() => {
+                                gerarCadastrosFakeBtn.disabled = false;
+                                gerarCadastrosFakeBtn.innerHTML = originalButtonHTML;
+                            }, 3000);
+                        }
+                    }
+                });
             }
         });
-    }
-
-    // Função para mostrar notificação toast
-    function showToast(type, message) {
-        const toast = document.createElement('div');
-        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white shadow-lg z-50 transition-all duration-300 transform ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        }`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        // Remover após 5 segundos
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
-    }
-});
-</script>
+    </script>
 </body>
 {% endblock %}

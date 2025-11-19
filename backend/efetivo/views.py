@@ -54,9 +54,6 @@ from backend.municipios.models import Posto
 from backend.rpt.models import Cadastro_rpt
 from backend.lp.models import LP, LP_fruicao
 
-# Importe a nova função de utilidade para imagem
-from .utils import generate_fake_image
-
 # ReportLab para PDF
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -84,6 +81,27 @@ from backend.core.monitoring_decorators import track_function_latency
 logger = logging.getLogger(__name__)
 
 User = get_user_model()  # Obtém o modelo de usuário ativo
+
+# Adicionado para gerar imagens fake
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+
+def generate_fake_image(text="Sample Text", width=150, height=150):
+    """Gera uma imagem falsa com texto para fins de teste."""
+    img = Image.new('RGB', (width, height), color = (128, 128, 128))
+    d = ImageDraw.Draw(img)
+    
+    # Tenta usar uma fonte padrão, se não, usa a fonte default do Pillow
+    try:
+        font = ImageFont.truetype("arial.ttf", 15)
+    except IOError:
+        font = ImageFont.load_default()
+        
+    d.text((10,10), text, fill=(255,255,0), font=font)
+    
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 @login_required
@@ -218,6 +236,145 @@ def cadastrar_militar(request):
 
         return redirect("/efetivo/cadastrar_militar")
 
+
+def gerar_cadastros_fake(request):
+    logger.info("Requisição para gerar cadastros fake recebida.")
+
+    if not request.user.is_superuser:
+        logger.warning(f"Tentativa de acesso negado para gerar cadastros fake por: {str(request.user)}")
+        return JsonResponse(
+            {"status": "error", "message": "Acesso negado. Apenas superusuários podem gerar cadastros fake."},
+            status=403,
+        )
+
+    try:
+        data = json.loads(request.body)
+        quantidade = int(data.get('quantidade', 1))
+        if not 1 <= quantidade <= 500:
+            raise ValueError("A quantidade deve estar entre 1 e 500.")
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        logger.error(f"Erro ao processar a quantidade de cadastros: {e}")
+        return JsonResponse(
+            {"status": "error", "message": f"Quantidade inválida. Forneça um número entre 1 e 500. Erro: {e}"},
+            status=400,
+        )
+
+    fake = Faker("pt_BR")
+    fake.unique.clear()  # Limpa o cache de valores únicos no início
+    cadastros_criados = 0
+    erros = 0
+
+    for i in range(quantidade):
+        try:
+            # Cada militar é criado em sua própria transação para isolar falhas
+            with transaction.atomic():
+                # 1. Criar Cadastro
+                sexo_fake = random.choice([choice[0] for choice in Cadastro.genero_choices if choice[0]])
+                data_nascimento_fake = fake.date_of_birth(minimum_age=18, maximum_age=60)
+                data_ingresso_fake = fake.date_between(start_date="-20y", end_date="-5y")
+                # Corrigido: A matrícula deve ser uma data, não um objeto datetime
+                matricula_fake = fake.date_between(start_date=data_ingresso_fake, end_date="today")
+                previsao_inatividade_fake = fake.date_between(start_date="today", end_date="+30y")
+
+                cadastro = Cadastro.objects.create(
+                    re=str(fake.unique.random_number(digits=6)),
+                    dig=str(random.randint(0, 9)),
+                    nome=fake.name(),
+                    nome_de_guerra=fake.first_name(),
+                    genero=sexo_fake,
+                    nasc=data_nascimento_fake,
+                    matricula=matricula_fake,
+                    admissao=data_ingresso_fake,
+                    previsao_de_inatividade=previsao_inatividade_fake,
+                    cpf=fake.cpf(),
+                    rg=str(fake.unique.random_number(digits=9)),
+                    tempo_para_averbar_inss=random.randint(0, 100),
+                    tempo_para_averbar_militar=random.randint(0, 100),
+                    email=fake.unique.email(),
+                    telefone=fake.phone_number(),
+                    alteracao=random.choice([choice[0] for choice in Cadastro.alteracao_choices if choice[0]]),
+                    user=request.user,
+                )
+
+                # 2. Criar Promocao
+                posto_grad_fake = random.choice([choice[0] for choice in Promocao.posto_grad_choices if choice[0]])
+                quadro_fake = random.choice([choice[0] for choice in Promocao.quadro_choices if choice[0]])
+                grupo_fake = random.choice([choice[0] for choice in Promocao.grupo_choices if choice[0]])
+                data_promocao_fake = fake.date_between(start_date=cadastro.admissao, end_date="today")
+
+                Promocao.objects.create(
+                    cadastro=cadastro,
+                    posto_grad=posto_grad_fake,
+                    quadro=quadro_fake,
+                    grupo=grupo_fake,
+                    ultima_promocao=data_promocao_fake,
+                    usuario_alteracao=request.user,
+                )
+
+                # 3. Criar DetalhesSituacao
+                sgb_fake = random.choice([choice[0] for choice in DetalhesSituacao.sgb_choices if choice[0]])
+                posto_secao_fake = random.choice([choice[0] for choice in DetalhesSituacao.posto_secao_choices if choice[0]])
+                esta_adido_fake = random.choice([choice[0] for choice in DetalhesSituacao.esta_adido_choices if choice[0]])
+                funcao_fake = random.choice([choice[0] for choice in DetalhesSituacao.funcao_choices if choice[0]])
+                op_adm_fake = random.choice([choice[0] for choice in DetalhesSituacao.op_adm_choices if choice[0]])
+                prontidao_fake = random.choice([choice[0] for choice in DetalhesSituacao.prontidao_choices if choice[0]])
+                apresentacao_unidade_fake = fake.date_between(start_date="-5y", end_date="today")
+                saida_unidade_fake = fake.date_between(start_date=apresentacao_unidade_fake, end_date="+1y") if random.choice([True, False]) else None
+
+                DetalhesSituacao.objects.create(
+                    cadastro=cadastro,
+                    situacao="Efetivo",
+                    sgb=sgb_fake,
+                    posto_secao=posto_secao_fake,
+                    esta_adido=esta_adido_fake,
+                    funcao=funcao_fake,
+                    op_adm=op_adm_fake,
+                    prontidao=prontidao_fake,
+                    apresentacao_na_unidade=apresentacao_unidade_fake,
+                    saida_da_unidade=saida_unidade_fake,
+                    usuario_alteracao=request.user,
+                )
+
+                # 4. Criar CatEfetivo
+                data_inicio_cat_fake = fake.date_between(start_date="-2y", end_date="today")
+                data_termino_cat_fake = fake.date_between(start_date="today", end_date="+1y") if random.choice([True, False]) else None
+
+                CatEfetivo.objects.create(
+                    cadastro=cadastro,
+                    tipo="ATIVO",
+                    data_inicio=data_inicio_cat_fake,
+                    data_termino=data_termino_cat_fake,
+                    usuario_cadastro=request.user,
+                    ativo=True,
+                    observacao=fake.sentence(),
+                )
+
+                # 5. Gerar e Salvar Imagem
+                fake_image_data = generate_fake_image(text=f"{cadastro.nome_de_guerra}\nRE: {cadastro.re}")
+                image_name = f"fake_militar_{cadastro.re}.png"
+                img_obj = Imagem(cadastro=cadastro, user=request.user)
+                img_obj.image.save(image_name, ContentFile(fake_image_data), save=True)
+
+            # Se a transação foi bem-sucedida, incrementa o contador
+            cadastros_criados += 1
+            logger.debug(f"Sucesso na criação do cadastro {i+1}/{quantidade} para o militar: {cadastro.nome}")
+
+        except IntegrityError as e:
+            logger.warning(f"Erro de integridade na tentativa {i+1}/{quantidade}: {e}. Pulando.")
+            erros += 1
+            fake.unique.clear()  # Limpa o cache de unicidade para a próxima iteração
+            continue
+        except Exception as e:
+            logger.error(f"Erro inesperado na tentativa {i+1}/{quantidade}: {e}", exc_info=True)
+            erros += 1
+            continue
+
+    message = f"{cadastros_criados} de {quantidade} cadastros fakes gerados com sucesso."
+    if erros > 0:
+        message += f" {erros} tentativas falharam devido a erros."
+
+    logger.info(message)
+    return JsonResponse({"status": "success", "message": message})
 
 @login_required
 @permissao_necessaria(level="sgb", redirect_url="accounts:acesso_negado")
@@ -2802,261 +2959,3 @@ def visualizar_militar_publico(request, id):
         return redirect("core:index")
 
 
-@login_required
-@csrf_exempt  # Apenas para desenvolvimento/teste. Remova em produção e use um método POST apropriado.
-@require_http_methods(["POST"])
-def gerar_cadastros_fake(request):
-    logger.info(
-        "Requisição para gerar cadastros fake recebida."
-    )  # Log de entrada na view
-
-    if not request.user.is_superuser:  # Opcional: restringe apenas para superusuários
-        logger.warning(
-            f"Tentativa de acesso negado para gerar cadastros fake por: {request.user.username}"
-        )  # Log de segurança
-        return JsonResponse(
-            {
-                "status": "error",
-                "message": "Acesso negado. Apenas superusuários podem gerar cadastros fake.",
-            },
-            status=403,
-        )
-
-    fake = Faker("pt_BR")
-    num_cadastros = 200
-
-    try:
-        with transaction.atomic():  # Garante que todas as operações sejam bem-sucedidas ou revertidas
-            for i in range(num_cadastros):  # Usar 'i' para contar o progresso
-                # 1. Criar Cadastro
-                # Seleciona um gênero válido das choices do modelo
-                sexo_fake = random.choice(
-                    [choice[0] for choice in Cadastro.genero_choices if choice[0]]
-                )
-
-                # Gera datas de forma que sejam compatíveis com o modelo DateField
-                data_nascimento_fake = fake.date_of_birth(
-                    minimum_age=18, maximum_age=60
-                )
-                data_ingresso_fake = fake.date_between(
-                    start_date="-20y", end_date="-5y"
-                )
-                matricula_fake = fake.date_between(
-                    start_date=data_ingresso_fake, end_date="today"
-                )
-                previsao_inatividade_fake = fake.date_between(
-                    start_date="today", end_date="+30y"
-                )
-
-                cadastro = Cadastro.objects.create(
-                    re=str(fake.unique.random_number(digits=6)),
-                    dig=str(random.randint(0, 9)),  # Dígito verificador
-                    nome=fake.name(),
-                    nome_de_guerra=fake.first_name(),
-                    genero=sexo_fake,
-                    nasc=data_nascimento_fake,
-                    matricula=matricula_fake,
-                    admissao=data_ingresso_fake,
-                    previsao_de_inatividade=previsao_inatividade_fake,
-                    cpf=fake.cpf(),
-                    rg=str(fake.unique.random_number(digits=9)),  # RG com 9 dígitos
-                    tempo_para_averbar_inss=random.randint(0, 100),
-                    tempo_para_averbar_militar=random.randint(0, 100),
-                    email=fake.email(),
-                    telefone=fake.phone_number(),  # CORREÇÃO AQUI: USAR phone_number()
-                    alteracao=random.choice(
-                        [
-                            choice[0]
-                            for choice in Cadastro.alteracao_choices
-                            if choice[0]
-                        ]
-                    ),
-                    user=request.user,  # Associa ao usuário logado
-                )
-                logger.debug(
-                    f"Cadastro {i+1}/{num_cadastros} - Militar criado: {cadastro.nome}"
-                )
-
-                # 2. Criar Promocao
-                # Seleciona posto_grad, quadro e grupo válidos das choices do modelo
-                posto_grad_fake = random.choice(
-                    [choice[0] for choice in Promocao.posto_grad_choices if choice[0]]
-                )
-                quadro_fake = random.choice(
-                    [choice[0] for choice in Promocao.quadro_choices if choice[0]]
-                )
-                grupo_fake = random.choice(
-                    [choice[0] for choice in Promocao.grupo_choices if choice[0]]
-                )
-                data_promocao_fake = fake.date_between(
-                    start_date=cadastro.admissao, end_date="today"
-                )
-
-                Promocao.objects.create(
-                    cadastro=cadastro,
-                    posto_grad=posto_grad_fake,
-                    quadro=quadro_fake,
-                    grupo=grupo_fake,
-                    ultima_promocao=data_promocao_fake,
-                    usuario_alteracao=request.user,
-                )
-                logger.debug(f"Cadastro {i+1}/{num_cadastros} - Promoção criada.")
-
-                # 3. Criar DetalhesSituacao
-                situacao_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.situacao_choices
-                        if choice[0]
-                    ]
-                )
-                sgb_fake = random.choice(
-                    [choice[0] for choice in DetalhesSituacao.sgb_choices if choice[0]]
-                )
-                posto_secao_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.posto_secao_choices
-                        if choice[0]
-                    ]
-                )
-                esta_adido_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.esta_adido_choices
-                        if choice[0]
-                    ]
-                )  # Corrigido para ser uma choice
-                funcao_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.funcao_choices
-                        if choice[0]
-                    ]
-                )
-                op_adm_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.op_adm_choices
-                        if choice[0]
-                    ]
-                )
-                prontidao_fake = random.choice(
-                    [
-                        choice[0]
-                        for choice in DetalhesSituacao.prontidao_choices
-                        if choice[0]
-                    ]
-                )
-
-                apresentacao_unidade_fake = fake.date_between(
-                    start_date="-5y", end_date="today"
-                )
-                saida_unidade_fake = (
-                    fake.date_between(
-                        start_date=apresentacao_unidade_fake, end_date="+1y"
-                    )
-                    if random.choice([True, False])
-                    else None
-                )
-
-                DetalhesSituacao.objects.create(
-                    cadastro=cadastro,
-                    situacao="Efetivo",  # Valor padrão
-                    sgb=sgb_fake,
-                    posto_secao=posto_secao_fake,
-                    esta_adido=esta_adido_fake,
-                    funcao=funcao_fake,
-                    op_adm=op_adm_fake,
-                    prontidao=prontidao_fake,
-                    apresentacao_na_unidade=apresentacao_unidade_fake,
-                    saida_da_unidade=saida_unidade_fake,
-                    usuario_alteracao=request.user,
-                )
-                logger.debug(
-                    f"Cadastro {i+1}/{num_cadastros} - Detalhes de Situação criados."
-                )
-
-                # 4. Criar CatEfetivo
-                tipo_cat_fake = random.choice(
-                    [choice[0] for choice in CatEfetivo.TIPO_CHOICES if choice[0]]
-                )
-                data_inicio_cat_fake = fake.date_between(
-                    start_date="-2y", end_date="today"
-                )
-                data_termino_cat_fake = (
-                    fake.date_between(start_date="today", end_date="+1y")
-                    if random.choice([True, False])
-                    else None
-                )
-
-                cat_efetivo = CatEfetivo.objects.create(
-                    cadastro=cadastro,
-                    tipo="ATIVO",  # Valor padrão
-                    data_inicio=data_inicio_cat_fake,
-                    data_termino=data_termino_cat_fake,
-                    usuario_cadastro=request.user,
-                    ativo=True,  # Definir como True inicialmente, o modelo pode ajustar na save
-                    observacao=fake.sentence(),
-                    boletim_concessao_lsv=(
-                        fake.word() if tipo_cat_fake == "LSV" else None
-                    ),
-                    data_boletim_lsv=(
-                        fake.date_between(start_date="-1y", end_date="today")
-                        if tipo_cat_fake == "LSV"
-                        else None
-                    ),
-                    # Preencher campos de restrição aleatoriamente se o tipo for RESTRICAO
-                    **{
-                        f'restricao_{field.name.split("_")[-1].lower()}': fake.boolean()
-                        for field in CatEfetivo._meta.get_fields()
-                        if field.name.startswith("restricao_")
-                        and isinstance(field, models.BooleanField)
-                        and tipo_cat_fake == "RESTRICAO"
-                    },
-                )
-                logger.debug(
-                    f"Cadastro {i+1}/{num_cadastros} - Categoria de Efetivo criada."
-                )
-
-                # 5. Gerar e Salvar Imagem
-                fake_image_data = generate_fake_image(
-                    text=f"{cadastro.nome_de_guerra}\nRE: {cadastro.re}"
-                )
-                image_name = f"fake_militar_{cadastro.re}.png"
-
-                img_obj = Imagem(
-                    cadastro=cadastro, user=request.user
-                )  # Passar o usuário
-                img_obj.image.save(image_name, ContentFile(fake_image_data), save=True)
-                logger.debug(
-                    f"Cadastro {i+1}/{num_cadastros} - Imagem salva: {image_name}"
-                )
-
-        logger.info(
-            f"{num_cadastros} cadastros fakes gerados com sucesso!"
-        )  # Log de sucesso
-        messages.success(
-            request,
-            f"{num_cadastros} cadastros fakes gerados com sucesso!",
-            extra_tags="bg-green-500 text-white p-4 rounded",
-        )
-        return JsonResponse(
-            {
-                "status": "success",
-                "message": f"{num_cadastros} cadastros fakes gerados com sucesso!",
-            }
-        )
-    except Exception as e:
-        logger.error(
-            f"Erro ao gerar cadastros fakes: {e}", exc_info=True
-        )  # Log de erro com stack trace
-        messages.error(
-            request,
-            f"Erro ao gerar cadastros fakes: {e}",
-            extra_tags="bg-red-500 text-white p-4 rounded",
-        )
-        return JsonResponse(
-            {"status": "error", "message": f"Erro ao gerar cadastros fakes: {e}"},
-            status=500,
-        )
