@@ -2990,3 +2990,22 @@ def visualizar_militar_publico(request, id):
         return redirect("core:index")
 
 
+from . import export_utils
+
+@login_required
+def exportar_efetivo(request):
+    """
+    View para lidar com a exportação da lista de militares para diferentes formatos.
+    """
+    # Reutiliza a lógica de filtragem da ListaMilitaresView
+    view_instance = ListaMilitaresView()
+    view_instance.request = request
+    queryset = view_instance.get_queryset()
+    
+    # Obtém o formato de exportação do formulário (POST)
+    format_type = request.POST.get("export_format", "pdf")
+
+    # Chama a função de exportação apropriada do export_utils
+    return export_utils.export_efetivo_data(request, queryset, format_type)
+
+

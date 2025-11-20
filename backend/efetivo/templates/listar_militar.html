@@ -244,11 +244,11 @@
                             </button>
                             
                             <div id="exportMenu" class="hidden absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10">
-                                <form method="GET" action="#" class="py-1">
+                                <form method="POST" action="{% url 'efetivo:exportar_efetivo' %}" class="py-1">
                                     {% csrf_token %}
-                                    <button type="button" onclick="exportTable('pdf')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</button>
-                                    <button type="button" onclick="exportTable('xlsx')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</button>
-                                    <button type="button" onclick="exportTable('csv')" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</button>
+                                    <button type="submit" name="export_format" value="pdf" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">PDF</button>
+                                    <button type="submit" name="export_format" value="xlsx" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">Excel</button>
+                                    <button type="submit" name="export_format" value="csv" class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left">CSV</button>
                                 </form>
                             </div>
                         </div>
@@ -298,10 +298,6 @@
                 exportMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
                 });
-            }
-
-            function exportTable(type) {
-                console.log('Exportando como:', type);
             }
 
             // Função para obter o CSRF token do cookie

@@ -106,6 +106,7 @@ urlpatterns = [
     path(
         "gerar_cadastros_fake/", views.gerar_cadastros_fake, name="gerar_cadastros_fake"
     ),
+    path('exportar/', views.exportar_efetivo, name='exportar_efetivo'),
     # URL para editar situação funcional.
     path(
         "editar_situacao_funcional/<int:id>/",
