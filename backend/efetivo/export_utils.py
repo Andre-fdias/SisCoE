@@ -23,16 +23,15 @@ def export_efetivo_data(request, queryset, format_type):
     """
     Função principal que despacha a exportação para o formato correto.
     """
-    # A ordenação agora é feita dentro da função de geração do PDF para acomodar a lógica hierárquica
+    # A ordenação agora é feita dentro de cada função de exportação para acomodar a lógica hierárquica
     data = queryset
 
     if format_type == "pdf":
         return export_to_pdf_efetivo(request, data)
-    # Outros formatos podem ser adicionados aqui (xlsx, csv)
-    # elif format_type == "xlsx":
-    #     return export_to_excel_efetivo(request, data)
-    # elif format_type == "csv":
-    #     return export_to_csv_efetivo(request, data)
+    elif format_type == "xlsx":
+        return export_to_excel_efetivo(request, data)
+    elif format_type == "csv":
+        return export_to_csv_efetivo(request, data)
     else:
         return HttpResponse("Formato não suportado", status=400)
 
@@ -207,4 +206,131 @@ def export_to_pdf_efetivo(request, data):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    return response
+
+def export_to_excel_efetivo(request, data):
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="relacao_efetivo.xlsx"'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Efetivo"
+
+    # Cabeçalho
+    ws.append(["15º GRUPAMENTO DE BOMBEIROS - RELAÇÃO DE EFETIVO"])
+    ws.append([f"Data de emissão: {datetime.now().strftime('%d/%m/%Y %H:%M')}"])
+    ws.append([f"Emitido por: {request.user.get_full_name()}"])
+    ws.append([])
+
+    # Organizar dados
+    organized_data = OrderedDict()
+    for militar in data:
+        detalhe = militar.detalhes_situacao.last()
+        if detalhe:
+            sgb = detalhe.sgb or "SGB não definido"
+            posto_secao = detalhe.posto_secao or "Posto/Seção não definido"
+            organized_data.setdefault(sgb, OrderedDict()).setdefault(posto_secao, []).append(militar)
+
+    # Ordem hierárquica para ordenação
+    ORDEM_POSTOS = [
+        "Cel PM", "Ten Cel PM", "Maj PM", "Cap PM", "1º Ten PM", "2º Ten PM",
+        "Asp OF PM", "Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM", "Cb PM", "Sd PM"
+    ]
+
+    def get_ordenacao_key(militar):
+        promocao = militar.promocoes.last()
+        posto_grad = promocao.posto_grad if promocao else None
+        try:
+            return ORDEM_POSTOS.index(posto_grad)
+        except (ValueError, AttributeError):
+            return len(ORDEM_POSTOS)
+
+    # Preencher planilha
+    for sgb, postos in organized_data.items():
+        ws.append([f"SGB: {sgb}"])
+
+        for posto_secao, militares in postos.items():
+            ws.append([f"Posto/Seção: {posto_secao}"])
+            ws.append(["Posto/Grad", "RE-Dig", "Nome", "Função"])
+
+            militares_sorted = sorted(militares, key=get_ordenacao_key)
+
+            for militar in militares_sorted:
+                promocao = militar.promocoes.last()
+                detalhe = militar.detalhes_situacao.last()
+                ws.append(
+                    [
+                        promocao.posto_grad if promocao else "-",
+                        f"{militar.re}-{militar.dig}" if militar.re else "-",
+                        militar.nome or "-",
+                        detalhe.funcao if detalhe and detalhe.funcao else "-",
+                    ]
+                )
+            ws.append([]) # Linha em branco após cada posto/seção
+        ws.append([]) # Linha em branco após cada SGB
+    
+    wb.save(response)
+    return response
+
+def export_to_csv_efetivo(request, data):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="relacao_efetivo.csv"'
+
+    writer = csv.writer(response, delimiter=";")
+
+    # Cabeçalho
+    writer.writerow(["15º GRUPAMENTO DE BOMBEIROS - RELAÇÃO DE EFETIVO"])
+    writer.writerow([f"Data de emissão: {datetime.now().strftime('%d/%m/%Y %H:%M')}"])
+    writer.writerow([f"Emitido por: {request.user.get_full_name()}"])
+    writer.writerow([])
+
+    # Organizar dados
+    organized_data = OrderedDict()
+    for militar in data:
+        detalhe = militar.detalhes_situacao.last()
+        if detalhe:
+            sgb = detalhe.sgb or "SGB não definido"
+            posto_secao = detalhe.posto_secao or "Posto/Seção não definido"
+            organized_data.setdefault(sgb, OrderedDict()).setdefault(posto_secao, []).append(militar)
+
+    # Ordem hierárquica para ordenação
+    ORDEM_POSTOS = [
+        "Cel PM", "Ten Cel PM", "Maj PM", "Cap PM", "1º Ten PM", "2º Ten PM",
+        "Asp OF PM", "Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM", "Cb PM", "Sd PM"
+    ]
+
+    def get_ordenacao_key(militar):
+        promocao = militar.promocoes.last()
+        posto_grad = promocao.posto_grad if promocao else None
+        try:
+            return ORDEM_POSTOS.index(posto_grad)
+        except (ValueError, AttributeError):
+            return len(ORDEM_POSTOS)
+
+    # Preencher CSV
+    for sgb, postos in organized_data.items():
+        writer.writerow([f"SGB: {sgb}"])
+
+        for posto_secao, militares in postos.items():
+            writer.writerow([f"Posto/Seção: {posto_secao}"])
+            writer.writerow(["Posto/Grad", "RE-Dig", "Nome", "Função"])
+
+            militares_sorted = sorted(militares, key=get_ordenacao_key)
+
+            for militar in militares_sorted:
+                promocao = militar.promocoes.last()
+                detalhe = militar.detalhes_situacao.last()
+                writer.writerow(
+                    [
+                        promocao.posto_grad if promocao else "-",
+                        f"{militar.re}-{militar.dig}" if militar.re else "-",
+                        militar.nome or "-",
+                        detalhe.funcao if detalhe and detalhe.funcao else "-",
+                    ]
+                )
+            writer.writerow([])
+        writer.writerow([])
+
     return response
