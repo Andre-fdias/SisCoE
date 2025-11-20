@@ -23,8 +23,8 @@ def export_efetivo_data(request, queryset, format_type):
     """
     Função principal que despacha a exportação para o formato correto.
     """
-    # Garante que o queryset está ordenado para o agrupamento
-    data = queryset.order_by('detalhes_situacao__sgb', 'detalhes_situacao__posto_secao', 'promocoes__posto_grad', 'nome_de_guerra')
+    # A ordenação agora é feita dentro da função de geração do PDF para acomodar a lógica hierárquica
+    data = queryset
 
     if format_type == "pdf":
         return export_to_pdf_efetivo(request, data)
@@ -61,6 +61,22 @@ def export_to_pdf_efetivo(request, data):
     styles.add(ParagraphStyle(name="SGB", fontSize=11, leading=13, spaceBefore=8 * mm, textColor=colors.HexColor("#004080"), fontName="Helvetica-Bold"))
     styles.add(ParagraphStyle(name="Posto", fontSize=10, leading=12, spaceBefore=5 * mm, textColor=colors.HexColor("#333333"), fontName="Helvetica-Bold"))
     styles.add(ParagraphStyle(name="Total", fontSize=9, alignment=2, spaceBefore=2 * mm))
+
+    # Ordem hierárquica para ordenação
+    ORDEM_POSTOS = [
+        "Cel PM", "Ten Cel PM", "Maj PM", "Cap PM", "1º Ten PM", "2º Ten PM",
+        "Asp OF PM", "Subten PM", "1º Sgt PM", "2º Sgt PM", "3º Sgt PM", "Cb PM", "Sd PM"
+    ]
+
+    def get_ordenacao_key(militar):
+        promocao = militar.promocoes.last()
+        posto_grad = promocao.posto_grad if promocao else None
+        try:
+            # Retorna um número baixo para postos altos (aparecem primeiro)
+            return ORDEM_POSTOS.index(posto_grad)
+        except (ValueError, AttributeError):
+            # Se o posto não está na lista ou não há promoção, vai para o fim
+            return len(ORDEM_POSTOS)
 
     # Função auxiliar para buscar imagens
     def get_image_path(file):
@@ -109,19 +125,22 @@ def export_to_pdf_efetivo(request, data):
 
             sgb_elements.append(Paragraph(f"<b>Posto/Seção:</b> {posto_secao}", styles["Posto"]))
             
-            table_data = [["Posto/Grad", "Nome de Guerra", "RE-Dig", "Situação"]]
-            for militar in militares:
+            # Ordenar militares pela hierarquia
+            militares_sorted = sorted(militares, key=get_ordenacao_key)
+
+            table_data = [["Posto/Grad", "RE-Dig", "Nome", "Função"]]
+            for militar in militares_sorted:
                 promocao = militar.promocoes.last()
                 detalhe = militar.detalhes_situacao.last()
                 
                 table_data.append([
                     promocao.posto_grad if promocao else "-",
-                    militar.nome_de_guerra or "-",
                     f"{militar.re}-{militar.dig}" if militar.re else "-",
-                    detalhe.get_situacao_display() if detalhe else "-",
+                    militar.nome or "-",
+                    detalhe.funcao if detalhe and detalhe.funcao else "-",
                 ])
 
-            table = Table(table_data, colWidths=[30*mm, 60*mm, 30*mm, 50*mm])
+            table = Table(table_data, colWidths=[30*mm, 30*mm, 80*mm, 30*mm])
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#E0E0E0")),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
