@@ -231,13 +231,12 @@ def export_to_pdf_military(request, data):
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
 
-        # CORREÇÃO: Verificar se profile existe de forma mais segura
         user_info = ""
-        if hasattr(request.user, "profile") and request.user.profile:
-            posto_grad = getattr(request.user.profile, "posto_grad", "")
-            re = getattr(request.user.profile, "re", "")
-            dig = getattr(request.user.profile, "dig", "")
-            cpf = getattr(request.user.profile, "cpf", "")
+        if hasattr(request.user, "cadastro") and request.user.cadastro:
+            cadastro = request.user.cadastro
+            posto_grad = getattr(cadastro, "posto_grad", "")
+            re = getattr(cadastro, "re", "")
+            dig = getattr(cadastro, "dig", "")
             user_info = f"{posto_grad} {re}-{dig} {request.user.last_name}"
         else:
             user_info = f"{request.user.get_full_name() or request.user.username}"
@@ -252,15 +251,13 @@ def export_to_pdf_military(request, data):
     def add_watermark(canvas, doc):
         canvas.saveState()
         canvas.setFont("Helvetica", 40)
-        canvas.setFillGray(0.9, 0.2)  # Cor e transparência da marca d'água
+        canvas.setFillGray(0.9, 0.2)
 
-        # Desenha a marca d'água repetidamente na diagonal
-        text = (
-            request.user.profile.cpf
-            if hasattr(request.user, "profile") and request.user.profile
-            else ""
-        )
-        angle = 45  # Ângulo da diagonal
+        text = ""
+        if hasattr(request.user, "cadastro") and request.user.cadastro:
+            text = getattr(request.user.cadastro, "cpf", "")
+
+        angle = 45
 
         for x in range(-500, int(A4[0] * 2), 300):
             for y in range(-500, int(A4[1] * 2), 200):
