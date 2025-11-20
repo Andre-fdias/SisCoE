@@ -83,12 +83,12 @@ logger = logging.getLogger(__name__)
 User = get_user_model()  # Obtém o modelo de usuário ativo
 
 # Adicionado para gerar imagens fake
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image as PILImage, ImageDraw, ImageFont
 from io import BytesIO
 
 def generate_fake_image(text="Sample Text", width=150, height=150):
     """Gera uma imagem falsa com texto para fins de teste."""
-    img = Image.new('RGB', (width, height), color = (128, 128, 128))
+    img = PILImage.new('RGB', (width, height), color = (128, 128, 128))
     d = ImageDraw.Draw(img)
     
     # Tenta usar uma fonte padrão, se não, usa a fonte default do Pillow
@@ -1939,19 +1939,19 @@ def gerar_etiqueta_pdf(request):
         try:
             # Logo como marca d'água central (3x4 ocupando toda altura)
             logo_img = Image(
-                "backend/core/static/img/logo.png",
+                get_image_path("logo.png"),
                 width=(3 / 4) * ETIQUETA_HEIGHT,
                 height=ETIQUETA_HEIGHT,
             )
 
             # Brasão no canto superior esquerdo (15x15mm)
             brasao_img = Image(
-                "backend/core/static/img/brasao.png", width=15 * mm, height=15 * mm
+                get_image_path("brasao.png"), width=15 * mm, height=15 * mm
             )
 
             # Brasão PM no canto superior direito (15x15mm)
             brasao_pm_img = Image(
-                "backend/core/static/img/brasaopm.png", width=15 * mm, height=15 * mm
+                get_image_path("brasaopm.png"), width=15 * mm, height=15 * mm
             )
 
         except Exception as e:
