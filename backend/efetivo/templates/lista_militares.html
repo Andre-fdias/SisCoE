@@ -269,100 +269,210 @@
     </div> {# Fecha o flex flex-col md:flex-row gap-6 #}
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggleGridViewBtn = document.getElementById('toggleGridView');
-            const toggleTableViewBtn = document.getElementById('toggleTableView');
-            const gridView = document.getElementById('gridView');
-            const tableView = document.getElementById('tableView');
-            const searchInput = document.getElementById('search');
+ 
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleGridViewBtn = document.getElementById('toggleGridView');
+    const toggleTableViewBtn = document.getElementById('toggleTableView');
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const searchInput = document.getElementById('search');
 
-            // === Lógica de Filtro Lateral ===
-            const filterGroupButtons = document.querySelectorAll('.filter-group-item');
-            const filterSubgroupButtons = document.querySelectorAll('.filter-subgroup-item');
+    // === Lógica de Filtro Lateral ===
+    const filterGroupButtons = document.querySelectorAll('.filter-group-item');
+    const filterSubgroupButtons = document.querySelectorAll('.filter-subgroup-item');
 
-            filterGroupButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const groupCode = this.dataset.groupCode;
-                    const isActive = this.classList.contains('active');
+    filterGroupButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const groupCode = this.dataset.groupCode;
+            const isActive = this.classList.contains('active');
 
-                    // Se já estiver ativo, desativa tudo e recarrega a página para o estado inicial
-                    if (isActive) {
-                        window.location.href = '{% url "efetivo:lista_militares" %}';
-                        return;
-                    }
-
-                    let url = new URL(window.location.href);
-                    url.searchParams.set('grupo', groupCode);
-                    url.searchParams.delete('subgrupo'); // Remove subgrupo ao selecionar novo grupo
-                    window.location.href = url.toString();
-                });
-            });
-
-            filterSubgroupButtons.forEach(button => {
-                button.addEventListener('click', function(event) {
-                    event.stopPropagation(); // Evita que o clique no subgrupo ative o grupo pai novamente
-                    const groupCode = this.dataset.groupCode;
-                    const subgroupCode = this.dataset.subgroupCode;
-
-                    let url = new URL(window.location.href);
-                    url.searchParams.set('grupo', groupCode);
-                    url.searchParams.set('subgrupo', subgroupCode);
-                    window.location.href = url.toString();
-                });
-            });
-
-
-            // === Lógica de Toggle de Visualização (Grade/Tabela) ===
-            function showGridView() {
-                gridView.classList.remove('hidden');
-                tableView.classList.add('hidden');
-                toggleGridViewBtn.classList.remove('bg-gray-700', 'text-gray-300');
-                toggleGridViewBtn.classList.add('bg-purple-600', 'text-white');
-                toggleTableViewBtn.classList.remove('bg-purple-600', 'text-white');
-                toggleTableViewBtn.classList.add('bg-gray-700', 'text-gray-300');
+            if (isActive) {
+                window.location.href = '{% url "efetivo:lista_militares" %}';
+                return;
             }
 
-            function showTableView() {
-                tableView.classList.remove('hidden');
-                gridView.classList.add('hidden');
-                toggleTableViewBtn.classList.remove('bg-gray-700', 'text-gray-300');
-                toggleTableViewBtn.classList.add('bg-purple-600', 'text-white');
-                toggleGridViewBtn.classList.remove('bg-purple-600', 'text-white');
-                toggleGridViewBtn.classList.add('bg-gray-700', 'text-gray-300');
-            }
-
-            toggleGridViewBtn.addEventListener('click', showGridView);
-            toggleTableViewBtn.addEventListener('click', showTableView);
-
-            // Defina a visualização padrão ao carregar (pode ser "table" ou "grid")
-            if (localStorage.getItem('defaultView') === 'grid') {
-                showGridView();
-            } else {
-                showTableView(); // Padrão é tabela
-            }
-
-            // Opcional: Salvar a preferência do usuário
-            toggleGridViewBtn.addEventListener('click', () => localStorage.setItem('defaultView', 'grid'));
-            toggleTableViewBtn.addEventListener('click', () => localStorage.setItem('defaultView', 'table'));
-
-            // === Lógica de Busca (apenas na tabela para este exemplo, grade precisa de AJAX) ===
-            searchInput.addEventListener('keyup', function() {
-                const filter = searchInput.value.toLowerCase();
-                const tableRows = document.querySelectorAll('#militares-table-body tr');
-
-                tableRows.forEach(row => {
-                    const reText = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const postoGradText = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                    const nameText = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-
-                    if (reText.includes(filter) || postoGradText.includes(filter) || nameText.includes(filter)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            });
+            let url = new URL(window.location.href);
+            url.searchParams.set('grupo', groupCode);
+            url.searchParams.delete('subgrupo');
+            window.location.href = url.toString();
         });
+    });
+
+    filterSubgroupButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.stopPropagation();
+            const groupCode = this.dataset.groupCode;
+            const subgroupCode = this.dataset.subgroupCode;
+
+            let url = new URL(window.location.href);
+            url.searchParams.set('grupo', groupCode);
+            url.searchParams.set('subgrupo', subgroupCode);
+            window.location.href = url.toString();
+        });
+    });
+
+    // === Lógica de Toggle de Visualização ===
+    function showGridView() {
+        gridView.classList.remove('hidden');
+        tableView.classList.add('hidden');
+        toggleGridViewBtn.classList.remove('bg-gray-700', 'text-gray-300');
+        toggleGridViewBtn.classList.add('bg-purple-600', 'text-white');
+        toggleTableViewBtn.classList.remove('bg-purple-600', 'text-white');
+        toggleTableViewBtn.classList.add('bg-gray-700', 'text-gray-300');
+        
+        searchInput.value = '';
+        searchInGridView('');
+    }
+
+    function showTableView() {
+        tableView.classList.remove('hidden');
+        gridView.classList.add('hidden');
+        toggleTableViewBtn.classList.remove('bg-gray-700', 'text-gray-300');
+        toggleTableViewBtn.classList.add('bg-purple-600', 'text-white');
+        toggleGridViewBtn.classList.remove('bg-purple-600', 'text-white');
+        toggleGridViewBtn.classList.add('bg-gray-700', 'text-gray-300');
+        
+        searchInput.value = '';
+        searchInTableView('');
+    }
+
+    toggleGridViewBtn.addEventListener('click', showGridView);
+    toggleTableViewBtn.addEventListener('click', showTableView);
+
+    // Visualização padrão
+    if (localStorage.getItem('defaultView') === 'grid') {
+        showGridView();
+    } else {
+        showTableView();
+    }
+
+    // Salvar preferência
+    toggleGridViewBtn.addEventListener('click', () => localStorage.setItem('defaultView', 'grid'));
+    toggleTableViewBtn.addEventListener('click', () => localStorage.setItem('defaultView', 'table'));
+
+    // === Lógica de Busca Unificada ===
+    searchInput.addEventListener('keyup', function() {
+        const filter = searchInput.value.toLowerCase().trim();
+        
+        if (!gridView.classList.contains('hidden')) {
+            searchInGridView(filter);
+        } else {
+            searchInTableView(filter);
+        }
+    });
+
+    function searchInGridView(filter) {
+        // Buscar todos os elementos que representam militares
+        const possibleElements = [
+            ...gridView.querySelectorAll('.militar-card'),
+            ...gridView.querySelectorAll('tr'),
+            ...gridView.querySelectorAll('div > div'),
+            ...gridView.querySelectorAll('[data-militar-id]'),
+            ...gridView.querySelectorAll('.card')
+        ];
+        
+        let foundAny = false;
+        
+        possibleElements.forEach(element => {
+            // Pular elementos vazios ou de mensagem
+            if (!element.textContent || element.textContent.trim() === '' || 
+                element.classList.contains('no-results-message')) {
+                return;
+            }
+            
+            if (filter === '') {
+                element.style.display = '';
+                element.classList.remove('hidden');
+                foundAny = true;
+                return;
+            }
+            
+            // Buscar em todo o texto do elemento
+            const elementText = element.textContent.toLowerCase();
+            const found = elementText.includes(filter);
+            
+            if (found) {
+                element.style.display = '';
+                element.classList.remove('hidden');
+                foundAny = true;
+            } else {
+                element.style.display = 'none';
+                element.classList.add('hidden');
+            }
+        });
+        
+        // Mensagem de nenhum resultado
+        const noResultsElement = gridView.querySelector('.no-results-message');
+        if (!foundAny && filter !== '') {
+            if (!noResultsElement) {
+                const message = document.createElement('div');
+                message.className = 'no-results-message col-span-full text-center py-8 text-gray-400';
+                message.innerHTML = `
+                    <i class="fas fa-search mr-2"></i>
+                    Nenhum militar encontrado para "<strong>${searchInput.value}</strong>"
+                `;
+                gridView.appendChild(message);
+            }
+        } else if (noResultsElement) {
+            noResultsElement.remove();
+        }
+    }
+
+    function searchInTableView(filter) {
+        const tableRows = document.querySelectorAll('#militares-table-body tr');
+        let foundAny = false;
+        
+        tableRows.forEach(row => {
+            if (row.classList.contains('no-results-row')) {
+                row.remove();
+                return;
+            }
+            
+            if (filter === '') {
+                row.style.display = '';
+                foundAny = true;
+                return;
+            }
+
+            const cells = row.querySelectorAll('td');
+            let found = false;
+            
+            for (let i = 1; i < cells.length - 1; i++) {
+                if (cells[i].textContent.toLowerCase().includes(filter)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (found) {
+                row.style.display = '';
+                foundAny = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Mensagem de nenhum resultado
+        const noResultsRow = document.querySelector('#militares-table-body .no-results-row');
+        if (!foundAny && filter !== '') {
+            if (!noResultsRow) {
+                const row = document.createElement('tr');
+                row.className = 'no-results-row';
+                row.innerHTML = `
+                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-400">
+                        <i class="fas fa-search mr-2"></i>
+                        Nenhum militar encontrado para "${searchInput.value}"
+                    </td>
+                `;
+                document.querySelector('#militares-table-body').appendChild(row);
+            }
+        } else if (noResultsRow) {
+            noResultsRow.remove();
+        }
+    }
+});
+
+
     </script>
 </div>
 {% endblock %}

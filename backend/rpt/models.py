@@ -251,3 +251,23 @@ class HistoricoRpt(models.Model):
 
     def __str__(self):
         return f"{self.cadastro.re} {self.cadastro.dig} {self.cadastro.nome_de_guerra}"
+
+class GeneratedReport(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pendente'),
+        ('SUCCESS', 'Sucesso'),
+        ('FAILURE', 'Falha'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='generated_reports')
+    report_type = models.CharField(max_length=100)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    task_id = models.CharField(max_length=255, blank=True, null=True)
+    file = models.FileField(upload_to='generated_reports/', blank=True, null=True)
+    selected_columns = models.JSONField(default=list, blank=True)
+    filters = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Relatório {self.report_type} para {self.user.username} em {self.created_at.strftime('%d/%m/%Y %H:%M')}"

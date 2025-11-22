@@ -41,13 +41,13 @@ from .models import (
     Cadastro,
     CatEfetivo,
     DetalhesSituacao,
-    GeneratedReport,
     HistoricoCatEfetivo,
     HistoricoDetalhesSituacao,
     HistoricoPromocao,
     Imagem,
     Promocao,
 )
+from backend.rpt.models import GeneratedReport
 
 # Modelos de outros apps
 
