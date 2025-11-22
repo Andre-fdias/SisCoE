@@ -40,6 +40,7 @@
 
             <fieldset class="bg-gradient-to-r from-gray-600 to-gray-900 rounded-md shadow-lg mb-2 mt-4 border-0">
                 <div class="bg-white p-6 rounded-md shadow-inner">
+                    {% if not cadastro %}
                     <div class="mb-4">
                         <p class="text-gray-700 font-medium">Digite abaixo o RE (sem dígito) do militar que será cadastrado!</p>
                     </div>
@@ -61,11 +62,13 @@
                             </div>
                         </div>
                     </form>
+                    {% endif %}
 
-                    <div id="militar-details-section" class="mt-6 hidden">
+                    <div id="militar-details-section" class="mt-6 {% if not cadastro %}hidden{% endif %}">
                         <form id="lpForm" method="post" action="{% url 'lp:cadastrar_lp' %}" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <input type="hidden" name="cadastro_id" id="cadastro_id_hidden">
+                            <input type="hidden" name="cadastro_id" id="cadastro_id_hidden" value="{{ cadastro.id }}">
+                            <input type="hidden" name="flow" value="{{ flow }}">
                             
                             <div class="space-y-6">
                                 <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
@@ -75,36 +78,36 @@
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div class="space-y-2">
                                                     <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">RE</label>
-                                                    <div class="input-readonly" id="militar_re"></div>
+                                                    <div class="input-readonly" id="militar_re">{{ cadastro.re }}</div>
                                                 </div>
                                                 <div class="space-y-2">
                                                     <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Posto/Grad</label>
-                                                    <div class="input-readonly" id="militar_posto_grad"></div>
+                                                    <div class="input-readonly" id="militar_posto_grad">{{ promocao.posto_grad }}</div>
                                                 </div>
                                             </div>
                                             
                                             <div class="space-y-2">
                                                 <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Nome Completo</label>
-                                                <div class="input-readonly" id="militar_nome"></div>
+                                                <div class="input-readonly" id="militar_nome">{{ cadastro.nome }}</div>
                                             </div>
                                             
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div class="space-y-2">
                                                     <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">SGB</label>
-                                                    <div class="input-readonly" id="militar_sgb"></div>
+                                                    <div class="input-readonly" id="militar_sgb">{{ detalhes.sgb }}</div>
                                                 </div>
                                                 <div class="space-y-2">
                                                     <label class="block text-xs font-medium text-gray-600 uppercase tracking-wide">Posto/Seção</label>
-                                                    <div class="input-readonly" id="militar_posto_secao"></div>
+                                                    <div class="input-readonly" id="militar_posto_secao">{{ detalhes.posto_secao }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div class="flex justify-center">
                                             <div class="relative group w-48 h-48">
-                                                <img id="preview" src="" 
-                                                     class="w-full h-full object-cover rounded-xl border-4 border-white shadow-lg hidden">
-                                                <div id="no-image-placeholder" class="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
+                                                <img id="preview" src="{% if imagem.image %}{{ imagem.image.url }}{% endif %}" 
+                                                     class="w-full h-full object-cover rounded-xl border-4 border-white shadow-lg {% if not imagem.image %}hidden{% endif %}">
+                                                <div id="no-image-placeholder" class="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center {% if imagem.image %}hidden{% endif %}">
                                                     <span class="text-gray-500 text-sm">Sem imagem cadastrada</span>
                                                 </div>
                                                 
@@ -219,8 +222,9 @@
                             </div>
                         </form>
                     </div>
+                    {% if not cadastro %}
                      <p id="initial-message" class="text-gray-600 mt-4 text-center">Por favor, utilize o campo acima para buscar um militar pelo RE.</p>
-
+                    {% endif %}
                 </div>
             </fieldset>
         </fieldset>
@@ -270,7 +274,6 @@
                 fields.forEach(field => {
                     if (field.id !== 're') { // Não desabilita o input de RE da busca
                         field.disabled = !enable;
-                        // Opcional: Adicionar/remover classes de estilo para indicar disabled/enabled
                         if (!enable) {
                             field.classList.add('opacity-50', 'cursor-not-allowed');
                         } else {
@@ -280,130 +283,94 @@
                 });
             }
 
-            // Inicialmente desabilita os campos do formulário LP
-            toggleFormFields(false);
-            militarDetailsSection.classList.add('hidden'); // Oculta a seção de detalhes
+            // Verifica se os dados do militar já vieram no contexto
+            const isMilitarPreloaded = !!document.getElementById('cadastro_id_hidden').value;
 
-            searchForm.addEventListener('submit', function(e) {
-                e.preventDefault(); // Impede o envio padrão do formulário
+            if (isMilitarPreloaded) {
+                toggleFormFields(true);
+                if(initialMessage) initialMessage.classList.add('hidden');
+            } else {
+                toggleFormFields(false);
+                militarDetailsSection.classList.add('hidden');
+            }
 
-                const formData = new FormData(this);
-                const url = this.action;
+            if(searchForm) {
+                searchForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); 
 
-                // Mostrar indicador de carregamento
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const originalBtnText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Buscando...';
-                submitBtn.disabled = true;
+                    const formData = new FormData(this);
+                    const url = this.action;
 
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest', // Indica que é uma requisição AJAX
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Envia o token CSRF
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                    
-                    if (data.success) {
-                        const militar = data.militar_data;
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Buscando...';
+                    submitBtn.disabled = true;
 
-                        // Preenche os campos de dados do militar
-                        cadastroIdHidden.value = militar.id;
-                        militarRe.textContent = militar.re;
-                        militarNome.textContent = militar.nome;
-                        militarPostoGrad.textContent = militar.posto_grad;
-                        militarSgb.textContent = militar.sgb;
-                        militarPostoSecao.textContent = militar.posto_secao;
-
-                        // Lida com a imagem
-                        if (militar.image_url) {
-                            previewImg.src = militar.image_url;
-                            previewImg.classList.remove('hidden');
-                            noImagePlaceholder.classList.add('hidden');
-                        } else {
-                            previewImg.src = '';
-                            previewImg.classList.add('hidden');
-                            noImagePlaceholder.classList.remove('hidden');
-                        }
-
-                        // Mostra a seção de detalhes e habilita os campos
-                        militarDetailsSection.classList.remove('hidden');
-                        initialMessage.classList.add('hidden'); // Oculta a mensagem inicial
-                        toggleFormFields(true);
-
-                        // Se houver dados iniciais da LP vindos do backend (initial_lp_data)
-                        // Você pode preencher os campos de LP aqui, por exemplo:
-                        // if (militar.initial_lp_data) {
-                        //     numeroLp.value = militar.initial_lp_data.numero_lp;
-                        //     dataUltimoLp.value = militar.initial_lp_data.data_ultimo_lp;
-                        //     
-                        //     diasDescontoLp.value = militar.initial_lp_data.dias_desconto_lp;
-                        //     calcularCampos(); // Recalcula após preencher
-                        // }
-
-                        // Mostrar alerta de sucesso
-                        if (data.alert) {
-                            showAlert(data.alert.type, data.alert.title, data.alert.message);
-                        }
-                    } else {
-                        // Limpa/oculta a seção de detalhes e desabilita os campos
-                        militarDetailsSection.classList.add('hidden');
-                        initialMessage.classList.remove('hidden'); // Mostra a mensagem inicial novamente
-                        toggleFormFields(false); // Desabilita os campos de LP
-
-                        // Limpa os campos de dados do militar
-                        cadastroIdHidden.value = '';
-                        militarRe.textContent = '';
-                        militarNome.textContent = '';
-                        militarPostoGrad.textContent = '';
-                        militarSgb.textContent = '';
-                        militarPostoSecao.textContent = '';
-                        previewImg.src = '';
-                        previewImg.classList.add('hidden');
-                        noImagePlaceholder.classList.remove('hidden'); // Mostra o placeholder de sem imagem
-
-                        // Limpa os campos de LP
-                        numeroLp.value = '';
-                        dataUltimoLp.value = '';
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
                         
-                        diasDescontoLp.value = '0'; // Volta para o valor padrão
-                        numeroProxLpOutput.value = '';
-                        proximoLpOutput.value = '';
-                        mesProximoLpOutput.value = '';
-                        anoProximoLpOutput.value = '';
+                        if (data.success) {
+                            const militar = data.militar_data;
 
-                        // Mostrar alerta de erro
-                        if (data.alert) {
-                            showAlert(data.alert.type, data.alert.title, data.alert.message);
+                            cadastroIdHidden.value = militar.id;
+                            militarRe.textContent = militar.re;
+                            militarNome.textContent = militar.nome;
+                            militarPostoGrad.textContent = militar.posto_grad;
+                            militarSgb.textContent = militar.sgb;
+                            militarPostoSecao.textContent = militar.posto_secao;
+
+                            if (militar.image_url) {
+                                previewImg.src = militar.image_url;
+                                previewImg.classList.remove('hidden');
+                                noImagePlaceholder.classList.add('hidden');
+                            } else {
+                                previewImg.src = '';
+                                previewImg.classList.add('hidden');
+                                noImagePlaceholder.classList.remove('hidden');
+                            }
+
+                            militarDetailsSection.classList.remove('hidden');
+                            if(initialMessage) initialMessage.classList.add('hidden');
+                            toggleFormFields(true);
+
+                            if (data.alert) {
+                                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                            }
+                        } else {
+                            militarDetailsSection.classList.add('hidden');
+                            if(initialMessage) initialMessage.classList.remove('hidden');
+                            toggleFormFields(false);
+
+                            if (data.alert) {
+                                showAlert(data.alert.type, data.alert.title, data.alert.message);
+                            }
                         }
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro na requisição AJAX:', error);
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                    
-                    showAlert('error', 'Erro de Rede', 'Não foi possível conectar ao servidor para buscar o militar.');
-                    
-                    // Em caso de erro de rede, limpa e oculta tudo
-                    militarDetailsSection.classList.add('hidden');
-                    initialMessage.classList.remove('hidden');
-                    toggleFormFields(false);
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição AJAX:', error);
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                        showAlert('error', 'Erro de Rede', 'Não foi possível conectar ao servidor para buscar o militar.');
+                        militarDetailsSection.classList.add('hidden');
+                        if(initialMessage) initialMessage.classList.remove('hidden');
+                        toggleFormFields(false);
+                    });
                 });
-            });
+            }
 
-            // Validação do formulário principal de LP (se o militar já foi carregado)
             if (lpForm) {
                 lpForm.addEventListener('submit', function(e) {
-                    const requiredFields = [
-                        'numero_lp', 'data_ultimo_lp'
-                    ];
-                    
+                    const requiredFields = ['numero_lp', 'data_ultimo_lp'];
                     let isValid = true;
                     
                     requiredFields.forEach(field => {
@@ -417,25 +384,17 @@
                     if (!isValid) {
                         e.preventDefault();
                         showAlert('warning', 'Campos Obrigatórios', 'Por favor, preencha todos os campos obrigatórios marcados com *');
-                        
-                        // Rolagem para o primeiro erro
                         const firstError = document.querySelector('.border-red-500');
                         if (firstError) {
-                            firstError.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     } else {
-                        // Mostrar indicador de carregamento
                         const submitBtn = this.querySelector('button[type="submit"]');
-                        const originalBtnText = submitBtn.innerHTML;
                         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
                         submitBtn.disabled = true;
                     }
                 });
                 
-                // Remover estilos de erro quando o usuário começa a digitar
                 lpForm.querySelectorAll('input, select').forEach(input => {
                     input.addEventListener('input', function() {
                         this.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
@@ -443,27 +402,22 @@
                 });
             }
 
-            // Função para calcular datas futuras (5 anos - dias de desconto)
             function calcularDataFutura(dataBaseStr, diasDesconto = 0) {
-                const dataBase = new Date(dataBaseStr + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso horário
+                const dataBase = new Date(dataBaseStr + 'T00:00:00');
                 dataBase.setFullYear(dataBase.getFullYear() + 5);
-                dataBase.setDate(dataBase.getDate() - diasDesconto); // Subtrai dias de desconto
+                dataBase.setDate(dataBase.getDate() - diasDesconto);
                 return dataBase;
             }
 
-            // Função principal de cálculo da LP
             function calcularCampos() {
                 try {
-                    if (!militarDetailsSection.classList.contains('hidden') && numeroLp.value && dataUltimoLp.value) {
+                    if (numeroLp.value && dataUltimoLp.value) {
                         const numero = parseInt(numeroLp.value);
                         numeroProxLpOutput.value = numero + 1;
                         
                         const diasDesconto = parseInt(diasDescontoLp.value) || 0;
                         
-                        // Cálculo correto baseado apenas na data do último LP
-                        const dataLp = new Date(dataUltimoLp.value);
-                        dataLp.setFullYear(dataLp.getFullYear() + 5);
-                        dataLp.setDate(dataLp.getDate() - diasDesconto);
+                        const dataLp = calcularDataFutura(dataUltimoLp.value, diasDesconto);
                         
                         proximoLpOutput.value = formatarData(dataLp);
                         mesProximoLpOutput.value = dataLp.getMonth() + 1;
@@ -479,7 +433,6 @@
                 }
             }
 
-            // Função auxiliar para formatar data como DD-MM-AAAA
             function formatarData(data) {
                 const dia = String(data.getDate()).padStart(2, '0');
                 const mes = String(data.getMonth() + 1).padStart(2, '0');
@@ -487,23 +440,19 @@
                 return `${dia}-${mes}-${ano}`;
             }
 
-            // Event listeners para todos os campos relevantes para o cálculo da LP
-            [numeroLp, dataUltimoLp].forEach(element => {
-                // Adiciona o evento 'input' também para reagir a digitação
-                element.addEventListener('input', calcularCampos); 
-              
+            [numeroLp, dataUltimoLp, diasDescontoLp].forEach(element => {
+                if(element) {
+                    element.addEventListener('input', calcularCampos);
+                    element.addEventListener('change', calcularCampos);
+                }
             });
 
-            // Funções de alerta (assumindo que 'modal_alerts.html' está incluído e possui JS para showAlert)
-            // Se 'modal_alerts.html' não injetar 'showAlert' globalmente, você precisará defini-la aqui:
             function showAlert(type, title, message) {
-                // Exemplo simplificado, adapte à sua implementação de modal_alerts.html
-                // Se você já tem a lógica em modal_alerts.html, esta função pode chamar a sua.
                 console.log(`ALERTA (${type}): ${title} - ${message}`);
-                // Ex: Se você usa SweetAlert2
-                // Swal.fire({ icon: type, title: title, text: message });
             }
 
+            // Calcular campos ao carregar a página se os dados já estiverem lá
+            calcularCampos();
         });
     </script>
 </body>

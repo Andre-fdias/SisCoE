@@ -6,6 +6,7 @@ from datetime import datetime  # Importar date também
 import random
 from faker import Faker
 from django.core.files.base import ContentFile
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
@@ -40,6 +41,7 @@ from .models import (
     Cadastro,
     CatEfetivo,
     DetalhesSituacao,
+    GeneratedReport,
     HistoricoCatEfetivo,
     HistoricoDetalhesSituacao,
     HistoricoPromocao,
@@ -214,10 +216,10 @@ def cadastrar_militar(request):
 
                 messages.success(
                     request,
-                    "Militar cadastrado com sucesso",
+                    "Militar cadastrado com sucesso! Próximo passo: Adicional.",
                     extra_tags="bg-green-500 text-white p-4 rounded",
                 )
-                return redirect("/efetivo/cadastrar_militar")
+                return redirect(f"{reverse('adicional:cadastrar_adicional')}?militar_id={cadastro.id}&flow=new_militar")
 
         except IntegrityError as e:
             print(f"Erro de integridade: {str(e)}", file=sys.stderr)
@@ -2991,21 +2993,114 @@ def visualizar_militar_publico(request, id):
 
 
 from . import export_utils
+from .tasks import generate_report_task
 
 @login_required
 def exportar_efetivo(request):
     """
-    View para lidar com a exportação da lista de militares para diferentes formatos.
+    Dispara a geração de relatório em segundo plano usando Celery e retorna uma resposta JSON.
     """
-    # Reutiliza a lógica de filtragem da ListaMilitaresView
-    view_instance = ListaMilitaresView()
-    view_instance.request = request
-    queryset = view_instance.get_queryset()
-    
-    # Obtém o formato de exportação do formulário (POST)
-    format_type = request.POST.get("export_format", "pdf")
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método não permitido'}, status=405)
 
-    # Chama a função de exportação apropriada do export_utils
-    return export_utils.export_efetivo_data(request, queryset, format_type)
+    try:
+        # Captura os filtros avançados do POST
+        advanced_filters = []
+        filter_fields = request.POST.getlist('filter_field')
+        filter_operators = request.POST.getlist('filter_operator')
+        filter_values = request.POST.getlist('filter_value')
+
+        for i in range(len(filter_fields)):
+            if filter_fields[i] and filter_operators[i] and filter_values[i]:
+                advanced_filters.append({
+                    'field': filter_fields[i],
+                    'operator': filter_operators[i],
+                    'value': filter_values[i],
+                })
+
+        filters_json = json.dumps(advanced_filters)
+
+        # Obtém o formato de exportação e as colunas do formulário (POST)
+        format_type = request.POST.get("export_format", "pdf")
+        report_type_name = f"efetivo_{format_type}"
+        selected_columns = request.POST.getlist('selected_columns')
+
+        # 1. Cria um registro de relatório no banco de dados
+        report = GeneratedReport.objects.create(
+            user=request.user,
+            status='PENDING',
+            report_type=report_type_name,
+            selected_columns=selected_columns,
+            filters=advanced_filters
+        )
+
+        # 2. Dispara a tarefa Celery
+        task = generate_report_task.delay(
+            user_id=request.user.id,
+            report_pk=report.pk,
+            format_type=format_type,
+            filters_json=filters_json,
+            selected_columns=selected_columns
+        )
+        
+        # Atualiza o relatório com o ID da tarefa Celery
+        report.task_id = task.id
+        report.save()
+
+        # 3. Retorna uma resposta JSON para o frontend
+        return JsonResponse({
+            'success': True, 
+            'message': f"Seu relatório ({format_type.upper()}) está sendo gerado.",
+            'task_id': task.id
+        })
+
+    except Exception as e:
+        logger.error(f"Erro ao disparar a tarefa de exportação: {e}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def listar_relatorios(request):
+    reports = GeneratedReport.objects.filter(user=request.user).order_by('-created_at')
+    has_pending_reports = reports.filter(status='PENDING').exists()
+    
+    available_columns = {
+        'cadastro': [
+            {'name': 're', 'label': 'RE'},
+            {'name': 'dig', 'label': 'Dígito'},
+            {'name': 'nome', 'label': 'Nome Completo'},
+            {'name': 'nome_de_guerra', 'label': 'Nome de Guerra'},
+            {'name': 'genero', 'label': 'Gênero'},
+            {'name': 'nasc', 'label': 'Nascimento'},
+            {'name': 'matricula', 'label': 'Matrícula'},
+            {'name': 'admissao', 'label': 'Admissão'},
+            {'name': 'previsao_de_inatividade', 'label': 'Previsão de Inatividade'},
+            {'name': 'cpf', 'label': 'CPF'},
+            {'name': 'rg', 'label': 'RG'},
+            {'name': 'email', 'label': 'E-mail'},
+            {'name': 'telefone', 'label': 'Telefone'},
+        ],
+        'promocao': [
+            {'name': 'posto_grad', 'label': 'Posto/Graduação'},
+            {'name': 'quadro', 'label': 'Quadro'},
+            {'name': 'grupo', 'label': 'Grupo'},
+            {'name': 'ultima_promocao', 'label': 'Última Promoção'},
+        ],
+        'detalhes_situacao': [
+            {'name': 'situacao', 'label': 'Situação'},
+            {'name': 'sgb', 'label': 'SGB'},
+            {'name': 'posto_secao', 'label': 'Posto/Seção'},
+            {'name': 'funcao', 'label': 'Função'},
+            {'name': 'op_adm', 'label': 'Operacional/Administrativo'},
+            {'name': 'prontidao', 'label': 'Prontidão'},
+        ]
+    }
+
+    context = {
+        'reports': reports,
+        'has_pending_reports': has_pending_reports,
+        'available_columns': available_columns,
+    }
+    return render(request, "listar_relatorios.html", context)
 
 

@@ -121,25 +121,56 @@ def cadastrar_lp(request):
     View para cadastrar Licença Prêmio para um militar.
     """
     template_name = "lp/cadastrar_lp.html"
+    context = {"n_choices": N_CHOICES}
+    flow = request.GET.get("flow") or request.POST.get("flow")
+    militar_id = request.GET.get("militar_id") or request.POST.get("cadastro_id")
 
     if request.method == "GET":
-        # Renderiza o formulário inicial de busca
-        return render(request, template_name, {"n_choices": N_CHOICES})
+        if flow == "new_militar" and militar_id:
+            try:
+                cadastro = get_object_or_404(Cadastro, id=militar_id)
+                promocao = (
+                    Promocao.objects.filter(cadastro=cadastro)
+                    .order_by("-ultima_promocao")
+                    .first()
+                )
+                detalhes = DetalhesSituacao.objects.filter(cadastro=cadastro).first()
+                imagem = Imagem.objects.filter(cadastro=cadastro).first()
+
+                if not detalhes or not promocao:
+                    messages.error(
+                        request, "Dados complementares do militar não encontrados."
+                    )
+                    return redirect("efetivo:listar_militar")
+
+                context.update(
+                    {
+                        "cadastro": cadastro,
+                        "promocao": promocao,
+                        "detalhes": detalhes,
+                        "imagem": imagem,
+                        "flow": flow,
+                    }
+                )
+                messages.info(
+                    request,
+                    f"Cadastrando Licença Prêmio para o militar {cadastro.nome_de_guerra}.",
+                )
+            except Exception as e:
+                messages.error(request, f"Erro ao carregar militar: {e}")
+                return redirect("efetivo:listar_militar")
+        return render(request, template_name, context)
 
     elif request.method == "POST":
         # Obtenção dos dados do formulário
-        cadastro_id = request.POST.get("cadastro_id")
         numero_lp = request.POST.get("numero_lp")
         data_ultimo_lp_str = request.POST.get("data_ultimo_lp")
-
         dias_desconto_lp = int(request.POST.get("dias_desconto_lp", 0) or 0)
         user = request.user
 
-        # Determinar se é uma requisição AJAX
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-        # Validações básicas
-        if not cadastro_id:
+        if not militar_id:
             error_msg = "Cadastro do militar não localizado."
             if is_ajax:
                 return alert_response(
@@ -148,7 +179,7 @@ def cadastrar_lp(request):
             messages.error(request, error_msg)
             return redirect("lp:cadastrar_lp")
 
-        cadastro = get_object_or_404(Cadastro, id=cadastro_id)
+        cadastro = get_object_or_404(Cadastro, id=militar_id)
 
         if not data_ultimo_lp_str:
             error_msg = "A data de fechamento do bloco aquisitivo é obrigatória."
@@ -160,22 +191,9 @@ def cadastrar_lp(request):
             return redirect("lp:cadastrar_lp")
 
         try:
-            # Conversão de datas
             data_ultimo_lp = datetime.strptime(data_ultimo_lp_str, "%Y-%m-%d").date()
-
-            # Validação do número da LP
-            if not numero_lp or not numero_lp.isdigit():
-                error_msg = "Número da Licença Prêmio inválido."
-                if is_ajax:
-                    return alert_response(
-                        type="error", title="Erro!", message=error_msg, status=400
-                    )
-                messages.error(request, error_msg)
-                return redirect("lp:cadastrar_lp")
-
             numero_lp_int = int(numero_lp)
 
-            # Verificar se LP já existe para este militar
             if LP.objects.filter(cadastro=cadastro, numero_lp=numero_lp_int).exists():
                 error_msg = f"Já existe uma LP de número {numero_lp_int} cadastrada para este militar."
                 if is_ajax:
@@ -185,7 +203,6 @@ def cadastrar_lp(request):
                 messages.error(request, error_msg)
                 return redirect("lp:cadastrar_lp")
 
-            # Calcular dados da próxima LP
             data_base_proximo_periodo = data_ultimo_lp + timedelta(days=1)
             proximo_lp = (
                 data_base_proximo_periodo + relativedelta(years=5) - timedelta(days=1)
@@ -195,7 +212,6 @@ def cadastrar_lp(request):
             numero_prox_lp = numero_lp_int + 1
 
             with transaction.atomic():
-                # Criação da LP
                 lp = LP.objects.create(
                     cadastro=cadastro,
                     user_created=user,
@@ -210,50 +226,46 @@ def cadastrar_lp(request):
                     situacao_lp="Aguardando",
                     status_lp=LP.StatusLP.AGUARDANDO_REQUISITOS,
                 )
-
-                # Registrar no histórico da LP
                 create_historico_lp(lp, user, "LP cadastrada inicialmente.")
 
-            success_msg = f"LP {lp.numero_lp} cadastrada com sucesso para {cadastro.nome_de_guerra}!"
-            if is_ajax:
-                redirect_url = reverse("lp:ver_lp", kwargs={"pk": lp.id})
-                return alert_response(
-                    type="success",
-                    title="Sucesso!",
-                    message=success_msg,
-                    redirect_url=redirect_url,
+            if flow == "new_militar":
+                messages.success(
+                    request,
+                    "Militar, Adicional e Licença Prêmio cadastrados com sucesso!",
                 )
-            messages.success(request, success_msg)
-            return redirect("lp:ver_lp", pk=lp.id)
+                return redirect("efetivo:listar_militar")
+            else:
+                success_msg = f"LP {lp.numero_lp} cadastrada com sucesso para {cadastro.nome_de_guerra}!"
+                if is_ajax:
+                    redirect_url = reverse("lp:ver_lp", kwargs={"pk": lp.id})
+                    return alert_response(
+                        type="success",
+                        title="Sucesso!",
+                        message=success_msg,
+                        redirect_url=redirect_url,
+                    )
+                messages.success(request, success_msg)
+                return redirect("lp:ver_lp", pk=lp.id)
 
-        except ValueError as e:
-            error_msg = (
-                f"Formato de data inválido. Use o formato AAAA-MM-DD. Erro: {str(e)}"
-            )
+        except (ValueError, TypeError) as e:
+            error_msg = f"Dados inválidos fornecidos. Erro: {str(e)}"
             if is_ajax:
                 return alert_response(
                     type="error", title="Erro!", message=error_msg, status=400
                 )
             messages.error(request, error_msg)
-            return redirect("lp:cadastrar_lp")
-
+            return redirect(f"{reverse('lp:cadastrar_lp')}?militar_id={militar_id}&flow={flow}")
         except ValidationError as e:
             error_msg = f'Erro de validação: {", ".join(e.messages)}'
             if is_ajax:
-                errors = {}
-                if hasattr(e, "error_dict"):
-                    for field, err_list in e.error_dict.items():
-                        errors[field] = " ".join([str(err) for err in err_list])
                 return alert_response(
                     type="error",
                     title="Erro de Validação!",
                     message=error_msg,
-                    errors=errors,
                     status=400,
                 )
             messages.error(request, error_msg)
-            return redirect("lp:cadastrar_lp")
-
+            return redirect(f"{reverse('lp:cadastrar_lp')}?militar_id={militar_id}&flow={flow}")
         except Exception as e:
             error_msg = f"Ocorreu um erro inesperado ao cadastrar: {str(e)}"
             logger.exception(f"Erro em cadastrar_lp: {str(e)}")
@@ -262,7 +274,7 @@ def cadastrar_lp(request):
                     type="error", title="Erro!", message=error_msg, status=500
                 )
             messages.error(request, error_msg)
-            return redirect("lp:cadastrar_lp")
+            return redirect(f"{reverse('lp:cadastrar_lp')}?militar_id={militar_id}&flow={flow}")
 
 
 @login_required

@@ -36,9 +36,48 @@ def alert_response(type, title, message, status=200):
 def cadastrar_adicional(request):
     """
     View para cadastrar Adicional para um militar.
+    Pode receber um militar pré-selecionado via GET (parâmetro militar_id).
     """
+    context = {}
+    flow = request.GET.get("flow")
+    militar_id = request.GET.get("militar_id")
+
     if request.method == "GET":
-        return render(request, "adicional/cadastrar_adicional.html")
+        if flow == "new_militar" and militar_id:
+            try:
+                cadastro = get_object_or_404(Cadastro, id=militar_id)
+                detalhes = (
+                    DetalhesSituacao.objects.filter(cadastro=cadastro)
+                    .order_by("-id")
+                    .first()
+                )
+                imagem = Imagem.objects.filter(cadastro=cadastro).order_by("-id").first()
+                promocao = (
+                    Promocao.objects.filter(cadastro=cadastro).order_by("-id").first()
+                )
+
+                if not detalhes or not promocao:
+                    messages.error(
+                        request, "Dados complementares do militar não encontrados."
+                    )
+                    return redirect("efetivo:listar_militar")
+
+                context = {
+                    "cadastro": cadastro,
+                    "detalhes": detalhes,
+                    "imagem": imagem,
+                    "promocao": promocao,
+                    "flow": flow,  # Passa o flow para o template
+                }
+                messages.info(
+                    request,
+                    f"Cadastrando Adicional para o militar {cadastro.nome_de_guerra}.",
+                )
+            except Exception as e:
+                messages.error(request, f"Erro ao carregar militar: {e}")
+                return redirect("efetivo:listar_militar")
+
+        return render(request, "adicional/cadastrar_adicional.html", context)
 
     elif request.method == "POST":
         # Obtenção dos dados do formulário
@@ -53,6 +92,7 @@ def cadastrar_adicional(request):
             request.POST.get("sexta_parte_hidden", "False") == "True"
         )  # Campo oculto
         user = request.user
+        post_flow = request.POST.get("flow")  # Pega o flow do POST
 
         # Determine if it's an AJAX request
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -136,13 +176,22 @@ def cadastrar_adicional(request):
                     status_adicional=adicional.status_adicional,
                 )
 
-            success_msg = "Adicional cadastrado com sucesso!"
-            if is_ajax:
-                return alert_response(
-                    type="success", title="Sucesso!", message=success_msg
+            # Lógica de redirecionamento baseada no fluxo
+            if post_flow == "new_militar":
+                messages.success(
+                    request, "Adicional cadastrado! Próximo passo: Licença Prêmio."
                 )
-            messages.success(request, success_msg)
-            return redirect("adicional:listar_adicional")
+                return redirect(
+                    f"{reverse('lp:cadastrar_lp')}?militar_id={cadastro.id}&flow=new_militar"
+                )
+            else:
+                success_msg = "Adicional cadastrado com sucesso!"
+                if is_ajax:
+                    return alert_response(
+                        type="success", title="Sucesso!", message=success_msg
+                    )
+                messages.success(request, success_msg)
+                return redirect("adicional:listar_adicional")
 
         except ValueError as e:
             error_msg = (
