@@ -1,27 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Histórico de Afastamento{% endblock %}
+{% block title %}Histórico de Categorias{% endblock %}
 
 {% block 'body' %}
 <div class="container mx-auto px-4 py-8">
+    <fieldset class="rounded-md">
+        {% if messages %}
+            <div id="django-messages" style="display:none;" data-messages='[
+                {% for message in messages %}
+                    {
+                        "tags": "{{ message.tags|upper }}",
+                        "message": "{{ message|escapejs }}"
+                    }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]'></div>
+        {% endif %}
+        {% include 'modals/alert_modal.html' %}
+    </fieldset>
 
-               <fieldset class="rounded-md">
-                {% if messages %}
-                    <div id="django-messages" style="display:none;" data-messages='[
-                        {% for message in messages %}
-                            {
-                                "tags": "{{ message.tags|upper }}",
-                                "message": "{{ message|escapejs }}"
-                            }{% if not forloop.last %},{% endif %}
-                        {% endfor %}
-                    ]'></div>
-                {% endif %}
-                    {% include 'modals/alert_modal.html' %}
-            </fieldset>
+
+
     <section class="w-full bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-200">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
             <h1 class="text-3xl font-extrabold text-gray-900 mb-4 sm:mb-0">
-                Histórico de Categorias - {{ cadastro.nome_de_guerra }}
+                Histórico de Categorias - {{ militar.nome_de_guerra }}
             </h1>
             <a href="{% url 'efetivo:ver_militar' militar.id %}"
                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
@@ -33,7 +35,6 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        {# Títulos centralizados com 'text-center' #}
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Período</th>
@@ -41,104 +42,139 @@
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Restrições</th>
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado Por</th>
                         <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th> {# Movido para o final #}
+                        <th scope="col" class="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% for historico in historicos %}
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">{{ historico.data_registro|date:"d/m/Y H:i" }}</td>
-                        <td class="py-4 px-4 whitespace-nowrap text-sm font-medium text-center">
-                            {{ historico.tipo_badge|safe }}
-                        </td>
-                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {% if historico.data_inicio and historico.data_termino %}
-                                {{ historico.data_inicio|date:"d/m/Y" }} - {{ historico.data_termino|date:"d/m/Y" }}
-                            {% elif historico.data_inicio %}
-                                A partir de {{ historico.data_inicio|date:"d/m/Y" }}
+            {% for item in historicos_preparados %}
+            {% with historico=item.objeto %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                        {{ historico.data_registro|date:"d/m/Y H:i" }}
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap text-sm font-medium text-center">
+                        {{ item.tipo_badge|safe }}
+                    </td>
+                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                        {% if historico.data_inicio and historico.data_termino %}
+                            {{ historico.data_inicio|date:"d/m/Y" }} - {{ historico.data_termino|date:"d/m/Y" }}
+                        {% elif historico.data_inicio %}
+                            A partir de {{ historico.data_inicio|date:"d/m/Y" }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                        {% if item.total_dias > 0 %}
+                            {{ item.total_dias }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                        {{ item.restricoes_siglas }}
+                    </td>
+                    <td class="py-4 px-4 text-sm text-gray-900 text-center">
+                        {% with usuario=historico.usuario_alteracao %}
+                            {% if usuario and usuario.cadastro %}
+                                <div class="font-medium">
+                                    {{ usuario.cadastro.last_promocao.posto_grad|default:'' }} 
+                                    {{ usuario.cadastro.re|default:'' }}-{{ usuario.cadastro.dig|default:'' }} 
+                                    {{ usuario.cadastro.nome_de_guerra|default:'' }}
+                                </div>
+                                <div class="text-gray-500">{{ usuario.cadastro.cpf|default:'CPF não encontrado' }}</div>
+                            {% elif usuario %}
+                                <div class="font-medium">{{ usuario.username }}</div>
+                                <div class="text-gray-500">Usuário sem cadastro</div>
                             {% else %}
-                                N/A
+                                <div class="text-gray-500">Usuário não disponível</div>
                             {% endif %}
-                        </td>
-                        <td class="py-4 px-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {% if historico.get_total_dias > 0 %}
-                                {{ historico.get_total_dias }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
-                            {{ historico.restricoes_selecionadas_siglas }}
-                        </td>
-                        <td class="py-4 px-4 text-sm text-gray-900 text-center">
-                            <div class="font-medium">{{ request.user.profile.posto_grad }} {{ request.user.profile.re }}-{{ request.user.profile.dig }} {{ request.user.last_name }}</div>
-                            <div class="text-gray-500">{{ request.user.profile.cpf }}</div>
-                        </td>
-                           {# Campo Status estilizado e movido para o final #}
-                        <td class="py-4 px-4 whitespace-nowrap text-sm text-center">
-                            {% if historico.status == "EM VIGOR" %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    {{ historico.status }}
-                                </span>
-                            {% elif historico.status == "ENCERRADO" %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    {{ historico.status }}
-                                </span>
-                            {% elif historico.status == "AGUARDANDO INÍCIO" %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                    {{ historico.status }}
-                                </span>
-                            {% else %}
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                    {{ historico.status }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-4 whitespace-nowrap text-sm font-medium flex space-x-3 items-center justify-center">
-                            <button onclick="abrirModalExclusao('{% url 'efetivo:excluir_historico_categoria' historico.id %}')"
-                                    class="text-red-600 hover:text-red-800 transition duration-150 ease-in-out" title="Excluir">
-                                <i class="fas fa-trash-alt text-lg"></i>
-                            </button>
-                        </td>
-                     
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        {# Ajuste o colspan para 8, conforme o número total de colunas #}
-                        <td colspan="8" class="py-4 px-4 text-center text-gray-500">
-                            Nenhum histórico de categoria encontrado.
-                        </td>
-                    </tr>
-                    {% endfor %}
+                        {% endwith %}
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap text-sm text-center">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ item.status_display.classe }}">
+                            <i class="fas {{ item.status_display.icone }} mr-1"></i>
+                            {{ item.status_display.texto }}
+                        </span>
+                    </td>
+                    
+                    <!-- COLUNA AÇÕES - VERIFICAÇÃO DIRETA -->
+<td class="py-4 px-4 whitespace-nowrap text-sm font-medium text-center">
+    {% if historico.data_termino and historico.data_termino > today %}
+
+        <button type="button"
+                class="excluir-historico-btn text-gray-600 hover:text-red-500 transition duration-150 ease-in-out focus:outline-none transform hover:scale-110"
+                data-url="{% url 'efetivo:excluir_historico_categoria' historico.id %}"
+                data-historico-id="{{ historico.id }}"
+                title="Excluir histórico - Válido até {{ historico.data_termino|date:'d/m/Y' }}"
+                aria-label="Excluir histórico de categoria">
+
+            <!-- ÍCONE SVG TRASH -->
+            <svg xmlns="http://www.w3.org/2000/svg" 
+                 width="20" height="20" 
+                 fill="currentColor" 
+                 class="bi bi-trash" 
+                 viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+
+        </button>
+
+        <div class="text-xs text-green-600 mt-1 font-medium">
+            ⏳ Excluír até {{ historico.data_termino|date:"d/m/Y" }}
+        </div>
+
+    {% else %}
+        <div class="text-transparent">-</div>
+    {% endif %}
+</td>
+
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">
+                        Nenhum histórico de categoria encontrado.
+                    </td>
+                </tr>
+            {% endfor %}
                 </tbody>
             </table>
         </div>
     </section>
 </div>
 
-{# Modal de Confirmação de Exclusão (mantido como está, pois não foi solicitado alteração) #}
-<div id="modalExclusao" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg p-6 shadow-2xl w-full max-w-sm transform transition-all sm:my-8 sm:align-middle sm:w-full border border-gray-200">
+<!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+<div id="modalExclusao" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+    <div class="bg-white rounded-xl p-6 shadow-2xl w-full max-w-sm border border-gray-200 transform transition-all duration-300">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
-            <button onclick="fecharModalExclusao()" class="text-gray-400 hover:text-gray-600 transition duration-150 ease-in-out">
+            <h2 id="modalTitle" class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
+            <button type="button" 
+                    onclick="fecharModalExclusao()" 
+                    class="text-gray-400 hover:text-gray-600 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 rounded p-1"
+                    aria-label="Fechar modal">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
         <div class="text-center py-4">
-            <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4 animate-bounce"></i>
-            <p class="text-gray-700 text-lg mb-6">Você tem certeza que deseja excluir este histórico?</p>
-            <p class="text-sm text-gray-500 mb-6">Esta ação é irreversível.</p>
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            </div>
+            <p class="text-gray-700 text-lg mb-4 font-semibold">Tem certeza que deseja excluir?</p>
+            <p class="text-sm text-gray-500 mb-6">Esta ação não pode ser desfeita.</p>
             
             <form id="formExclusao" method="POST" action="">
                 {% csrf_token %}
-                <div class="flex justify-center space-x-4">
-                    <button type="button" onclick="fecharModalExclusao()"
-                            class="px-5 py-2.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-150 ease-in-out">
+                <div class="flex justify-center space-x-3">
+                    <button type="button" 
+                            onclick="fecharModalExclusao()"
+                            class="flex-1 px-4 py-2.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium">
                         Cancelar
                     </button>
                     <button type="submit"
-                            class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                            id="btnConfirmarExclusao"
+                            class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out font-medium">
                         Excluir
                     </button>
                 </div>
@@ -147,20 +183,158 @@
     </div>
 </div>
 
+<style>
+    .excluir-historico-btn {
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+    
+    .excluir-historico-btn:hover {
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    #modalExclusao {
+        backdrop-filter: blur(4px);
+    }
+</style>
+
 <script>
-    function abrirModalExclusao(url) {
-        document.getElementById('formExclusao').action = url;
-        document.getElementById('modalExclusao').classList.remove('hidden');
+    // DEBUG DETALHADO - CORRIGIDO
+    console.log('🔍 === DEBUG DETALHADO HISTÓRICO ===');
+    console.log('📍 Data atual:', '{{ today|date:"Y-m-d" }}');
+    console.log('📍 Total de registros:', {{ historicos_preparados|length }});
+    
+    // Verificar cada histórico individualmente - CORREÇÃO AQUI
+    {% for item in historicos_preparados %}
+    {% with historico=item.objeto %}
+    console.log('📋 Histórico {{ forloop.counter }}:');
+    console.log('   ID:', {{ historico.id }});
+    console.log('   Data término:', '{{ historico.data_termino|date:"Y-m-d" }}');
+    console.log('   Pode excluir:', {% if historico.data_termino and historico.data_termino > today %}true{% else %}false{% endif %});
+    console.log('   ---');
+    {% endwith %}
+    {% endfor %}
+
+    // CONTROLE DO MODAL
+    function abrirModalExclusao(url, historicoId) {
+        console.log('🎯 Abrindo modal para histórico:', historicoId, 'URL:', url);
+        
+        const form = document.getElementById('formExclusao');
+        const modal = document.getElementById('modalExclusao');
+        
+        if (form && modal) {
+            form.action = url;
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            
+            // Animar entrada
+            modal.style.opacity = '0';
+            modal.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.style.transform = 'scale(1)';
+            }, 10);
+            
+            // Focar no botão de cancelar
+            setTimeout(() => {
+                const cancelBtn = modal.querySelector('button[type="button"]');
+                if (cancelBtn) cancelBtn.focus();
+            }, 100);
+        }
     }
 
     function fecharModalExclusao() {
-        document.getElementById('modalExclusao').classList.add('hidden');
+        const modal = document.getElementById('modalExclusao');
+        if (modal) {
+            // Animar saída
+            modal.style.opacity = '0';
+            modal.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+                modal.style.opacity = '';
+                modal.style.transform = '';
+                
+                // Reabilitar botão de confirmação
+                const submitBtn = document.getElementById('btnConfirmarExclusao');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Excluir';
+                }
+            }, 200);
+            
+            console.log('🔒 Modal fechado');
+        }
     }
 
-    document.getElementById('modalExclusao').addEventListener('click', function(event) {
-        if (event.target === this) {
-            fecharModalExclusao();
+    // INICIALIZAÇÃO ROBUSTA
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Inicializando sistema de histórico...');
+        
+        // Configurar botões de exclusão
+        const botoesExclusao = document.querySelectorAll('.excluir-historico-btn');
+        console.log('📍 Botões de exclusão encontrados:', botoesExclusao.length);
+        
+        botoesExclusao.forEach((button, index) => {
+            console.log(`📍 Botão ${index + 1}:`, {
+                id: button.getAttribute('data-historico-id'),
+                url: button.getAttribute('data-url'),
+                visible: button.offsetParent !== null
+            });
+            
+            button.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                const historicoId = this.getAttribute('data-historico-id');
+                
+                console.log('🎯 Clicou no botão de exclusão:', {
+                    historicoId: historicoId,
+                    url: url
+                });
+                
+                if (url) {
+                    abrirModalExclusao(url, historicoId);
+                } else {
+                    console.error('❌ URL não encontrada no botão');
+                }
+            });
+        });
+
+        // Fechar modal ao clicar no backdrop
+        const modal = document.getElementById('modalExclusao');
+        if (modal) {
+            modal.addEventListener('click', function(event) {
+                if (event.target === this) {
+                    fecharModalExclusao();
+                }
+            });
         }
+
+        // Prevenir envio duplo do formulário
+        const formExclusao = document.getElementById('formExclusao');
+        if (formExclusao) {
+            formExclusao.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('btnConfirmarExclusao');
+                if (submitBtn && !submitBtn.disabled) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Excluindo...';
+                    console.log('🔄 Enviando formulário de exclusão...');
+                }
+            });
+        }
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('modalExclusao');
+                if (modal && !modal.classList.contains('hidden')) {
+                    fecharModalExclusao();
+                }
+            }
+        });
+
+        console.log('✅ Sistema de histórico inicializado com sucesso!');
     });
 </script>
 {% endblock %}

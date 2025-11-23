@@ -1328,53 +1328,141 @@ def detalhar_efetivo(request, posto_id):
     return render(request, "detalhes_efetivo.html", context)
 
 
-# responsável pelo historico de afastamentos
+# responsável pelo histórico de categorias
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
 def historico_categorias(request, militar_id):
     militar = get_object_or_404(Cadastro, id=militar_id)
+    
+    # IMPORTANTE: Usar timezone.now().date() para garantir a data atual
+    today = timezone.now().date()
+    
+    # Otimização: pré-definir campos de restrição
+    CAMPOS_RESTRICAO = [f.name for f in CatEfetivo._meta.get_fields() 
+                       if f.name.startswith("restricao_")]
+    
     historicos = (
         HistoricoCatEfetivo.objects.filter(cat_efetivo__cadastro=militar)
-        .select_related("cat_efetivo", "usuario_alteracao")
+        .select_related(
+            "cat_efetivo", 
+            "usuario_alteracao", 
+            "usuario_alteracao__cadastro"
+        )
+        .prefetch_related("usuario_alteracao__cadastro__promocoes")
         .order_by("-data_registro")
     )
+
+    # Preparar dados para o template
+    historicos_preparados = []
+    for historico in historicos:
+        # DEBUG: Verificar as datas no console
+        print(f"Histórico ID: {historico.id}")
+        print(f"Data término: {historico.data_termino}")
+        print(f"Today: {today}")
+        print(f"Data término > today: {historico.data_termino and historico.data_termino > today}")
+        print("---")
+        
+        historicos_preparados.append({
+            'objeto': historico,
+            'tipo_badge': gerar_badge_tipo(historico.tipo),
+            'restricoes_siglas': obter_restricoes_siglas(historico, CAMPOS_RESTRICAO),
+            'status_display': obter_status_display(historico),
+            'total_dias': historico.get_total_dias(),
+            'pode_excluir': historico.data_termino and historico.data_termino > today,  # ← NOVO CAMPO
+        })
 
     return render(
         request,
         "historico_categorias.html",
         {
             "militar": militar,
-            "historicos": historicos,
-            "today": timezone.now().date(),
+            "cadastro": militar,
+            "historicos_preparados": historicos_preparados,
+            "today": today,  # ← JÁ ESTÁ CORRETO
+            "user": request.user,
         },
     )
 
-
-def parse_date(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else None
-
-
-def criar_historico(categoria, usuario):
-    historico_data = {
-        "cat_efetivo": categoria,
-        "tipo": categoria.tipo,
-        "data_inicio": categoria.data_inicio,
-        "data_termino": categoria.data_termino,
-        "observacao": categoria.observacao,
-        "boletim_concessao_lsv": categoria.boletim_concessao_lsv,
-        "data_boletim_lsv": categoria.data_boletim_lsv,
-        "usuario_alteracao": usuario,
-        "ativo": categoria.ativo,
+# Funções auxiliares
+def gerar_badge_tipo(tipo):
+    """Gera HTML do badge para o tipo de categoria"""
+    cores = {
+        "ATIVO": "bg-green-100 text-green-800",
+        "LSV": "bg-blue-100 text-blue-800", 
+        "RESTRICAO": "bg-yellow-100 text-yellow-800",
+        "AFASTAMENTO": "bg-red-100 text-red-800",
+        "INATIVO": "bg-red-100 text-red-800",
+        "LTS": "bg-indigo-100 text-indigo-800",
+        "LTS FAMILIA": "bg-purple-100 text-purple-800",
+        "CONVAL": "bg-pink-100 text-pink-800",
+        "ELEIÇÃO": "bg-teal-100 text-teal-800",
+        "LP": "bg-orange-100 text-orange-800",
+        "FERIAS": "bg-yellow-100 text-yellow-800",
+        "DS": "bg-lime-100 text-lime-800",
+        "DR": "bg-cyan-100 text-cyan-800",
     }
+    
+    cor = cores.get(tipo, "bg-gray-100 text-gray-800")
+    return f'<span class="px-2 py-1 text-xs font-medium rounded-full {cor}">{tipo}</span>'
 
-    if categoria.tipo == "RESTRICAO":
-        campos_restricao = [
-            f.name for f in CatEfetivo._meta.fields if f.name.startswith("restricao_")
-        ]
-        historico_data.update(
-            {campo: getattr(categoria, campo) for campo in campos_restricao}
-        )
 
-    HistoricoCatEfetivo.objects.create(**historico_data)
+def obter_restricoes_siglas(historico, campos_restricao):
+    """Obtém siglas das restrições ativas"""
+    if historico.tipo != "RESTRICAO":
+        return "N/A"
+    
+    siglas_ativas = []
+    for campo in campos_restricao:
+        if getattr(historico, campo, False):
+            sigla = campo.split("_")[-1].upper()
+            siglas_ativas.append(sigla)
+    
+    return ", ".join(siglas_ativas) if siglas_ativas else "Nenhuma"
 
+
+def obter_status_display(historico):
+    """Determina o status do histórico"""
+    hoje = timezone.now().date()
+    
+    if not historico.data_inicio:
+        return {
+            "texto": "N/A",
+            "classe": "bg-gray-100 text-gray-800",
+            "icone": "fa-question-circle"
+        }
+    
+    # Se tem data de término e já passou
+    if historico.data_termino and historico.data_termino < hoje:
+        return {
+            "texto": "ENCERRADO",
+            "classe": "bg-red-100 text-red-800",
+            "icone": "fa-times-circle"
+        }
+    
+    # Se a data de início é no futuro
+    if historico.data_inicio > hoje:
+        return {
+            "texto": "AGUARDANDO INÍCIO",
+            "classe": "bg-yellow-100 text-yellow-800", 
+            "icone": "fa-clock"
+        }
+    
+    # Se está dentro do período (data_inicio <= hoje E (sem data_termino OU data_termino >= hoje))
+    if historico.data_inicio <= hoje and (historico.data_termino is None or historico.data_termino >= hoje):
+        return {
+            "texto": "EM VIGOR",
+            "classe": "bg-green-100 text-green-800",
+            "icone": "fa-check-circle"
+        }
+    
+    # Caso padrão (não deveria acontecer)
+    return {
+        "texto": "N/A",
+        "classe": "bg-gray-100 text-gray-800",
+        "icone": "fa-question-circle"
+    }
 
 @login_required
 def adicionar_categoria_efetivo(request, militar_id):
