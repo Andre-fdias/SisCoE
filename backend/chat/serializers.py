@@ -36,15 +36,22 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "email", "first_name", "last_name"]
 
     def get_presence(self, obj):
+        # Otimização N+1: Acessa o objeto 'presence' que foi pré-buscado
+        # com select_related('presence') na view.
+        if hasattr(obj, "presence"):
+            return {
+                "status": obj.presence.status,
+                "last_seen": obj.presence.last_seen,
+            }
+        # Fallback para caso o 'presence' não tenha sido pré-buscado.
         try:
             presence = Presence.objects.get(user=obj)
             return {
                 "status": presence.status,
                 "last_seen": presence.last_seen,
-                "is_typing": presence.is_typing,
             }
         except Presence.DoesNotExist:
-            return {"status": "offline", "last_seen": None, "is_typing": False}
+            return {"status": "offline", "last_seen": None}
 
     def get_image_url(self, obj):
         """
@@ -119,7 +126,6 @@ class MessageSerializer(serializers.ModelSerializer):
     parent_message = serializers.SerializerMethodField()
     is_own = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    text = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
@@ -140,9 +146,15 @@ class MessageSerializer(serializers.ModelSerializer):
             "status",
         ]
         read_only_fields = ["id", "conversation", "sender", "created_at", "edited_at"]
+        # O campo 'text' agora é gravável por padrão.
 
-    def get_text(self, obj):
-        return obj.decrypted_text
+    def to_representation(self, instance):
+        """
+        Sobrescreve a representação de saída para usar o texto descriptografado.
+        """
+        representation = super().to_representation(instance)
+        representation["text"] = instance.decrypted_text
+        return representation
 
     def get_parent_message(self, obj):
         if obj.parent_message:
@@ -164,18 +176,20 @@ class MessageSerializer(serializers.ModelSerializer):
         return False
 
     def get_status(self, obj):
+        """
+        Otimização N+1: Determina o status da mensagem para o usuário atual
+        usando os dados pré-buscados pela view.
+        """
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            try:
-                participant = Participant.objects.get(
-                    conversation=obj.conversation, user=request.user
-                )
-                status_obj = MessageStatus.objects.get(
-                    message=obj, participant=participant
-                )
+        if not (request and request.user.is_authenticated):
+            return "sent"
+
+        # obj.statuses.all() usa os dados pré-buscados do prefetch_related na view
+        for status_obj in obj.statuses.all():
+            # O 'participant' no status_obj também foi pré-buscado
+            if status_obj.participant.user_id == request.user.id:
                 return status_obj.status
-            except (Participant.DoesNotExist, MessageStatus.DoesNotExist):
-                return "sent"
+
         return "sent"
 
 
@@ -377,7 +391,7 @@ class DetalhesSituacaoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DetalhesSituacao
-        fields = ["situacao", "sgb", "funcao"]
+        fields = ["situacao", "sgb", "funcao", "posto_secao"]
 
 
 class CadastroSerializer(serializers.ModelSerializer):

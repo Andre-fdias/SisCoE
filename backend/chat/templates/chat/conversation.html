@@ -92,7 +92,7 @@
             </div>
 
             <!-- Active Conversation -->
-            <div id="active-conversation" class="hidden flex-1 flex-col">
+            <div id="active-conversation" class="hidden h-full flex-1 flex flex-col">
                 <!-- Chat Header -->
                 <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <div class="flex items-center space-x-3">
@@ -113,39 +113,42 @@
                     </button>
                 </div>
 
-                <!-- Message Area -->
+                <!-- Message Area (Scrollable) -->
                 <div id="message-area" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
                     <div id="message-list" class="space-y-2"></div>
                 </div>
                 
-                <div id="typing-indicator" class="hidden p-2 px-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span id="typing-user"></span> está digitando...
-                </div>
-
-                <div id="file-preview-container" class="hidden p-2 px-4 bg-gray-100 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                    <div class="flex items-center justify-between text-sm">
-                        <div class="flex items-center space-x-2 overflow-hidden">
-                            <i class="fas fa-file-alt text-blue-500"></i>
-                            <span id="file-preview-name" class="text-gray-600 dark:text-gray-300 truncate"></span>
-                        </div>
-                        <button id="remove-file-btn" class="p-1 text-red-500 hover:text-red-600 flex-shrink-0">
-                            <i class="fas fa-times"></i>
-                        </button>
+                <!-- Footer Area (Fixed) -->
+                <div class="flex-shrink-0">
+                    <div id="typing-indicator" class="hidden p-2 px-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span id="typing-user"></span> está digitando...
                     </div>
-                </div>
 
-                <!-- Message Input Form -->
-                <div id="message-form-container" class="p-4 bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700">
-                    <form id="message-form" class="flex items-center space-x-3">
-                        <input type="file" id="file-input" class="hidden" accept="*/*">
-                        <button type="button" id="attach-file-btn" class="p-3 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <input type="text" id="message-input" class="flex-1 p-3 rounded-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200" placeholder="Digite uma mensagem...">
-                        <button type="submit" id="send-btn" class="p-3 w-12 h-12 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-colors disabled:opacity-50">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </form>
+                    <div id="file-preview-container" class="hidden p-2 px-4 bg-gray-100 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex items-center space-x-2 overflow-hidden">
+                                <i class="fas fa-file-alt text-blue-500"></i>
+                                <span id="file-preview-name" class="text-gray-600 dark:text-gray-300 truncate"></span>
+                            </div>
+                            <button id="remove-file-btn" class="p-1 text-red-500 hover:text-red-600 flex-shrink-0">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Message Input Form -->
+                    <div id="message-form-container" class="p-4 bg-gray-50 dark:bg-gray-800 border-t-2 border-gray-200 dark:border-gray-700">
+                        <form id="message-form" class="flex items-center space-x-3">
+                            <input type="file" id="file-input" class="hidden" accept="*/*">
+                            <button type="button" id="attach-file-btn" class="p-3 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <input type="text" id="message-input" class="flex-1 p-3 rounded-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200" placeholder="Digite uma mensagem...">
+                            <button type="submit" id="send-btn" class="p-3 w-12 h-12 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-colors disabled:opacity-50">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -183,6 +186,7 @@
                         <p><strong>Nome Completo:</strong> <span id="info-modal-nome-completo"></span></p>
                         <p><strong>SGB:</strong> <span id="info-modal-sgb"></span></p>
                         <p><strong>Seção:</strong> <span id="info-modal-secao"></span></p>
+                        <p><strong>Função:</strong> <span id="info-modal-funcao"></span></p>
                     </div>
                 </div>
             </div>

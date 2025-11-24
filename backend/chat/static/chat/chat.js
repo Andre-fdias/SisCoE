@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nomeCompleto: document.getElementById('info-modal-nome-completo'),
             sgb: document.getElementById('info-modal-sgb'),
             secao: document.getElementById('info-modal-secao'),
+            funcao: document.getElementById('info-modal-funcao'),
         },
         typingIndicator: {
             container: document.getElementById('typing-indicator'),
@@ -622,7 +623,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const h4 = item.querySelector('h4');
                 if(h4) h4.textContent = name;
                 const lastMessage = item.querySelector('.last-message');
-                if(lastMessage) lastMessage.textContent = conv.last_message?.text?.substring(0, 50) + '...' || 'Nenhuma mensagem';
+                const lastMessageText = conv.last_message?.text;
+                if (lastMessage) {
+                    lastMessage.textContent = lastMessageText ? (lastMessageText.substring(0, 50) + (lastMessageText.length > 50 ? '...' : '')) : 'Nenhuma mensagem';
+                }
                 const time = item.querySelector('.time');
                 if(time) time.textContent = conv.last_message ? formatTime(conv.last_message.created_at) : '';
                 
@@ -790,7 +794,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const re = profile.cadastro?.re || 'N/A';
             const dig = profile.cadastro?.dig || '';
             const nomeCompleto = profile.full_name || 'N/A';
-            const secao = profile.situacao?.funcao || 'N/A';
+            const secao = profile.situacao?.posto_secao || 'N/A';
+            const funcao = profile.situacao?.funcao || 'N/A';
             const imageUrl = profile.avatar;
 
             if(ui.infoModal.name) ui.infoModal.name.textContent = nomeDeGuerra;
@@ -800,6 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(ui.infoModal.nomeCompleto) ui.infoModal.nomeCompleto.textContent = nomeCompleto;
             if(ui.infoModal.sgb) ui.infoModal.sgb.textContent = sgb || 'N/A';
             if(ui.infoModal.secao) ui.infoModal.secao.textContent = secao;
+            if(ui.infoModal.funcao) ui.infoModal.funcao.textContent = funcao;
 
             if (imageUrl) {
                 if(ui.infoModal.img) {
@@ -940,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const timestampEl = messageElement.querySelector('.timestamp');
             const readStatusEl = messageElement.querySelector('.read-status');
 
-            if (messageTextEl) messageTextEl.textContent = message.decrypted_text || message.text || '';
+            if (messageTextEl) messageTextEl.textContent = message.text || '';
             if (timestampEl) timestampEl.textContent = formatTime(message.created_at);
 
             // Avatar
