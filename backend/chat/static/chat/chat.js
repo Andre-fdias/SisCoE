@@ -886,6 +886,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- MESSAGES ---
+    async function markConversationAsRead(conversationId, messageId) {
+        if (!conversationId || !messageId) return;
+        try {
+            await apiFetch(`/api/chat/conversations/${conversationId}/messages/${messageId}/mark_read/`, {
+                method: 'POST',
+            });
+            // Re-fetch conversations to update the unread count in the sidebar immediately.
+            fetchAndRenderConversations();
+        } catch (e) {
+            console.error('Erro ao marcar conversa como lida:', e);
+            // It's a background task, so no toast notification is shown to the user.
+        }
+    }
+
     async function fetchMessages(conversationId) {
         if(ui.message.list) {
             ui.message.list.innerHTML = '';
@@ -898,6 +912,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const messages = Array.isArray(response) ? response : (response.results || []);
             messages.reverse().forEach(m => appendMessage(m, false));
             setTimeout(scrollToBottom, 100);
+
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                // Only mark as read if the last message was not sent by the current user
+                if (lastMessage.sender.id != state.currentUser.id) {
+                     markConversationAsRead(conversationId, lastMessage.id);
+                }
+            }
+
         } catch (e) {
             console.error('Erro ao carregar mensagens:', e);
             showToast('Erro ao carregar mensagens', 'error');

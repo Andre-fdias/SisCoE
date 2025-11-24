@@ -33,11 +33,12 @@
             </a>
           </li>
           <li>
-            <a href="{% url 'chat-page' %}" class="text-base text-gray-500 font-normal rounded-lg flex items-center p-2 hover:bg-gray-100 group">
+            <a href="{% url 'chat-page' %}" id="chat-link" class="text-base text-gray-500 font-normal rounded-lg flex items-center p-2 hover:bg-gray-100 group">
               <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-chat-dots-fill" viewBox="0 0 16 16">
                 <path d="M16 8c0 3.866-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.584.296-1.186.838-1.844 1.493a1.26 1.26 0 0 1-.791.407c-1.28-.91-2.733-2.41-4.369-4.04C1.86 10.71 0 8.582 0 6c0-3.866 3.582-7 8-7s8 3.134 8 7M5 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0"/>
               </svg>
               <span class="ml-3">SisCoE_Zap</span>
+              <span id="chat-unread-count" class="ml-2 hidden inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">0</span>
             </a>
           </li>
 
@@ -253,11 +254,45 @@ function atualizarContadorTickets() {
         .catch(error => console.error('Erro ao atualizar contador:', error));
 }
 
+// Função para atualizar o contador de mensagens não lidas do chat
+function atualizarContadorChat() {
+    fetch('{% url "chat:unread-message-count" %}')
+        .then(response => response.json())
+        .then(data => {
+            const chatBadge = document.getElementById('chat-unread-count');
+            const chatLink = document.getElementById('chat-link');
+            const chatTextSpan = chatLink ? chatLink.querySelector('span.ml-3') : null;
+
+            if (chatBadge && chatLink && chatTextSpan && data.unread_count !== undefined) {
+                chatBadge.textContent = data.unread_count;
+
+                if (data.unread_count > 0) {
+                    chatBadge.classList.remove('hidden', 'bg-red-500', 'text-white');
+                    chatBadge.classList.add('bg-yellow-500', 'text-black'); // Cor do badge para amarelo ouro, com texto preto
+                    chatTextSpan.classList.remove('text-gray-500');
+                    chatTextSpan.classList.add('text-yellow-500'); // Cor do texto para amarelo ouro
+                } else {
+                    chatBadge.classList.add('hidden');
+                    chatBadge.classList.remove('bg-yellow-500', 'text-black');
+                    chatBadge.classList.add('bg-red-500', 'text-white'); // Volta para o estado original
+                    chatTextSpan.classList.remove('text-yellow-500');
+                    chatTextSpan.classList.add('text-gray-500'); // Volta para cinza se não houver notificações
+                }
+            }
+        })
+        .catch(error => console.error('Erro ao atualizar contador de chat:', error));
+}
+
+
 // Atualizar a cada 30 segundos
 setInterval(atualizarContadorTickets, 30000);
+setInterval(atualizarContadorChat, 15000); // Atualiza o chat a cada 15 segundos
 
 // Atualizar imediatamente ao carregar a página
-document.addEventListener('DOMContentLoaded', atualizarContadorTickets);
+document.addEventListener('DOMContentLoaded', () => {
+    atualizarContadorTickets();
+    atualizarContadorChat();
+});
 </script>
   
 </aside>

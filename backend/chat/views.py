@@ -13,6 +13,7 @@ from django.db.models import (
     OuterRef,
     Value,
     DateTimeField,
+    Sum,
 )
 from django.db.models.functions import Coalesce
 from django.views.generic import TemplateView
@@ -169,6 +170,49 @@ class UserPresenceView(APIView):
         )
 
         return Response({"status": presence.status, "last_seen": presence.last_seen})
+
+
+class UnreadMessageCountAPIView(APIView):
+    """
+    API para obter a contagem total de mensagens não lidas para o usuário autenticado.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Subquery para obter o timestamp da última mensagem lida pelo participante
+        # para cada conversa do usuário.
+        participant_last_read_ts_subquery = Participant.objects.filter(
+            user=user,
+            conversation=OuterRef('pk')
+        ).values('last_read_message__created_at')[:1]
+
+        # Anotar cada conversa com a contagem de mensagens não lidas para o usuário atual
+        conversations_with_unread_counts = Conversation.objects.filter(
+            participants__user=user
+        ).annotate(
+            unread_count_in_conversation=Coalesce(
+                Count(
+                    "messages",
+                    filter=Q(
+                        messages__created_at__gt=Coalesce(
+                            Subquery(participant_last_read_ts_subquery),
+                            timezone.datetime.min.replace(tzinfo=timezone.utc),
+                        )
+                    )
+                    & ~Q(messages__sender=user) # Não contar mensagens enviadas pelo próprio usuário como "não lidas"
+                ),
+                0,
+            )
+        )
+
+        # Somar as contagens de mensagens não lidas de todas as conversas
+        total_unread_messages = conversations_with_unread_counts.aggregate(
+            total_unread=Sum('unread_count_in_conversation')
+        )['total_unread'] or 0
+
+        return Response({"unread_count": total_unread_messages})
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
