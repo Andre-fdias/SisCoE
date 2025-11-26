@@ -884,7 +884,7 @@
                 formDataFiltrado.append('novos_tipos[]', tipos[index]);
             });
     
-            const response = await fetch("{% url 'documentos:editar_documento_arquivos' documento.pk %}", {
+            const response = await fetch("{% url 'documentos:gerenciar_arquivos' documento.pk %}", {
                 method: 'POST',
                 body: formDataFiltrado,
                 headers: {

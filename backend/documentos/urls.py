@@ -9,11 +9,6 @@ urlpatterns = [
     path("documento/criar/", views.criar_documento, name="criar_documento"),
     path("documento/<int:pk>/editar/", views.editar_documento, name="editar_documento"),
     path(
-        "documento/editar/<int:pk>/arquivos/",
-        views.editar_documento_arquivos,
-        name="editar_documento_arquivos",
-    ),
-    path(
         "documento/excluir/<int:pk>/", views.excluir_documento, name="excluir_documento"
     ),
     path("noticias/carrossel/", views.carrossel_noticias, name="carrossel_noticias"),
@@ -27,8 +22,6 @@ urlpatterns = [
         views.gerenciar_arquivos,
         name="gerenciar_arquivos",
     ),
-    # Remova ou ajuste esta URL, a exclusão agora é feita por AJAX
-    # path('excluir-arquivo/<int:arquivo_id>/', views.excluir_arquivo, name='excluir_arquivo'),
-    path("arquivo/excluir/<int:pk>/", views.excluir_arquivo, name="excluir_arquivo"),
+    path("arquivo/excluir/<int:arquivo_id>/", views.remover_arquivo, name="excluir_arquivo"),
     path("galeria/", views.galeria_documentos, name="galeria_documentos"),
 ]
