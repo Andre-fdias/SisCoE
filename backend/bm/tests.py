@@ -102,101 +102,6 @@ class TestModels(TestCase):
         self.assertTrue(imagem.image.name.startswith("img/fotos_bm/"))
 
 
-class TestViews(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.factory = RequestFactory()
-
-        self.user = User.objects.create_user(
-            email="test@example.com", password="testpass123"
-        )
-
-        self.cadastro_data = {
-            "nome": "João da Silva",
-            "nome_de_guerra": "Silva",
-            "situacao": "Efetivo",
-            "sgb": "1ºSGB",
-            "posto_secao": "703151101 - EB CERRADO",
-            "cpf": "12345678901",
-            "rg": "123456789",
-            "cnh": "12345678901",
-            "cat_cnh": "B",
-            "esb": "SIM",
-            "ovb": "LEVE",
-            "admissao": "2020-01-01",
-            "nasc": "1990-01-01",
-            "email": "joao@example.com",
-            "telefone": "11999999999",
-            "apresentacao_na_unidade": "2020-01-15",
-            "funcao": "MOTORISTA",
-            "genero": "Masculino",
-        }
-
-        self.cadastro = Cadastro_bm.objects.create(
-            nome="João da Silva",
-            nome_de_guerra="Silva",
-            situacao="Efetivo",
-            sgb="1ºSGB",
-            posto_secao="703151101 - EB CERRADO",
-            cpf="12345678901",
-            rg="123456789",
-            cnh="12345678901",
-            cat_cnh="B",
-            esb="SIM",
-            ovb="LEVE",
-            admissao=date(2020, 1, 1),
-            nasc=date(1990, 1, 1),
-            email="joao@example.com",
-            telefone="11999999999",
-            apresentacao_na_unidade=date(2020, 1, 15),
-            funcao="MOTORISTA",
-            genero="Masculino",
-            user=self.user,
-        )
-
-    def test_listar_bm_authenticated(self):
-        """Testa listagem de bombeiros com usuário autenticado"""
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("bm:listar_bm"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "listar_bm.html")
-
-    def test_listar_bm_unauthenticated(self):
-        """Testa redirecionamento para login quando não autenticado"""
-        response = self.client.get(reverse("bm:listar_bm"))
-        self.assertEqual(response.status_code, 302)
-
-    def test_ver_bm(self):
-        """Testa visualização de cadastro individual"""
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("bm:ver_bm", args=[self.cadastro.id]))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "ver_bm.html")
-
-    def test_cadastrar_bm_get(self):
-        """Testa acesso ao formulário de cadastro"""
-        self.client.force_login(self.user)
-        response = self.client.get(reverse("bm:cadastrar_bm"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "cadastro_bm.html")
-
-    def test_cadastrar_bm_post_success(self):
-        """Testa cadastro bem-sucedido"""
-        self.client.force_login(self.user)
-
-        data = self.cadastro_data.copy()
-        data["cpf"] = "98765432100"  # CPF diferente
-
-        response = self.client.post(reverse("bm:cadastrar_bm"), data)
-
-        self.assertIn(response.status_code, [200, 302])
-        if response.status_code == 302:
-            self.assertTrue(Cadastro_bm.objects.filter(cpf="98765432100").exists())
-
-
 class TestExportUtils(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -280,7 +185,7 @@ class TestImportBM(TestCase):
         self.client = Client()
 
         self.user = User.objects.create_superuser(
-            email="admin@example.com", password="adminpass123"
+            email="admin@example.com", password="password"
         )
 
     def create_test_csv(self):
@@ -317,13 +222,13 @@ class TestImportBM(TestCase):
     def test_importar_bm_superuser_required(self):
         """Testa que apenas superusuários podem importar"""
         regular_user = User.objects.create_user(
-            email="regular@example.com", password="testpass123"
+            email="regular@example.com", password="password", permissoes="basico"
         )
 
         self.client.force_login(regular_user)
 
         response = self.client.get(reverse("bm:importar_bm"))
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f'/accounts/login/?next={reverse("bm:importar_bm")}')
 
     def test_importar_bm_csv_success(self):
         """Testa importação CSV bem-sucedida"""
@@ -332,7 +237,8 @@ class TestImportBM(TestCase):
         csv_file = self.create_test_csv()
         response = self.client.post(reverse("bm:importar_bm"), {"arquivo": csv_file})
 
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, [200, 302])
+        self.assertTrue(Cadastro_bm.objects.filter(cpf="11122233344").exists())
 
 
 # Testes Básicos de Modelos
@@ -397,3 +303,111 @@ class TestBasicModels(TestCase):
 
         imagem = Imagem_bm(cadastro=cadastro, user=user)
         self.assertIn("Imagem de Imagem", str(imagem))
+
+
+class BmSecurityAndAccessTest(TestCase):
+    """
+    Testa a segurança e o controle de acesso do app 'bm', garantindo que:
+    1. Apenas usuários com permissão 'sgb' ou superior podem acessar.
+    2. Usuários com acesso podem ver todos os registros, sem filtro de propriedade.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """
+        Cria usuários com diferentes níveis de permissão e um cadastro de teste.
+        """
+        cls.user_basico = User.objects.create_user(
+            email="basico@example.com", password="password", permissoes="basico"
+        )
+        cls.user_sgb = User.objects.create_user(
+            email="sgb@example.com", password="password", permissoes="sgb"
+        )
+        cls.admin_user = User.objects.create_superuser(
+             email="admin@example.com", password="password"
+        )
+
+        cls.cadastro = Cadastro_bm.objects.create(
+            nome="João Teste",
+            nome_de_guerra="Teste",
+            cpf="12345678901",
+            rg="1234567",
+            admissao=date.today(),
+            nasc=date(1990, 1, 1),
+            apresentacao_na_unidade=date.today(),
+            posto_secao="SOLDADO",
+            sgb="1ºSGB",
+            user=cls.admin_user
+        )
+
+        # URLs para teste
+        cls.listar_url = reverse("bm:listar_bm")
+        cls.ver_url = reverse("bm:ver_bm", kwargs={'pk': cls.cadastro.pk})
+        cls.cadastrar_url = reverse("bm:cadastrar_bm")
+        cls.editar_url = reverse("bm:editar_bm", kwargs={'pk': cls.cadastro.pk})
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_unauthenticated_user_is_redirected(self):
+        """Verifica se usuários não autenticados são redirecionados para a tela de login."""
+        response = self.client.get(self.listar_url)
+        self.assertRedirects(response, f'/accounts/login/?next={self.listar_url}')
+        
+        response = self.client.get(self.ver_url)
+        self.assertRedirects(response, f'/accounts/login/?next={self.ver_url}')
+
+    def test_basico_user_is_denied_access(self):
+        """[SEGURANÇA] Garante que um usuário com permissão 'basico' recebe 403 (Forbidden)."""
+        self.client.login(email=self.user_basico.email, password="password")
+        
+        urls_to_test = [self.listar_url, self.ver_url, self.cadastrar_url, self.editar_url]
+        for url in urls_to_test:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403, f"Acesso à URL {url} não foi negado para usuário 'basico'.")
+
+    def test_sgb_user_has_full_access(self):
+        """[SEGURANÇA] Garante que um usuário com permissão 'sgb' tem acesso total (status 200)."""
+        self.client.login(email=self.user_sgb.email, password="password")
+        
+        urls_to_test = [self.listar_url, self.ver_url, self.cadastrar_url, self.editar_url]
+        for url in urls_to_test:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200, f"Acesso à URL {url} foi negado indevidamente para usuário 'sgb'.")
+
+    def test_sgb_user_sees_all_records(self):
+        """[REQUISITO] Garante que um usuário autorizado vê todos os registros, sem filtro."""
+        # Cria um segundo cadastro para garantir que a lista não está sendo filtrada
+        User.objects.create_user(email="outro@example.com", password="password")
+        outro_cadastro = Cadastro_bm.objects.create(
+            nome="Maria Outra",
+            nome_de_guerra="Outra",
+            cpf="98765432109",
+            rg="7654321",
+            admissao=date.today(),
+            nasc=date(1991, 1, 1),
+            apresentacao_na_unidade=date.today(),
+            posto_secao="CABO",
+            sgb="2ºSGB",
+            user=self.user_sgb # Mesmo que o usuário seja o mesmo, o teste deve passar
+        )
+
+        self.client.login(email=self.user_sgb.email, password="password")
+        response = self.client.get(self.listar_url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.cadastro.nome)
+        self.assertContains(response, outro_cadastro.nome)
+        self.assertEqual(len(response.context['cadastros']), 2)
+
+    def test_importar_bm_is_superuser_only(self):
+        """[SEGURANÇA] Garante que apenas superusuários podem acessar a página de importação."""
+        # Usuário SGB não pode acessar
+        self.client.login(email=self.user_sgb.email, password="password")
+        response = self.client.get(reverse("bm:importar_bm"))
+        self.assertNotEqual(response.status_code, 200, "Usuário 'sgb' acessou a importação, que deveria ser apenas para superuser.")
+        
+        # Superuser pode acessar
+        self.client.login(email=self.admin_user.email, password="password")
+        response = self.client.get(reverse("bm:importar_bm"))
+        self.assertEqual(response.status_code, 200)

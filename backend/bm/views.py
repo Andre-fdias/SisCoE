@@ -9,17 +9,16 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .export_utils import export_bm_data
 from .models import Cadastro_bm, Imagem_bm
 from django.contrib.messages import constants
+from backend.accounts.decorators import permissao_necessaria
 
-from backend.core.utils import filter_by_user_sgb
 
-
-@login_required
+@permissao_necessaria('sgb')
 def listar_bm(request):
     cadastros = Cadastro_bm.objects.all()
-    cadastros = filter_by_user_sgb(cadastros, request.user)
     return render(request, "listar_bm.html", {"cadastros": cadastros})
 
 
+@permissao_necessaria('sgb')
 def ver_bm(request, pk):
     cadastro = get_object_or_404(Cadastro_bm, pk=pk)
     imagens = cadastro.imagens.all()
@@ -39,7 +38,7 @@ def ver_bm(request, pk):
     return render(request, "ver_bm.html", context)
 
 
-@login_required
+@permissao_necessaria('sgb')
 def cadastrar_bm(request):
     if request.method == "GET":
         context = {
@@ -117,7 +116,7 @@ def cadastrar_bm(request):
             return redirect("bm:cadastrar_bm")
 
 
-@login_required
+@permissao_necessaria('sgb')
 def editar_bm(request, pk):
     cadastro = get_object_or_404(Cadastro_bm, pk=pk)
 
@@ -193,7 +192,7 @@ def editar_bm(request, pk):
     return render(request, "ver_bm.html", context)
 
 
-@login_required
+@permissao_necessaria('sgb')
 def atualizar_foto(request, pk):
     cadastro = get_object_or_404(Cadastro_bm, pk=pk)
 
@@ -217,7 +216,7 @@ def atualizar_foto(request, pk):
     return redirect("bm:ver_bm", pk=cadastro.id)
 
 
-@login_required
+@permissao_necessaria('sgb')
 def excluir_bm(request, pk):
     cadastro = get_object_or_404(Cadastro_bm, pk=pk)
     User = get_user_model()  # Obter o modelo de usuário personalizado
@@ -461,6 +460,7 @@ def importar_bm(request):
     return render(request, "importar_bm.html")
 
 
+@permissao_necessaria('sgb')
 def exportar_bm(request):
     if request.method == "POST":
         format_type = request.POST.get("export_format")
