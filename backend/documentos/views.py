@@ -220,7 +220,8 @@ def gerenciar_arquivos(request, pk):
 def galeria_documentos(request):
     """ Exibe uma galeria de documentos com base na permissão do usuário. """
     user = request.user
-    if user.permissoes in ['admin', 'gestor']:
+    if user.permissoes in ['basico'
+    '']:
         documentos_base = Documento.objects.all()
     else:
         documentos_base = Documento.objects.filter(usuario=user)

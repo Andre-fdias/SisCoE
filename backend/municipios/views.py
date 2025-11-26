@@ -349,9 +349,6 @@ def excluir_posto(request, id):
     return JsonResponse({"success": False, "message": "Método inválido."})
 
 
-@permissao_necessaria('sgb')
-def rota_calculator_page(request):
-    return render(request, "calcular_rota.html")
 
 @permissao_necessaria('sgb')
 def editar_pessoal(request, pk):
@@ -473,26 +470,6 @@ def calculate_route_api(request):
         return JsonResponse({'error': f'Erro ao processar a rota: {str(e)}'}, status=500)
     except Exception as e:
         return JsonResponse({'error': f'Um erro inesperado ocorreu: {str(e)}'}, status=500)
-
-
-@permissao_necessaria('sgb')
-def modal_rota(request):
-    valid_postos = (
-        Posto.objects.filter(contato__isnull=False)
-        .exclude(posto_secao="")
-        .select_related("contato")
-        .order_by("posto_secao")
-    )
-    posto_secao_value_to_label_map = dict(Posto.posto_secao_choices)
-    posto_options_for_template = []
-    posto_coordinates_map = {}
-
-    for posto in valid_postos:
-        display_label = posto_secao_value_to_label_map.get(posto.posto_secao, posto.posto_secao)
-        posto_options_for_template.append({"value": posto.posto_secao, "label": display_label})
-        posto_coordinates_map[posto.posto_secao] = {"lat": posto.contato.latitude, "lon": posto.contato.longitude}
-
-    return render(request, "modals/modal_rota.html", {"posto_options": posto_options_for_template, "posto_coordinates_map_json": json.dumps(posto_coordinates_map)})
 
 
 from django.contrib import messages

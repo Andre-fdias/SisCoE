@@ -24,7 +24,7 @@
         </div>
 
         <!-- Cards Principais -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <!-- Card QPO -->
             <div class="group relative">
                 <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-300"></div>
@@ -65,29 +65,6 @@
                         </p>
                         <div class="flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold">
                             <span>Explorar Municípios</span>
-                            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                            </svg>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Card Roteirizador -->
-            <div class="group relative">
-                <div class="absolute -inset-1 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-300"></div>
-                <a href="{% url 'municipios:rota_calculator_page' %}" 
-                   class="relative block p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 border border-white/20 dark:border-gray-700/50">
-                    <div class="flex flex-col items-center text-center">
-                        <div class="flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white mb-6 shadow-lg">
-                            <i class="fas fa-route text-2xl"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Roteirizador</h2>
-                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
-                            Calcule a distância e o tempo estimado de percurso entre dois municípios atendidos pela unidade.
-                        </p>
-                        <div class="flex items-center justify-center text-green-600 dark:text-green-400 font-semibold">
-                            <span>Acessar Roteirizador</span>
                             <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                             </svg>

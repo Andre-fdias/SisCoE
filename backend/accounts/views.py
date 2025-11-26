@@ -649,7 +649,9 @@ def generate_termo_pdf(request, pk):
 
     # Cabeçalho: Logo e Título
     try:
-        logo_path = os.path.join(settings.STATIC_ROOT, "img", "logo-siscoe-light.png")
+        logo_path = os.path.join(
+            settings.BASE_DIR, "backend", "core", "static", "img", "logo-siscoe-light.png"
+        )
         pdf.drawImage(
             logo_path,
             margin,
@@ -657,8 +659,10 @@ def generate_termo_pdf(request, pk):
             width=60,
             height=25,
             preserveAspectRatio=True,
+            mask='auto'
         )
-    except FileNotFoundError:
+    except Exception as e:
+        logger.error(f"Erro ao desenhar logo no PDF: {e}")
         pass
 
     pdf.setFont("Helvetica-Bold", 12)
@@ -672,7 +676,9 @@ def generate_termo_pdf(request, pk):
     y_position -= 20
 
     try:
-        brasao_path = os.path.join(settings.STATIC_ROOT, "img", "brasaoSP.png")
+        brasao_path = os.path.join(
+            settings.BASE_DIR, "backend", "core", "static", "img", "BrasaoSP.png"
+        )
         # Posição do brasão alinhada com o texto
         pdf.drawImage(
             brasao_path,
@@ -681,8 +687,10 @@ def generate_termo_pdf(request, pk):
             width=40,
             height=40,
             preserveAspectRatio=True,
+            mask='auto'
         )
-    except FileNotFoundError:
+    except Exception as e:
+        logger.error(f"Erro ao desenhar brasão no PDF: {e}")
         pass
 
     text_x = margin + 50
@@ -856,7 +864,8 @@ def generate_termo_pdf(request, pk):
             preserveAspectRatio=True,
         )
         y_position -= 50
-    except:
+    except Exception as e:
+        logger.error(f"Erro ao desenhar assinatura digital no PDF: {e}")
         # Se não houver assinatura digital, apenas ajusta a posição
         y_position -= 20
 

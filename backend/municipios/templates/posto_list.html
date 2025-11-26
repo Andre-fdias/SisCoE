@@ -45,19 +45,20 @@
 
         <fieldset class="p-4 mb-2 rounded-md w-full">
             <fieldset class="bg-gray-100 rounded-md shadow-lg mb-2 border-0">
-                <table id="qpo" class="w-full text-sm text-left text-gray-700">
+                <table id="qpo" class="w-full text-sm text-gray-700">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-center">Posto-Seção</th>
+                            <th class="px-4 py-3 text-center" data-sortable="false">Imagem</th>
+                            <th class="px-4 py-3 text-left">Posto-Seção</th>
                             <th class="px-4 py-3 text-center">SGB</th>
-                            <th class="px-4 py-3 text-center">Município</th>
-                            <th class="px-4 py-3 text-center">TC</th>
-                            <th class="px-4 py-3 text-center">Maj</th>
-                            <th class="px-4 py-3 text-center">Cap</th>
-                            <th class="px-4 py-3 text-center">Ten</th>
-                            <th class="px-4 py-3 text-center">Ten QA</th>
-                            <th class="px-4 py-3 text-center">St/Sgt</th>
-                            <th class="px-4 py-3 text-center">Cb/Sd</th>
+                            <th class="px-4 py-3 text-left">Município</th>
+                            <th class="px-4 py-3 text-center">TC <img src="{% static 'img/ten_cel.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="ten-cel"></th>
+                            <th class="px-4 py-3 text-center">Maj <img src="{% static 'img/major-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="major"></th>
+                            <th class="px-4 py-3 text-center">Cap <img src="{% static 'img/capitao-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="capitao"></th>
+                            <th class="px-4 py-3 text-center">Ten <img src="{% static 'img/1-tenente-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="ten-qo"></th>
+                            <th class="px-4 py-3 text-center">Ten QA <img src="{% static 'img/1-tenente-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="ten-qa"></th>
+                            <th class="px-4 py-3 text-center">St/Sgt <img src="{% static 'img/1-sargento-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="st-sgt"></th>
+                            <th class="px-4 py-3 text-center">Cb/Sd <img src="{% static 'img/cabo-pm.jpg' %}" class="w-10 h-8 rounded-full inline-block align-middle" role="img" aria-label="cb-sd"></th>
                             <th class="px-4 py-3 text-center">Total</th>
                             <th class="px-4 py-3 text-center">Ações</th>
                         </tr>
@@ -65,9 +66,18 @@
                     <tbody>
                         {% for posto in postos %}
                         <tr class="bg-white border-b hover:bg-gray-50">
-                            <td class="px-4 py-3 text-center">{{ posto.posto_secao }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{% url 'municipios:posto_detail' posto.id %}" class="flex items-center justify-center h-full">
+                                    {% if posto.quartel %}
+                                        <img src="{{ posto.quartel.url }}" class="w-10 h-10 rounded-full object-cover mx-auto" alt="Quartel Image">
+                                    {% else %}
+                                        <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">N/A</div>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-left">{{ posto.posto_secao }}</td>
                             <td class="px-4 py-3 text-center">{{ posto.sgb }}</td>
-                            <td class="px-4 py-3 text-center">{{ posto.cidade_posto }}</td>
+                            <td class="px-4 py-3 text-left">{{ posto.cidade_posto }}</td>
 
                             {% with pessoal=posto.pessoal.first %}
                                 <td class="px-4 py-3 text-center">{{ pessoal.ten_cel|default:"0" }}</td>

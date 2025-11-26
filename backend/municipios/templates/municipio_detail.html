@@ -56,7 +56,7 @@
                         
                         <!-- Botões -->
                         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <a href="{% url 'municipios:posto_list' %}" 
+                            <a href="{% url 'municipios:municipio_list' %}" 
                             class="text-white bg-gradient-to-r from-gray-500 to-gray-600 hover:bg-gradient-to-br 
                                     focus:ring-4 focus:outline-none focus:ring-gray-300 shadow-lg shadow-gray-500/50 
                                     font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all duration-200">
@@ -113,15 +113,19 @@
                             <div class="w-full bg-gray-800/30 p-4 rounded-xl border border-gray-700/50">
                                 <h2 class="text-xl font-semibold text-white mb-2 pb-2 border-b border-gray-600/50">
                                     <span class="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
-                                        Postos de Atendimento
+                                        Posto Vinculado
                                     </span>
                                 </h2>
                                 <div class="flex flex-wrap gap-2 mt-4">
-                                    {% for posto in cidade.posto_set.all %}
+                                    {% if cidade.posto %}
                                     <span class="bg-indigo-700/80 hover:bg-indigo-600 text-indigo-100 px-3 py-1 rounded-full text-sm transition-colors duration-200">
-                                        {{ posto.posto_atendimento }}
+                                        {{ cidade.posto.posto_atendimento }}
                                     </span>
-                                    {% endfor %}
+                                    {% else %}
+                                    <span class="bg-gray-500 text-gray-200 px-3 py-1 rounded-full text-sm">
+                                        Nenhum posto principal vinculado
+                                    </span>
+                                    {% endif %}
                                 </div>
                             </div>
 
@@ -230,7 +234,7 @@
                     </div>
                 </div>
         
-                <form id="editCidadeForm" method="post" action="{% url 'municipios:posto_update' cidade.posto.id %}" enctype="multipart/form-data" class="p-6 space-y-8 bg-gray-50">
+                <form id="editCidadeForm" method="post" action="{% if cidade.posto %}{% url 'municipios:posto_update' cidade.posto.id %}{% endif %}" enctype="multipart/form-data" class="p-6 space-y-8 bg-gray-50">
                     {% csrf_token %}
                     <input type="hidden" name="cidade_id" value="{{ cidade.id }}">
                     
