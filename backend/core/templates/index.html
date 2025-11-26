@@ -1678,12 +1678,10 @@
     
     <!-- Links úteis adicionais -->
     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-        <a href="#" 
-           target="_blank" 
-           class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            Política de Privacidade
-        </a>
-        <a href="#" 
+                <a href="{% url 'core:privacy_policy' %}"
+                   class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    Política de Privacidade
+                </a>        <a href="#" 
            target="_blank" 
            class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Termos de Uso
