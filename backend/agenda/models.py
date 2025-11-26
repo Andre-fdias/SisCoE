@@ -21,7 +21,7 @@ class Lembrete(models.Model):
 
     titulo = models.CharField(max_length=200)
     descricao = models.TextField()
-    data = models.DateTimeField()
+    data = models.DateTimeField(db_index=True)
     tipo = models.CharField(max_length=50, default="Lembrete")
     cor = models.CharField(max_length=7, default="#3788d8")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -54,8 +54,8 @@ class Tarefa(models.Model):
 
     titulo = models.CharField(max_length=200)
     descricao = models.TextField()
-    data_inicio = models.DateTimeField()
-    data_fim = models.DateTimeField()
+    data_inicio = models.DateTimeField(db_index=True)
+    data_fim = models.DateTimeField(db_index=True)
     tipo = models.CharField(max_length=50, default="Tarefa")
     cor = models.CharField(max_length=7, default="#3788d8")
     user = models.ForeignKey(User, on_delete=models.CASCADE)

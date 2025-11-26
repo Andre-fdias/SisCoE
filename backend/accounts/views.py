@@ -1207,6 +1207,11 @@ def global_access_history(request):
     filtered_history.sort(
         key=lambda x: x["login_time"] if x["login_time"] else timezone.make_aware(datetime.min), reverse=True
     )
+    
+    # Paginação
+    paginator = Paginator(filtered_history, 25)  # Mostra 25 registros por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
         "all_users": all_users,
@@ -1217,7 +1222,7 @@ def global_access_history(request):
             else start_date_str
         ),
         "end_date": end_date_str,
-        "global_login_history": filtered_history,
+        "global_login_history": page_obj,
         "history_limit": "6 meses (padrão)" if not start_date_str else None,
     }
     log_user_action(request.user, "Visualizou o histórico global de acessos", request)
