@@ -67,7 +67,10 @@ def index(request):
                 detalhes_situacao__funcao=funcao_valor,
                 detalhes_situacao__situacao="Efetivo",
             )
-            queryset = filter_by_user_sgb(queryset, request.user)
+            # Aplica o filtro por SGB apenas se o usuário tiver permissão 'sgb'
+            if request.user.permissoes == "sgb":
+                queryset = filter_by_user_sgb(queryset, request.user)
+            
             queryset = queryset.prefetch_related(
                 "imagens", "promocoes", "detalhes_situacao"
             ).order_by("-detalhes_situacao__apresentacao_na_unidade")
