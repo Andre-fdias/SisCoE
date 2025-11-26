@@ -40,6 +40,8 @@ from django.contrib.auth.forms import PasswordChangeForm  # Importação adicion
 from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import timedelta  # Importar timedelta
+from django.core.paginator import Paginator
+from django.db.models import Q
 from .decorators import permissao_necessaria
 
 logger = logging.getLogger(__name__)
@@ -1137,7 +1139,7 @@ def global_access_history(request):
     if not start_date_str:
         start_date_obj = two_months_ago
     else:
-        start_date_obj = datetime.strptime(start_date_str, "%Y-%m-%d")
+        start_date_obj = timezone.make_aware(datetime.strptime(start_date_str, "%Y-%m-%d"))
 
     filtered_history = []
 
@@ -1170,10 +1172,10 @@ def global_access_history(request):
 
             # Aplicar filtro de data final se especificado
             if end_date_str:
-                end_date_obj = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(
+                end_date_obj = timezone.make_aware(datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(
                     days=1
-                )
-                if login_time.date() >= end_date_obj.date():
+                ))
+                if login_time >= end_date_obj:
                     continue
 
             duration = None
@@ -1203,7 +1205,7 @@ def global_access_history(request):
 
     # Ordenar o histórico pela data de login (mais recente primeiro)
     filtered_history.sort(
-        key=lambda x: x["login_time"] if x["login_time"] else datetime.min, reverse=True
+        key=lambda x: x["login_time"] if x["login_time"] else timezone.make_aware(datetime.min), reverse=True
     )
 
     context = {
@@ -1237,37 +1239,47 @@ def global_user_action_history(request):
     # Data limite padrão - 2 meses atrás
     two_months_ago = timezone.now() - timedelta(days=60)
 
-    # Inicializa o queryset com o filtro de tempo padrão
-    action_logs = UserActionLog.objects.filter(timestamp__gte=two_months_ago)
+    # Inicializa o queryset base
+    action_logs_query = UserActionLog.objects.select_related('user', 'user__cadastro').order_by("-timestamp")
 
     # Filtros
     selected_user_id = request.GET.get("user")
     start_date_str = request.GET.get("start_date")
     end_date_str = request.GET.get("end_date")
+    
+    # Monta a query de forma otimizada
+    query_filter = Q()
+    history_limit_text = None
 
     if selected_user_id:
-        action_logs = action_logs.filter(user__id=selected_user_id)
+        query_filter &= Q(user__id=selected_user_id)
 
-    # Se houver filtro de data inicial, substitui o limite padrão de 2 meses
     if start_date_str:
         start_date_obj = datetime.strptime(start_date_str, "%Y-%m-%d")
-        action_logs = action_logs.filter(timestamp__gte=start_date_obj)
+        query_filter &= Q(timestamp__gte=start_date_obj)
+    else:
+        # Aplica o limite padrão apenas se não houver data de início
+        query_filter &= Q(timestamp__gte=two_months_ago)
+        history_limit_text = "2 meses (padrão)"
 
     if end_date_str:
         end_date_obj = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1)
-        action_logs = action_logs.filter(timestamp__lt=end_date_obj)
+        query_filter &= Q(timestamp__lt=end_date_obj)
 
-    action_logs = action_logs.order_by("-timestamp")
+    action_logs = action_logs_query.filter(query_filter)
+
+    # Paginação
+    paginator = Paginator(action_logs, 25)  # Mostra 25 logs por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
         "all_users": all_users,
         "selected_user_id": selected_user_id,
-        "start_date": (
-            start_date_str if start_date_str else two_months_ago.strftime("%Y-%m-%d")
-        ),
+        "start_date": start_date_str,
         "end_date": end_date_str,
-        "global_action_logs": action_logs,
-        "history_limit": "2 meses (padrão)" if not start_date_str else None,
+        "global_action_logs": page_obj,  # Passa o objeto da página para o template
+        "history_limit": history_limit_text,
     }
     log_user_action(request.user, "Visualizou o histórico global de ações", request)
     return render(request, "accounts/global_user_action_history.html", context)
