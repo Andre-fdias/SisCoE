@@ -1127,17 +1127,17 @@ def global_access_history(request):
 
     all_users = User.objects.all().order_by("email")
 
-    # Data limite padrão - 2 meses atrás
-    two_months_ago = timezone.now() - timedelta(days=60)
+    # Data limite padrão - 6 meses atrás
+    six_months_ago = timezone.now() - timedelta(days=180)
 
     # Filtros
     selected_user_id = request.GET.get("user")
     start_date_str = request.GET.get("start_date")
     end_date_str = request.GET.get("end_date")
 
-    # Se não houver filtro de data, aplica o limite de 2 meses
+    # Se não houver filtro de data, aplica o limite de 6 meses
     if not start_date_str:
-        start_date_obj = two_months_ago
+        start_date_obj = six_months_ago
     else:
         start_date_obj = timezone.make_aware(datetime.strptime(start_date_str, "%Y-%m-%d"))
 
@@ -1218,7 +1218,7 @@ def global_access_history(request):
         ),
         "end_date": end_date_str,
         "global_login_history": filtered_history,
-        "history_limit": "2 meses (padrão)" if not start_date_str else None,
+        "history_limit": "6 meses (padrão)" if not start_date_str else None,
     }
     log_user_action(request.user, "Visualizou o histórico global de acessos", request)
     return render(request, "accounts/global_access_history.html", context)
@@ -1236,8 +1236,8 @@ def global_user_action_history(request):
 
     all_users = User.objects.all().order_by("email")
 
-    # Data limite padrão - 2 meses atrás
-    two_months_ago = timezone.now() - timedelta(days=60)
+    # Data limite padrão - 6 meses atrás
+    six_months_ago = timezone.now() - timedelta(days=180)
 
     # Inicializa o queryset base
     action_logs_query = UserActionLog.objects.select_related('user', 'user__cadastro').order_by("-timestamp")
@@ -1259,8 +1259,8 @@ def global_user_action_history(request):
         query_filter &= Q(timestamp__gte=start_date_obj)
     else:
         # Aplica o limite padrão apenas se não houver data de início
-        query_filter &= Q(timestamp__gte=two_months_ago)
-        history_limit_text = "2 meses (padrão)"
+        query_filter &= Q(timestamp__gte=six_months_ago)
+        history_limit_text = "6 meses (padrão)"
 
     if end_date_str:
         end_date_obj = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1)
