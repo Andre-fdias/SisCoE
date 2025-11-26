@@ -7,6 +7,12 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import pandas as pd
 import csv
+from django.db.models import Sum
+import requests
+import os
+import json # <-- Adicionado
+from django.views.decorators.http import require_POST
+from geopy.distance import geodesic
 
 # Importe a função de importação (se estiver em import_utils.py)
 from .import_utils import importar_dados
@@ -16,22 +22,54 @@ from .export_utils import export_efetivo_pdf_report  # Importe a nova função
 
 
 @login_required
-def posto_list(request):
-    postos = Posto.objects.all().prefetch_related("pessoal", "cidades")
-    cidades = Cidade.objects.all().select_related("posto")
-
-    # Obter as choices diretamente do modelo
-    municipio_choices = Cidade._meta.get_field("municipio").choices
-
-    return render(
-        request,
-        "posto_list.html",
-        {
-            "postos": postos,
-            "cidades": cidades,
-            "municipio_choices": municipio_choices,  # Adicionar ao contexto principal
-        },
+def municipios_home(request):
+    """
+    Renderiza a página de seleção principal para o app de municípios
+    e calcula as estatísticas para a visão geral.
+    """
+    posto_count = Posto.objects.count()
+    municipio_count = Cidade.objects.count()
+    
+    # Correção: Somar cada campo individualmente no nível do banco de dados
+    efetivo_agregado = Pessoal.objects.aggregate(
+        total_cel=Sum('cel'),
+        total_ten_cel=Sum('ten_cel'),
+        total_maj=Sum('maj'),
+        total_cap=Sum('cap'),
+        total_tenqo=Sum('tenqo'),
+        total_tenqa=Sum('tenqa'),
+        total_asp=Sum('asp'),
+        total_st_sgt=Sum('st_sgt'),
+        total_cb_sd=Sum('cb_sd')
     )
+
+    # Somar os resultados em Python, tratando valores None como 0
+    efetivo_count = sum(value for value in efetivo_agregado.values() if value is not None)
+
+    context = {
+        'posto_count': posto_count,
+        'municipio_count': municipio_count,
+        'efetivo_count': efetivo_count,
+    }
+    return render(request, "municipios_home.html", context)
+
+
+@login_required
+def posto_list(request):
+    """
+    Lista todos os Postos (QPO).
+    """
+    postos = Posto.objects.all().prefetch_related("pessoal", "cidades")
+    return render(request, "posto_list.html", {"postos": postos})
+
+
+@login_required
+def municipio_list(request):
+    """
+    Lista todos os Municípios.
+    """
+    cidades = Cidade.objects.all().select_related("posto")
+    return render(request, "municipio_list.html", {"cidades": cidades})
 
 
 from django.contrib.auth.decorators import login_required
@@ -125,10 +163,21 @@ def posto_create(request):
     op_adm_choices = Posto.op_adm_choices
 
     if request.method == "POST":
+        # Validação para garantir que campos obrigatórios foram enviados
+        sgb = request.POST.get("sgb")
+        posto_secao = request.POST.get("posto_secao")
+
+        if not sgb or not posto_secao:
+            from django.contrib import messages
+            messages.error(request, "Os campos 'SGB' e 'Posto/Seção' são obrigatórios. Selecione um SGB para habilitar o Posto/Seção.")
+            # Retorna para o formulário, mas sem os dados (simplificado)
+            # Uma implementação completa repopularia o formulário
+            return redirect('municipios:posto_create')
+
         # Dados do Posto
         posto_data = {
-            "sgb": request.POST.get("sgb"),
-            "posto_secao": request.POST.get("posto_secao"),
+            "sgb": sgb,
+            "posto_secao": posto_secao,
             "posto_atendimento": request.POST.get("posto_atendimento"),
             "cidade_posto": request.POST.get("cidade_posto"),
             "tipo_cidade": request.POST.get("tipo_cidade"),
@@ -182,12 +231,15 @@ def posto_create(request):
         descricoes = request.POST.getlist("descricoes[]")
 
         for i in range(len(municipios)):
+            lat = latitudes[i] if latitudes[i] and latitudes[i] != 'Buscando...' and latitudes[i] != 'Não encontrado' else None
+            lon = longitudes[i] if longitudes[i] and longitudes[i] != 'Buscando...' and longitudes[i] != 'Não encontrado' else None
+
             cidade_data = {
                 "posto": posto,
                 "municipio": municipios[i],
                 "descricao": descricoes[i],
-                "latitude": latitudes[i],
-                "longitude": longitudes[i],
+                "latitude": lat,
+                "longitude": lon,
             }
 
             if i < len(bandeiras) and bandeiras[i]:
@@ -371,7 +423,7 @@ from django.contrib.auth.decorators import login_required
 
 
 @login_required
-def excluir_municipio(request, id):
+def excluir_posto(request, id):
     if request.method == "POST":
         try:
             cadastro = get_object_or_404(Posto, id=id)
@@ -388,7 +440,7 @@ def excluir_municipio(request, id):
 
             cadastro.delete()
             return JsonResponse(
-                {"success": True, "message": "Município excluído com sucesso."}
+                {"success": True, "message": "Posto excluído com sucesso."}
             )
 
         except Exception as e:
@@ -399,9 +451,12 @@ def excluir_municipio(request, id):
     return JsonResponse({"success": False, "message": "Método inválido."})
 
 
-def calcular_rota(request):
-    cidades = Cidade.objects.all().select_related("posto")
-    return render(request, "calcular_rota.html", {"cidades": cidades})
+@login_required
+def rota_calculator_page(request):
+    """
+    Renderiza a página do roteirizador.
+    """
+    return render(request, "calcular_rota.html")
 
 
 from django.contrib.auth.decorators import login_required
@@ -506,96 +561,79 @@ def posto_print(request, pk):
     )
 
 
-# views.py
-import json
-from django.views.decorators.http import require_POST
-from geopy.distance import geodesic
-
-
 @require_POST
-def calcular_rota(request):
+@login_required
+def calculate_route_api(request):
     try:
         data = json.loads(request.body)
-        origem_posto_secao_value = data.get(
-            "origem_posto_secao"
-        )  # This is the value from the choice tuple
-        destino_posto_secao_value = data.get(
-            "destino_posto_secao"
-        )  # This is the value from the choice tuple
+        origin = data.get('origin')
+        destination = data.get('destination')
+        waypoints = data.get('waypoints', [])
+        
+        # Vehicle and fuel parameters
+        km_per_l = float(data.get('vehicle', {}).get('km_per_l', 0))
+        fuel_price = float(data.get('fuel_price', 0))
 
-        if not origem_posto_secao_value or not destino_posto_secao_value:
-            return JsonResponse(
-                {"success": False, "error": "Origem e destino são obrigatórios"},
-                status=400,
-            )
+        if not origin or not destination:
+            return JsonResponse({'error': 'Origem e destino são obrigatórios.'}, status=400)
 
-        # Retrieve lat/lng for origin Posto based on the posto_secao value
-        try:
-            # Find the Posto instance where posto_secao matches the value
-            origem_posto_instance = Posto.objects.get(
-                posto_secao=origem_posto_secao_value
-            )
-            origem_contato = Contato.objects.get(posto=origem_posto_instance)
-            origem_lat = origem_contato.latitude
-            origem_lng = origem_contato.longitude
+        # 1. Build coordinates string for OSRM API
+        # Formato: {lon},{lat};{lon},{lat}...
+        coords = [f"{origin['lng']},{origin['lat']}"]
+        for wp in waypoints:
+            coords.append(f"{wp['lng']},{wp['lat']}")
+        coords.append(f"{destination['lng']},{destination['lat']}")
+        
+        coordinates_str = ";".join(coords)
+        
+        # 2. Call OSRM API
+        # Using the public demo server
+        osrm_url = f"http://router.project-osrm.org/route/v1/driving/{coordinates_str}"
+        params = {'overview': 'full', 'geometries': 'geojson'}
+        
+        response = requests.get(osrm_url, params=params)
+        response.raise_for_status()
+        route_data = response.json()
 
-            # Use the display name from the choices for response, or just the value
-            origem_nome = dict(Posto.posto_secao_choices).get(
-                origem_posto_secao_value, origem_posto_secao_value
-            )
+        if route_data.get('code') != 'Ok':
+            return JsonResponse({'error': 'Não foi possível encontrar uma rota.', 'details': route_data.get('message')}, status=400)
 
-        except (Posto.DoesNotExist, Contato.DoesNotExist):
-            return JsonResponse(
+        # 3. Extract data from OSRM response
+        main_route = route_data['routes'][0]
+        distance_meters = main_route.get('distance', 0)
+        duration_seconds = main_route.get('duration', 0)
+        polyline = main_route.get('geometry') # This is the GeoJSON geometry
+
+        distance_km = distance_meters / 1000
+
+        # 4. Calculate consumption and cost
+        estimated_liters = (distance_km / km_per_l) if km_per_l > 0 else 0
+        estimated_cost = estimated_liters * fuel_price
+
+        # 5. Return the complete response
+        return JsonResponse({
+            'status': 'ok',
+            'distance_km': round(distance_km, 2),
+            'duration_seconds': round(duration_seconds),
+            'polyline': polyline,  # The GeoJSON for the route line
+            'estimated_liters': round(estimated_liters, 2),
+            'estimated_cost': round(estimated_cost, 2),
+            'steps': [
                 {
-                    "success": False,
-                    "error": f'Coordenadas de origem para "{origem_posto_secao_value}" não encontradas. Certifique-se de que o Posto existe e tem um Contato associado.',
-                },
-                status=400,
-            )
+                    'instruction': step['maneuver']['instruction'],
+                    'distance_m': step['distance'],
+                    'duration_s': step['duration'],
+                }
+                for step in main_route['legs'][0]['steps'] # Simplified for first leg
+            ]
+        })
 
-        # Retrieve lat/lng for destination Posto based on the posto_secao value
-        try:
-            destino_posto_instance = Posto.objects.get(
-                posto_secao=destino_posto_secao_value
-            )
-            destino_contato = Contato.objects.get(posto=destino_posto_instance)
-            destino_lat = destino_contato.latitude
-            destino_lng = destino_contato.longitude
-
-            destino_nome = dict(Posto.posto_secao_choices).get(
-                destino_posto_secao_value, destino_posto_secao_value
-            )
-
-        except (Posto.DoesNotExist, Contato.DoesNotExist):
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": f'Coordenadas de destino para "{destino_posto_secao_value}" não encontradas. Certifique-se de que o Posto existe e tem um Contato associado.',
-                },
-                status=400,
-            )
-
-        # Cálculo da distância usando geopy
-        distancia = geodesic((origem_lat, origem_lng), (destino_lat, destino_lng)).km
-
-        # Cálculo do tempo estimado (70km/h)
-        tempo = round((distancia / 70) * 60)  # Em minutos
-
-        return JsonResponse(
-            {
-                "success": True,
-                "distancia": round(distancia, 1),
-                "tempo": tempo,
-                "origem": origem_nome,
-                "destino": destino_nome,
-                "origem_lat": origem_lat,  # Return these for map visualization if needed
-                "origem_lng": origem_lng,
-                "destino_lat": destino_lat,
-                "destino_lng": destino_lng,
-            }
-        )
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Payload JSON inválido.'}, status=400)
+    except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+        return JsonResponse({'error': f'Erro ao processar a rota: {str(e)}'}, status=500)
     except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
+        return JsonResponse({'error': f'Um erro inesperado ocorreu: {str(e)}'}, status=500)
 
 
 def modal_rota(request):
@@ -1001,3 +1039,193 @@ def exportar_relatorio_efetivo_pdf(request):
     response = HttpResponse(pdf_buffer, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+def api_cep_info(request):
+    cep = request.GET.get('cep', '').replace('-', '').replace('.', '')
+    if not cep or not cep.isdigit() or len(cep) != 8:
+        return JsonResponse({'error': 'CEP inválido.'}, status=400)
+
+    # 1. Buscar endereço no ViaCEP
+    try:
+        viacep_response = requests.get(f'https://viacep.com.br/ws/{cep}/json/')
+        viacep_response.raise_for_status()
+        viacep_data = viacep_response.json()
+        if viacep_data.get('erro'):
+            return JsonResponse({'error': 'CEP não encontrado.'}, status=404)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Erro ao contatar a API de CEP: {e}'}, status=503)
+
+    # 2. Buscar coordenadas no Nominatim
+    address_string = f"{viacep_data.get('logradouro', '')}, {viacep_data.get('bairro', '')}, {viacep_data.get('localidade', '')}, {viacep_data.get('uf', '')}, Brazil"
+    try:
+        nominatim_response = requests.get(
+            'https://nominatim.openstreetmap.org/search',
+            params={'q': address_string, 'format': 'json', 'limit': 1},
+            headers={'User-Agent': 'SisCoE/1.0'}
+        )
+        nominatim_response.raise_for_status()
+        nominatim_data = nominatim_response.json()
+        
+        if not nominatim_data:
+            # Fallback se o endereço completo falhar
+            fallback_address = f"{viacep_data.get('localidade', '')}, {viacep_data.get('uf', '')}, Brazil"
+            nominatim_response = requests.get(
+                'https://nominatim.openstreetmap.org/search',
+                params={'q': fallback_address, 'format': 'json', 'limit': 1},
+                headers={'User-Agent': 'SisCoE/1.0'}
+            )
+            nominatim_response.raise_for_status()
+            nominatim_data = nominatim_response.json()
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Erro ao contatar a API de geocodificação: {e}'}, status=503)
+
+    # 3. Montar a resposta final
+    final_data = {
+        'rua': viacep_data.get('logradouro', ''),
+        'bairro': viacep_data.get('bairro', ''),
+        'cidade': viacep_data.get('localidade', ''),
+        'complemento': viacep_data.get('complemento', ''),
+        'latitude': None,
+        'longitude': None,
+    }
+
+    if nominatim_data:
+        final_data['latitude'] = nominatim_data[0].get('lat')
+        final_data['longitude'] = nominatim_data[0].get('lon')
+
+    return JsonResponse(final_data)
+
+
+from .services import fetch_wikipedia_data
+from django.core.files.base import ContentFile
+import urllib.request
+
+def api_municipio_info(request):
+    municipio_nome = request.GET.get('municipio', None)
+    uf = request.GET.get('uf', 'SP') # Default para SP, mas idealmente viria do request
+
+    if not municipio_nome:
+        return JsonResponse({'error': 'Nome do município não fornecido.'}, status=400)
+
+    # Garante a criação ou obtenção do objeto Cidade
+    cidade_obj, created = Cidade.objects.get_or_create(
+        municipio=municipio_nome,
+        defaults={'posto': None} # Adicione um default se o posto for obrigatório
+    )
+
+    # Verifica se precisa buscar dados externos (descrição ou bandeira)
+    if not cidade_obj.descricao or not cidade_obj.bandeira:
+        wiki_data = fetch_wikipedia_data(cidade_obj.municipio, uf)
+
+        if wiki_data:
+            # Atualiza a descrição se estiver vazia
+            if not cidade_obj.descricao and wiki_data.get('descricao'):
+                cidade_obj.descricao = wiki_data['descricao']
+
+            # Atualiza a bandeira se estiver vazia e uma URL for encontrada
+            if not cidade_obj.bandeira and wiki_data.get('url_bandeira'):
+                url = wiki_data['url_bandeira']
+                try:
+                    # Baixa a imagem da URL
+                    result = urllib.request.urlretrieve(url)
+                    # Cria um ContentFile e salva no campo ImageField
+                    cidade_obj.bandeira.save(
+                        os.path.basename(url),
+                        ContentFile(open(result[0], 'rb').read())
+                    )
+                except (urllib.error.URLError, FileNotFoundError, ValueError) as e:
+                    # Log do erro, mas não impede a resposta de continuar
+                    print(f"Erro ao baixar ou salvar a imagem da bandeira de {url}: {e}")
+
+            cidade_obj.save()
+
+    # 2. Se ainda não tiver coordenadas, busca no Nominatim
+    if not cidade_obj.latitude or not cidade_obj.longitude:
+        try:
+            address_string = f"{cidade_obj.municipio}, {uf}, Brazil"
+            nominatim_response = requests.get(
+                'https://nominatim.openstreetmap.org/search',
+                params={'q': address_string, 'format': 'json', 'limit': 1},
+                headers={'User-Agent': 'SisCoE/1.0'}
+            )
+            nominatim_response.raise_for_status()
+            nominatim_data = nominatim_response.json()
+
+            if nominatim_data:
+                cidade_obj.latitude = nominatim_data[0].get('lat')
+                cidade_obj.longitude = nominatim_data[0].get('lon')
+                cidade_obj.save()
+
+        except requests.exceptions.RequestException as e:
+            # Não retorna erro, apenas loga ou ignora. A resposta principal segue.
+            print(f"Erro ao buscar coordenadas para {cidade_obj.municipio}: {e}")
+
+
+    # 3. Retorna os dados consolidados do objeto Cidade
+    return JsonResponse({
+        'latitude': cidade_obj.latitude,
+        'longitude': cidade_obj.longitude,
+        'descricao': cidade_obj.descricao,
+        'bandeira_url': cidade_obj.bandeira.url if cidade_obj.bandeira else None,
+    })
+
+@login_required
+def api_geocode_autocomplete(request):
+    """
+    API para autocomplete de geocodificação usando Nominatim.
+    Busca por 'q' e retorna uma lista de locais.
+    """
+    query = request.GET.get('q', '')
+    if not query or len(query) < 3:
+        return JsonResponse([], safe=False)
+
+    # Parâmetros para a API do Nominatim
+    params = {
+        'q': query,
+        'format': 'json',
+        'addressdetails': 1,  # Retorna detalhes do endereço
+        'limit': 7,           # Limita o número de resultados
+        'countrycodes': 'br', # Restringe a busca ao Brasil
+        'accept-language': 'pt-BR',
+    }
+
+    try:
+        response = requests.get(
+            "https://nominatim.openstreetmap.org/search", 
+            params=params,
+            headers={'User-Agent': 'SisCoE/1.0'}
+        )
+        response.raise_for_status()
+        results = response.json()
+
+        suggestions = []
+        for r in results:
+            address = r.get('address', {})
+            
+            # Constrói um nome de exibição mais limpo e relevante
+            city = address.get('city') or address.get('town') or address.get('village')
+            state = address.get('state')
+            road = address.get('road')
+            
+            display_parts = []
+            if r.get('osm_type') == 'relation' and city: # Prioriza cidades/municípios
+                display_parts.extend([part for part in [city, state] if part])
+            else:
+                display_parts.extend([part for part in [road, city, state] if part])
+
+            short_address = ", ".join(display_parts)
+
+            if not short_address or any(s['short_address'] == short_address for s in suggestions):
+                continue
+
+            suggestions.append({
+                'short_address': short_address,
+                'lat': r.get('lat'),
+                'lon': r.get('lon'),
+            })
+
+        return JsonResponse(suggestions, safe=False)
+
+    except requests.RequestException as e:
+        return JsonResponse({'error': str(e)}, status=500)

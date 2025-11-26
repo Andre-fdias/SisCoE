@@ -239,7 +239,7 @@
                                           shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                           transition-all duration-200 placeholder-gray-400
                                           hover:border-gray-300 text-gray-700 font-medium"
-                                   placeholder="Digite o CEP" required oninput="buscarEnderecoPorCEP(this.value)">
+                                   placeholder="Digite o CEP" required>
                             <div class="text-red-500 text-sm mt-1 hidden" id="cep_error">Por favor, insira o CEP.</div>
                         </div>
                         
@@ -534,7 +534,7 @@
                     <div class="space-y-2">
                         <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
                         <textarea name="descricoes[]" rows="3"
-                            class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                            class="descricao-input w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                     shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                     transition-all duration-200 placeholder-gray-400
                                     hover:border-gray-300 text-gray-700 font-medium"></textarea>
@@ -546,12 +546,12 @@
                         
                         <div class="flex flex-col items-center space-y-4">
                             <!-- Preview da Imagem -->
-                            <img src="#" alt="Preview" class="hidden max-w-[200px] max-h-[120px] object-contain preview-image border border-gray-200 rounded-lg" id="preview_0">
+                            <img src="#" alt="Bandeira do Município" class="hidden max-w-[200px] max-h-[120px] object-contain preview-image border border-gray-200 rounded-lg" id="preview_0">
                             
                             <!-- Upload de Arquivo -->
                             <div class="w-full">
                                 <input type="file" name="bandeiras[]" accept="image/*"
-                                    class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
+                                    class="bandeira-input w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
                                             shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
                                             transition-all duration-200
                                             hover:border-gray-300 text-gray-700 font-medium
@@ -559,8 +559,7 @@
                                             file:rounded-lg file:border-0
                                             file:text-sm file:font-semibold
                                             file:bg-gray-100 file:text-gray-700
-                                            hover:file:bg-gray-200"
-                                    onchange="previewImage(event, 0)">
+                                            hover:file:bg-gray-200">
                             </div>
                         </div>
                     </div>
@@ -582,223 +581,6 @@
         </div>
     </div>
 </fieldset>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const cidadesContainer = document.getElementById('cidades-container');
-    const addCidadeButton = document.getElementById('add-cidade');
-    let cidadeIndex = 1; // Começa em 1 porque já temos o primeiro item
-
-    // Função para buscar coordenadas via API
-    async function buscarCoordenadas(cidade) {
-        const apiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cidade)}, São Paulo, Brazil&format=json`;
-        
-        try {
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                return { 
-                    latitude: parseFloat(data[0].lat), 
-                    longitude: parseFloat(data[0].lon) 
-                };
-            }
-            return null;
-        } catch (error) {
-            console.error("Erro ao buscar coordenadas:", error);
-            return null;
-        }
-    }
-
-    // Função para atualizar as coordenadas quando uma cidade é selecionada
-    async function updateCidadeInfo(selectElement) {
-        const selectedCityName = selectElement.value;
-        const cidadeItem = selectElement.closest('.cidade-item');
-        const latitudeInput = cidadeItem.querySelector('.latitude-input');
-        const longitudeInput = cidadeItem.querySelector('.longitude-input');
-
-        if (selectedCityName) {
-            // Mostra loading
-            latitudeInput.value = 'Buscando...';
-            longitudeInput.value = 'Buscando...';
-
-            const coordenadas = await buscarCoordenadas(selectedCityName);
-
-            if (coordenadas) {
-                latitudeInput.value = coordenadas.latitude;
-                longitudeInput.value = coordenadas.longitude;
-            } else {
-                latitudeInput.value = 'Não encontrado';
-                longitudeInput.value = 'Não encontrado';
-            }
-        } else {
-            latitudeInput.value = '';
-            longitudeInput.value = '';
-        }
-    }
-
-    // Função para criar um novo item de cidade
-    function createCidadeItem(index) {
-        const div = document.createElement('div');
-        div.className = 'cidade-item bg-white p-6 rounded-xl border border-gray-200 shadow-xs mt-4';
-        div.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="space-y-2">
-                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Município *</label>
-                    <div class="relative">
-                        <select name="municipios[]" class="municipio-select w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                        shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                        transition-all duration-200 hover:border-gray-300 text-gray-700 font-medium
-                                        appearance-none" required>
-                            <option value="" disabled selected>Selecione um município</option>
-                            {% for value, label in municipio_choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Latitude</label>
-                    <input type="text" name="latitudes[]"
-                        class="latitude-input w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                transition-all duration-200 placeholder-gray-400
-                                hover:border-gray-300 text-gray-700 font-medium" required readonly>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Longitude</label>
-                    <input type="text" name="longitudes[]"
-                        class="longitude-input w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                transition-all duration-200 placeholder-gray-400
-                                hover:border-gray-300 text-gray-700 font-medium" required readonly>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
-                <div class="space-y-2">
-                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide">Descrição</label>
-                    <textarea name="descricoes[]" rows="3"
-                        class="w-full pl-4 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                transition-all duration-200 placeholder-gray-400
-                                hover:border-gray-300 text-gray-700 font-medium"></textarea>
-                </div>
-                
-                <!-- Bandeira Municipal -->
-                <div class="space-y-4">
-                    <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bandeira Municipal</h3>
-                    
-                    <div class="flex flex-col items-center space-y-4">
-                        <!-- Preview da Imagem -->
-                        <img src="#" alt="Preview" class="hidden max-w-[200px] max-h-[120px] object-contain preview-image border border-gray-200 rounded-lg" id="preview_${index}">
-                        
-                        <!-- Upload de Arquivo -->
-                        <div class="w-full">
-                            <input type="file" name="bandeiras[]" accept="image/*"
-                                class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-gray-200 bg-white/70
-                                        shadow-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500
-                                        transition-all duration-200
-                                        hover:border-gray-300 text-gray-700 font-medium
-                                        file:mr-4 file:py-2 file:px-4
-                                        file:rounded-lg file:border-0
-                                        file:text-sm file:font-semibold
-                                        file:bg-gray-100 file:text-gray-700
-                                        hover:file:bg-gray-200"
-                                onchange="previewImage(event, ${index})">
-                        </div>
-                        
-                        <!-- Botão Remover -->
-                        <button type="button"
-                            class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white
-                                    font-medium rounded-xl shadow-sm hover:shadow-md
-                                    transition-all duration-200 hover:scale-[1.02]
-                                    flex items-center justify-center gap-2 remove-cidade">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Remover Cidade
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Adiciona o event listener para o select de município
-        const select = div.querySelector('.municipio-select');
-        select.addEventListener('change', function() {
-            updateCidadeInfo(this);
-        });
-
-        return div;
-    }
-
-    // Configura o event listener para o select inicial
-    const initialSelect = cidadesContainer.querySelector('.municipio-select');
-    if (initialSelect) {
-        initialSelect.addEventListener('change', function() {
-            updateCidadeInfo(this);
-        });
-    }
-
-    // Adiciona uma nova cidade quando o botão é clicado
-    addCidadeButton.addEventListener('click', () => {
-        const newItem = createCidadeItem(cidadeIndex);
-        cidadesContainer.appendChild(newItem);
-        cidadeIndex++;
-    });
-
-    // Remove uma cidade quando o botão é clicado
-    cidadesContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-cidade') || e.target.closest('.remove-cidade')) {
-            const itemToRemove = e.target.closest('.cidade-item');
-            if (itemToRemove && cidadesContainer.children.length > 1) {
-                itemToRemove.remove();
-            }
-        }
-    });
-});
-
-// Função para pré-visualizar a imagem
-function previewImage(event, index) {
-    const input = event.target;
-    const preview = document.getElementById(`preview_${index}`);
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = '#';
-        preview.classList.add('hidden');
-    }
-}
-
-
-function previewImage(event) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        const preview = document.getElementById('preview');
-        preview.src = reader.result;
-        preview.classList.remove('hidden');
-    }
-    if (event.target.files[0]) {
-        reader.readAsDataURL(event.target.files[0]);
-    }
-}
-</script>
 
                 <!-- Botão de Envio -->
                 <fieldset class="bg-gray-100 p-6 mb-8 rounded-2xl">
@@ -923,14 +705,10 @@ function previewImage(event) {
             const postoSeccaoSelect = document.getElementById('posto_secao');
             const sgbSelecionado = sgbSelect.value;
     
-            // Limpar opções exceto a primeira
             postoSeccaoSelect.innerHTML = '<option value="" disabled selected>Primeiro selecione o SGB</option>';
-    
-            // Habilitar/desabilitar select
             postoSeccaoSelect.disabled = !sgbSelecionado;
     
             if (sgbSelecionado && postoSeccaoPorSGB[sgbSelecionado]) {
-                // Adicionar novas opções
                 postoSeccaoPorSGB[sgbSelecionado].forEach(([value, label]) => {
                     const option = new Option(label, value);
                     postoSeccaoSelect.add(option);
@@ -938,112 +716,183 @@ function previewImage(event) {
             }
         }
     
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar o select de Posto/Seção como desabilitado
-            document.getElementById('posto_secao').disabled = true;
-    
-            // Adicionar o event listener para o select de SGB
-            document.getElementById('sgb').addEventListener('change', atualizarPostoSeccao);
-        });
+        document.getElementById('sgb').addEventListener('change', atualizarPostoSeccao);
+        atualizarPostoSeccao(); // Run on load
     </script>
-   <script>
-    function buscarEnderecoPorCEP(cep) {
-        // Remove caracteres não numéricos do CEP
-        cep = cep.replace(/\D/g, '');
 
-        // Verifica se o CEP tem 8 dígitos
-        if (cep.length === 8) {
-            // Faz a requisição à API ViaCEP para obter o endereço
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.erro) {
-                        // Preenche os campos de endereço com os dados retornados
-                        document.getElementById('rua').value = data.logradouro || '';
-                        document.getElementById('bairro').value = data.bairro || '';
-                        document.getElementById('cidade').value = data.localidade || '';
-                        document.getElementById('complemento').value = data.complemento || '';
-
-                        // Monta o endereço completo para geocodificação
-                        const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`;
-
-                        // Faz a requisição à API de geocodificação (OpenCage)
-                        const apiKey = 'c551e30d46174904aba53cf0669cb401'; // Substitua pela sua chave de API
-                        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(enderecoCompleto)}&key=${apiKey}`)
-                            .then(response => response.json())
-                            .then(geoData => {
-                                if (geoData.results && geoData.results.length > 0) {
-                                    const latitude = geoData.results[0].geometry.lat;
-                                    const longitude = geoData.results[0].geometry.lng;
-
-                                    // Preenche os campos de latitude e longitude
-                                    document.getElementById('latitude_contato').value = latitude;
-                                    document.getElementById('longitude_contato').value = longitude;
-                                } else {
-                                    alert('Não foi possível obter a latitude e longitude.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Erro ao buscar latitude e longitude:', error);
-                                alert('Erro ao buscar latitude e longitude. Tente novamente.');
-                            });
-                    } else {
-                        alert('CEP não encontrado.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao buscar o CEP:', error);
-                    alert('Erro ao buscar o CEP. Tente novamente.');
-                });
-        }
-    }
-    </script>
-    
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Previne o envio do formulário ao pressionar Enter
-            document.querySelectorAll('input, select, textarea').forEach(function (element) {
-                element.addEventListener('keydown', function (event) {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                    }
-                });
-            });
-    
-            // Validação do formulário ao enviar
-            document.querySelector('form').addEventListener('submit', function (event) {
-                let isValid = true;
-    
-                // Verifica se todos os campos obrigatórios estão preenchidos
-                document.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (element) {
-                    if (!element.value) {
-                        isValid = false;
-                        const errorMessage = element.nextElementSibling;
-                        if (errorMessage && errorMessage.classList.contains('text-red-500')) {
-                            errorMessage.classList.remove('hidden');
-                        }
-                    }
-                });
-    
-                if (!isValid) {
-                    event.preventDefault();
+    document.addEventListener('DOMContentLoaded', function () {
+        let cepTimeout;
+        const cepInput = document.getElementById('cep');
+        
+        // --- Lógica para formatação e busca de CEP ---
+        cepInput.addEventListener('input', function(e) {
+            // Formatação do CEP
+            let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            } else if (value.length > 8) { // Limita a 8 dígitos (5 + 3)
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            }
+            e.target.value = value;
+
+            // Lógica de busca de CEP (com debounce)
+            clearTimeout(cepTimeout);
+            const cep = this.value;
+            cepTimeout = setTimeout(() => {
+                buscarCep(cep);
+            }, 500); // Adiciona um delay de 500ms para não fazer requisições a cada dígito
+        });
+
+        async function buscarCep(cep) {
+            cep = cep.replace(/\D/g, '');
+            if (cep.length !== 8) return;
+
+            // Adicionar feedback de "carregando"
+            setEnderecoFieldsReadOnly(true, 'Carregando...');
+
+            try {
+                const response = await fetch(`{% url 'municipios:api_cep_info' %}?cep=${cep}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('rua').value = data.rua || '';
+                    document.getElementById('bairro').value = data.bairro || '';
+                    document.getElementById('cidade').value = data.cidade || '';
+                    document.getElementById('complemento').value = data.complemento || '';
+                    document.getElementById('latitude_contato').value = data.latitude || '';
+                    document.getElementById('longitude_contato').value = data.longitude || '';
+                } else {
+                    alert(`Erro: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar CEP:', error);
+                alert('Não foi possível buscar o CEP. Verifique a conexão.');
+            } finally {
+                setEnderecoFieldsReadOnly(false);
+            }
+        }
+
+        function setEnderecoFieldsReadOnly(isReadOnly, placeholder = '') {
+            const fields = ['rua', 'bairro', 'cidade', 'latitude_contato', 'longitude_contato'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = isReadOnly;
+                if (isReadOnly) {
+                    el.value = placeholder;
                 }
             });
-        });
-    </script>
-    <script>
-            // Função para pré-visualizar a imagem
-            function previewImage(event, index) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                const preview = document.getElementById(`preview_${index}`);
-                preview.src = reader.result;
-                preview.style.display = 'block';
-            }
-            if (event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // --- Lógica para Cidades Atendidas ---
+        const cidadesContainer = document.getElementById('cidades-container');
+        let cidadeIndex = 1;
+
+        async function buscarDadosMunicipio(selectElement) {
+            const municipioNome = selectElement.value;
+            if (!municipioNome) return;
+
+            const cidadeItem = selectElement.closest('.cidade-item');
+            const latInput = cidadeItem.querySelector('.latitude-input');
+            const lonInput = cidadeItem.querySelector('.longitude-input');
+            const descInput = cidadeItem.querySelector('.descricao-input');
+            const bandeiraPreview = cidadeItem.querySelector('.preview-image');
+
+            latInput.value = 'Buscando...';
+            lonInput.value = 'Buscando...';
+
+            try {
+                const response = await fetch(`{% url 'municipios:api_municipio_info' %}?municipio=${municipioNome}&uf=SP`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    latInput.value = data.latitude || 'Não encontrado';
+                    lonInput.value = data.longitude || 'Não encontrado';
+                    descInput.value = data.descricao || '';
+                    
+                    if (data.bandeira_url) {
+                        bandeiraPreview.src = data.bandeira_url;
+                        bandeiraPreview.classList.remove('hidden');
+                    } else {
+                        bandeiraPreview.src = '#';
+                        bandeiraPreview.classList.add('hidden');
+                    }
+                } else {
+                    alert(`Erro: ${data.error}`);
+                    latInput.value = 'Erro';
+                    lonInput.value = 'Erro';
+                }
+            } catch (error) {
+                console.error('Erro ao buscar dados do município:', error);
+                alert('Não foi possível buscar os dados do município.');
+                latInput.value = 'Erro';
+                lonInput.value = 'Erro';
             }
         }
+
+        // Delegação de evento para os selects de município
+        cidadesContainer.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('municipio-select')) {
+                buscarDadosMunicipio(e.target);
+            }
+        });
+
+        // Lógica para adicionar/remover cidades
+        document.getElementById('add-cidade').addEventListener('click', () => {
+            const clone = cidadesContainer.firstElementChild.cloneNode(true);
+            
+            // Limpar valores e resetar campos do clone
+            clone.querySelector('.municipio-select').selectedIndex = 0;
+            clone.querySelector('.latitude-input').value = '';
+            clone.querySelector('.longitude-input').value = '';
+            clone.querySelector('.descricao-input').value = '';
+            
+            const bandeiraInput = clone.querySelector('.bandeira-input');
+            bandeiraInput.value = ''; // Limpa o file input
+            
+            const previewImg = clone.querySelector('.preview-image');
+            previewImg.src = '#';
+            previewImg.classList.add('hidden');
+            previewImg.id = `preview_${cidadeIndex}`; // ID único para o preview
+            
+            // Adicionar botão de remover se não for o primeiro
+            if (!clone.querySelector('.remove-cidade')) {
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02] flex items-center justify-center gap-2 remove-cidade mt-4';
+                removeButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Remover Cidade`;
+                clone.querySelector('.bandeira-input').parentElement.parentElement.appendChild(removeButton);
+            }
+            
+            cidadesContainer.appendChild(clone);
+            cidadeIndex++;
+        });
+
+        cidadesContainer.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-cidade');
+            if (removeBtn) {
+                removeBtn.closest('.cidade-item').remove();
+            }
+        });
+    });
+
+    // Função global para preview de imagem
+    function previewImage(event, elementId) {
+        const input = event.target;
+        const preview = document.getElementById(elementId);
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.classList.add('hidden');
+        }
+    }
     </script>
 </body>
 {% endblock 'body' %}

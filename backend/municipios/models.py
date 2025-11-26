@@ -256,12 +256,12 @@ class Pessoal(models.Model):
 
     def get_search_result(self):
         return {
-            "title": f"{self.municipio}",
+            "title": f"Efetivo do {self.posto.posto_atendimento}",
             "fields": {
-                "Município": self.get_nome_municipio(),
-                "Descrição": (
-                    Truncator(self.descricao).chars(100) if self.descricao else "-"
-                ),
+                "Posto": self.posto.posto_atendimento,
+                "Total de Pessoal": self.total,
+                "Oficiais": self.cel + self.ten_cel + self.maj + self.cap + self.tenqo + self.tenqa + self.asp,
+                "Praças": self.st_sgt + self.cb_sd,
             },
         }
 
@@ -356,6 +356,8 @@ class Cidade(models.Model):
         on_delete=models.CASCADE,
         related_name="cidades",
         verbose_name="Posto vinculado",
+        null=True, 
+        blank=True
     )
     descricao = models.TextField(
         verbose_name="Descrição",
@@ -366,8 +368,8 @@ class Cidade(models.Model):
         max_length=100, verbose_name="Município", choices=municipio_choices
     )
 
-    longitude = models.FloatField()
-    latitude = models.FloatField()
+    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
     bandeira = models.ImageField(
         upload_to="img/bandeiras/%Y/%m/%d/",
         blank=True,
@@ -387,32 +389,31 @@ class Cidade(models.Model):
         """Retorna o nome de exibição do município"""
         return dict(self.municipio_choices).get(self.municipio, self.municipio)
 
-    # Adicione ao final da classe Pessoal
     def get_search_result(self):
         return {
-            "title": f"Pessoal {self.posto.posto_atendimento}",
+            "title": f"Município de {self.get_nome_municipio()}",
             "fields": {
-                "Cel": self.cel,
-                "Ten Cel": self.ten_cel,
-                "Maj": self.maj,
-                "Cap": self.cap,
-                "Total": self.total,
+                "Posto Vinculado": self.posto.posto_atendimento,
+                "Descrição": (
+                    Truncator(self.descricao).chars(100) if self.descricao else "-"
+                ),
             },
         }
 
-    class HistoricoPessoal(models.Model):
-        data_referencia = models.DateField()
-        total_cel = models.IntegerField()
-        total_ten_cel = models.IntegerField()
-        total_maj = models.IntegerField()
-        total_cap = models.IntegerField()
-        total_tenqo = models.IntegerField()
-        total_tenqa = models.IntegerField()
-        total_asp = models.IntegerField()
-        total_st_sgt = models.IntegerField()
-        total_cb_sd = models.IntegerField()
-        total_geral = models.IntegerField()
-        criado_em = models.DateTimeField(auto_now_add=True)
+
+class HistoricoPessoal(models.Model):
+    data_referencia = models.DateField()
+    total_cel = models.IntegerField()
+    total_ten_cel = models.IntegerField()
+    total_maj = models.IntegerField()
+    total_cap = models.IntegerField()
+    total_tenqo = models.IntegerField()
+    total_tenqa = models.IntegerField()
+    total_asp = models.IntegerField()
+    total_st_sgt = models.IntegerField()
+    total_cb_sd = models.IntegerField()
+    total_geral = models.IntegerField()
+    criado_em = models.DateTimeField(auto_now_add=True)
 
     @classmethod
     def criar_registro_mensal(cls):
@@ -443,3 +444,26 @@ class Cidade(models.Model):
             total_cb_sd=totais["cb_sd"] or 0,
             total_geral=total_geral,
         )
+
+class Vehicle(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)  # e.g. "Gol 1.0"
+    consumption_km_per_l = models.FloatField()  # km por litro
+    fuel_type = models.CharField(max_length=50)  # gasolina, etanol, diesel
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Route(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, blank=True)
+    origin_address = models.CharField(max_length=300)
+    origin_lat = models.FloatField()
+    origin_lng = models.FloatField()
+    destination_address = models.CharField(max_length=300)
+    destination_lat = models.FloatField()
+    destination_lng = models.FloatField()
+    waypoints = models.JSONField(blank=True, null=True)  # lista de {address, lat, lng}
+    distance_km = models.FloatField(null=True, blank=True)
+    duration_seconds = models.IntegerField(null=True, blank=True)
+    estimated_liters = models.FloatField(null=True, blank=True)
+    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -122,6 +122,13 @@ TEMPLATES = [
     },
 ]
 
+# ============ CONFIGURAÇÕES DE AMBIENTE E SERVIÇOS ============
+# Define o host do Redis a partir de variáveis de ambiente.
+# Padrão: "localhost" para desenvolvimento local.
+# Em Docker, defina REDIS_HOST=redis no arquivo .env.
+REDIS_HOST = config("REDIS_HOST", default="localhost")
+
+
 # ============ CONFIGURAÇÕES ASSÍNCRONAS (ASGI) ============
 # ⚠️ CONFIGURAÇÃO CRÍTICA PARA DAPHNE
 ASGI_APPLICATION = 'backend.asgi.application'
@@ -131,7 +138,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],  # Nome do container no Docker
+            "hosts": [(REDIS_HOST, 6379)],  # Usa a variável REDIS_HOST
             "capacity": 1500,    # Aumenta capacidade para chat
             "expiry": 10,        # Expiração em segundos
         },
@@ -209,8 +216,8 @@ if DEBUG and not EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # ============ CONFIGURAÇÕES CELERY ============
-CELERY_BROKER_URL = "redis://redis:6379/0"
-CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -327,7 +334,7 @@ CSRF_TRUSTED_ORIGINS = [
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -335,7 +342,7 @@ CACHES = {
 }
 
 # Cache para Channels
-CHANNELS_REDIS_HOST = "redis"
+CHANNELS_REDIS_HOST = REDIS_HOST
 CHANNELS_REDIS_PORT = 6379
 
 # ============ CONFIGURAÇÕES DE LOGGING ============

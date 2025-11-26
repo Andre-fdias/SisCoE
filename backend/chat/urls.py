@@ -41,6 +41,7 @@ urlpatterns = [
     ),
     # URLs para estatísticas e busca
     path("statistics/", views.ChatStatisticsView.as_view(), name="chat-statistics"),
+    path("unread-count/", views.UnreadMessageCountAPIView.as_view(), name="unread-message-count"),
     # path("search/", views.SearchView.as_view(), name="chat-search"), # Desativado temporariamente
     path("admin/stats/", views.AdminChatView.as_view(), name="admin-chat-stats"),
 ]
