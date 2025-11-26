@@ -18,16 +18,16 @@ class Documento(models.Model):
 
     id = models.AutoField(primary_key=True)
     data_publicacao = models.DateField()
-    data_documento = models.DateField()
+    data_documento = models.DateField(db_index=True)
     numero_documento = models.CharField(max_length=100)
-    assunto = models.CharField(max_length=200)
+    assunto = models.CharField(max_length=200, db_index=True)
     descricao = models.TextField()
     assinada_por = models.CharField(max_length=100)
     data_criacao = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL
     )
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default="OUTRO")
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default="OUTRO", db_index=True)
 
     def __str__(self):
         return self.assunto

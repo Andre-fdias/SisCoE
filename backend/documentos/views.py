@@ -28,9 +28,9 @@ def listar_documentos(request):
     """
     user = request.user
     if user.permissoes in ['admin', 'gestor']:
-        documentos = Documento.objects.select_related('usuario').all()
+        documentos = Documento.objects.select_related('usuario').prefetch_related('arquivos').all()
     else:
-        documentos = Documento.objects.select_related('usuario').filter(usuario=user)
+        documentos = Documento.objects.select_related('usuario').prefetch_related('arquivos').filter(usuario=user)
 
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
