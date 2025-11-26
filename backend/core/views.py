@@ -1514,6 +1514,13 @@ def dashboard_links_view(request):
     return render(request, "core/dashboard_links.html")
 
 
+def privacy_policy_view(request):
+    """
+    View para exibir a política de privacidade.
+    """
+    return render(request, "privacy_policy.html")
+
+
 def handler400(request, exception):
     return render(request, "400.html", status=400)
 

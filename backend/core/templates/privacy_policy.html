@@ -1,0 +1,454 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <title>Política de Privacidade - SisCoE</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1f2937',
+                        },
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .legal-text {
+                @apply text-gray-700 dark:text-gray-300 text-justify leading-relaxed mb-4;
+            }
+            .legal-h2 {
+                @apply text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-6 pb-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3;
+            }
+            .citation-box {
+                @apply text-sm bg-gray-50 dark:bg-gray-800 border-l-4 border-primary-500 text-gray-700 dark:text-gray-300 p-4 my-6 italic rounded-r-lg shadow-sm;
+            }
+            .feature-card {
+                @apply bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300;
+            }
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1f2937;
+        }
+        
+        body.dark {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e5e7eb;
+        }
+
+        .gradient-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .dark .gradient-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #7e22ce 100%);
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+            background: #cbd5e1; 
+            border-radius: 4px; 
+        }
+        .dark ::-webkit-scrollbar-thumb { 
+            background: #475569; 
+        }
+
+        /* Animações suaves */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        
+        <!-- Header Simplificado -->
+        <div class="flex flex-col items-center mb-12 fade-in">
+            <div class="flex items-center justify-between w-full mb-8">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'core:dashboard' %}" class="flex items-center gap-4">
+                        <img src="{% static 'img/logo-siscoe-light.png' %}" 
+                             class="h-16 dark:hidden transition-all duration-300 hover:scale-105" 
+                             alt="SisCoE Logo">
+                        <img src="{% static 'img/logo-siscoe-black2.png' %}" 
+                             class="h-16 hidden dark:block transition-all duration-300 hover:scale-105" 
+                             alt="SisCoE Logo">
+                    </a>
+                </div>
+
+                <!-- Botão Dark Mode -->
+                <button id="darkModeToggle"
+                        class="flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <svg id="sunIcon" class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-6 h-6 text-indigo-400 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Cabeçalho Principal -->
+            <div class="gradient-header rounded-2xl shadow-2xl w-full p-8 text-center text-white mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Política de Privacidade</h1>
+                <p class="text-xl opacity-90 mb-2">Sistema de Controle de Efetivo (SisCoE)</p>
+                <p class="text-sm opacity-80">Em conformidade com I-30-PM, I-31-PM e LGPD</p>
+            </div>
+
+            <!-- Cards de Navegação Rápida -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 w-full mb-8">
+                <a href="#intro" class="feature-card text-center group hover:border-primary-300 dark:hover:border-primary-600">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-building-shield text-primary-600 dark:text-primary-400 text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Controlador</span>
+                </a>
+                
+                <a href="#dados" class="feature-card text-center group hover:border-primary-300 dark:hover:border-primary-600">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-file-contract text-primary-600 dark:text-primary-400 text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Dados</span>
+                </a>
+                
+                <a href="#seguranca" class="feature-card text-center group hover:border-primary-300 dark:hover:border-primary-600">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-lock text-primary-600 dark:text-primary-400 text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Segurança</span>
+                </a>
+                
+                <a href="#monitoramento" class="feature-card text-center group hover:border-red-300 dark:hover:border-red-600">
+                    <div class="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-eye text-red-600 dark:text-red-400 text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Monitoramento</span>
+                </a>
+                
+                <a href="#vedacoes" class="feature-card text-center group hover:border-primary-300 dark:hover:border-primary-600">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-ban text-primary-600 dark:text-primary-400 text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Vedações</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="fade-in">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                
+                <!-- Conteúdo da Política -->
+                <div class="p-8 md:p-12">
+                    
+                    <section id="intro" class="scroll-mt-24">
+                        <h2 class="legal-h2">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-building-shield text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            1. Identificação e Controlador
+                        </h2>
+                        <p class="legal-text">
+                            O <strong class="text-blue-600 dark:text-blue-400">SisCoE</strong> é uma ferramenta institucional de propriedade da <strong class="text-blue-600 dark:text-blue-400">Polícia Militar do Estado de São Paulo (PMESP)</strong>. O acesso é restrito e deve obedecer à finalidade exclusiva de serviço policial-militar.
+                        </p>
+                        <div class="citation-box">
+                            <i class="fa-solid fa-quote-left text-primary-500 mr-2"></i>
+                            "A utilização dos servidores... deverá ser exclusivamente em razão do serviço policial militar."
+                            <div class="mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400 not-italic">
+                                - Art. 36 das Instruções I-31-PM
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="dados" class="scroll-mt-24">
+                        <h2 class="legal-h2">
+                            <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-file-contract text-green-600 dark:text-green-400"></i>
+                            </div>
+                            2. Natureza dos Dados
+                        </h2>
+                        <p class="legal-text">
+                            O sistema trata dados pessoais para o cumprimento de obrigações legais e execução de políticas públicas de segurança. Os dados coletados incluem:
+                        </p>
+                        <div class="grid md:grid-cols-3 gap-6 mt-6">
+                            <div class="feature-card">
+                                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa-solid fa-id-card text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 dark:text-white mb-2">Identificação</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Nome, RE, CPF, RG e dados pessoais básicos</p>
+                            </div>
+                            
+                            <div class="feature-card">
+                                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa-solid fa-briefcase text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 dark:text-white mb-2">Funcionais</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Posto/Graduação, Lotação (OPM), Funções exercidas</p>
+                            </div>
+                            
+                            <div class="feature-card">
+                                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa-solid fa-shield-alt text-orange-600 dark:text-orange-400"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 dark:text-white mb-2">Operacionais</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Escalas de serviço, missões, afastamentos médicos e férias</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="seguranca" class="scroll-mt-24">
+                        <h2 class="legal-h2">
+                            <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-lock text-yellow-600 dark:text-yellow-400"></i>
+                            </div>
+                            3. Segurança e Senhas
+                        </h2>
+                        <p class="legal-text">
+                            A credencial de acesso é <strong class="text-yellow-600 dark:text-yellow-400">pessoal e intransferível</strong>. O usuário é administrativamente e penalmente responsável por qualquer ação realizada com seu login.
+                        </p>
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded-r-lg p-6 my-6">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-triangle-exclamation text-yellow-600 dark:text-yellow-400 text-xl mt-1"></i>
+                                <div>
+                                    <p class="text-yellow-800 dark:text-yellow-200 font-bold text-lg mb-2">
+                                        Atenção Importante
+                                    </p>
+                                    <p class="text-yellow-700 dark:text-yellow-300">
+                                        "O usuário é inteiramente responsável pela confidencialidade de sua conta e senha, bem como de qualquer atividade que ocorra na utilização da sua conta."
+                                    </p>
+                                    <div class="mt-2 text-sm text-yellow-600 dark:text-yellow-400 font-semibold">
+                                        - Art. 13 das I-31-PM
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="monitoramento" class="scroll-mt-24">
+                        <h2 class="legal-h2 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900">
+                            <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-eye text-red-600 dark:text-red-400"></i>
+                            </div>
+                            4. Monitoramento e Auditoria
+                        </h2>
+                        <p class="legal-text">
+                            O usuário declara ciência de que <strong class="text-red-600 dark:text-red-400">não há expectativa de privacidade</strong> no uso desta ferramenta corporativa. 
+                        </p>
+                        <p class="legal-text">
+                            A PMESP realiza auditoria constante dos dados trafegados e logs de acesso (IP, data, hora, ações) para garantir a integridade da informação e investigar infrações.
+                        </p>
+                        <div class="citation-box border-red-400 bg-red-50 dark:bg-red-900/10">
+                            <i class="fa-solid fa-quote-left text-red-500 mr-2"></i>
+                            "A PMESP se reserva ao direito de monitorar as informações e conteúdo trafegado... visando coibir qualquer desvio do usuário que macule o nome da Instituição."
+                            <div class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400 not-italic">
+                                - Art. 26 das Instruções I-31-PM
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="vedacoes" class="scroll-mt-24">
+                        <h2 class="legal-h2">
+                            <div class="w-10 h-10 bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-ban text-gray-600 dark:text-gray-400"></i>
+                            </div>
+                            5. Vedações
+                        </h2>
+                        <p class="legal-text">
+                            É expressamente proibido, sob pena de responsabilidade disciplinar, civil e penal (Art. 29 das I-31-PM):
+                        </p>
+                        <div class="grid md:grid-cols-2 gap-6 mt-6">
+                            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-red-600 dark:text-red-400 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-bold text-red-700 dark:text-red-300">Uso Indevido</h3>
+                                </div>
+                                <p class="text-red-600 dark:text-red-400 text-sm">Utilizar o sistema para fins particulares, comerciais ou políticos</p>
+                            </div>
+                            
+                            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-red-600 dark:text-red-400 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-bold text-red-700 dark:text-red-300">Dados Sigilosos</h3>
+                                </div>
+                                <p class="text-red-600 dark:text-red-400 text-sm">Inserir ou compartilhar dados sigilosos sem a devida autorização</p>
+                            </div>
+                            
+                            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-red-600 dark:text-red-400 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-bold text-red-700 dark:text-red-300">Segurança</h3>
+                                </div>
+                                <p class="text-red-600 dark:text-red-400 text-sm">Tentar burlar os mecanismos de segurança da informação</p>
+                            </div>
+                            
+                            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-red-600 dark:text-red-400 text-sm"></i>
+                                    </div>
+                                    <h3 class="font-bold text-red-700 dark:text-red-300">Credenciais</h3>
+                                </div>
+                                <p class="text-red-600 dark:text-red-400 text-sm">Compartilhar credenciais de acesso com terceiros</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Call to Action -->
+                    <div class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dúvidas sobre segurança da informação?</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+                                Entre em contato com nosso departamento de telemática para esclarecer qualquer questão relacionada à segurança e uso adequado do sistema.
+                            </p>
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                <a href="#" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl">
+                                    <i class="fa-solid fa-shield-halved mr-2"></i> Contatar Depto. de Telemática
+                                </a>
+                                <a href="{% url 'core:dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
+                                    <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Sistema
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="mt-12 text-center">
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    &copy; 2025 Polícia Militar do Estado de São Paulo - SisCoE v{{ APP_VERSION }}
+                </div>
+                <div class="text-xs text-gray-400 dark:text-gray-500">
+                    Sistema desenvolvido para uso institucional exclusivo
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+    <script>
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+
+            // Verifica se há preferência salva
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Aplica o modo inicial
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+
+            // Alterna entre modos
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        });
+
+        // Smooth scroll para navegação interna
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    const headerOffset = 100;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // Adiciona classe de fade-in para elementos quando entram na viewport
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        // Observa todas as seções
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

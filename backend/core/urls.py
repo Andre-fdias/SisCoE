@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import index, capa, CalendarioView, dashboard_view, global_search_view, dashboard_links_view
+from .views import index, capa, CalendarioView, dashboard_view, global_search_view, dashboard_links_view, privacy_policy_view
 
 app_name = "core"
 
@@ -15,4 +15,5 @@ urlpatterns = [
     path("calendario/", CalendarioView.as_view(), name="calendario"),
     path("search/", global_search_view, name="global_search"),
     path("links/", dashboard_links_view, name="dashboard_links"),
+    path("privacy-policy/", privacy_policy_view, name="privacy_policy"),
 ]

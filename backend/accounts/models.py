@@ -64,6 +64,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=20,
         choices=PERMISSOES_CHOICES,
         default="basico",
+        
     )
 
     cadastro = models.OneToOneField(
