@@ -1,0 +1,455 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+    <title>Termos de Uso - SisCoE</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1f2937',
+                        },
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .term-text {
+                @apply text-gray-700 dark:text-gray-300 leading-relaxed mb-4;
+            }
+            .term-section {
+                @apply mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700;
+            }
+            .term-h2 {
+                @apply text-2xl font-bold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3;
+            }
+            .citation-box {
+                @apply text-sm bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 text-gray-700 dark:text-gray-300 p-4 my-4 italic rounded-r-lg;
+            }
+            .warning-box {
+                @apply bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 my-4 rounded-r-lg;
+            }
+            .danger-box {
+                @apply bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 my-4 rounded-r-lg;
+            }
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        body.dark {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .gradient-header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+        }
+        
+        .dark .gradient-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
+        }
+
+        .signature-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+        
+        .dark .signature-section {
+            background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
+        }
+
+        /* Animações */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+            background: #cbd5e1; 
+            border-radius: 4px; 
+        }
+        .dark ::-webkit-scrollbar-thumb { 
+            background: #475569; 
+        }
+    </style>
+</head>
+
+<body class="bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-8 fade-in">
+            <div class="flex items-center justify-between w-full mb-6">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'core:dashboard' %}" class="flex items-center gap-4">
+                        <img src="{% static 'img/logo-siscoe-light.png' %}" 
+                             class="h-14 dark:hidden transition-all duration-300 hover:scale-105" 
+                             alt="SisCoE Logo">
+                        <img src="{% static 'img/logo-siscoe-black2.png' %}" 
+                             class="h-14 hidden dark:block transition-all duration-300 hover:scale-105" 
+                             alt="SisCoE Logo">
+                    </a>
+                </div>
+
+                <!-- Botão Dark Mode -->
+                <button id="darkModeToggle"
+                        class="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <svg id="sunIcon" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-indigo-400 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Cabeçalho Principal -->
+            <div class="gradient-header rounded-2xl shadow-2xl w-full p-6 text-center text-white">
+                <h1 class="text-3xl font-bold mb-3">Termo de Aceite e Uso do Sistema</h1>
+                <p class="text-lg opacity-90">Sistema de Controle de Efetivo (SisCoE)</p>
+                <p class="text-sm opacity-80 mt-1">SECRETARIA DA SEGURANÇA PÚBLICA - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO</p>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="fade-in">
+            
+            <!-- Identificação do Militar -->
+            <div class="term-section signature-section mb-8">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-blue-600"></i>
+                    IDENTIFICAÇÃO DO MILITAR
+                </h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-semibold text-gray-700 dark:text-gray-300">Nome:</p>
+                        <p class="text-gray-600 dark:text-gray-400">1º Sgt PM ANDRE FONSECA DIAS</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-700 dark:text-gray-300">RE:</p>
+                        <p class="text-gray-600 dark:text-gray-400">108154-3</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-700 dark:text-gray-300">CPF:</p>
+                        <p class="text-gray-600 dark:text-gray-400">309.914.928-46</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-700 dark:text-gray-300">Data:</p>
+                        <p class="text-gray-600 dark:text-gray-400">03/11/2025</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção 1: Finalidade -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-bullseye text-blue-600 dark:text-blue-400 text-sm"></i>
+                    </div>
+                    1. FINALIDADE
+                </h2>
+                <p class="term-text">
+                    O acesso ao sistema é exclusivo para fins institucionais, em conformidade com as atribuições funcionais do usuário e com as disposições da Instrução Policial-Militar I-31-PM (3ª edição, 2022) e da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+                </p>
+                <div class="citation-box">
+                    <i class="fa-solid fa-scale-balanced text-blue-500 mr-2"></i>
+                    "O acesso aos sistemas deve ser utilizado exclusivamente para fins institucionais, em conformidade com as normas da Corporação."
+                </div>
+            </section>
+
+            <!-- Seção 2: Obrigações do Usuário -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-shield-alt text-green-600 dark:text-green-400 text-sm"></i>
+                    </div>
+                    2. OBRIGAÇÕES DO USUÁRIO
+                </h2>
+                <p class="term-text">
+                    Eu, <strong>1º Sgt PM 108154-3 ANDRE FONSECA DIAS</strong>, inscrito no CPF <strong>309.914.928-46</strong>, declaro estar ciente e de acordo com os seguintes termos:
+                </p>
+                
+                <div class="space-y-3 mt-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-green-500 mt-1"></i>
+                        <p class="term-text mb-0">Utilizar o sistema de forma ética, responsável e em consonância com as normas da PMESP e da LGPD</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-green-500 mt-1"></i>
+                        <p class="term-text mb-0">Manter a confidencialidade de senhas e credenciais de acesso, sendo integralmente responsável por seu uso</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-green-500 mt-1"></i>
+                        <p class="term-text mb-0">Não compartilhar, divulgar ou acessar dados sem autorização legal ou institucional</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-green-500 mt-1"></i>
+                        <p class="term-text mb-0">Não utilizar o sistema para fins ilícitos, difamatórios, políticos, comerciais ou que violem direitos de terceiros</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-green-500 mt-1"></i>
+                        <p class="term-text mb-0">Comunicar imediatamente ao Oficial de Telemática da OPM qualquer violação de segurança ou uso indevido</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção 3: LGPD -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-gavel text-purple-600 dark:text-purple-400 text-sm"></i>
+                    </div>
+                    3. LGPD
+                </h2>
+                <p class="term-text">
+                    Os dados pessoais tratados no sistema estão sujeitos às normas da LGPD, incluindo os princípios de finalidade, adequação, necessidade e transparência. O usuário consente com o tratamento de seus dados pessoais para fins de controle de acesso, auditoria e cumprimento de obrigações legais.
+                </p>
+                <div class="citation-box">
+                    <i class="fa-solid fa-book-law text-purple-500 mr-2"></i>
+                    "O tratamento de dados pessoais deve ser realizado com observância aos princípios da LGPD, especialmente a finalidade específica e o interesse legítimo."
+                </div>
+            </section>
+
+            <!-- Seção 4: Auditoria e Monitoramento -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-eye text-yellow-600 dark:text-yellow-400 text-sm"></i>
+                    </div>
+                    4. AUDITORIA E MONITORAMENTO
+                </h2>
+                <p class="term-text">
+                    A PMESP reserva-se o direito de monitorar e auditar o uso do sistema, conforme previsto no Artigo 7º da I-31-PM. Em caso de irregularidades, o usuário estará sujeito às sanções administrativas, civis e penais cabíveis.
+                </p>
+                <div class="warning-box">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-600 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-yellow-800 dark:text-yellow-200">Atenção:</p>
+                            <p class="text-yellow-700 dark:text-yellow-300 text-sm mt-1">
+                                Todas as ações no sistema são registradas em log e podem ser auditadas a qualquer momento pela administração do sistema.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção 5: Penalidades -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-ban text-red-600 dark:text-red-400 text-sm"></i>
+                    </div>
+                    5. PENALIDADES
+                </h2>
+                <p class="term-text">
+                    Descumprimento deste termo acarretará medidas disciplinares, conforme o Regulamento Geral da PMESP e a legislação vigente, podendo resultar em suspensão ou cancelamento do acesso, ações disciplinares e medidas legais cabíveis.
+                </p>
+                <div class="danger-box">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-exclamation-circle text-red-600 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-red-800 dark:text-red-200">Consequências do Descumprimento:</p>
+                            <ul class="text-red-700 dark:text-red-300 text-sm mt-1 list-disc list-inside space-y-1">
+                                <li>Suspensão imediata do acesso ao sistema</li>
+                                <li>Processo administrativo disciplinar</li>
+                                <li>Responsabilização civil e penal quando aplicável</li>
+                                <li>Medidas cabíveis conforme Regulamento da PMESP</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção 6: Disposições Finais -->
+            <section class="term-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-file-contract text-gray-600 dark:text-gray-400 text-sm"></i>
+                    </div>
+                    6. DISPOSIÇÕES FINAIS
+                </h2>
+                <p class="term-text">
+                    Este termo entra em vigor na data de sua publicação. Dúvidas ou esclarecimentos devem ser dirigidos ao 15º Grupamento de Bombeiros via e-mail: <a href="mailto:15gb@policiamilitar.sp.gov.br" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">15gb@policiamilitar.sp.gov.br</a>.
+                </p>
+                
+                <div class="mt-4">
+                    <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Referências Legais:</h3>
+                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>• I-31-PM (3ª edição, 2022)</li>
+                        <li>• LGPD (Lei nº 13.709/2018)</li>
+                        <li>• Decreto Federal nº 7.845/2012 (sigilo de informações)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Declaração de Aceite -->
+            <section class="term-section signature-section">
+                <h2 class="term-h2">
+                    <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-signature text-green-600 dark:text-green-400 text-sm"></i>
+                    </div>
+                    DECLARAÇÃO DE CIÊNCIA E ACEITE
+                </h2>
+                
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    <div class="text-center mb-6">
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white">
+                            Nome: 1º Sgt PM ANDRE FONSECA DIAS - RE: 108154-3
+                        </p>
+                    </div>
+                    
+                    <div class="text-center border-t border-gray-300 dark:border-gray-600 pt-6">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Assinatura Eletrônica Registrada:
+                        </p>
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <i class="fa-solid fa-fingerprint text-green-600"></i>
+                            <span class="text-sm font-mono text-gray-700 dark:text-gray-300">ASSINADO DIGITALMENTE</span>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
+                            Registrado em: 03/11/2025 às 14:30
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
+                    <button onclick="window.print()" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-lg">
+                        <i class="fa-solid fa-print mr-2"></i> Imprimir Termo
+                    </button>
+                    <a href="{% url 'core:dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Sistema
+                    </a>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-12 text-center">
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                &copy; 2025 Polícia Militar do Estado de São Paulo - SisCoE v{{ APP_VERSION }}
+            </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">
+                Documento gerado automaticamente pelo sistema
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+    <script>
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const body = document.body;
+
+            // Verifica se há preferência salva
+            const savedMode = localStorage.getItem('darkMode');
+            
+            // Aplica o modo inicial
+            if (savedMode === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+
+            // Alterna entre modos
+            darkModeToggle.addEventListener('click', function() {
+                if (body.classList.contains('dark')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark');
+                localStorage.setItem('darkMode', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark');
+                localStorage.setItem('darkMode', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        });
+
+        // Smooth scroll para navegação
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    const headerOffset = 80;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // Animação de entrada
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

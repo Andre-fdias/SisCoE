@@ -1521,6 +1521,20 @@ def privacy_policy_view(request):
     return render(request, "privacy_policy.html")
 
 
+@login_required
+def termo_aceite_view(request):
+    """
+    View para exibir o termo de aceite personalizado com dados do usuário logado
+    """
+    context = {
+        'current_date': timezone.now().date(),
+        'APP_VERSION': '1.0.0',  # Ajuste conforme sua variável de versão
+    }
+    
+    return render(request, 'termo_aceite_index.html', context)
+
+
+
 def handler400(request, exception):
     return render(request, "400.html", status=400)
 
