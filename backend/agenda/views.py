@@ -1,18 +1,39 @@
 from django.shortcuts import render
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView, CreateView, DeleteView
 from django.utils import timezone
 from datetime import timedelta
+from django.core.exceptions import PermissionDenied
 
 from .models import Lembrete, Tarefa
 from .forms import LembreteForm, TarefaForm
 
 
-# --- Mixins ---
+# --- Constantes de Permissão ---
+AGENDA_ALLOWED_PERMISSIONS = ['sgb', 'gestor', 'admin']
+
+# --- Mixins e Decoradores ---
+
+def check_agenda_permission(user):
+    """Verifica se o usuário tem permissão para acessar o app Agenda."""
+    return user.permissoes in AGENDA_ALLOWED_PERMISSIONS
+
+agenda_permission_required = user_passes_test(check_agenda_permission, login_url='/accounts/login/')
+
+
+class AgendaPermissionMixin(AccessMixin):
+    """Mixin para CBVs que verifica as permissões de acesso ao app Agenda."""
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not check_agenda_permission(request.user):
+            raise PermissionDenied("Você não tem permissão para acessar esta área da Agenda.")
+        return super().dispatch(request, *args, **kwargs)
+
 
 class JsonFormMixin:
     """Mixin para retornar respostas JSON para forms."""
@@ -34,6 +55,7 @@ class JsonFormMixin:
 # --- Views ---
 
 @login_required
+@agenda_permission_required
 def calendario(request):
     user = request.user
     lembretes = Lembrete.objects.select_related('user').filter(user=user)
@@ -52,7 +74,7 @@ def calendario(request):
     )
 
 
-class LembreteCreateView(LoginRequiredMixin, JsonFormMixin, CreateView):
+class LembreteCreateView(LoginRequiredMixin, AgendaPermissionMixin, JsonFormMixin, CreateView):
     model = Lembrete
     form_class = LembreteForm
 
@@ -61,7 +83,7 @@ class LembreteCreateView(LoginRequiredMixin, JsonFormMixin, CreateView):
         return super().form_valid(form)
 
 
-class TarefaCreateView(LoginRequiredMixin, JsonFormMixin, CreateView):
+class TarefaCreateView(LoginRequiredMixin, AgendaPermissionMixin, JsonFormMixin, CreateView):
     model = Tarefa
     form_class = TarefaForm
 
@@ -70,7 +92,7 @@ class TarefaCreateView(LoginRequiredMixin, JsonFormMixin, CreateView):
         return super().form_valid(form)
 
 
-class LembreteUpdateView(LoginRequiredMixin, UpdateView):
+class LembreteUpdateView(LoginRequiredMixin, AgendaPermissionMixin, UpdateView):
     model = Lembrete
     form_class = LembreteForm
     template_name = "lembrete_form.html"
@@ -85,7 +107,7 @@ class LembreteUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class TarefaUpdateView(LoginRequiredMixin, UpdateView):
+class TarefaUpdateView(LoginRequiredMixin, AgendaPermissionMixin, UpdateView):
     model = Tarefa
     form_class = TarefaForm
     template_name = "eventos/tarefa_form.html"
@@ -100,7 +122,7 @@ class TarefaUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class LembreteDeleteView(LoginRequiredMixin, DeleteView):
+class LembreteDeleteView(LoginRequiredMixin, AgendaPermissionMixin, DeleteView):
     model = Lembrete
     http_method_names = ['post']
 
@@ -113,7 +135,7 @@ class LembreteDeleteView(LoginRequiredMixin, DeleteView):
         return JsonResponse({"success": True, "message": "Lembrete excluído com sucesso!"})
 
 
-class TarefaDeleteView(LoginRequiredMixin, DeleteView):
+class TarefaDeleteView(LoginRequiredMixin, AgendaPermissionMixin, DeleteView):
     model = Tarefa
     http_method_names = ['post']
 
@@ -127,6 +149,7 @@ class TarefaDeleteView(LoginRequiredMixin, DeleteView):
 
 
 @login_required
+@agenda_permission_required
 def eventos_proximos(request):
     user = request.user
     agora = timezone.now()
