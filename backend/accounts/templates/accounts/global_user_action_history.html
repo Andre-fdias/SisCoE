@@ -149,31 +149,8 @@
                         <tbody>
                             {% for log in global_action_logs %}
                             <tr class="bg-white border-b hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                    {% with militar=log.user.cadastro %}
-                                        {% if militar %}
-                                            <a href="{% url 'efetivo:ver_militar' militar.id %}" class="text-cyan-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                                                <div class="font-medium">
-                                                    {% if militar.ultima_promocao %}
-                                                        {{ militar.ultima_promocao.posto_grad }}
-                                                    {% endif %}
-                                                    {{ militar.re }}-{{ militar.dig }}
-                                                    {{ log.user.last_name }}
-                                                </div>
-                                                <div class="text-gray-500 dark:text-gray-400">
-                                                    {{ militar.cpf|default:"-" }}
-                                                </div>
-                                            </a>
-                                        {% else %}
-                                            <div class="font-medium">
-                                                {{ log.user.email }}
-                                            </div>
-                                            <div class="text-gray-500 dark:text-gray-400">
-                                                {{ log.user.get_full_name }}
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
-                                </td>
+                            
+                                
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ log.action }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     {% if log.timestamp %}
