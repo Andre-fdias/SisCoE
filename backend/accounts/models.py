@@ -58,6 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("gestor", "Gestor"),
         ("admin", "Admin"),
     )
+
     permissoes = models.CharField(
         _("Permission Level"),
         max_length=20,
