@@ -76,7 +76,15 @@
                                 <select id="user" name="user" class="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-all duration-200">
                                     <option value="">Todos os usuários</option>
                                     {% for user_option in all_users %}
-                                    <option value="{{ user_option.id }}" {% if user_option.id|stringformat:"s" == selected_user_id %}selected{% endif %}>{{ user_option.email }}</option>
+                                    <option value="{{ user_option.id }}" {% if user_option.id|stringformat:"s" == selected_user_id %}selected{% endif %}>
+                                        {% with militar=user_option.cadastro %}
+                                            {% if militar %}
+                                                {% if militar.ultima_promocao %}{{ militar.ultima_promocao.posto_grad }}{% endif %} {{ militar.re }}-{{ militar.dig }} {{ user_option.last_name|default:'' }}
+                                            {% else %}
+                                                {{ user_option.email }} {% if user_option.get_full_name %}({{ user_option.get_full_name }}){% endif %}
+                                            {% endif %}
+                                        {% endwith %}
+                                    </option>
                                     {% endfor %}
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
