@@ -1,4 +1,5 @@
 {% load static %}
+{% load cpftags %}
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -113,7 +114,7 @@
             <div class="flex items-center justify-between w-full mb-6">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
-                    <a href="{% url 'core:dashboard' %}" class="flex items-center gap-4">
+                    <a href="{% url 'core:index' %}" class="flex items-center gap-4">
                         <img src="{% static 'img/logo-siscoe-light.png' %}" 
                              class="h-14 dark:hidden transition-all duration-300 hover:scale-105" 
                              alt="SisCoE Logo">
@@ -153,22 +154,26 @@
                     IDENTIFICAÇÃO DO MILITAR
                 </h2>
                 <div class="grid md:grid-cols-2 gap-4">
+                    {% if termo_aceite and termo_aceite.usuario.cadastro %}
                     <div>
                         <p class="font-semibold text-gray-700 dark:text-gray-300">Nome:</p>
-                        <p class="text-gray-600 dark:text-gray-400">1º Sgt PM ANDRE FONSECA DIAS</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ termo_aceite.usuario.cadastro.posto_grad }} PM {{ termo_aceite.usuario.cadastro.nome }}</p>
                     </div>
                     <div>
                         <p class="font-semibold text-gray-700 dark:text-gray-300">RE:</p>
-                        <p class="text-gray-600 dark:text-gray-400">108154-3</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ termo_aceite.usuario.cadastro.re }}-{{ termo_aceite.usuario.cadastro.dig }}</p>
                     </div>
                     <div>
                         <p class="font-semibold text-gray-700 dark:text-gray-300">CPF:</p>
-                        <p class="text-gray-600 dark:text-gray-400">309.914.928-46</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ termo_aceite.usuario.cadastro.cpf }}</p>
                     </div>
                     <div>
                         <p class="font-semibold text-gray-700 dark:text-gray-300">Data:</p>
-                        <p class="text-gray-600 dark:text-gray-400">03/11/2025</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ termo_aceite.data_aceite|date:"d/m/Y" }}</p>
                     </div>
+                    {% else %}
+                    <p class="text-red-500">Dados do militar não encontrados.</p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -197,9 +202,11 @@
                     </div>
                     2. OBRIGAÇÕES DO USUÁRIO
                 </h2>
+                {% if termo_aceite and termo_aceite.usuario.cadastro %}
                 <p class="term-text">
-                    Eu, <strong>1º Sgt PM 108154-3 ANDRE FONSECA DIAS</strong>, inscrito no CPF <strong>309.914.928-46</strong>, declaro estar ciente e de acordo com os seguintes termos:
+                    Eu, <strong>{{ termo_aceite.usuario.cadastro.posto_grad }} PM {{ termo_aceite.usuario.cadastro.re }}-{{ termo_aceite.usuario.cadastro.dig }} {{ termo_aceite.usuario.cadastro.nome }}</strong>, inscrito no CPF <strong>{{ termo_aceite.usuario.cadastro.cpf|format_cpf }}</strong>, declaro estar ciente e de acordo com os seguintes termos:
                 </p>
+                {% endif %}
                 
                 <div class="space-y-3 mt-4">
                     <div class="flex items-start gap-3">
@@ -325,9 +332,10 @@
                 </h2>
                 
                 <div class="bg-white dark:bg-gray-700 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
+                    {% if termo_aceite and termo_aceite.usuario.cadastro %}
                     <div class="text-center mb-6">
                         <p class="text-lg font-semibold text-gray-800 dark:text-white">
-                            Nome: 1º Sgt PM ANDRE FONSECA DIAS - RE: 108154-3
+                            Nome: {{ termo_aceite.usuario.cadastro.posto_grad }} PM {{ termo_aceite.usuario.cadastro.nome }} - RE: {{ termo_aceite.usuario.cadastro.re }}-{{ termo_aceite.usuario.cadastro.dig }}
                         </p>
                     </div>
                     
@@ -335,22 +343,28 @@
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                             Assinatura Eletrônica Registrada:
                         </p>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                            <i class="fa-solid fa-fingerprint text-green-600"></i>
-                            <span class="text-sm font-mono text-gray-700 dark:text-gray-300">ASSINADO DIGITALMENTE</span>
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-3">
-                            Registrado em: 03/11/2025 às 14:30
+                        {% if termo_aceite.signature_data %}
+                            <img src="{{ termo_aceite.signature_data }}" alt="Assinatura" class="mx-auto bg-gray-200 dark:bg-gray-600 rounded-md" style="max-height: 100px;"/>
+                        {% else %}
+                            <div class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                <i class="fa-solid fa-fingerprint text-red-600"></i>
+                                <span class="text-sm font-mono text-red-700 dark:text-red-300">ASSINATURA NÃO ENCONTRADA</span>
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                            Registrado em: {{ termo_aceite.data_aceite|date:"d/m/Y \à\s H:i" }}
                         </p>
                     </div>
+                    {% else %}
+                    <p class="text-red-500 text-center">Termo de aceite não encontrado para este usuário.</p>
+                    {% endif %}
                 </div>
 
                 <!-- Botões de Ação -->
                 <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-                    <button onclick="window.print()" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-lg">
+                    <a href="{% url 'accounts:generate_termo_pdf' pk=request.user.pk %}" target="_blank" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-lg">
                         <i class="fa-solid fa-print mr-2"></i> Imprimir Termo
-                    </button>
-                    <a href="{% url 'core:dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
+                    </a>                    <a href="{% url 'core:index' %}" class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-700 bg-white dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
                         <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Sistema
                     </a>
                 </div>

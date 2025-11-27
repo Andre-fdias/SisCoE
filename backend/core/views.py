@@ -15,6 +15,7 @@ import logging
 import json
 from backend.accounts.decorators import permissao_necessaria
 from backend.core.utils import filter_by_user_sgb
+from backend.accounts.models import TermosAceite
 
 logger = logging.getLogger(__name__)
 
@@ -1526,9 +1527,18 @@ def termo_aceite_view(request):
     """
     View para exibir o termo de aceite personalizado com dados do usuário logado
     """
+    termo_aceite = TermosAceite.objects.filter(usuario=request.user).order_by('-data_aceite').first()
+
+    # Ler a versão do arquivo VERSION
+    try:
+        with open('VERSION') as f:
+            app_version = f.read().strip()
+    except FileNotFoundError:
+        app_version = 'N/A'
+
     context = {
-        'current_date': timezone.now().date(),
-        'APP_VERSION': '1.0.0',  # Ajuste conforme sua variável de versão
+        'termo_aceite': termo_aceite,
+        'APP_VERSION': app_version,
     }
     
     return render(request, 'termo_aceite_index.html', context)

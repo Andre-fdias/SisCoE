@@ -1687,16 +1687,17 @@
    class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
     Termos de Uso
 </a>
-        <a href="#" 
-           target="_blank" 
+        <a href="{% url 'tickets:meus_chamados' %}" 
            class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Suporte
         </a>
+        {% if user.is_superuser %}
         <a href="https://andre-fdias.github.io/SisCoE/" 
            target="_blank" 
            class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             Documentação
         </a>
+        {% endif %}
     </div>
 </div>
 </div>

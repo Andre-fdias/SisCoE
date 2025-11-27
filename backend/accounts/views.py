@@ -869,12 +869,19 @@ def generate_termo_pdf(request, pk):
         # Se não houver assinatura digital, apenas ajusta a posição
         y_position -= 20
 
+    # Ler a versão do arquivo VERSION
+    try:
+        with open('VERSION') as f:
+            app_version = f.read().strip()
+    except FileNotFoundError:
+        app_version = 'N/A'
+
     # Rodapé
     pdf.setFont("Helvetica-Oblique", 8)
     pdf.drawCentredString(
         width / 2,
         margin - 20,
-        '"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana"',
+        f'"Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a Defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana" - SisCoE v{app_version}',
     )
 
     pdf.save()
